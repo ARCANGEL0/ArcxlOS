@@ -1,0 +1,1785 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import time
+import subprocess
+import glob
+import math
+
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QPointF, QRectF
+from PyQt6.QtGui import (
+    QPixmap, QImage, QFont, QColor, QPainter, QPen, QBrush, QIcon, QLinearGradient, QRadialGradient
+)
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QStackedWidget, QRadioButton, QButtonGroup, QComboBox,
+    QLineEdit, QProgressBar, QTextEdit, QTableWidget, QTableWidgetItem,
+    QHeaderView, QCheckBox, QMessageBox, QFrame, QDialog, QSpinBox, QFormLayout,
+    QGridLayout, QListWidget, QListWidgetItem,
+    QGraphicsDropShadowEffect, QSplitter
+)
+
+COLOR_BG = "#0E0E0D"
+COLOR_SIDEBAR = "#0A0A09"
+COLOR_SURFACE = "#111110"
+COLOR_SURFACE_LIGHT = "#1A1A18"
+COLOR_PRIMARY = "#C24A52"
+COLOR_PRIMARY_HOVER = "#D4565E"
+COLOR_ACCENT = "#C24A52"
+COLOR_TEXT = "#ECEBE8"
+COLOR_MUTED = "#9A9895"
+COLOR_BORDER = "#2A2A28"
+COLOR_SUCCESS = "#6E8F6A"
+COLOR_ERROR = "#C24A52"
+COLOR_WARNING = "#C9A15A"
+
+FONT_FAMILY = "Quantico"
+LOGO_PATH = "/usr/share/sddm/themes/archangelos/assets/logo.png"
+WALLPAPERS_DIR = "/usr/share/backgrounds"
+
+EDITION_TITLE = 'ArchangelOS Fallen - RedTeam Edition'
+EDITION_SUBTITLE = 'FALLEN INSTALLER'
+EDITION_BIO = 'Fallen Edition: a BlackArch-based red team arsenal for offensive security operations.'
+
+CITIES_DB = [
+    {"city": "India (New Delhi / Kolkata)", "country": "India", "zone": "Asia/Kolkata", "lon": 77.2, "lat": 28.6},
+    {"city": "United States (New York)", "country": "USA", "zone": "America/New_York", "lon": -74.0, "lat": 40.7},
+    {"city": "United States (Los Angeles)", "country": "USA", "zone": "America/Los_Angeles", "lon": -118.2, "lat": 34.0},
+    {"city": "United States (Chicago)", "country": "USA", "zone": "America/Chicago", "lon": -87.6, "lat": 41.8},
+    {"city": "United Kingdom (London)", "country": "UK", "zone": "Europe/London", "lon": -0.1, "lat": 51.5},
+    {"city": "France (Paris)", "country": "France", "zone": "Europe/Paris", "lon": 2.3, "lat": 48.8},
+    {"city": "Germany (Berlin)", "country": "Germany", "zone": "Europe/Berlin", "lon": 13.4, "lat": 52.5},
+    {"city": "Japan (Tokyo)", "country": "Japan", "zone": "Asia/Tokyo", "lon": 139.6, "lat": 35.6},
+    {"city": "China (Shanghai / Beijing)", "country": "China", "zone": "Asia/Shanghai", "lon": 121.4, "lat": 31.2},
+    {"city": "Australia (Sydney)", "country": "Australia", "zone": "Australia/Sydney", "lon": 151.2, "lat": -33.8},
+    {"city": "Brazil (Sao Paulo)", "country": "Brazil", "zone": "America/Sao_Paulo", "lon": -46.6, "lat": -23.5},
+    {"city": "Canada (Toronto)", "country": "Canada", "zone": "America/Toronto", "lon": -79.3, "lat": 43.6},
+    {"city": "Russia (Moscow)", "country": "Russia", "zone": "Europe/Moscow", "lon": 37.6, "lat": 55.7},
+    {"city": "United Arab Emirates (Dubai)", "country": "UAE", "zone": "Asia/Dubai", "lon": 55.2, "lat": 25.2},
+    {"city": "Egypt (Cairo)", "country": "Egypt", "zone": "Africa/Cairo", "lon": 31.2, "lat": 30.0},
+    {"city": "South Africa (Johannesburg)", "country": "South Africa", "zone": "Africa/Johannesburg", "lon": 28.0, "lat": -26.2},
+    {"city": "Mexico (Mexico City)", "country": "Mexico", "zone": "America/Mexico_City", "lon": -99.1, "lat": 19.4},
+    {"city": "Argentina (Buenos Aires)", "country": "Argentina", "zone": "America/Argentina/Buenos_Aires", "lon": -58.3, "lat": -34.6},
+    {"city": "Singapore", "country": "Singapore", "zone": "Asia/Singapore", "lon": 103.8, "lat": 1.3},
+    {"city": "Saudi Arabia (Riyadh)", "country": "Saudi Arabia", "zone": "Asia/Riyadh", "lon": 46.6, "lat": 24.7},
+    {"city": "South Korea (Seoul)", "country": "South Korea", "zone": "Asia/Seoul", "lon": 126.9, "lat": 37.5},
+    {"city": "New Zealand (Auckland)", "country": "New Zealand", "zone": "Pacific/Auckland", "lon": 174.7, "lat": -36.8},
+    {"city": "Turkey (Istanbul)", "country": "Turkey", "zone": "Europe/Istanbul", "lon": 28.9, "lat": 41.0},
+    {"city": "UTC / Greenwich", "country": "UTC", "zone": "UTC", "lon": 0.0, "lat": 51.0},
+]
+
+KEYBOARD_LAYOUTS = [
+    ("English (US)", "us"),
+    ("English (UK)", "gb"),
+    ("Portuguese (Brazil)", "br-abnt2"),
+    ("Portuguese (Portugal)", "pt-latin1"),
+    ("Spanish", "es"),
+    ("Latin American", "la-latin1"),
+    ("German", "de"),
+    ("Swiss German", "sg-latin1"),
+    ("French", "fr"),
+    ("Canadian French", "cf"),
+    ("Italian", "it"),
+    ("Dutch", "nl"),
+    ("Swedish", "sv-latin1"),
+    ("Norwegian", "no-latin1"),
+    ("Danish", "dk-latin1"),
+    ("Finnish", "fi"),
+    ("Polish", "pl"),
+    ("Czech", "cz-lat2"),
+    ("Hungarian", "hu"),
+    ("Romanian", "ro"),
+    ("Greek", "gr"),
+    ("Russian", "ru"),
+    ("Ukrainian", "ua-utf"),
+    ("Turkish", "tr_q-latin5"),
+    ("Hebrew", "il"),
+    ("Arabic", "arabic"),
+    ("Japanese", "jp106"),
+    ("Korean", "kr106"),
+    ("Chinese", "us"),
+    ("Hindi (India)", "us"),
+]
+
+COUNTRIES = [
+    ("Argentina", "America/Argentina/Buenos_Aires"),
+    ("Australia", "Australia/Sydney"),
+    ("Brazil", "America/Sao_Paulo"),
+    ("Canada", "America/Toronto"),
+    ("China", "Asia/Shanghai"),
+    ("Egypt", "Africa/Cairo"),
+    ("France", "Europe/Paris"),
+    ("Germany", "Europe/Berlin"),
+    ("India", "Asia/Kolkata"),
+    ("Japan", "Asia/Tokyo"),
+    ("Mexico", "America/Mexico_City"),
+    ("New Zealand", "Pacific/Auckland"),
+    ("Russia", "Europe/Moscow"),
+    ("Saudi Arabia", "Asia/Riyadh"),
+    ("Singapore", "Asia/Singapore"),
+    ("South Africa", "Africa/Johannesburg"),
+    ("South Korea", "Asia/Seoul"),
+    ("Turkey", "Europe/Istanbul"),
+    ("United Arab Emirates", "Asia/Dubai"),
+    ("United Kingdom", "Europe/London"),
+    ("United States", "America/New_York"),
+]
+
+
+SLIDESHOW_TEXTS = [
+    ("ArchangelOS Cyber Security Arsenal", "Includes over 3000+ pre-configured penetration testing, OSINT, and ethical hacking tools ready out-of-the-box."),
+    ("Lightning-Fast XFCE Desktop", "Ultra-optimized, lightweight dark-themed desktop environment tuned for low memory usage and high productivity."),
+    ("100% Offline Standalone Installer", "Complete system deployment directly from live environment images without requiring an active internet connection."),
+    ("Advanced Boot & Kernel Options", "Hardened Linux kernel with hardware virtualization, WiFi auditing drivers, and custom terminal profiles."),
+    ("Hack The Planet", "A complete red-team toolkit tuned for OSINT, recon, and exploitation workflows straight out of the box."),
+    ("BlackArch Compatible Repos", "Drop straight into the BlackArch package universe for the deepest security tooling catalog available on Linux."),
+    ("Built-in Threat Research Suite", "Reverse engineering, malware analysis, and network forensics tools pre-wired and ready to launch."),
+    ("Arc-Reactor Themed Experience", "Every corner of ArchangelOS — from boot to desktop — carries a consistent Iron Man-inspired cyberpunk aesthetic."),
+    ("Luna AI Integrated Ecosystem", "ArchangelOS ships alongside Luna AI, an autonomous multi-agent assistant built directly into the OS workflow."),
+    ("Crafted by Arunachalam", "Designed for maximum stability, cutting-edge security research, and seamless dual-boot functionality."),
+]
+
+
+DEVELOPER_NAME = "Arunachalam M."
+DEVELOPER_WEBSITE = "arunachalam-gojosaturo.github.io"
+DEVELOPER_GITHUB = "github.com/Arunachalam-gojosaturo"
+DEVELOPER_EMAIL = "arunachalamthehacker@gmail.com"
+DEVELOPER_ABOUT_HTML = f"""
+<div style="font-family:'{FONT_FAMILY}'; color:{COLOR_TEXT};">
+<p style="font-size:14px; line-height:1.5;">
+<b style="color:{COLOR_PRIMARY};">ArchangelOS</b> is developed by
+<b>{DEVELOPER_NAME}</b>, an independent Linux developer and creator of the
+ArchangelOS ecosystem.
+</p>
+<p style="font-size:13px; line-height:1.6; color:{COLOR_TEXT};">
+The project combines <b>Arch Linux</b>, <b>Hyprland</b>, <b>Luna AI</b>, and
+modern cybersecurity tools into a unified platform designed for developers,
+security researchers, students, and power users.
+</p>
+<p style="font-size:13px; line-height:1.8;">
+<span style="color:{COLOR_MUTED};">Website:</span>
+<a href="https://{DEVELOPER_WEBSITE}" style="color:{COLOR_PRIMARY};">{DEVELOPER_WEBSITE}</a><br>
+<span style="color:{COLOR_MUTED};">GitHub:</span>
+<a href="https://{DEVELOPER_GITHUB}" style="color:{COLOR_PRIMARY};">{DEVELOPER_GITHUB}</a><br>
+<span style="color:{COLOR_MUTED};">Email:</span>
+<a href="mailto:{DEVELOPER_EMAIL}" style="color:{COLOR_PRIMARY};">{DEVELOPER_EMAIL}</a>
+</p>
+</div>
+"""
+
+
+def run_command_output(cmd):
+    """Run shell command and return stdout string."""
+    try:
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+        return res.stdout.strip()
+    except Exception:
+        return ""
+
+
+def get_boot_mode():
+    if os.path.exists("/sys/firmware/efi"):
+        return "UEFI"
+    return "BIOS (Legacy)"
+
+
+def get_available_disks():
+    """Scan available disks using lsblk."""
+    disks = []
+    output = run_command_output("lsblk -dno NAME,SIZE,MODEL,TYPE | grep -E 'disk'")
+    for line in output.splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            name = parts[0]
+            size = parts[1]
+            model = " ".join(parts[2:]) if len(parts) > 2 else "Drive"
+            dev_path = f"/dev/{name}"
+            disks.append({
+                "dev": dev_path,
+                "name": name,
+                "size": size,
+                "model": model
+            })
+    return disks
+
+
+def get_disk_partitions(disk_dev):
+    """Get list of partitions on selected disk."""
+    parts = []
+    output = run_command_output(f"lsblk -lno NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS '{disk_dev}' | grep -E '[0-9]+'")
+    for line in output.splitlines():
+        tokens = line.split()
+        if tokens:
+            p_name = tokens[0]
+            p_size = tokens[1] if len(tokens) > 1 else "Unknown"
+            p_fs = tokens[2] if len(tokens) > 2 else "raw"
+            p_path = f"/dev/{p_name}"
+            parts.append({
+                "dev": p_path,
+                "name": p_name,
+                "size": p_size,
+                "fs": p_fs
+            })
+    return parts
+
+
+class WorldMapWidget(QWidget):
+    timezoneSelected = pyqtSignal(str, str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumHeight(320)
+        self.selected_city = CITIES_DB[0]
+        self.setMouseTracking(True)
+        self.hovered_city = None
+        self.custom_target_point = None
+
+    def set_selected_city_by_zone(self, zone_name):
+        for c in CITIES_DB:
+            if c["zone"] == zone_name:
+                self.selected_city = c
+                self.custom_target_point = None
+                self.update()
+                break
+
+    def mousePressEvent(self, event):
+        w = self.width()
+        h = self.height()
+        click_x = event.position().x()
+        click_y = event.position().y()
+
+        click_lon = (click_x / w) * 360.0 - 180.0
+        click_lat = 90.0 - (click_y / h) * 180.0
+
+        closest_city = None
+        min_dist = 999999
+
+        for c in CITIES_DB:
+            dlon = c["lon"] - click_lon
+            dlat = c["lat"] - click_lat
+            dist = math.hypot(dlon, dlat)
+            if dist < min_dist:
+                min_dist = dist
+                closest_city = c
+
+        if closest_city:
+            self.selected_city = closest_city
+            self.custom_target_point = (click_lon, click_lat)
+            self.timezoneSelected.emit(closest_city["city"], closest_city["zone"])
+            self.update()
+
+    def mouseMoveEvent(self, event):
+        w = self.width()
+        h = self.height()
+        mx = event.position().x()
+        my = event.position().y()
+
+        closest = None
+        min_d = 9999
+
+        for c in CITIES_DB:
+            cx = (c["lon"] + 180) * (w / 360.0)
+            cy = (90 - c["lat"]) * (h / 180.0)
+            d = math.hypot(mx - cx, my - cy)
+            if d < min_d:
+                min_d = d
+                closest = c
+
+        if closest and min_d < 40:
+            if self.hovered_city != closest:
+                self.hovered_city = closest
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+                self.update()
+        else:
+            if self.hovered_city is not None:
+                self.hovered_city = None
+                self.unsetCursor()
+                self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w = self.width()
+        h = self.height()
+
+        grad = QLinearGradient(0, 0, 0, h)
+        grad.setColorAt(0, QColor("#060a12"))
+        grad.setColorAt(0.5, QColor("#0a101d"))
+        grad.setColorAt(1, QColor("#070d18"))
+        painter.fillRect(0, 0, w, h, grad)
+
+        grid_pen = QPen(QColor("#161614"), 1, Qt.PenStyle.DotLine)
+        painter.setPen(grid_pen)
+
+        for lon in range(-180, 181, 30):
+            x = (lon + 180) * (w / 360.0)
+            painter.drawLine(int(x), 0, int(x), h)
+
+        for lat in range(-90, 91, 30):
+            y = (90 - lat) * (h / 180.0)
+            painter.drawLine(0, int(y), w, int(y))
+
+        eq_y = (90 - 0) * (h / 180.0)
+        pm_x = (0 + 180) * (w / 360.0)
+        painter.setPen(QPen(QColor("#1A1A18"), 1, Qt.PenStyle.SolidLine))
+        painter.drawLine(0, int(eq_y), w, int(eq_y))
+        painter.drawLine(int(pm_x), 0, int(pm_x), h)
+
+        cancer_y = (90 - 23.5) * (h / 180.0)
+        capricorn_y = (90 - (-23.5)) * (h / 180.0)
+        painter.setPen(QPen(QColor("#161614"), 1, Qt.PenStyle.DashLine))
+        painter.drawLine(0, int(cancer_y), w, int(cancer_y))
+        painter.drawLine(0, int(capricorn_y), w, int(capricorn_y))
+
+        painter.setPen(QPen(QColor("#1A1A18"), 1))
+        painter.setBrush(QBrush(QColor("#161614")))
+
+        continents = [
+            [(-168, 65), (-165, 70), (-140, 70), (-130, 55), (-125, 50), (-124, 40), (-117, 32), (-105, 20), (-90, 16), (-90, 20), (-97, 26), (-95, 30), (-88, 30), (-82, 25), (-80, 30), (-75, 35), (-70, 42), (-65, 45), (-64, 47), (-60, 60), (-75, 62), (-80, 65), (-95, 70), (-120, 72), (-168, 65)],
+            [(-105, 20), (-92, 14), (-88, 13), (-83, 9), (-77, 8), (-80, 15), (-90, 17), (-105, 20)],
+            [(-77, 8), (-73, 11), (-60, 10), (-50, 0), (-35, -5), (-35, -12), (-40, -22), (-50, -30), (-65, -54), (-75, -50), (-72, -35), (-75, -15), (-80, -2), (-77, 8)],
+            [(-9, 36), (-9, 43), (-2, 43), (-5, 48), (2, 51), (8, 54), (10, 58), (20, 55), (30, 60), (30, 45), (25, 40), (22, 38), (15, 40), (12, 44), (9, 44), (3, 43), (-3, 37), (-9, 36)],
+            [(-10, 51), (-10, 55), (-6, 58), (-3, 58), (1, 52), (-5, 50), (-10, 51)],
+            [(-10, 52), (-10, 55), (-6, 55), (-6, 52), (-10, 52)],
+            [(5, 58), (10, 63), (18, 70), (28, 70), (30, 65), (22, 60), (12, 56), (5, 58)],
+            [(-17, 15), (-17, 21), (-6, 36), (11, 37), (25, 32), (34, 27), (43, 12), (51, 11), (40, -3), (35, -25), (20, -35), (15, -30), (12, -15), (8, 4), (-8, 4), (-15, 11), (-17, 15)],
+            [(35, 30), (45, 40), (50, 40), (60, 55), (70, 70), (100, 75), (140, 72), (170, 66), (180, 65), (160, 55), (140, 40), (120, 30), (110, 20), (105, 10), (100, 4), (98, 10), (92, 20), (88, 22), (68, 24), (60, 25), (55, 25), (50, 15), (43, 12), (35, 30)],
+            [(68, 24), (73, 20), (76, 15), (77, 8), (80, 13), (85, 20), (88, 22), (68, 24)],
+            [(80, 10), (82, 10), (81, 6), (80, 6), (80, 10)],
+            [(130, 32), (133, 35), (140, 36), (142, 44), (145, 44), (140, 36), (130, 32)],
+            [(114, -22), (114, -34), (138, -35), (153, -28), (152, -15), (142, -11), (136, -15), (129, -15), (114, -22)],
+            [(144, -40), (148, -40), (148, -44), (144, -44), (144, -40)],
+            [(172, -34), (178, -38), (174, -42), (172, -34)],
+            [(166, -46), (174, -41), (170, -46), (166, -46)],
+            [(-55, 60), (-40, 60), (-20, 70), (-18, 80), (-40, 83), (-60, 78), (-55, 60)],
+            [(44, -12), (50, -15), (47, -25), (43, -25), (44, -12)],
+            [(95, 5), (105, -5), (115, -8), (125, -8), (140, -3), (150, -10), (140, -2), (125, 2), (105, 5), (95, 5)],
+            [(120, 18), (126, 12), (125, 6), (120, 10), (120, 18)]
+        ]
+
+        for poly in continents:
+            pts = []
+            for lon, lat in poly:
+                wx = (lon + 180) * (w / 360.0)
+                wy = (90 - lat) * (h / 180.0)
+                pts.append(QPointF(wx, wy))
+            painter.drawPolygon(pts)
+
+        for c in CITIES_DB:
+            cx = (c["lon"] + 180) * (w / 360.0)
+            cy = (90 - c["lat"]) * (h / 180.0)
+
+            is_selected = (c == self.selected_city)
+            is_hovered = (c == self.hovered_city)
+
+            if is_selected:
+                rad = QRadialGradient(cx, cy, 26)
+                rad.setColorAt(0, QColor(0, 243, 255, 240))
+                rad.setColorAt(0.5, QColor(0, 243, 255, 90))
+                rad.setColorAt(1, QColor(0, 243, 255, 0))
+                painter.setBrush(QBrush(rad))
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawEllipse(QPointF(cx, cy), 26, 26)
+
+                painter.setPen(QPen(QColor("#C24A52"), 1, Qt.PenStyle.SolidLine))
+                painter.drawLine(int(cx - 16), int(cy), int(cx + 16), int(cy))
+                painter.drawLine(int(cx), int(cy - 16), int(cx), int(cy + 16))
+
+                painter.setBrush(QBrush(QColor("#ffffff")))
+                painter.setPen(QPen(QColor("#C24A52"), 2))
+                painter.drawEllipse(QPointF(cx, cy), 5, 5)
+
+                painter.setFont(QFont(FONT_FAMILY, 9, QFont.Weight.Bold))
+                tag_text = f"📍 {c['city']} [{c['zone']}]"
+                metrics = painter.fontMetrics()
+                tw = metrics.horizontalAdvance(tag_text) + 16
+                th = 22
+                rect_x = int(cx) + 12
+                rect_y = int(cy) - 24
+                if rect_x + tw > w - 10:
+                    rect_x = int(cx) - tw - 12
+                if rect_y < 10:
+                    rect_y = int(cy) + 12
+
+                painter.setBrush(QBrush(QColor("#09101c")))
+                painter.setPen(QPen(QColor("#C24A52"), 1))
+                painter.drawRoundedRect(rect_x, rect_y, tw, th, 4, 4)
+
+                painter.setPen(QPen(QColor("#ffffff")))
+                painter.drawText(rect_x + 8, rect_y + 15, tag_text)
+
+            elif is_hovered:
+                painter.setBrush(QBrush(QColor("#D4565E")))
+                painter.setPen(QPen(QColor("#ffffff"), 1))
+                painter.drawEllipse(QPointF(cx, cy), 6, 6)
+
+                painter.setFont(QFont(FONT_FAMILY, 8))
+                painter.setPen(QPen(QColor("#C24A52")))
+                painter.drawText(int(cx) + 8, int(cy) + 4, c["city"].split("(")[0].strip())
+
+            else:
+                painter.setBrush(QBrush(QColor("#C24A52")))
+                painter.setPen(QPen(QColor("#C24A52"), 1))
+                painter.drawEllipse(QPointF(cx, cy), 3.5, 3.5)
+
+        if self.custom_target_point:
+            clon, clat = self.custom_target_point
+            t_x = (clon + 180) * (w / 360.0)
+            t_y = (90 - clat) * (h / 180.0)
+
+            painter.setPen(QPen(QColor("#C9A15A"), 1.5, Qt.PenStyle.DashLine))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(QPointF(t_x, t_y), 12, 12)
+            painter.drawLine(int(t_x - 16), int(t_y), int(t_x + 16), int(t_y))
+            painter.drawLine(int(t_x), int(t_y - 16), int(t_x), int(t_y + 16))
+
+        painter.setBrush(QBrush(QColor(10, 16, 28, 220)))
+        painter.setPen(QPen(QColor("#1A1A18"), 1))
+        painter.drawRect(0, h - 26, w, 26)
+
+        painter.setFont(QFont(FONT_FAMILY, 8, QFont.Weight.Bold))
+        painter.setPen(QPen(QColor("#C24A52")))
+        hud_info = f"SELECTED: {self.selected_city['city']} ({self.selected_city['zone']}) | LAT: {self.selected_city['lat']}° | LON: {self.selected_city['lon']}° | MIRROR: https://geo.mirror.pkgbuild.com"
+        painter.drawText(10, h - 8, hud_info)
+
+
+class AboutDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("About ArchangelOS")
+        self.setFixedSize(480, 400)
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {COLOR_SURFACE};
+                border: 1px solid {COLOR_PRIMARY};
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(16)
+
+        header_box = QHBoxLayout()
+        logo_lbl = QLabel()
+        if os.path.exists(LOGO_PATH):
+            logo_lbl.setPixmap(
+                QPixmap(LOGO_PATH).scaled(56, 56, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            )
+        header_box.addWidget(logo_lbl)
+
+        title_box = QVBoxLayout()
+        t = QLabel("ArchangelOS")
+        t.setFont(QFont(FONT_FAMILY, 20, QFont.Weight.Bold))
+        t.setStyleSheet(f"color: {COLOR_PRIMARY};")
+        sub = QLabel("Arch-based Cybersecurity Linux Distribution")
+        sub.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 11px;")
+        title_box.addWidget(t)
+        title_box.addWidget(sub)
+        header_box.addLayout(title_box)
+        header_box.addStretch()
+        layout.addLayout(header_box)
+
+        divider = QFrame()
+        divider.setFixedHeight(1)
+        divider.setStyleSheet(f"background-color: {COLOR_PRIMARY};")
+        layout.addWidget(divider)
+
+        body = QLabel()
+        body.setTextFormat(Qt.TextFormat.RichText)
+        body.setText(DEVELOPER_ABOUT_HTML)
+        body.setWordWrap(True)
+        body.setOpenExternalLinks(True)
+        body.setStyleSheet(f"background-color: {COLOR_BG}; border: 1px solid {COLOR_BORDER}; border-radius: 8px; padding: 16px;")
+        layout.addWidget(body, 1)
+
+        close_btn = QPushButton("Close")
+        close_btn.setObjectName("PrimaryBtn")
+        close_btn.clicked.connect(self.accept)
+        layout.addWidget(close_btn)
+
+
+def apply_glow(widget, color=COLOR_PRIMARY, radius=18, offset=0, alpha=160):
+    """Attach a soft neon drop-shadow glow to any widget."""
+    effect = QGraphicsDropShadowEffect(widget)
+    effect.setBlurRadius(radius)
+    effect.setOffset(offset, offset)
+    q = QColor(color)
+    q.setAlpha(alpha)
+    effect.setColor(q)
+    widget.setGraphicsEffect(effect)
+    return effect
+
+
+class CustomPartitionDialog(QDialog):
+    def __init__(self, disk_dev, parent=None):
+        super().__init__(parent)
+        self.disk_dev = disk_dev
+        self.setWindowTitle("Create Custom Partition - ArchangelOS")
+        self.setFixedSize(440, 320)
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {COLOR_SURFACE};
+                color: {COLOR_TEXT};
+                border: 1px solid {COLOR_BORDER};
+            }}
+            QLabel {{
+                color: {COLOR_TEXT};
+                font-size: 13px;
+            }}
+            QLineEdit, QComboBox, QSpinBox {{
+                background-color: {COLOR_BG};
+                color: {COLOR_TEXT};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 6px;
+                padding: 6px;
+            }}
+            QPushButton {{
+                background-color: {COLOR_PRIMARY};
+                color: #000000;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 8px 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLOR_PRIMARY_HOVER};
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+
+        title = QLabel(f"Create Partition on {disk_dev}")
+        title.setFont(QFont(FONT_FAMILY, 14, QFont.Weight.Bold))
+        layout.addWidget(title)
+
+        form = QFormLayout()
+
+        self.size_spin = QSpinBox()
+        self.size_spin.setRange(1024, 2048000)
+        self.size_spin.setValue(30720)
+        self.size_spin.setSuffix(" MB")
+        form.addRow("Size (MB):", self.size_spin)
+
+        self.fs_combo = QComboBox()
+        self.fs_combo.addItems(["ext4", "btrfs", "xfs", "fat32", "linux-swap"])
+        form.addRow("Filesystem:", self.fs_combo)
+
+        self.mount_combo = QComboBox()
+        self.mount_combo.addItems(["/", "/boot/efi", "/home", "/var", "None (swap/data)"])
+        form.addRow("Mount Point:", self.mount_combo)
+
+        self.format_check = QCheckBox("Format partition")
+        self.format_check.setChecked(True)
+        form.addRow("", self.format_check)
+
+        layout.addLayout(form)
+        layout.addStretch()
+
+        btn_box = QHBoxLayout()
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.setStyleSheet("background-color: #2A2A28; color: #ffffff;")
+        btn_cancel.clicked.connect(self.reject)
+
+        btn_create = QPushButton("Create Partition")
+        btn_create.clicked.connect(self.accept)
+
+        btn_box.addWidget(btn_cancel)
+        btn_box.addWidget(btn_create)
+        layout.addLayout(btn_box)
+
+    def get_details(self):
+        return {
+            "size_mb": self.size_spin.value(),
+            "fs": self.fs_combo.currentText(),
+            "mount": self.mount_combo.currentText(),
+            "format": self.format_check.isChecked()
+        }
+
+
+class InstallWorkerThread(QThread):
+    progressChanged = pyqtSignal(int, str)
+    installationFinished = pyqtSignal(bool, str)
+
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+
+    def log(self, percent, msg):
+        self.progressChanged.emit(percent, msg)
+        time.sleep(0.3)
+
+    def run_cmd(self, cmd):
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if res.returncode != 0:
+            raise Exception(f"Command failed ({res.returncode}): {cmd}\nOutput: {res.stderr or res.stdout}")
+        return res.stdout
+
+    def run(self):
+        try:
+            disk = self.config["disk"]
+            boot_mode = self.config["boot_mode"]
+            part_option = self.config["part_option"]
+            user_name = self.config["username"]
+            password = self.config["password"]
+            hostname = self.config["hostname"]
+            timezone = self.config["timezone"]
+            keymap = self.config.get("keymap", "us")
+            root_password = self.config.get("root_password") or password
+
+            self.log(2, "Initializing offline system installer engine...")
+
+            self.run_cmd("umount -R /mnt 2>/dev/null || true")
+
+            root_part = ""
+            boot_part = ""
+
+            if part_option == 1:
+                self.log(10, f"Wiping partition table on {disk}...")
+                self.run_cmd(f"dd if=/dev/zero of='{disk}' bs=512 count=100 conv=notrunc 2>/dev/null || true")
+                self.run_cmd(f"wipefs -a '{disk}' 2>/dev/null || true")
+
+                if boot_mode == "UEFI":
+                    self.log(15, "Creating GPT partition table layout (UEFI)...")
+                    self.run_cmd(f"parted -s '{disk}' mklabel gpt")
+                    self.run_cmd(f"parted -s '{disk}' mkpart primary fat32 1MiB 513MiB")
+                    self.run_cmd(f"parted -s '{disk}' set 1 esp on")
+                    self.run_cmd(f"parted -s '{disk}' mkpart primary ext4 513MiB 100%")
+                    self.run_cmd(f"partprobe '{disk}' 2>/dev/null || true")
+                    self.run_cmd("udevadm settle")
+
+                    p_prefix = f"{disk}p" if disk[-1].isdigit() else disk
+                    boot_part = f"{p_prefix}1"
+                    root_part = f"{p_prefix}2"
+
+                    self.log(20, f"Formatting EFI System Partition ({boot_part})...")
+                    self.run_cmd(f"mkfs.fat -F 32 '{boot_part}'")
+                else:
+                    self.log(15, "Creating MBR partition table layout (BIOS)...")
+                    self.run_cmd(f"parted -s '{disk}' mklabel msdos")
+                    self.run_cmd(f"parted -s '{disk}' mkpart primary ext4 1MiB 100%")
+                    self.run_cmd(f"parted -s '{disk}' set 1 boot on")
+                    self.run_cmd(f"partprobe '{disk}' 2>/dev/null || true")
+                    self.run_cmd("udevadm settle")
+
+                    p_prefix = f"{disk}p" if disk[-1].isdigit() else disk
+                    root_part = f"{p_prefix}1"
+
+                self.log(25, f"Formatting Root Partition ({root_part})...")
+                self.run_cmd(f"mkfs.ext4 -F '{root_part}'")
+
+            elif part_option == 2:
+                self.log(10, f"Scanning unallocated space on {disk}...")
+                sf_out = self.run_cmd(f"sfdisk -F '{disk}' 2>/dev/null || true")
+
+                largest_start = 0
+                largest_sectors = 0
+                for line in sf_out.splitlines():
+                    tokens = line.split()
+                    if len(tokens) >= 3 and tokens[0].isdigit():
+                        start, end, sectors = int(tokens[0]), int(tokens[1]), int(tokens[2])
+                        if sectors > largest_sectors:
+                            largest_start = start
+                            largest_sectors = sectors
+
+                if largest_sectors == 0:
+                    raise Exception("No unallocated free space found on disk for dual boot.")
+
+                largest_end = largest_start + largest_sectors - 1
+                self.log(15, "Creating partition in free space...")
+                parts_before = run_command_output(f"lsblk -lno NAME '{disk}' | grep -E '[0-9]+$'").split()
+                self.run_cmd(f"parted -s '{disk}' mkpart primary ext4 {largest_start}s {largest_end}s")
+                self.run_cmd(f"partprobe '{disk}' 2>/dev/null || true")
+                self.run_cmd("udevadm settle")
+                time.sleep(1)
+                parts_after = run_command_output(f"lsblk -lno NAME '{disk}' | grep -E '[0-9]+$'").split()
+
+                new_part_name = None
+                for pa in parts_after:
+                    if pa not in parts_before:
+                        new_part_name = pa
+                        break
+
+                if not new_part_name and parts_after:
+                    new_part_name = parts_after[-1]
+
+                root_part = f"/dev/{new_part_name}"
+                self.log(25, f"Formatting dual-boot root partition ({root_part})...")
+                self.run_cmd(f"mkfs.ext4 -F '{root_part}'")
+
+                if boot_mode == "UEFI":
+                    efi_parts = run_command_output(f"lsblk -lno NAME,FSTYPE '{disk}' | grep -i 'vfat' | awk '{{print \"/dev/\"$1}}'").split()
+                    if efi_parts:
+                        boot_part = efi_parts[0]
+
+            else:
+                root_part = self.config.get("manual_root", "")
+                boot_part = self.config.get("manual_boot", "")
+                if self.config.get("format_root", False) and root_part:
+                    self.log(20, f"Formatting selected root partition ({root_part})...")
+                    self.run_cmd(f"mkfs.ext4 -F '{root_part}'")
+
+            self.log(30, f"Mounting root partition {root_part} to /mnt...")
+            self.run_cmd(f"mount '{root_part}' /mnt")
+
+            if boot_mode == "UEFI" and boot_part:
+                self.log(35, f"Mounting EFI partition {boot_part} to /mnt/boot/efi...")
+                self.run_cmd("mkdir -p /mnt/boot/efi")
+                self.run_cmd(f"mount '{boot_part}' /mnt/boot/efi")
+
+            self.log(40, "Deploying ArchangelOS system files from live image (100% Offline)...")
+            rsync_cmd = (
+                "rsync -aAXv --exclude='/dev/*' --exclude='/proc/*' --exclude='/sys/*' "
+                "--exclude='/tmp/*' --exclude='/run/*' --exclude='/mnt/*' --exclude='/media/*' "
+                "--exclude='/lost+found' --exclude='/boot/efi/*' --exclude='/boot/grub/*' "
+                "--exclude='/etc/fstab' --exclude='/etc/resolv.conf' / /mnt/"
+            )
+            self.run_cmd(rsync_cmd)
+
+            if not os.path.exists("/mnt/boot/vmlinuz-linux"):
+                self.log(60, "Copying kernel and initramfs files to target boot partition...")
+                self.run_cmd("cp -af /boot/vmlinuz-linux /mnt/boot/ 2>/dev/null || true")
+                self.run_cmd("cp -af /boot/initramfs*.img /mnt/boot/ 2>/dev/null || true")
+
+            self.log(65, "Generating /etc/fstab UUID mapping...")
+            self.run_cmd("genfstab -U /mnt > /mnt/etc/fstab")
+
+            self.log(70, "Configuring system locale, hostname & timezone...")
+            self.run_cmd("rm -f /mnt/etc/machine-id /mnt/var/lib/dbus/machine-id")
+            self.run_cmd("arch-chroot /mnt systemd-machine-id-setup")
+            self.run_cmd(f"arch-chroot /mnt ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime")
+            with open("/mnt/etc/vconsole.conf", "w") as f:
+                f.write(f"KEYMAP={keymap}\n")
+            self.run_cmd("arch-chroot /mnt hwclock --systohc 2>/dev/null || true")
+            self.run_cmd("sed -i 's/#\\(en_US\\.UTF-8\\)/\\1/' /mnt/etc/locale.gen 2>/dev/null || true")
+            self.run_cmd("arch-chroot /mnt locale-gen 2>/dev/null || true")
+
+            with open("/mnt/etc/hostname", "w") as f:
+                f.write(f"{hostname}\n")
+
+            with open("/mnt/etc/hosts", "w") as f:
+                f.write(f"127.0.0.1\tlocalhost\n::1\t\tlocalhost\n127.0.1.1\t{hostname}.localdomain\t{hostname}\n")
+
+            self.run_cmd("arch-chroot /mnt systemctl enable NetworkManager sddm 2>/dev/null || true")
+
+            self.run_cmd("mkdir -p /mnt/etc/sddm.conf.d")
+            with open("/mnt/etc/sddm.conf.d/10-archangelos.conf", "w") as _sddmf:
+                _sddmf.write("[Theme]\nCurrent=archangelos\n\n[General]\nGreeterEnvironment=QT_QUICK_CONTROLS_STYLE=Basic\n")
+
+            self.log(80, f"Creating user account '{user_name}'...")
+            self.run_cmd("arch-chroot /mnt userdel -r liveuser 2>/dev/null || true")
+            self.run_cmd(f"arch-chroot /mnt userdel -r '{user_name}' 2>/dev/null || true")
+            self.run_cmd(f"arch-chroot /mnt useradd -m -g users -G wheel,power,audio,video,storage -s /bin/zsh '{user_name}'")
+            self.run_cmd(f"echo '{user_name}:{password}' | arch-chroot /mnt chpasswd")
+            self.run_cmd(f"echo 'root:{root_password}' | arch-chroot /mnt chpasswd")
+
+            with open("/mnt/etc/sudoers.d/wheel", "w") as f:
+                f.write("%wheel ALL=(ALL:ALL) ALL\n")
+            os.chmod("/mnt/etc/sudoers.d/wheel", 0o440)
+
+            self.log(85, "Regenerating initramfs images...")
+            self.run_cmd("arch-chroot /mnt mkinitcpio -P 2>/dev/null || true")
+
+            self.log(90, "Installing GRUB bootloader...")
+            grub_default = """
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="ArchangelOS"
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"
+GRUB_CMDLINE_LINUX=""
+GRUB_PRELOAD_MODULES="part_gpt part_msdos ext2 fat search search_fs_uuid"
+GRUB_DISABLE_OS_PROBER=false
+GRUB_TIMEOUT_STYLE=menu
+GRUB_GFXMODE=auto
+GRUB_BACKGROUND="/usr/share/backgrounds/splash.png"
+"""
+            with open("/mnt/etc/default/grub", "w") as f:
+                f.write(grub_default)
+
+            if boot_mode == "UEFI":
+                self.run_cmd("arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ArchangelOS --recheck")
+                self.run_cmd("arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable")
+            else:
+                self.run_cmd(f"arch-chroot /mnt grub-install --target=i386-pc '{disk}'")
+
+            self.run_cmd("arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg")
+
+            self.log(98, "Finalizing installation & unmounting filesystems...")
+            self.run_cmd("arch-chroot /mnt systemctl disable choose-mirror.service pacman-init.service vboxservice.service 2>/dev/null || true")
+            self.run_cmd("umount -R /mnt 2>/dev/null || true")
+
+            self.log(100, "Installation completed successfully!")
+            self.installationFinished.emit(True, "Installation complete.")
+
+        except Exception as e:
+            self.installationFinished.emit(False, str(e))
+
+
+class ArchangelOSInstallerWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ArchangelOS Installer")
+        self.setMinimumSize(1020, 660)
+        self.resize(1080, 700)
+
+        self.boot_mode = get_boot_mode()
+        self.available_disks = get_available_disks()
+        self.wallpapers = self.load_wallpaper_paths()
+        self.slideshow_index = 0
+
+        self.setup_stylesheet()
+        self.init_ui()
+
+    def setup_stylesheet(self):
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {COLOR_BG};
+                color: {COLOR_TEXT};
+            }}
+            QWidget {{
+                font-family: '{FONT_FAMILY}';
+                color: {COLOR_TEXT};
+            }}
+            QFrame#Sidebar {{
+                background-color: {COLOR_SIDEBAR};
+                border-right: 1px solid {COLOR_BORDER};
+            }}
+            QLabel#SidebarStepItem {{
+                color: {COLOR_MUTED};
+                font-size: 13px;
+                font-weight: 500;
+                padding: 12px 16px;
+                border-radius: 6px;
+                margin-bottom: 4px;
+            }}
+            QLabel#SidebarStepItem:hover {{
+                background-color: {COLOR_SURFACE_LIGHT};
+                color: {COLOR_TEXT};
+            }}
+            QLabel#SidebarStepItemActive {{
+                color: {COLOR_PRIMARY};
+                font-size: 13px;
+                font-weight: bold;
+                padding: 12px 16px;
+                background-color: #161614;
+                border-left: 4px solid {COLOR_PRIMARY};
+                border-radius: 4px;
+                margin-bottom: 4px;
+            }}
+            QPushButton {{
+                background-color: {COLOR_SURFACE_LIGHT};
+                color: {COLOR_TEXT};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 6px;
+                padding: 8px 20px;
+                font-weight: bold;
+                font-size: 13px;
+            }}
+            QPushButton:hover {{
+                background-color: {COLOR_BORDER};
+                border-color: {COLOR_PRIMARY};
+            }}
+            QPushButton#PrimaryBtn {{
+                background-color: {COLOR_PRIMARY};
+                color: #0E0E0D;
+                border: none;
+            }}
+            QPushButton#PrimaryBtn:hover {{
+                background-color: {COLOR_PRIMARY_HOVER};
+            }}
+            QListWidget#PickList {{
+                background-color: {COLOR_SURFACE};
+                color: {COLOR_TEXT};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 8px;
+                padding: 6px;
+                font-size: 14px;
+                outline: none;
+            }}
+            QListWidget#PickList::item {{
+                padding: 9px 14px;
+                border-bottom: 1px solid {COLOR_SURFACE_LIGHT};
+            }}
+            QListWidget#PickList::item:hover {{
+                background-color: {COLOR_SURFACE_LIGHT};
+            }}
+            QListWidget#PickList::item:selected {{
+                background-color: {COLOR_SURFACE_LIGHT};
+                color: {COLOR_TEXT};
+                border-left: 3px solid {COLOR_PRIMARY};
+                font-weight: bold;
+            }}
+            QLineEdit, QComboBox {{
+                background-color: {COLOR_SURFACE};
+                color: {COLOR_TEXT};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 13px;
+            }}
+            QLineEdit:focus, QComboBox:focus {{
+                border-color: {COLOR_PRIMARY};
+            }}
+            QRadioButton {{
+                font-size: 13px;
+                spacing: 8px;
+            }}
+            QRadioButton::indicator {{
+                width: 16px;
+                height: 16px;
+                border-radius: 3px;
+                border: 2px solid {COLOR_MUTED};
+                background-color: transparent;
+            }}
+            QRadioButton::indicator:checked {{
+                background-color: {COLOR_PRIMARY};
+                border-color: {COLOR_PRIMARY};
+            }}
+            QProgressBar {{
+                background-color: {COLOR_SURFACE};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 8px;
+                text-align: center;
+                color: #ffffff;
+                font-weight: bold;
+            }}
+            QProgressBar::chunk {{
+                background-color: {COLOR_PRIMARY};
+                border-radius: 7px;
+            }}
+            QTableWidget {{
+                background-color: {COLOR_SURFACE};
+                gridline-color: {COLOR_BORDER};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 6px;
+            }}
+            QHeaderView::section {{
+                background-color: {COLOR_SURFACE_LIGHT};
+                color: {COLOR_PRIMARY};
+                font-weight: bold;
+                padding: 6px;
+                border: none;
+            }}
+        """)
+
+    def load_wallpaper_paths(self):
+        """
+        Build the slideshow image list. Explicit filenames (in display order)
+        are checked first so the slideshow always includes every named
+        wallpaper regardless of glob/extension quirks (e.g. spaces in
+        'wall 1080.png', mixed .jpg/.jpeg case). Anything else found in
+        WALLPAPERS_DIR via glob is appended afterward, deduplicated.
+        """
+        named_files = [
+            "background.png",
+            "wall-4k.png",
+            "wall-2k.png",
+            "wall 1080.png",
+            "splash.png",
+            "hoodie.png",
+            "hacktheplanet.png",
+            "YOR.jpg",
+            "blackarch.png",
+            "Blue_cyber_theme_wallpaper_ARCHANGELOS_202607261041.jpeg",
+            "Cyber_wallpaper_ARCHANGELOS_OS_blue_202607261052.jpeg",
+            "Cyber_wallpaper_ARCHANGELOS_OS_theme_202607261055.jpeg",
+            "Green_hacker_wallpaper_ARCHANGELOS_OS_202607261052.jpeg",
+            "Woman_with_ARCHANGELOS_text_2K_202607261040.jpeg",
+        ]
+
+        paths = []
+        seen = set()
+
+        for fname in named_files:
+            fpath = os.path.join(WALLPAPERS_DIR, fname)
+            if os.path.exists(fpath) and fpath not in seen:
+                paths.append(fpath)
+                seen.add(fpath)
+
+        exts = ('*.png', '*.jpg', '*.jpeg', '*.webp', '*.PNG', '*.JPG', '*.JPEG', '*.WEBP')
+        extra = []
+        for ext in exts:
+            extra.extend(glob.glob(os.path.join(WALLPAPERS_DIR, ext)))
+        extra.sort()
+
+        for fpath in extra:
+            if fpath not in seen:
+                paths.append(fpath)
+                seen.add(fpath)
+
+        return paths
+
+    def init_ui(self):
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        main_h_layout = QHBoxLayout(main_widget)
+        main_h_layout.setContentsMargins(0, 0, 0, 0)
+        main_h_layout.setSpacing(0)
+
+        sidebar = QFrame()
+        sidebar.setObjectName("Sidebar")
+        sidebar.setFixedWidth(240)
+        sidebar_layout = QVBoxLayout(sidebar)
+        sidebar_layout.setContentsMargins(16, 20, 16, 20)
+
+        logo_box = QVBoxLayout()
+        logo_box.setSpacing(4)
+        logo_lbl = QLabel()
+        if os.path.exists(LOGO_PATH):
+            logo_lbl.setPixmap(QPixmap(LOGO_PATH).scaledToWidth(196, Qt.TransformationMode.SmoothTransformation))
+        else:
+            logo_lbl.setText("ArchangelOS")
+            logo_lbl.setFont(QFont(FONT_FAMILY, 18, QFont.Weight.Bold))
+
+        brand_sub = QLabel(EDITION_SUBTITLE)
+        brand_sub.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 10px; letter-spacing: 2px;")
+
+        brand_sub.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        logo_box.addWidget(logo_lbl, alignment=Qt.AlignmentFlag.AlignHCenter)
+        logo_box.addWidget(brand_sub, alignment=Qt.AlignmentFlag.AlignHCenter)
+        sidebar_layout.addLayout(logo_box)
+        sidebar_layout.addSpacing(24)
+
+        self.step_labels = []
+        self.step_names = ["Welcome", "Country", "Keyboard", "Timezone", "Disks", "Account", "Summary", "Install"]
+
+        for i, s_name in enumerate(self.step_names):
+            lbl = QLabel(f"{i + 1}.  {s_name}")
+            lbl.setObjectName("SidebarStepItemActive" if i == 0 else "SidebarStepItem")
+            self.step_labels.append(lbl)
+            sidebar_layout.addWidget(lbl)
+
+        sidebar_layout.addStretch()
+
+
+
+        main_h_layout.addWidget(sidebar)
+
+        content_area = QWidget()
+        content_layout = QVBoxLayout(content_area)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
+
+        header = QFrame()
+        header.setObjectName("PageHeader")
+        header.setStyleSheet(f"QFrame#PageHeader {{ background-color: {COLOR_SURFACE}; border-bottom: 1px solid {COLOR_BORDER}; }}")
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(24, 14, 24, 14)
+
+        self.page_header_title = QLabel("Welcome to ArchangelOS")
+        self.page_header_title.setFont(QFont(FONT_FAMILY, 15, QFont.Weight.Bold))
+
+        self.page_header_desc = QLabel("100% Offline System Deployment Engine")
+        self.page_header_desc.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 11px;")
+
+        head_txt = QVBoxLayout()
+        head_txt.addWidget(self.page_header_title)
+        head_txt.addWidget(self.page_header_desc)
+        header_layout.addLayout(head_txt)
+        header_layout.addStretch()
+
+        boot_lbl = QLabel(f"Boot Mode: {self.boot_mode}")
+        boot_lbl.setStyleSheet(f"color: {COLOR_PRIMARY}; font-weight: bold; font-size: 12px; background-color: #161614; padding: 4px 12px; border-radius: 12px; border: 1px solid #1A1A18;")
+        header_layout.addWidget(boot_lbl)
+
+        content_layout.addWidget(header)
+
+        self.stacked_widget = QStackedWidget()
+        content_layout.addWidget(self.stacked_widget, 1)
+
+        self.page_welcome = self.create_page_welcome()
+        self.page_country = self.create_page_country()
+        self.page_keyboard = self.create_page_keyboard()
+        self.page_timezone = self.create_page_timezone()
+        self.page_partition = self.create_page_partition()
+        self.page_credentials = self.create_page_credentials()
+        self.page_summary = self.create_page_summary()
+        self.page_installing = self.create_page_installing()
+        self.page_finish = self.create_page_finish()
+
+        self.stacked_widget.addWidget(self.page_welcome)
+        self.stacked_widget.addWidget(self.page_country)
+        self.stacked_widget.addWidget(self.page_keyboard)
+        self.stacked_widget.addWidget(self.page_timezone)
+        self.stacked_widget.addWidget(self.page_partition)
+        self.stacked_widget.addWidget(self.page_credentials)
+        self.stacked_widget.addWidget(self.page_summary)
+        self.stacked_widget.addWidget(self.page_installing)
+        self.stacked_widget.addWidget(self.page_finish)
+
+        self.country_list.currentRowChanged.connect(self.on_country_changed)
+        self.on_country_changed(self.country_list.currentRow())
+
+        bottom_bar = QFrame()
+        bottom_bar.setObjectName("BottomBar")
+        bottom_bar.setStyleSheet(f"QFrame#BottomBar {{ background-color: {COLOR_SURFACE}; border-top: 1px solid {COLOR_BORDER}; }}")
+        bottom_layout = QHBoxLayout(bottom_bar)
+        bottom_layout.setContentsMargins(24, 14, 24, 14)
+
+        self.btn_back = QPushButton("< Back")
+        self.btn_back.clicked.connect(self.go_back)
+        self.btn_back.setEnabled(False)
+
+        self.btn_next = QPushButton("Next >")
+        self.btn_next.setObjectName("PrimaryBtn")
+        self.btn_next.clicked.connect(self.go_next)
+
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.clicked.connect(self.close)
+
+        bottom_layout.addWidget(btn_cancel)
+        bottom_layout.addStretch()
+        bottom_layout.addWidget(self.btn_back)
+        bottom_layout.addWidget(self.btn_next)
+
+        content_layout.addWidget(bottom_bar)
+        main_h_layout.addWidget(content_area, 1)
+
+    def open_about_dialog(self):
+        dlg = AboutDialog(self)
+        dlg.exec()
+
+    def update_step_indicator(self, index):
+        headers = [
+            ("Fallen Edition", ""),
+            ("Country", "Select your country"),
+            ("Keyboard", "Select your keyboard layout"),
+            ("Timezone", "Select your timezone"),
+            ("Disks & Partitions", "Select where to install ArchangelOS"),
+            ("Account Configuration", "Create your user account"),
+            ("Summary", "Review your settings before the installation begins"),
+            ("Installing ArchangelOS", "Please wait while ArchangelOS is installed"),
+            ("Installation Complete", "ArchangelOS has been installed on your computer")
+        ]
+
+        if index < len(headers):
+            title, desc = headers[index]
+            self.page_header_title.setText(title)
+            self.page_header_desc.setText(desc)
+
+        active = min(index, 7)
+        for i, lbl in enumerate(self.step_labels):
+            if i == active:
+                lbl.setObjectName("SidebarStepItemActive")
+                lbl.setText(f"{i + 1}.  {self.step_names[i]}")
+            else:
+                lbl.setObjectName("SidebarStepItem")
+                prefix = "\u2713" if i < active else str(i + 1) + "."
+                lbl.setText(f"{prefix}  {self.step_names[i]}")
+            lbl.setStyle(lbl.style())
+
+        self.btn_next.setEnabled(True)
+        if index == 7:
+            self.btn_back.setEnabled(False)
+            self.btn_next.setEnabled(False)
+            self.btn_next.setText("Installing...")
+        elif index == 8:
+            self.btn_back.setEnabled(False)
+            self.btn_next.setText("Done")
+        else:
+            self.btn_back.setEnabled(index > 0)
+            self.btn_next.setText("Next >")
+
+    def create_page_welcome(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(40, 30, 40, 30)
+        layout.addStretch()
+
+        logo_img = QLabel()
+        logo_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if os.path.exists(LOGO_PATH):
+            logo_img.setPixmap(QPixmap(LOGO_PATH).scaledToWidth(380, Qt.TransformationMode.SmoothTransformation))
+        else:
+            logo_img.setText("ArchangelOS")
+            logo_img.setFont(QFont(FONT_FAMILY, 34, QFont.Weight.Bold))
+        layout.addWidget(logo_img)
+
+        layout.addSpacing(22)
+
+        w_title = QLabel(EDITION_TITLE)
+        w_title.setFont(QFont("Shippori Mincho", 22, QFont.Weight.Bold))
+        w_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        w_title.setStyleSheet(f"color: {COLOR_TEXT};")
+        layout.addWidget(w_title)
+
+        layout.addSpacing(6)
+
+        w_desc = QLabel(EDITION_BIO)
+        w_desc.setWordWrap(True)
+        w_desc.setFixedWidth(620)
+        w_desc.setMinimumHeight(64)
+        w_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        w_desc.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 14px;")
+        layout.addWidget(w_desc, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        layout.addStretch()
+        return page
+
+    def create_page_country(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        self.country_search = QLineEdit()
+        self.country_search.setPlaceholderText("Type to search your country...")
+        self.country_search.textChanged.connect(self.filter_country_list)
+        layout.addWidget(self.country_search)
+
+        self.country_list = QListWidget()
+        self.country_list.setObjectName("PickList")
+        for name, zone in COUNTRIES:
+            item = QListWidgetItem(name)
+            item.setData(Qt.ItemDataRole.UserRole, zone)
+            self.country_list.addItem(item)
+
+        default_row = 0
+        detected = self.detect_timezone()
+        for i, (name, zone) in enumerate(COUNTRIES):
+            if zone == detected:
+                default_row = i
+                break
+
+        self.country_list.setCurrentRow(default_row)
+        layout.addWidget(self.country_list, 1)
+        return page
+
+    def create_page_keyboard(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        self.keymap_search = QLineEdit()
+        self.keymap_search.setPlaceholderText("Type to search your keyboard layout...")
+        self.keymap_search.textChanged.connect(self.filter_keymap_list)
+        layout.addWidget(self.keymap_search)
+
+        self.keymap_list = QListWidget()
+        self.keymap_list.setObjectName("PickList")
+        for label, code in KEYBOARD_LAYOUTS:
+            item = QListWidgetItem(label)
+            item.setData(Qt.ItemDataRole.UserRole, code)
+            self.keymap_list.addItem(item)
+
+        self.keymap_list.setCurrentRow(0)
+        layout.addWidget(self.keymap_list, 1)
+        return page
+
+    def create_page_timezone(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        self.clock_lbl = QLabel()
+        self.clock_lbl.setFont(QFont(FONT_FAMILY, 12, QFont.Weight.Bold))
+        self.clock_lbl.setStyleSheet(f"color: {COLOR_PRIMARY};")
+
+        self.timezone_list = QListWidget()
+        self.timezone_list.setObjectName("PickList")
+        default_zone = self.detect_timezone()
+        ordered = sorted(CITIES_DB, key=lambda c: (c["zone"] != default_zone, c["zone"]))
+        for c in ordered:
+            item = QListWidgetItem(f"{c['zone']}    ·    {c['city']}")
+            item.setData(Qt.ItemDataRole.UserRole, c["zone"])
+            self.timezone_list.addItem(item)
+
+        self.timezone_list.currentRowChanged.connect(self.on_timezone_changed)
+        layout.addWidget(self.timezone_list, 1)
+
+        layout.addSpacing(10)
+        layout.addWidget(self.clock_lbl)
+
+        self.clock_timer = QTimer(self)
+        self.clock_timer.timeout.connect(self.update_live_clock)
+        self.clock_timer.start(1000)
+
+        self.timezone_list.setCurrentRow(0)
+        return page
+
+    def detect_timezone(self):
+        try:
+            real = os.path.realpath("/etc/localtime")
+            marker = "/usr/share/zoneinfo/"
+            if marker in real:
+                return real.split(marker, 1)[1]
+        except Exception:
+            pass
+        try:
+            with open("/etc/timezone") as fh:
+                return fh.read().strip()
+        except Exception:
+            return ""
+
+    def select_timezone(self, zone):
+        for i in range(self.timezone_list.count()):
+            if self.timezone_list.item(i).data(Qt.ItemDataRole.UserRole) == zone:
+                self.timezone_list.setCurrentRow(i)
+                return
+
+    def on_country_changed(self, row):
+        item = self.country_list.item(row)
+        if item is not None:
+            self.select_timezone(item.data(Qt.ItemDataRole.UserRole))
+
+    def on_timezone_changed(self, row):
+        self.update_live_clock()
+
+    def filter_country_list(self, text):
+        text = text.strip().lower()
+        for i in range(self.country_list.count()):
+            item = self.country_list.item(i)
+            item.setHidden(bool(text) and text not in item.text().lower())
+
+    def filter_keymap_list(self, text):
+        text = text.strip().lower()
+        for i in range(self.keymap_list.count()):
+            item = self.keymap_list.item(i)
+            item.setHidden(bool(text) and text not in item.text().lower())
+
+    def selected_country(self):
+        item = self.country_list.currentItem()
+        return item.text() if item is not None else ""
+
+    def selected_keymap(self):
+        item = self.keymap_list.currentItem()
+        return item.data(Qt.ItemDataRole.UserRole) if item is not None else "us"
+
+    def selected_timezone(self):
+        item = self.timezone_list.currentItem()
+        return item.data(Qt.ItemDataRole.UserRole) if item is not None else "UTC"
+
+    def update_live_clock(self):
+        try:
+            os.environ["TZ"] = self.selected_timezone()
+            time.tzset()
+            self.clock_lbl.setText(f"Local time: {time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        except Exception:
+            self.clock_lbl.setText("Local time: syncing...")
+
+    def create_page_partition(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        disk_box = QHBoxLayout()
+        disk_lbl = QLabel("Target Hard Disk:")
+        disk_lbl.setFont(QFont(FONT_FAMILY, 13, QFont.Weight.Bold))
+        self.disk_combo = QComboBox()
+
+        for d in self.available_disks:
+            self.disk_combo.addItem(f"{d['dev']} - {d['model']} ({d['size']})", d["dev"])
+
+        self.disk_combo.currentIndexChanged.connect(self.on_disk_selection_changed)
+
+        disk_box.addWidget(disk_lbl)
+        disk_box.addWidget(self.disk_combo, 1)
+
+        btn_gparted = QPushButton("🛠 Launch GParted")
+        btn_gparted.clicked.connect(self.launch_gparted)
+        disk_box.addWidget(btn_gparted)
+
+        layout.addLayout(disk_box)
+
+        self.part_button_group = QButtonGroup(self)
+
+        self.radio_erase = QRadioButton("Erase Entire Disk — Wipe disk & create fresh partition layout")
+        self.radio_dual = QRadioButton("Install on free space remaining — Use largest free unallocated space")
+        self.radio_manual = QRadioButton("Manual Partitioning — Custom select existing partitions or format manually")
+
+        self.radio_erase.setChecked(True)
+
+        self.part_button_group.addButton(self.radio_erase, 1)
+        self.part_button_group.addButton(self.radio_dual, 2)
+        self.part_button_group.addButton(self.radio_manual, 3)
+
+        layout.addWidget(self.radio_erase)
+        layout.addWidget(self.radio_dual)
+        layout.addWidget(self.radio_manual)
+
+        custom_bar = QHBoxLayout()
+        btn_create_custom = QPushButton("➕ Create Custom Partition")
+        btn_create_custom.clicked.connect(self.open_custom_partition_dialog)
+        custom_bar.addWidget(btn_create_custom)
+        custom_bar.addStretch()
+        layout.addLayout(custom_bar)
+
+        self.part_table = QTableWidget()
+        self.part_table.setColumnCount(4)
+        self.part_table.setHorizontalHeaderLabels(["Partition", "Size", "Filesystem", "Action / Mount"])
+        self.part_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+        layout.addWidget(self.part_table, 1)
+        self.on_disk_selection_changed()
+
+        return page
+
+    def on_disk_selection_changed(self):
+        disk_dev = self.disk_combo.currentData()
+        if not disk_dev:
+            return
+
+        parts = get_disk_partitions(disk_dev)
+        self.part_table.setRowCount(len(parts))
+
+        for row, p in enumerate(parts):
+            self.part_table.setItem(row, 0, QTableWidgetItem(p["dev"]))
+            self.part_table.setItem(row, 1, QTableWidgetItem(p["size"]))
+            self.part_table.setItem(row, 2, QTableWidgetItem(p["fs"]))
+            self.part_table.setItem(row, 3, QTableWidgetItem("Use as Root (/)" if row == 0 else "Select Mount"))
+
+    def launch_gparted(self):
+        try:
+            subprocess.Popen(["gparted"])
+        except Exception:
+            QMessageBox.warning(self, "GParted", "Could not launch GParted. Make sure gparted is installed.")
+
+    def open_custom_partition_dialog(self):
+        disk_dev = self.disk_combo.currentData() or "/dev/sda"
+        dlg = CustomPartitionDialog(disk_dev, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            details = dlg.get_details()
+            QMessageBox.information(
+                self, "Partition Configured",
+                f"Configured custom partition ({details['size_mb']} MB {details['fs']}) on {disk_dev}.\n"
+                f"Mount point: {details['mount']}"
+            )
+            self.on_disk_selection_changed()
+
+    def create_page_credentials(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        card = QFrame()
+        card.setObjectName("CredCard")
+        card.setStyleSheet(f"QFrame#CredCard {{ background-color: {COLOR_SURFACE}; border: 1px solid {COLOR_BORDER}; border-radius: 8px; padding: 22px; }}")
+        grid = QGridLayout(card)
+        grid.setHorizontalSpacing(18)
+        grid.setVerticalSpacing(4)
+
+        self.input_fullname = QLineEdit()
+        self.input_username = QLineEdit()
+        self.input_pass = QLineEdit()
+        self.input_pass.setEchoMode(QLineEdit.EchoMode.Password)
+        self.input_pass_confirm = QLineEdit()
+        self.input_pass_confirm.setEchoMode(QLineEdit.EchoMode.Password)
+        self.input_hostname = QLineEdit()
+        self.input_hostname.setText("archangelos")
+        self.input_root_pass = QLineEdit()
+        self.input_root_pass.setEchoMode(QLineEdit.EchoMode.Password)
+        self.input_root_pass.setEnabled(False)
+
+        fields = [
+            ("FULL NAME", self.input_fullname, 0, 0, 1),
+            ("USERNAME", self.input_username, 0, 1, 1),
+            ("PASSWORD", self.input_pass, 1, 0, 1),
+            ("CONFIRM PASSWORD", self.input_pass_confirm, 1, 1, 1),
+            ("HOSTNAME", self.input_hostname, 2, 0, 2),
+            ("ROOT PASSWORD", self.input_root_pass, 3, 0, 2),
+        ]
+
+        for label, widget, row, col, span in fields:
+            widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            widget.setMinimumHeight(38)
+            lbl = QLabel(label)
+            lbl.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 10px; letter-spacing: 2px;")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            grid.addWidget(lbl, row * 2, col, 1, span)
+            grid.addWidget(widget, row * 2 + 1, col, 1, span)
+            grid.setRowMinimumHeight(row * 2 + 1, 46)
+
+        grid.setColumnStretch(0, 1)
+        grid.setColumnStretch(1, 1)
+
+        layout.addWidget(card)
+        layout.addSpacing(16)
+
+        self.check_same_root = QCheckBox("Use the same password for the root account")
+        self.check_same_root.setChecked(True)
+        self.check_same_root.toggled.connect(lambda on: self.input_root_pass.setEnabled(not on))
+        layout.addWidget(self.check_same_root)
+
+        layout.addStretch()
+        return page
+
+    def create_page_summary(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        card = QFrame()
+        card.setObjectName("SummaryCard")
+        card.setStyleSheet(f"QFrame#SummaryCard {{ background-color: {COLOR_SURFACE}; border: 1px solid {COLOR_BORDER}; border-radius: 8px; padding: 20px; }}")
+        grid = QGridLayout(card)
+        grid.setHorizontalSpacing(24)
+        grid.setVerticalSpacing(10)
+
+        self.summary_rows = {}
+        rows = [
+            ("country", "Country"),
+            ("keyboard", "Keyboard"),
+            ("timezone", "Timezone"),
+            ("disk", "Target disk"),
+            ("mode", "Installation mode"),
+            ("boot", "Bootloader"),
+            ("user", "User account"),
+            ("hostname", "Hostname"),
+        ]
+
+        for row, (key, label) in enumerate(rows):
+            name_lbl = QLabel(label)
+            name_lbl.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 13px;")
+            value_lbl = QLabel("")
+            value_lbl.setFont(QFont(FONT_FAMILY, 13, QFont.Weight.Bold))
+            value_lbl.setStyleSheet(f"color: {COLOR_TEXT};")
+            grid.addWidget(name_lbl, row, 0)
+            grid.addWidget(value_lbl, row, 1)
+            self.summary_rows[key] = value_lbl
+
+        grid.setColumnStretch(1, 1)
+        layout.addWidget(card)
+        layout.addSpacing(16)
+
+        warn = QFrame()
+        warn.setObjectName("WarnBox")
+        warn.setStyleSheet(f"QFrame#WarnBox {{ background-color: {COLOR_SURFACE}; border: 1px solid {COLOR_PRIMARY}; border-radius: 8px; padding: 14px; }}")
+        warn_layout = QHBoxLayout(warn)
+        warn_mark = QLabel("!")
+        warn_mark.setFont(QFont(FONT_FAMILY, 16, QFont.Weight.Bold))
+        warn_mark.setStyleSheet(f"color: {COLOR_PRIMARY};")
+        warn_txt = QLabel("The target disk will be erased. This cannot be undone.")
+        warn_txt.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 12px;")
+        warn_layout.addWidget(warn_mark)
+        warn_layout.addSpacing(8)
+        warn_layout.addWidget(warn_txt)
+        warn_layout.addStretch()
+
+        layout.addWidget(warn)
+        layout.addStretch()
+        return page
+
+    def populate_summary(self):
+        modes = {1: "Erase disk (guided)", 2: "Install alongside (dual boot)", 3: "Manual partitioning"}
+        disk = self.disk_combo.currentData() or ""
+        disk_label = disk
+        for d in self.available_disks:
+            if d["dev"] == disk:
+                disk_label = f"{d['dev']}  ·  {d['model']} ({d['size']})"
+                break
+
+        kb_item = self.keymap_list.currentItem()
+        values = {
+            "country": self.selected_country(),
+            "keyboard": kb_item.text() if kb_item is not None else "",
+            "timezone": self.selected_timezone(),
+            "disk": disk_label,
+            "mode": modes.get(self.part_button_group.checkedId(), ""),
+            "boot": f"GRUB ({self.boot_mode})",
+            "user": self.input_username.text().strip(),
+            "hostname": self.input_hostname.text().strip(),
+        }
+
+        for key, lbl in self.summary_rows.items():
+            lbl.setText(values.get(key, ""))
+
+    def create_page_installing(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        self.slideshow_frame = QFrame()
+        self.slideshow_frame.setObjectName("SlideFrame")
+        self.slideshow_frame.setStyleSheet(f"QFrame#SlideFrame {{ background-color: {COLOR_SURFACE}; border: 1px solid {COLOR_BORDER}; border-radius: 10px; }}")
+        slide_layout = QVBoxLayout(self.slideshow_frame)
+        slide_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.slide_img_lbl = QLabel()
+        self.slide_img_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.slide_img_lbl.setMinimumHeight(320)
+        slide_layout.addWidget(self.slide_img_lbl, 1)
+
+        self.slide_title_lbl = QLabel(EDITION_TITLE)
+        self.slide_title_lbl.setFont(QFont(FONT_FAMILY, 16, QFont.Weight.Bold))
+        self.slide_title_lbl.setStyleSheet(f"color: {COLOR_PRIMARY}; background-color: rgba(13, 17, 23, 0.85); padding: 8px 16px;")
+
+        self.slide_desc_lbl = QLabel("Installing system files offline...")
+        self.slide_desc_lbl.setStyleSheet("color: #ffffff; background-color: rgba(13, 17, 23, 0.85); padding: 4px 16px 10px 16px; font-size: 13px;")
+
+        slide_layout.addWidget(self.slide_title_lbl)
+        slide_layout.addWidget(self.slide_desc_lbl)
+
+        layout.addWidget(self.slideshow_frame, 1)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setValue(0)
+        self.progress_bar.setFixedHeight(24)
+        layout.addWidget(self.progress_bar)
+
+        self.status_lbl = QLabel("Preparing installation...")
+        self.status_lbl.setFont(QFont(FONT_FAMILY, 11, QFont.Weight.Bold))
+        self.status_lbl.setStyleSheet(f"color: {COLOR_PRIMARY};")
+        layout.addWidget(self.status_lbl)
+
+        self.slideshow_timer = QTimer(self)
+        self.slideshow_timer.timeout.connect(self.rotate_slideshow)
+
+        return page
+
+    def start_installation(self):
+        selected_disk = self.disk_combo.currentData() or "/dev/sda"
+        part_option = self.part_button_group.checkedId()
+        username = self.input_username.text().strip() or "liveuser"
+        password = self.input_pass.text() or "live"
+        hostname = self.input_hostname.text().strip() or "archangelos"
+        timezone = self.selected_timezone()
+        keymap = self.selected_keymap()
+        root_password = password if self.check_same_root.isChecked() else self.input_root_pass.text()
+
+        config = {
+            "disk": selected_disk,
+            "boot_mode": self.boot_mode,
+            "part_option": part_option,
+            "username": username,
+            "password": password,
+            "root_password": root_password,
+            "hostname": hostname,
+            "timezone": timezone,
+            "keymap": keymap
+        }
+
+        self.rotate_slideshow()
+        self.slideshow_timer.start(5000)
+
+        self.worker = InstallWorkerThread(config)
+        self.worker.progressChanged.connect(self.on_install_progress)
+        self.worker.installationFinished.connect(self.on_install_finished)
+        self.worker.start()
+
+    def rotate_slideshow(self):
+        if not self.wallpapers:
+            return
+
+        wp_path = self.wallpapers[self.slideshow_index % len(self.wallpapers)]
+
+        pix = QPixmap(wp_path)
+        if not pix.isNull():
+            scaled = pix.scaled(self.slideshow_frame.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
+            self.slide_img_lbl.setPixmap(scaled)
+
+        self.slideshow_index += 1
+
+    def on_install_progress(self, percent, msg):
+        self.progress_bar.setValue(percent)
+        self.status_lbl.setText(f"Status: {msg}")
+
+    def on_install_finished(self, success, result_msg):
+        self.slideshow_timer.stop()
+        if success:
+            self.goto_page(8)
+        else:
+            QMessageBox.critical(self, "Installation Error", f"Installation failed:\n{result_msg}")
+
+    def create_page_finish(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(40, 30, 40, 30)
+        layout.addStretch()
+
+        check = QLabel("✓")
+        check.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        check.setFixedSize(96, 96)
+        check.setStyleSheet(f"color: {COLOR_PRIMARY}; font-size: 46px; border: 2px solid {COLOR_PRIMARY}; border-radius: 48px;")
+        layout.addWidget(check, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        layout.addSpacing(26)
+
+        title = QLabel("ArchangelOS has been installed successfully")
+        title.setFont(QFont("Shippori Mincho", 20, QFont.Weight.Bold))
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet(f"color: {COLOR_TEXT};")
+        layout.addWidget(title)
+
+        layout.addSpacing(10)
+
+        sub = QLabel("You can restart now to boot into your new system, or keep using the live session.")
+        sub.setWordWrap(True)
+        sub.setFixedWidth(560)
+        sub.setMinimumHeight(48)
+        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sub.setStyleSheet(f"color: {COLOR_MUTED}; font-size: 14px;")
+        layout.addWidget(sub, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        layout.addSpacing(26)
+
+        self.check_reboot = QCheckBox("Reboot system now automatically")
+        self.check_reboot.setChecked(True)
+        self.check_reboot.setFont(QFont(FONT_FAMILY, 12, QFont.Weight.Bold))
+        layout.addWidget(self.check_reboot, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        layout.addStretch()
+        return page
+
+    def go_next(self):
+        cur_idx = self.stacked_widget.currentIndex()
+
+        if cur_idx == 5:
+            username = self.input_username.text().strip()
+            p1 = self.input_pass.text()
+            p2 = self.input_pass_confirm.text()
+
+            if not username:
+                QMessageBox.warning(self, "Username Required", "Please enter a username for the account.")
+                return
+            if not p1:
+                QMessageBox.warning(self, "Password Required", "Please enter a password for the account.")
+                return
+            if p1 != p2:
+                QMessageBox.warning(self, "Password Mismatch", "Passwords do not match. Please enter matching passwords.")
+                return
+            if not self.check_same_root.isChecked() and not self.input_root_pass.text():
+                QMessageBox.warning(self, "Root Password Required", "Please enter a password for the root account.")
+                return
+
+            self.populate_summary()
+            self.goto_page(6)
+        elif cur_idx == 6:
+            reply = QMessageBox.question(
+                self, "Confirm Installation",
+                "Are you ready to begin installation?\nThe selected disk partitions will be modified and data on them erased.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                self.goto_page(7)
+                self.start_installation()
+        elif cur_idx == 8:
+            if self.check_reboot.isChecked():
+                subprocess.run(["reboot"])
+            self.close()
+        else:
+            self.goto_page(cur_idx + 1)
+
+    def goto_page(self, index):
+        self.stacked_widget.setCurrentIndex(index)
+        self.update_step_indicator(index)
+
+    def go_back(self):
+        cur_idx = self.stacked_widget.currentIndex()
+        if cur_idx > 0:
+            new_idx = cur_idx - 1
+            self.stacked_widget.setCurrentIndex(new_idx)
+            self.update_step_indicator(new_idx)
+
+
+def main():
+    if os.geteuid() != 0:
+        print("[!] Error: ArchangelOS Installer must be run as root (sudo archangelos-gui-installer).")
+        sys.exit(1)
+
+    app = QApplication(sys.argv)
+    window = ArchangelOSInstallerWindow()
+    window.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

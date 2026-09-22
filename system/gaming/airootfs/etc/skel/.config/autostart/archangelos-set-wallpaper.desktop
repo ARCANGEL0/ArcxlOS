@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Set ArchangelOS Wallpaper
+Comment=Ensures the ArchangelOS default wallpaper is applied properly on startup
+Exec=/usr/bin/archangelos-set-wallpaper
+OnlyShowIn=XFCE;
+StartupNotify=false
+Terminal=false
+Hidden=false

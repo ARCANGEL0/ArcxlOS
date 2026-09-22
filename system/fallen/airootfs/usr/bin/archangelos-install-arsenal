@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -u
+
+cat <<'BANNER'
+========================================================================
+  ArchangelOS — Fallen Edition : Full Red-Team Arsenal Installer
+------------------------------------------------------------------------
+  The live image ships a curated core of the most-used tools. This
+  pulls the complete arsenal (~1000 tools) from the repositories and
+  the AUR. It needs a network connection and can take a while.
+
+  Individual tools also install automatically the first time you launch
+  them from the app menu, so you only need this to fetch everything at
+  once (e.g. before going offline).
+========================================================================
+BANNER
+
+read -rp "Install the full arsenal now? [y/N] " ans
+case "${ans,,}" in
+  y|yes) ;;
+  *) echo "Aborted."; exit 0 ;;
+esac
+
+if [ ! -x /usr/bin/archangelos-redops-tools ]; then
+  echo "[!] arsenal catalog (/usr/bin/archangelos-redops-tools) is missing." >&2
+  exit 1
+fi
+
+exec sudo /usr/bin/archangelos-redops-tools

@@ -1,0 +1,33 @@
+# ISO build artifacts and chroot work directories
+*.iso
+*.img
+*.sqfs
+*.tar.xz
+work/
+out/
+db/
+*/work/
+*/out/
+*/db/
+build/
+
+# Staged build inputs (copied from system/common + assets at build time)
+system/*/airootfs/usr/bin/archangelos-wallpaper
+system/*/airootfs/usr/bin/archangelos-wallpaper-setup
+system/*/airootfs/usr/bin/archangelos-fastfetch-setup
+system/*/airootfs/usr/bin/archangelos-lock
+system/*/airootfs/usr/share/backgrounds/archangelos/
+system/*/airootfs/etc/archangelos/version
+
+# Python cache & temporary files
+__pycache__/
+*.pyc
+*.swp
+*~
+*.tmp
+
+# User gnupg & subversion
+.gnupg/
+.subversion/
+.MTREE
+.PKGINFO
