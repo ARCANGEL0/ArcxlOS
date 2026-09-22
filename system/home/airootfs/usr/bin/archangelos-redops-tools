@@ -1,0 +1,450 @@
+#!/usr/bin/env bash
+# ArchangelOS Fallen - RedOps toolkit installer (GENERATED from verified research).
+# Runs at build time from customize_airootfs.sh, inside the chroot.
+# Every install is best-effort and non-fatal: a tool that fails is logged and
+# skipped so the ISO build always completes. See /var/log/archangelos-redops.log.
+set -u
+LOG=/var/log/archangelos-redops.log
+OPT=/opt/redops
+mkdir -p "$OPT"; : > "$LOG"
+warn() { printf '[redops][miss] %s\n' "$*" >>"$LOG"; }
+ok()   { printf '[redops][ok]   %s\n' "$*" >>"$LOG"; }
+
+BUILD_USER=liveuser
+id -u "$BUILD_USER" >/dev/null 2>&1 || BUILD_USER=root
+
+for p in git base-devel python python-pipx python-pip go rust npm nodejs jq curl wget wine; do
+  pacman -S --noconfirm --needed "$p" >/dev/null 2>&1 || true
+done
+export GOBIN=/usr/local/bin GOPATH=$OPT/go PIPX_HOME=$OPT/pipx PIPX_BIN_DIR=/usr/local/bin
+mkdir -p "$GOPATH" "$PIPX_HOME"
+
+# --- BlackArch packages (exact, verified names) --------------------------
+BA_PKGS="
+  adversarial-robustness-toolbox \
+  aimap \
+  alterx \
+  amap \
+  amass \
+  apkleaks \
+  aquatone \
+  arpwner \
+  assetfinder \
+  awsbucketdump \
+  backdoor-factory \
+  backfuzz \
+  bbot \
+  beef \
+  beroot \
+  blackeye \
+  blindsql \
+  bloodhound \
+  btlejack \
+  bulk-extractor \
+  cai \
+  certipy \
+  chainsaw \
+  chaos-client \
+  chipsec \
+  chisel \
+  choronzon \
+  cleverhans \
+  cloud_enum \
+  cloudsploit \
+  cmsmap \
+  coercer \
+  corscanner \
+  corsy \
+  crackmapexec \
+  credsniper \
+  crlf-injector \
+  dharma \
+  dizzy \
+  dmitry \
+  dnschef \
+  dnsenum \
+  dnsmap \
+  dnsrecon \
+  dnsx \
+  domato \
+  donut \
+  droopescan \
+  drozer \
+  eaphammer \
+  easyfuzzer \
+  empire \
+  enum4linux \
+  enum4linux-ng \
+  enumerate-iam \
+  evil-winrm \
+  eyewitness \
+  fierce \
+  finalrecon \
+  firmwalker \
+  firmware-mod-kit \
+  fluxion \
+  fuzzdb \
+  gcpbucketbrute \
+  ghunt \
+  git-dumper \
+  gophish \
+  gowitness \
+  gtfoblookup \
+  h2buster \
+  h2csmuggler \
+  h8mail \
+  halberd \
+  havoc-c2 \
+  hiddeneye \
+  honggfuzz \
+  hostapd-mana \
+  hostapd-wpe \
+  httprobe \
+  httpx \
+  hyperion-crypter \
+  infoga \
+  interactsh-client \
+  invoke-obfuscation \
+  ivre \
+  jsql-injection \
+  koadic \
+  ligolo-ng \
+  linenum \
+  linkfinder \
+  linux-exploit-suggester \
+  lolbas \
+  maltego \
+  massdns \
+  mentalist \
+  merlin-server \
+  metagoofil \
+  mimikatz \
+  mitmf \
+  mobsf \
+  modlishka \
+  naabu \
+  net-creds \
+  netdiscover \
+  nishang \
+  nosqlmap \
+  ntlm-scanner \
+  ntlmrecon \
+  nuclei \
+  nuclei-templates \
+  oledump \
+  onesixtyone \
+  oscanner \
+  pack \
+  pacu \
+  pcileech \
+  pcredz \
+  pe-sieve \
+  peach \
+  peach-fuzz \
+  peass \
+  phishery \
+  phoneinfoga \
+  photon \
+  pingcastle \
+  plcscan \
+  powersploit \
+  python-censys \
+  python-python-wappalyzer \
+  qark \
+  recon-ng \
+  responder \
+  roadrecon \
+  rsmangler \
+  s3scanner \
+  scout2 \
+  seccomp-tools \
+  secretfinder \
+  set \
+  shellnoob \
+  shellter \
+  silenttrinity \
+  sippts \
+  sliver \
+  smbmap \
+  smod \
+  smtp-user-enum \
+  smuggler \
+  sn1per \
+  snmpcheck \
+  socialfish \
+  socialscan \
+  spiderfoot \
+  sprayhound \
+  sqlninja \
+  sslstrip \
+  sstimap \
+  subfinder \
+  sublist3r \
+  suid3num \
+  sulley \
+  theharvester \
+  tplmap \
+  trape \
+  twint \
+  uncover \
+  unicornscan \
+  uniscan \
+  unix-privesc-check \
+  urlcrazy \
+  userrecon \
+  veil \
+  villain \
+  w3af \
+  wafw00f \
+  wcvs \
+  webanalyze \
+  webscarab \
+  webshag \
+  websploit \
+  weevely \
+  whatweb \
+  wifi-pumpkin \
+  wifiphisher \
+  windows-exploit-suggester
+"
+for p in $BA_PKGS; do
+  pacman -S --noconfirm --needed "$p" >/dev/null 2>&1 && ok "blackarch $p" || warn "blackarch $p"
+done
+
+# --- AUR / chaotic-aur ----------------------------------------------------
+AUR_PKGS="
+  AUR python-libcsearcher 1.1.5 \
+  AUR ropium 3.2 \
+  AUR webshells-git 1.1 \
+  airgeddon \
+  androguard \
+  android-apktool \
+  android-studio \
+  arjun \
+  aur:linux-smart-enumeration-git \
+  aur:peirates-bin \
+  aur:pezor \
+  aur:pspy-bin \
+  autopsy \
+  bacnet-stack \
+  binaryninja-free \
+  bindiff \
+  burpsuite \
+  caido-desktop \
+  capa-bin \
+  cassandra \
+  cewl-git \
+  clair \
+  codeql \
+  commix \
+  crowbar \
+  crunch \
+  cubicsdr \
+  cupp-git \
+  cyberchef-electron \
+  dalfox \
+  dbvis \
+  dc3dd \
+  dcfldd \
+  dependency-check-cli \
+  detect-it-easy-bin \
+  dirbuster \
+  dirsearch \
+  dockle-bin \
+  elasticsearch \
+  falco-bin \
+  feroxbuster \
+  ffuf \
+  flare-floss-bin \
+  frida \
+  frida-tools \
+  ftkimager \
+  garak \
+  gau \
+  genymotion \
+  google-cloud-cli \
+  gr-gsm-git \
+  grype \
+  guymager \
+  gvm \
+  hakrawler-git \
+  hash-identifier \
+  hashid \
+  holehe \
+  ida-free \
+  ignorant-git \
+  ilspycmd-git \
+  instaloader \
+  joomscan \
+  katana-bin \
+  kerbrute-bin \
+  kibana-bin \
+  kiterunner-bin \
+  kube-bench-bin \
+  kube-hunter-bin \
+  kubeletctl-bin \
+  kubescape-bin \
+  lazagne \
+  libosmocore \
+  magiskboot-bin \
+  maigret \
+  maskprocessor \
+  mfcuk-git \
+  mongodb-tools-bin \
+  mongosh-bin \
+  mssql-tools \
+  neo4j-community \
+  nessus \
+  netexec \
+  nomore403 \
+  objection \
+  ophcrack \
+  oracle-instantclient-sqlplus \
+  osmedeus-bin \
+  patator \
+  pdf-parser-git \
+  peepdf \
+  princeprocessor-git \
+  procdump \
+  promptfoo \
+  python-angr \
+  python-angr-management \
+  python-boofuzz \
+  python-chipwhisperer \
+  python-detect-secrets \
+  python-name-that-hash \
+  python-oletools \
+  regripper-git \
+  retdec-bin \
+  rockyou \
+  ruby-brakeman \
+  safety \
+  scalpel-git \
+  sdrpp-git \
+  seclists \
+  sherlock \
+  sipvicious \
+  snap7 \
+  snyk \
+  trufflehog \
+  uber-apk-signer-bin \
+  ubertooth \
+  voiphopper-git \
+  wapiti \
+  waybackurls \
+  waymore \
+  wfuzz \
+  wifipumpkin3-git \
+  xsstrike
+"
+if command -v yay >/dev/null 2>&1; then
+  for p in $AUR_PKGS; do
+    pacman -S --noconfirm --needed "$p" >/dev/null 2>&1 \
+      || su - "$BUILD_USER" -c "yay -S --noconfirm --needed --answerclean None --answerdiff None $p" >/dev/null 2>&1 \
+      && ok "aur $p" || warn "aur $p"
+  done
+  rm -rf "/home/$BUILD_USER/.cache/yay/"* 2>/dev/null || true
+fi
+
+# --- Python (pipx isolated) ----------------------------------------------
+PIPX_PKGS="
+  checkov \
+  cyclonedx-bom \
+  https://pypi.org/project/toutatis/ \
+  ldapdomaindump \
+  netlas \
+  plaso \
+  prowler \
+  pypi.org/project/s3tk \
+  pypi:agentic-radar \
+  pypi:mcp-scan \
+  pypi:modelscan \
+  pypi:pentestgpt \
+  pypi:pyrit \
+  scoutsuite \
+  semgrep \
+  timesketch \
+  zoomeye
+"
+for p in $PIPX_PKGS; do pipx install "$p" >/dev/null 2>&1 && ok "pipx $p" || warn "pipx $p"; done
+
+PIP_PKGS="
+  giskard \
+  llm-guard \
+  rebuff \
+  textattack
+"
+for p in $PIP_PKGS; do pip install --break-system-packages "$p" >/dev/null 2>&1 && ok "pip $p" || warn "pip $p"; done
+
+# --- Go -------------------------------------------------------------------
+GO_PKGS="
+  github.com/0xsha/cloudbrute@latest \
+  github.com/BishopFox/cloudfox@latest \
+  github.com/Emoe/kxss@latest \
+  github.com/KathanP19/Gxss@latest \
+  github.com/Shopify/kubeaudit/cmd@latest \
+  github.com/Tylous/Freeze@latest \
+  github.com/Tylous/ScareCrow@latest
+"
+if command -v go >/dev/null 2>&1; then
+  for m in $GO_PKGS; do go install "$m" >/dev/null 2>&1 && ok "go $m" || warn "go $m"; done
+fi
+
+# --- Node -----------------------------------------------------------------
+NPM_PKGS="
+  gattacker \
+  retire
+"
+if command -v npm >/dev/null 2>&1; then
+  for p in $NPM_PKGS; do npm install -g "$p" >/dev/null 2>&1 && ok "npm $p" || warn "npm $p"; done
+fi
+
+# --- GitHub-only tools (cloned into /opt/redops/<name>) -------------------
+clone() { if [ ! -d "$OPT/$1/.git" ]; then git clone --depth 1 "$2" "$OPT/$1" >/dev/null 2>&1 && ok "git $1" || warn "git $1 ($2)"; fi; }
+clone GRASSMARLIN https://github.com/nsacyber/GRASSMARLIN
+clone ModbusPal https://github.com/zeelos/ModbusPal
+clone amsi-fail https://github.com/Flangvik/AMSI.fail.git
+clone assetnote-wordlists https://github.com/assetnote/wordlists
+clone atomic-red-team https://github.com/redcanaryco/atomic-red-team.git
+clone azucar https://github.com/nccgroup/azucar.git
+clone blackbird https://github.com/antoniaci/blackbird
+clone blobhunter https://github.com/cyberark/BlobHunter
+clone bucketloot https://github.com/redhuntlabs/BucketLoot
+clone cape-sandbox https://github.com/kevoreilly/CAPEv2.git
+clone diaphora https://github.com/joxeankoret/diaphora.git
+clone didierstevenssuite https://github.com/DidierStevens/DidierStevensSuite.git
+clone evilurl https://github.com/UndeadSec/EvilURL
+clone fact https://github.com/fkie-cad/FACT_core
+clone inveigh https://github.com/Kevin-Robertson/Inveigh.git
+clone invisibility-cloak https://github.com/h4wkst3r/InvisibilityCloak.git
+clone king-phisher https://github.com/CrimsonForge-io/king-phisher
+clone lazys3 https://github.com/nahamsec/lazys3
+clone microburst https://github.com/NetSPI/MicroBurst.git
+clone moneta https://github.com/forrest-orr/moneta.git
+clone nimcrypt2 https://github.com/icyguider/Nimcrypt2.git
+clone nimpackt-v1 https://github.com/chvancooten/NimPackt-v1.git
+clone nimplant https://github.com/chvancooten/NimPlant.git
+clone nmap-vulners https://github.com/vulnersCom/nmap-vulners
+clone paramspider https://github.com/devanshbatham/ParamSpider
+clone petitpotam https://github.com/topotam/PetitPotam.git
+clone poshc2 https://github.com/nettitude/PoshC2.git
+clone powerzure https://github.com/hausec/PowerZure.git
+clone privesccheck https://github.com/itm4n/PrivescCheck.git
+clone r2frida https://github.com/nowsecure/r2frida
+clone reconftw https://github.com/six2dez/reconftw
+clone rubeus https://github.com/Flangvik/SharpCollection.git
+clone s3-inspector https://github.com/vpistis/s3-inspector
+clone s7scan https://github.com/klsecservices/s7scan
+clone seatbelt https://github.com/Flangvik/SharpCollection.git
+clone sharpcollection https://github.com/Flangvik/SharpCollection.git
+clone sharphound https://github.com/SpecterOps/SharpHound.git
+clone spidersuite https://github.com/spidersuite/SpiderSuite
+clone spray https://github.com/Greenwolf/Spray
+clone whatsmyname https://github.com/WebBreacher/WhatsMyName.git
+clone zphisher https://github.com/htr-tech/zphisher
+
+chown -R "$BUILD_USER":users "$OPT" 2>/dev/null || true
+n_ok=$(grep -c '\[ok\]' "$LOG" 2>/dev/null || echo 0)
+n_miss=$(grep -c '\[miss\]' "$LOG" 2>/dev/null || echo 0)
+printf '[redops] done: %s installed, %s missed (see %s)\n' "$n_ok" "$n_miss" "$LOG"
+exit 0

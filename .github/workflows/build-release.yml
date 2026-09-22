@@ -1,0 +1,174 @@
+name: Build and Release ISOs
+
+# Cut a release by pushing a tag:  git tag v2.4 && git push origin v2.4
+# ISOs are attached to the GitHub release as:
+#   archangelos-home.iso
+#   archangelos-game-edition.iso
+#   archangelos-fallen.iso
+#   archangelos-netinstall.iso
+#
+# The workflow can also be dispatched by hand to build a single edition without
+# creating a release.
+#
+# Disk: a hosted runner has only ~13 GB free on / out of the box, but ships
+# ~30 GB of preinstalled SDKs. The build job reclaims that with
+# jlumbroso/free-disk-space (dotnet/Android/Haskell/tool-cache), which brings /
+# up to ~40-50 GB free — enough for the uncompressed chroot + squashfs + ISO of
+# every edition. If a future edition grows past that, point `runs-on` at a
+# self-hosted runner with a larger volume.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: Edition to build
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - home
+          - gaming
+          - fallen
+          - netinstall
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Resolve editions
+    runs-on: ubuntu-latest
+    outputs:
+      editions: ${{ steps.set.outputs.editions }}
+    steps:
+      - id: set
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.edition }}" != "all" ]; then
+            echo 'editions=["${{ inputs.edition }}"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'editions=["home","gaming","fallen","netinstall"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build ${{ matrix.edition }}
+    needs: plan
+    # No `container:` here on purpose. A hosted runner has ONE disk: / is 72 GB
+    # with only ~13 GB free out of the box, and /mnt is NOT a separate volume on
+    # the current image — it lives on that same /dev/root. So there is no big
+    # scratch disk to grab; the only lever is reclaiming the ~30 GB of
+    # preinstalled SDKs/tool-cache, which jlumbroso/free-disk-space takes to
+    # ~44 GB free. We then run archiso in an Arch container we launch by hand and
+    # build onto that freed root via AX_BUILD_DIR=/mnt/axbuild (same disk).
+    # 44 GB clears home/gaming/netinstall comfortably; Fallen (~42 GB peak) is
+    # right at the ceiling — see its guard below.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: ${{ fromJSON(needs.plan.outputs.editions) }}
+    steps:
+      - name: Free disk space (reclaim preinstalled SDKs + tool cache)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Reclaim the extra runner cruft jlumbroso misses
+        # Fallen's pacstrap needs ~37 GB to install but pacman counts the ~7 GB
+        # download cache on the same filesystem, so ~46 GB free still comes up
+        # ~3 GB short. These dirs (Swift, PowerShell, gcloud, Azure CLI, extra
+        # JDKs/GraalVM, bundled node/boost) are another ~6-8 GB the runner ships
+        # and we never use — clearing them puts Fallen comfortably over the line.
+        run: |
+          sudo rm -rf \
+            /usr/share/swift \
+            /usr/local/share/powershell \
+            /usr/lib/google-cloud-sdk /usr/lib/azure-cli \
+            /opt/az /opt/microsoft \
+            /usr/local/graalvm \
+            /usr/local/share/chromium /usr/local/lib/node_modules \
+            /usr/share/miniconda /opt/pipx \
+            /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          # Extra JVMs (keep whatever the default-java symlink points at).
+          sudo bash -c 'ls -d /usr/lib/jvm/* 2>/dev/null | grep -v "$(readlink -f /usr/lib/jvm/default 2>/dev/null)" | xargs -r rm -rf' || true
+
+      - name: Show available disk space
+        run: df -h /
+
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.edition }} ISO
+        run: |
+          sudo mkdir -p /mnt/axbuild
+          docker run --rm --privileged \
+            -v "$PWD":/work -v /mnt/axbuild:/mnt/axbuild -w /work \
+            -e AX_BUILD_DIR=/mnt/axbuild \
+            archlinux:latest bash -c '
+              set -euo pipefail
+              pacman -Syu --noconfirm --needed \
+                archiso git grub syslinux libisoburn squashfs-tools \
+                mtools dosfstools e2fsprogs erofs-utils
+              pacman -Scc --noconfirm || true
+              ./build.sh --${{ matrix.edition }}
+            '
+
+      - name: Rename ISO to release asset name
+        run: |
+          case "${{ matrix.edition }}" in
+            home)      asset="archangelos-home.iso" ;;
+            gaming)    asset="archangelos-game-edition.iso" ;;
+            fallen)    asset="archangelos-fallen.iso" ;;
+            netinstall) asset="archangelos-netinstall.iso" ;;
+          esac
+          iso="$(sudo find /mnt/axbuild/${{ matrix.edition }}/out -maxdepth 1 -name '*.iso' | head -n 1)"
+          test -n "${iso}"
+          sudo mv "${iso}" "${asset}"
+          sudo chown "$(id -u):$(id -g)" "${asset}"
+          ls -lh "${asset}"
+          echo "ASSET=${asset}" >> "$GITHUB_ENV"
+
+      - name: Checksum
+        run: sha256sum "${{ env.ASSET }}" > "${{ env.ASSET }}.sha256"
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.edition }}-iso
+          path: |
+            ${{ env.ASSET }}
+            ${{ env.ASSET }}.sha256
+          retention-days: 7
+          compression-level: 0
+
+  release:
+    name: Attach ISOs to release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: isos
+          merge-multiple: true
+
+      - name: List collected assets
+        run: ls -lh isos
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            isos/*.iso
+            isos/*.sha256
+          generate_release_notes: true

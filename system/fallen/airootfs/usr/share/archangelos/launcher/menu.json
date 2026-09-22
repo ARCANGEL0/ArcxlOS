@@ -1,0 +1,5276 @@
+{
+ "edition": "Fallen - RedTeam Edition",
+ "categories": [
+  {
+   "name": "Arsenal",
+   "icon": "🗡️",
+   "items": [
+    {
+     "name": "Install Full Arsenal",
+     "exec": "archangelos-install-arsenal",
+     "terminal": true
+    }
+   ]
+  },
+  {
+   "name": "Internet",
+   "icon": "🌐",
+   "items": [
+    {
+     "name": "Firefox",
+     "exec": "firefox",
+     "terminal": false
+    },
+    {
+     "name": "LibreWolf",
+     "exec": "librewolf",
+     "terminal": false
+    },
+    {
+     "name": "Chromium",
+     "exec": "chromium",
+     "terminal": false
+    },
+    {
+     "name": "Thunderbird",
+     "exec": "thunderbird",
+     "terminal": false
+    },
+    {
+     "name": "Tor Browser",
+     "exec": "torbrowser-launcher",
+     "terminal": false
+    },
+    {
+     "name": "Telegram",
+     "exec": "telegram-desktop",
+     "terminal": false
+    },
+    {
+     "name": "Discord",
+     "exec": "discord",
+     "terminal": false
+    },
+    {
+     "name": "Signal",
+     "exec": "signal-desktop",
+     "terminal": false
+    },
+    {
+     "name": "Element",
+     "exec": "element-desktop",
+     "terminal": false
+    },
+    {
+     "name": "Proton Mail",
+     "exec": "proton-mail",
+     "terminal": false
+    },
+    {
+     "name": "Proton VPN",
+     "exec": "proton-vpn",
+     "terminal": false
+    },
+    {
+     "name": "Proton Pass",
+     "exec": "proton-pass",
+     "terminal": false
+    },
+    {
+     "name": "Proton Drive",
+     "exec": "proton-drive",
+     "terminal": true
+    },
+    {
+     "name": "qBittorrent",
+     "exec": "qbittorrent",
+     "terminal": false
+    },
+    {
+     "name": "Transmission",
+     "exec": "transmission-qt",
+     "terminal": false
+    },
+    {
+     "name": "FileZilla",
+     "exec": "filezilla",
+     "terminal": false
+    },
+    {
+     "name": "Remmina",
+     "exec": "remmina",
+     "terminal": false
+    },
+    {
+     "name": "Warpinator",
+     "exec": "warpinator",
+     "terminal": true
+    },
+    {
+     "name": "cURL",
+     "exec": "curl",
+     "terminal": true
+    },
+    {
+     "name": "wget",
+     "exec": "wget",
+     "terminal": true
+    },
+    {
+     "name": "aria2",
+     "exec": "aria2",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Office",
+   "icon": "📄",
+   "items": [
+    {
+     "name": "WPS Office",
+     "exec": "wps",
+     "terminal": false
+    },
+    {
+     "name": "Okular",
+     "exec": "okular",
+     "terminal": false
+    },
+    {
+     "name": "Obsidian",
+     "exec": "obsidian",
+     "terminal": false
+    },
+    {
+     "name": "KOrganizer",
+     "exec": "korganizer",
+     "terminal": false
+    },
+    {
+     "name": "Zotero",
+     "exec": "zotero",
+     "terminal": false
+    },
+    {
+     "name": "LibreOffice",
+     "exec": "libreoffice",
+     "terminal": false
+    },
+    {
+     "name": "Pandoc",
+     "exec": "pandoc",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Graphics",
+   "icon": "🎨",
+   "items": [
+    {
+     "name": "GIMP",
+     "exec": "gimp",
+     "terminal": false
+    },
+    {
+     "name": "Krita",
+     "exec": "krita",
+     "terminal": false
+    },
+    {
+     "name": "Inkscape",
+     "exec": "inkscape",
+     "terminal": false
+    },
+    {
+     "name": "Aseprite",
+     "exec": "aseprite",
+     "terminal": false
+    },
+    {
+     "name": "Scribus",
+     "exec": "scribus",
+     "terminal": false
+    },
+    {
+     "name": "Darktable",
+     "exec": "darktable",
+     "terminal": false
+    },
+    {
+     "name": "digiKam",
+     "exec": "digikam",
+     "terminal": false
+    },
+    {
+     "name": "Gwenview",
+     "exec": "gwenview",
+     "terminal": false
+    },
+    {
+     "name": "Skanlite",
+     "exec": "skanlite",
+     "terminal": false
+    },
+    {
+     "name": "ImageMagick",
+     "exec": "imagemagick",
+     "terminal": true
+    },
+    {
+     "name": "RawTherapee",
+     "exec": "rawtherapee",
+     "terminal": false
+    },
+    {
+     "name": "Blender",
+     "exec": "blender",
+     "terminal": false
+    },
+    {
+     "name": "Font Manager",
+     "exec": "font-manager",
+     "terminal": false
+    },
+    {
+     "name": "Color Picker",
+     "exec": "color-picker",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Media",
+   "icon": "🎬",
+   "items": [
+    {
+     "name": "VLC",
+     "exec": "vlc",
+     "terminal": false
+    },
+    {
+     "name": "OBS Studio",
+     "exec": "obs",
+     "terminal": false
+    },
+    {
+     "name": "Kdenlive",
+     "exec": "kdenlive",
+     "terminal": false
+    },
+    {
+     "name": "Shotcut",
+     "exec": "shotcut",
+     "terminal": false
+    },
+    {
+     "name": "Audacity",
+     "exec": "audacity",
+     "terminal": false
+    },
+    {
+     "name": "HandBrake",
+     "exec": "ghb",
+     "terminal": false
+    },
+    {
+     "name": "MediaInfo",
+     "exec": "mediainfo",
+     "terminal": true
+    },
+    {
+     "name": "Subtitle Editor",
+     "exec": "subtitle-editor",
+     "terminal": true
+    },
+    {
+     "name": "FFmpeg",
+     "exec": "ffmpeg",
+     "terminal": true
+    },
+    {
+     "name": "Celluloid",
+     "exec": "celluloid",
+     "terminal": false
+    },
+    {
+     "name": "GPU Screen Recorder",
+     "exec": "gpu-screen-recorder",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Music",
+   "icon": "🎵",
+   "items": [
+    {
+     "name": "Strawberry",
+     "exec": "strawberry",
+     "terminal": false
+    },
+    {
+     "name": "Elisa",
+     "exec": "elisa",
+     "terminal": false
+    },
+    {
+     "name": "Tauon Music Box",
+     "exec": "tauon-music-box",
+     "terminal": true
+    },
+    {
+     "name": "Quod Libet",
+     "exec": "quodlibet",
+     "terminal": false
+    },
+    {
+     "name": "cmus",
+     "exec": "cmus",
+     "terminal": true
+    },
+    {
+     "name": "ncmpcpp",
+     "exec": "ncmpcpp",
+     "terminal": true
+    },
+    {
+     "name": "MPD",
+     "exec": "mpd",
+     "terminal": true
+    },
+    {
+     "name": "EasyEffects",
+     "exec": "easyeffects",
+     "terminal": false
+    },
+    {
+     "name": "MuseScore",
+     "exec": "musescore",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Education",
+   "icon": "📚",
+   "items": [
+    {
+     "name": "Stellarium",
+     "exec": "stellarium",
+     "terminal": false
+    },
+    {
+     "name": "KStars",
+     "exec": "kstars",
+     "terminal": false
+    },
+    {
+     "name": "Marble",
+     "exec": "marble",
+     "terminal": false
+    },
+    {
+     "name": "GeoGebra",
+     "exec": "geogebra",
+     "terminal": false
+    },
+    {
+     "name": "KGeography",
+     "exec": "kgeography",
+     "terminal": true
+    },
+    {
+     "name": "KDE Edu",
+     "exec": "kde-edu",
+     "terminal": true
+    },
+    {
+     "name": "Anki",
+     "exec": "anki",
+     "terminal": false
+    },
+    {
+     "name": "GCompris",
+     "exec": "gcompris-qt",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Development",
+   "icon": "💻",
+   "items": [
+    {
+     "name": "Geany",
+     "exec": "geany",
+     "terminal": false
+    },
+    {
+     "name": "Git",
+     "exec": "git",
+     "terminal": true
+    },
+    {
+     "name": "GitHub CLI",
+     "exec": "gh",
+     "terminal": true
+    },
+    {
+     "name": "GCC",
+     "exec": "gcc",
+     "terminal": true
+    },
+    {
+     "name": "G++",
+     "exec": "g++",
+     "terminal": true
+    },
+    {
+     "name": "GDB",
+     "exec": "gdb",
+     "terminal": true
+    },
+    {
+     "name": "LLDB",
+     "exec": "lldb",
+     "terminal": true
+    },
+    {
+     "name": "Make",
+     "exec": "make",
+     "terminal": true
+    },
+    {
+     "name": "CMake",
+     "exec": "cmake",
+     "terminal": true
+    },
+    {
+     "name": "Ninja",
+     "exec": "ninja",
+     "terminal": true
+    },
+    {
+     "name": "Meson",
+     "exec": "meson",
+     "terminal": true
+    },
+    {
+     "name": "Python",
+     "exec": "python",
+     "terminal": true
+    },
+    {
+     "name": "pip",
+     "exec": "pip",
+     "terminal": true
+    },
+    {
+     "name": "Node.js",
+     "exec": "node.js",
+     "terminal": true
+    },
+    {
+     "name": "npm",
+     "exec": "npm",
+     "terminal": true
+    },
+    {
+     "name": "OpenJDK",
+     "exec": "openjdk",
+     "terminal": true
+    },
+    {
+     "name": "Rust",
+     "exec": "rust",
+     "terminal": true
+    },
+    {
+     "name": "Cargo",
+     "exec": "cargo",
+     "terminal": true
+    },
+    {
+     "name": "Go",
+     "exec": "go",
+     "terminal": true
+    },
+    {
+     "name": "Perl",
+     "exec": "perl",
+     "terminal": true
+    },
+    {
+     "name": "Ruby",
+     "exec": "ruby",
+     "terminal": true
+    },
+    {
+     "name": "Bash",
+     "exec": "bash",
+     "terminal": true
+    },
+    {
+     "name": "Zsh",
+     "exec": "zsh",
+     "terminal": true
+    },
+    {
+     "name": "Fish",
+     "exec": "fish",
+     "terminal": true
+    },
+    {
+     "name": "Konsole",
+     "exec": "konsole",
+     "terminal": false
+    },
+    {
+     "name": "Vim",
+     "exec": "vim",
+     "terminal": true
+    },
+    {
+     "name": "Neovim",
+     "exec": "neovim",
+     "terminal": true
+    },
+    {
+     "name": "Nano",
+     "exec": "nano",
+     "terminal": true
+    },
+    {
+     "name": "tmux",
+     "exec": "tmux",
+     "terminal": true
+    },
+    {
+     "name": "htop",
+     "exec": "htop",
+     "terminal": true
+    },
+    {
+     "name": "btop",
+     "exec": "btop",
+     "terminal": true
+    },
+    {
+     "name": "jq",
+     "exec": "jq",
+     "terminal": true
+    },
+    {
+     "name": "yq",
+     "exec": "yq",
+     "terminal": true
+    },
+    {
+     "name": "tree",
+     "exec": "tree",
+     "terminal": true
+    },
+    {
+     "name": "rsync",
+     "exec": "rsync",
+     "terminal": true
+    },
+    {
+     "name": "OpenSSH",
+     "exec": "openssh",
+     "terminal": true
+    },
+    {
+     "name": "Docker",
+     "exec": "docker",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Books",
+   "icon": "📖",
+   "items": [
+    {
+     "name": "Okular",
+     "exec": "okular",
+     "terminal": false
+    },
+    {
+     "name": "Calibre",
+     "exec": "calibre",
+     "terminal": false
+    },
+    {
+     "name": "Foliate",
+     "exec": "foliate",
+     "terminal": false
+    },
+    {
+     "name": "Zotero",
+     "exec": "zotero",
+     "terminal": false
+    },
+    {
+     "name": "Sigil",
+     "exec": "sigil",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Security",
+   "icon": "🔐",
+   "items": [
+    {
+     "name": "Firewalld",
+     "exec": "firewalld",
+     "terminal": true
+    },
+    {
+     "name": "FirewallD GUI",
+     "exec": "firewalld-gui",
+     "terminal": true
+    },
+    {
+     "name": "VeraCrypt",
+     "exec": "veracrypt",
+     "terminal": false
+    },
+    {
+     "name": "Kleopatra",
+     "exec": "kleopatra",
+     "terminal": false
+    },
+    {
+     "name": "Seahorse",
+     "exec": "seahorse",
+     "terminal": false
+    },
+    {
+     "name": "KeePassXC",
+     "exec": "keepassxc",
+     "terminal": false
+    },
+    {
+     "name": "GPG",
+     "exec": "gpg",
+     "terminal": true
+    },
+    {
+     "name": "OpenSSL",
+     "exec": "openssl",
+     "terminal": true
+    },
+    {
+     "name": "Lynis",
+     "exec": "lynis",
+     "terminal": true
+    },
+    {
+     "name": "AppArmor",
+     "exec": "apparmor",
+     "terminal": true
+    },
+    {
+     "name": "auditd",
+     "exec": "auditd",
+     "terminal": true
+    },
+    {
+     "name": "USBGuard",
+     "exec": "usbguard",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Backup & Cloud",
+   "icon": "☁️",
+   "items": [
+    {
+     "name": "Proton Drive",
+     "exec": "proton-drive",
+     "terminal": true
+    },
+    {
+     "name": "Nextcloud",
+     "exec": "nextcloud",
+     "terminal": false
+    },
+    {
+     "name": "Syncthing",
+     "exec": "syncthingtray",
+     "terminal": false
+    },
+    {
+     "name": "Timeshift",
+     "exec": "timeshift-launcher",
+     "terminal": false
+    },
+    {
+     "name": "KBackup",
+     "exec": "kbackup",
+     "terminal": false
+    },
+    {
+     "name": "Restic",
+     "exec": "restic",
+     "terminal": true
+    },
+    {
+     "name": "Borg",
+     "exec": "borg",
+     "terminal": true
+    },
+    {
+     "name": "Rclone",
+     "exec": "rclone",
+     "terminal": true
+    },
+    {
+     "name": "Déjà Dup",
+     "exec": "dj-dup",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Files",
+   "icon": "📦",
+   "items": [
+    {
+     "name": "Dolphin",
+     "exec": "dolphin",
+     "terminal": false
+    },
+    {
+     "name": "Ark",
+     "exec": "ark",
+     "terminal": false
+    },
+    {
+     "name": "Filelight",
+     "exec": "filelight",
+     "terminal": false
+    },
+    {
+     "name": "KFind",
+     "exec": "kfind",
+     "terminal": false
+    },
+    {
+     "name": "Bulk Rename",
+     "exec": "bulk-rename",
+     "terminal": true
+    },
+    {
+     "name": "Midnight Commander",
+     "exec": "midnight-commander",
+     "terminal": true
+    },
+    {
+     "name": "Ranger",
+     "exec": "ranger",
+     "terminal": true
+    },
+    {
+     "name": "Yazi",
+     "exec": "yazi",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Printers & Scanners",
+   "icon": "🖨️",
+   "items": [
+    {
+     "name": "Print Manager",
+     "exec": "print-manager",
+     "terminal": true
+    },
+    {
+     "name": "Skanlite",
+     "exec": "skanlite",
+     "terminal": false
+    },
+    {
+     "name": "Simple Scan",
+     "exec": "simple-scan",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Devices",
+   "icon": "📱",
+   "items": [
+    {
+     "name": "KDE Connect",
+     "exec": "kdeconnect-app",
+     "terminal": false
+    },
+    {
+     "name": "Bluetooth",
+     "exec": "bluetooth",
+     "terminal": true
+    },
+    {
+     "name": "Blueman",
+     "exec": "blueman-manager",
+     "terminal": false
+    },
+    {
+     "name": "Android Debug Bridge",
+     "exec": "adb",
+     "terminal": true
+    },
+    {
+     "name": "Fastboot",
+     "exec": "fastboot",
+     "terminal": true
+    },
+    {
+     "name": "Scrcpy",
+     "exec": "scrcpy",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "RedOps",
+   "icon": "🕵️",
+   "items": [],
+   "subcats": [
+    {
+     "name": "01 · Reconnaissance & Enumeration",
+     "items": [
+      {
+       "name": "Nmap",
+       "exec": "nmap",
+       "terminal": true
+      },
+      {
+       "name": "Masscan",
+       "exec": "masscan",
+       "terminal": true
+      },
+      {
+       "name": "RustScan",
+       "exec": "rustscan",
+       "terminal": true
+      },
+      {
+       "name": "Naabu",
+       "exec": "naabu",
+       "terminal": true
+      },
+      {
+       "name": "Unicornscan",
+       "exec": "unicornscan",
+       "terminal": true
+      },
+      {
+       "name": "Amap",
+       "exec": "amap",
+       "terminal": true
+      },
+      {
+       "name": "ZMap",
+       "exec": "zmap",
+       "terminal": true
+      },
+      {
+       "name": "Netdiscover",
+       "exec": "netdiscover",
+       "terminal": true
+      },
+      {
+       "name": "ARP-Scan",
+       "exec": "arp-scan",
+       "terminal": true
+      },
+      {
+       "name": "Amass",
+       "exec": "amass",
+       "terminal": true
+      },
+      {
+       "name": "Subfinder",
+       "exec": "subfinder",
+       "terminal": true
+      },
+      {
+       "name": "Assetfinder",
+       "exec": "assetfinder",
+       "terminal": true
+      },
+      {
+       "name": "Findomain",
+       "exec": "findomain",
+       "terminal": true
+      },
+      {
+       "name": "Sublist3r",
+       "exec": "sublist3r",
+       "terminal": true
+      },
+      {
+       "name": "AlterX",
+       "exec": "alterx",
+       "terminal": true
+      },
+      {
+       "name": "Chaos",
+       "exec": "chaos",
+       "terminal": true
+      },
+      {
+       "name": "dnsx",
+       "exec": "dnsx",
+       "terminal": true
+      },
+      {
+       "name": "MassDNS",
+       "exec": "massdns",
+       "terminal": true
+      },
+      {
+       "name": "DNSRecon",
+       "exec": "dnsrecon",
+       "terminal": true
+      },
+      {
+       "name": "DNSenum",
+       "exec": "dnsenum",
+       "terminal": true
+      },
+      {
+       "name": "Fierce",
+       "exec": "fierce",
+       "terminal": true
+      },
+      {
+       "name": "Dnsmap",
+       "exec": "dnsmap",
+       "terminal": true
+      },
+      {
+       "name": "theHarvester",
+       "exec": "theharvester",
+       "terminal": true
+      },
+      {
+       "name": "Recon-ng",
+       "exec": "recon-ng",
+       "terminal": true
+      },
+      {
+       "name": "SpiderFoot",
+       "exec": "spiderfoot",
+       "terminal": true
+      },
+      {
+       "name": "Maltego",
+       "exec": "maltego",
+       "terminal": false
+      },
+      {
+       "name": "Dmitry",
+       "exec": "dmitry",
+       "terminal": true
+      },
+      {
+       "name": "Metagoofil",
+       "exec": "metagoofil",
+       "terminal": true
+      },
+      {
+       "name": "Photon",
+       "exec": "photon",
+       "terminal": true
+      },
+      {
+       "name": "ReconFTW",
+       "exec": "reconftw",
+       "terminal": true
+      },
+      {
+       "name": "FinalRecon",
+       "exec": "finalrecon",
+       "terminal": true
+      },
+      {
+       "name": "Sn1per",
+       "exec": "sn1per",
+       "terminal": true
+      },
+      {
+       "name": "Osmedeus",
+       "exec": "osmedeus",
+       "terminal": true
+      },
+      {
+       "name": "BBOT",
+       "exec": "bbot",
+       "terminal": true
+      },
+      {
+       "name": "IVRE",
+       "exec": "ivre",
+       "terminal": true
+      },
+      {
+       "name": "Shodan CLI",
+       "exec": "shodan",
+       "terminal": true
+      },
+      {
+       "name": "Censys",
+       "exec": "censys",
+       "terminal": true
+      },
+      {
+       "name": "ZoomEye",
+       "exec": "zoomeye",
+       "terminal": true
+      },
+      {
+       "name": "Netlas",
+       "exec": "netlas",
+       "terminal": true
+      },
+      {
+       "name": "WhatWeb",
+       "exec": "whatweb",
+       "terminal": true
+      },
+      {
+       "name": "Wappalyzer",
+       "exec": "wappalyzer",
+       "terminal": true
+      },
+      {
+       "name": "Webanalyze",
+       "exec": "webanalyze",
+       "terminal": true
+      },
+      {
+       "name": "Aquatone",
+       "exec": "aquatone",
+       "terminal": true
+      },
+      {
+       "name": "EyeWitness",
+       "exec": "eyewitness",
+       "terminal": true
+      },
+      {
+       "name": "Gowitness",
+       "exec": "gowitness",
+       "terminal": true
+      },
+      {
+       "name": "httpx",
+       "exec": "httpx",
+       "terminal": true
+      },
+      {
+       "name": "Httprobe",
+       "exec": "httprobe",
+       "terminal": true
+      },
+      {
+       "name": "Nuclei",
+       "exec": "nuclei",
+       "terminal": true
+      },
+      {
+       "name": "Uncover",
+       "exec": "uncover",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "02 · Vulnerability Assessment",
+     "items": [
+      {
+       "name": "OpenVAS",
+       "exec": "openvas",
+       "terminal": true
+      },
+      {
+       "name": "Nessus",
+       "exec": "nessus",
+       "terminal": true
+      },
+      {
+       "name": "Nuclei",
+       "exec": "nuclei",
+       "terminal": true
+      },
+      {
+       "name": "Nikto",
+       "exec": "nikto",
+       "terminal": true
+      },
+      {
+       "name": "Wapiti",
+       "exec": "wapiti",
+       "terminal": true
+      },
+      {
+       "name": "W3af",
+       "exec": "w3af",
+       "terminal": true
+      },
+      {
+       "name": "Nmap NSE",
+       "exec": "nmap-nse",
+       "terminal": true
+      },
+      {
+       "name": "OpenSCAP",
+       "exec": "openscap",
+       "terminal": true
+      },
+      {
+       "name": "Lynis",
+       "exec": "lynis",
+       "terminal": true
+      },
+      {
+       "name": "Prowler",
+       "exec": "prowler",
+       "terminal": true
+      },
+      {
+       "name": "ScoutSuite",
+       "exec": "scoutsuite",
+       "terminal": true
+      },
+      {
+       "name": "Trivy",
+       "exec": "trivy",
+       "terminal": true
+      },
+      {
+       "name": "Grype",
+       "exec": "grype",
+       "terminal": true
+      },
+      {
+       "name": "Syft",
+       "exec": "syft",
+       "terminal": true
+      },
+      {
+       "name": "Clair",
+       "exec": "clair",
+       "terminal": true
+      },
+      {
+       "name": "Kube-bench",
+       "exec": "kube-bench",
+       "terminal": true
+      },
+      {
+       "name": "Kube-hunter",
+       "exec": "kube-hunter",
+       "terminal": true
+      },
+      {
+       "name": "SearchSploit",
+       "exec": "searchsploit",
+       "terminal": true
+      },
+      {
+       "name": "Vulners",
+       "exec": "vulners",
+       "terminal": true
+      },
+      {
+       "name": "Retire.js",
+       "exec": "retire.js",
+       "terminal": true
+      },
+      {
+       "name": "Semgrep",
+       "exec": "semgrep",
+       "terminal": true
+      },
+      {
+       "name": "Bandit",
+       "exec": "bandit",
+       "terminal": true
+      },
+      {
+       "name": "Gitleaks",
+       "exec": "gitleaks",
+       "terminal": true
+      },
+      {
+       "name": "TruffleHog",
+       "exec": "trufflehog",
+       "terminal": true
+      },
+      {
+       "name": "Dependency-Check",
+       "exec": "dependency-check",
+       "terminal": true
+      },
+      {
+       "name": "Safety",
+       "exec": "safety",
+       "terminal": true
+      },
+      {
+       "name": "Snyk CLI",
+       "exec": "snyk",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "03 · Web Applications",
+     "items": [
+      {
+       "name": "Burp Suite",
+       "exec": "burpsuite",
+       "terminal": false
+      },
+      {
+       "name": "OWASP ZAP",
+       "exec": "zaproxy",
+       "terminal": false
+      },
+      {
+       "name": "Caido",
+       "exec": "caido",
+       "terminal": true
+      },
+      {
+       "name": "mitmproxy",
+       "exec": "mitmproxy",
+       "terminal": true
+      },
+      {
+       "name": "ffuf",
+       "exec": "ffuf",
+       "terminal": true
+      },
+      {
+       "name": "Feroxbuster",
+       "exec": "feroxbuster",
+       "terminal": true
+      },
+      {
+       "name": "Gobuster",
+       "exec": "gobuster",
+       "terminal": true
+      },
+      {
+       "name": "Dirsearch",
+       "exec": "dirsearch",
+       "terminal": true
+      },
+      {
+       "name": "DirBuster",
+       "exec": "dirbuster",
+       "terminal": true
+      },
+      {
+       "name": "Wfuzz",
+       "exec": "wfuzz",
+       "terminal": true
+      },
+      {
+       "name": "Arjun",
+       "exec": "arjun",
+       "terminal": true
+      },
+      {
+       "name": "Kiterunner",
+       "exec": "kiterunner",
+       "terminal": true
+      },
+      {
+       "name": "Katana",
+       "exec": "katana",
+       "terminal": true
+      },
+      {
+       "name": "Hakrawler",
+       "exec": "hakrawler",
+       "terminal": true
+      },
+      {
+       "name": "Gau",
+       "exec": "gau",
+       "terminal": true
+      },
+      {
+       "name": "Waybackurls",
+       "exec": "waybackurls",
+       "terminal": true
+      },
+      {
+       "name": "Waymore",
+       "exec": "waymore",
+       "terminal": true
+      },
+      {
+       "name": "ParamSpider",
+       "exec": "paramspider",
+       "terminal": true
+      },
+      {
+       "name": "Httpx",
+       "exec": "httpx",
+       "terminal": true
+      },
+      {
+       "name": "Dalfox",
+       "exec": "dalfox",
+       "terminal": true
+      },
+      {
+       "name": "XSStrike",
+       "exec": "xsstrike",
+       "terminal": true
+      },
+      {
+       "name": "KXSS",
+       "exec": "kxss",
+       "terminal": true
+      },
+      {
+       "name": "Gxss",
+       "exec": "gxss",
+       "terminal": true
+      },
+      {
+       "name": "Commix",
+       "exec": "commix",
+       "terminal": true
+      },
+      {
+       "name": "SQLMap",
+       "exec": "sqlmap",
+       "terminal": true
+      },
+      {
+       "name": "NoSQLMap",
+       "exec": "nosqlmap",
+       "terminal": true
+      },
+      {
+       "name": "WPScan",
+       "exec": "wpscan",
+       "terminal": true
+      },
+      {
+       "name": "JoomScan",
+       "exec": "joomscan",
+       "terminal": true
+      },
+      {
+       "name": "Droopescan",
+       "exec": "droopescan",
+       "terminal": true
+      },
+      {
+       "name": "CMSmap",
+       "exec": "cmsmap",
+       "terminal": true
+      },
+      {
+       "name": "WhatWeb",
+       "exec": "whatweb",
+       "terminal": true
+      },
+      {
+       "name": "WAFW00F",
+       "exec": "wafw00f",
+       "terminal": true
+      },
+      {
+       "name": "CORScanner",
+       "exec": "corscanner",
+       "terminal": true
+      },
+      {
+       "name": "SecretFinder",
+       "exec": "secretfinder",
+       "terminal": true
+      },
+      {
+       "name": "LinkFinder",
+       "exec": "linkfinder",
+       "terminal": true
+      },
+      {
+       "name": "Git-Dumper",
+       "exec": "git-dumper",
+       "terminal": true
+      },
+      {
+       "name": "GitLeaks",
+       "exec": "gitleaks",
+       "terminal": true
+      },
+      {
+       "name": "TruffleHog",
+       "exec": "trufflehog",
+       "terminal": true
+      },
+      {
+       "name": "Interactsh",
+       "exec": "interactsh",
+       "terminal": true
+      },
+      {
+       "name": "SSTImap",
+       "exec": "sstimap",
+       "terminal": true
+      },
+      {
+       "name": "tplmap",
+       "exec": "tplmap",
+       "terminal": true
+      },
+      {
+       "name": "Smuggler",
+       "exec": "smuggler",
+       "terminal": true
+      },
+      {
+       "name": "HTTP Request Smuggler",
+       "exec": "http-request-smuggler",
+       "terminal": true
+      },
+      {
+       "name": "Corsy",
+       "exec": "corsy",
+       "terminal": true
+      },
+      {
+       "name": "Nomore403",
+       "exec": "nomore403",
+       "terminal": true
+      },
+      {
+       "name": "H2C Smuggler",
+       "exec": "h2c-smuggler",
+       "terminal": true
+      },
+      {
+       "name": "H2Buster",
+       "exec": "h2buster",
+       "terminal": true
+      },
+      {
+       "name": "CRLF Injector",
+       "exec": "crlf-injector",
+       "terminal": true
+      },
+      {
+       "name": "Web Cache Vulnerability Scanner",
+       "exec": "web-cache-vulnerability-scanner",
+       "terminal": true
+      },
+      {
+       "name": "Nuclei Templates",
+       "exec": "nuclei-templates",
+       "terminal": true
+      },
+      {
+       "name": "WebScarab",
+       "exec": "webscarab",
+       "terminal": true
+      },
+      {
+       "name": "Uniscan",
+       "exec": "uniscan",
+       "terminal": true
+      },
+      {
+       "name": "WebShag",
+       "exec": "webshag",
+       "terminal": true
+      },
+      {
+       "name": "Websploit",
+       "exec": "websploit",
+       "terminal": true
+      },
+      {
+       "name": "Halberd",
+       "exec": "halberd",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "04 · Databases & Data Stores",
+     "items": [
+      {
+       "name": "SQLMap",
+       "exec": "sqlmap",
+       "terminal": true
+      },
+      {
+       "name": "SQLNinja",
+       "exec": "sqlninja",
+       "terminal": true
+      },
+      {
+       "name": "jSQL Injection",
+       "exec": "jsql-injection",
+       "terminal": true
+      },
+      {
+       "name": "NoSQLMap",
+       "exec": "nosqlmap",
+       "terminal": true
+      },
+      {
+       "name": "blindsql",
+       "exec": "blindsql",
+       "terminal": true
+      },
+      {
+       "name": "MongoDB Tools",
+       "exec": "mongodb",
+       "terminal": true
+      },
+      {
+       "name": "mongosh",
+       "exec": "mongosh",
+       "terminal": true
+      },
+      {
+       "name": "MySQL Client",
+       "exec": "mysql",
+       "terminal": true
+      },
+      {
+       "name": "MariaDB Client",
+       "exec": "mariadb",
+       "terminal": true
+      },
+      {
+       "name": "PostgreSQL Client",
+       "exec": "postgresql",
+       "terminal": true
+      },
+      {
+       "name": "MSSQL Tools",
+       "exec": "mssql",
+       "terminal": true
+      },
+      {
+       "name": "Oracle Tools",
+       "exec": "oracle",
+       "terminal": true
+      },
+      {
+       "name": "Redis CLI",
+       "exec": "redis",
+       "terminal": true
+      },
+      {
+       "name": "CouchDB Tools",
+       "exec": "couchdb",
+       "terminal": true
+      },
+      {
+       "name": "Cassandra Tools",
+       "exec": "cassandra",
+       "terminal": true
+      },
+      {
+       "name": "Elasticsearch Tools",
+       "exec": "elasticsearch",
+       "terminal": true
+      },
+      {
+       "name": "Kibana",
+       "exec": "kibana",
+       "terminal": true
+      },
+      {
+       "name": "Neo4j Tools",
+       "exec": "neo4j",
+       "terminal": true
+      },
+      {
+       "name": "LDAP Tools",
+       "exec": "ldap",
+       "terminal": true
+      },
+      {
+       "name": "ldapsearch",
+       "exec": "ldapsearch",
+       "terminal": true
+      },
+      {
+       "name": "ldapdomaindump",
+       "exec": "ldapdomaindump",
+       "terminal": true
+      },
+      {
+       "name": "DbVisualizer",
+       "exec": "dbvisualizer",
+       "terminal": true
+      },
+      {
+       "name": "Oscanner",
+       "exec": "oscanner",
+       "terminal": true
+      },
+      {
+       "name": "S3Scanner",
+       "exec": "s3scanner",
+       "terminal": true
+      },
+      {
+       "name": "S3Inspector",
+       "exec": "s3inspector",
+       "terminal": true
+      },
+      {
+       "name": "AWSBucketDump",
+       "exec": "awsbucketdump",
+       "terminal": true
+      },
+      {
+       "name": "BucketLoot",
+       "exec": "bucketloot",
+       "terminal": true
+      },
+      {
+       "name": "Lazys3",
+       "exec": "lazys3",
+       "terminal": true
+      },
+      {
+       "name": "S3tk",
+       "exec": "s3tk",
+       "terminal": true
+      },
+      {
+       "name": "GCPBucketBrute",
+       "exec": "gcpbucketbrute",
+       "terminal": true
+      },
+      {
+       "name": "BlobHunter",
+       "exec": "blobhunter",
+       "terminal": true
+      },
+      {
+       "name": "GrayhatWarfare",
+       "exec": "grayhatwarfare",
+       "terminal": true
+      },
+      {
+       "name": "CloudBrute",
+       "exec": "cloudbrute",
+       "terminal": true
+      },
+      {
+       "name": "CloudEnum",
+       "exec": "cloudenum",
+       "terminal": true
+      },
+      {
+       "name": "Enumerate-IAM",
+       "exec": "enumerate-iam",
+       "terminal": true
+      },
+      {
+       "name": "Pacu",
+       "exec": "pacu",
+       "terminal": true
+      },
+      {
+       "name": "ScoutSuite",
+       "exec": "scoutsuite",
+       "terminal": true
+      },
+      {
+       "name": "Prowler",
+       "exec": "prowler",
+       "terminal": true
+      },
+      {
+       "name": "AWS CLI",
+       "exec": "aws",
+       "terminal": true
+      },
+      {
+       "name": "Azure CLI",
+       "exec": "azure",
+       "terminal": true
+      },
+      {
+       "name": "gcloud CLI",
+       "exec": "gcloud",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "05 · Credential & Password Attacks",
+     "items": [
+      {
+       "name": "Hashcat",
+       "exec": "hashcat",
+       "terminal": true
+      },
+      {
+       "name": "John the Ripper",
+       "exec": "john",
+       "terminal": true
+      },
+      {
+       "name": "Hydra",
+       "exec": "hydra",
+       "terminal": true
+      },
+      {
+       "name": "Medusa",
+       "exec": "medusa",
+       "terminal": true
+      },
+      {
+       "name": "Ncrack",
+       "exec": "ncrack",
+       "terminal": true
+      },
+      {
+       "name": "Patator",
+       "exec": "patator",
+       "terminal": true
+      },
+      {
+       "name": "Crowbar",
+       "exec": "crowbar",
+       "terminal": true
+      },
+      {
+       "name": "Ophcrack",
+       "exec": "ophcrack",
+       "terminal": true
+      },
+      {
+       "name": "THC-Hydra",
+       "exec": "hydra",
+       "terminal": true
+      },
+      {
+       "name": "CeWL",
+       "exec": "cewl",
+       "terminal": true
+      },
+      {
+       "name": "Crunch",
+       "exec": "crunch",
+       "terminal": true
+      },
+      {
+       "name": "CUPP",
+       "exec": "cupp",
+       "terminal": true
+      },
+      {
+       "name": "Mentalist",
+       "exec": "mentalist",
+       "terminal": true
+      },
+      {
+       "name": "RSMangler",
+       "exec": "rsmangler",
+       "terminal": true
+      },
+      {
+       "name": "Princeprocessor",
+       "exec": "princeprocessor",
+       "terminal": true
+      },
+      {
+       "name": "PACK",
+       "exec": "pack",
+       "terminal": true
+      },
+      {
+       "name": "Maskprocessor",
+       "exec": "maskprocessor",
+       "terminal": true
+      },
+      {
+       "name": "Hash-Identifier",
+       "exec": "hash-identifier",
+       "terminal": true
+      },
+      {
+       "name": "HashID",
+       "exec": "hashid",
+       "terminal": true
+      },
+      {
+       "name": "Name-That-Hash",
+       "exec": "name-that-hash",
+       "terminal": true
+      },
+      {
+       "name": "LaZagne",
+       "exec": "lazagne",
+       "terminal": true
+      },
+      {
+       "name": "SecretsDump",
+       "exec": "secretsdump",
+       "terminal": true
+      },
+      {
+       "name": "Kerbrute",
+       "exec": "kerbrute",
+       "terminal": true
+      },
+      {
+       "name": "Sprayhound",
+       "exec": "sprayhound",
+       "terminal": true
+      },
+      {
+       "name": "Spray",
+       "exec": "spray",
+       "terminal": true
+      },
+      {
+       "name": "NetExec",
+       "exec": "nxc",
+       "terminal": true
+      },
+      {
+       "name": "SecLists",
+       "exec": "seclists",
+       "terminal": true
+      },
+      {
+       "name": "RockYou",
+       "exec": "rockyou",
+       "terminal": true
+      },
+      {
+       "name": "Assetnote Wordlists",
+       "exec": "assetnote-wordlists",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "06 · Wireless Security",
+     "items": [
+      {
+       "name": "Aircrack-ng",
+       "exec": "aircrack-ng",
+       "terminal": true
+      },
+      {
+       "name": "Airgeddon",
+       "exec": "airgeddon",
+       "terminal": true
+      },
+      {
+       "name": "Wifite",
+       "exec": "wifite",
+       "terminal": true
+      },
+      {
+       "name": "Kismet",
+       "exec": "kismet",
+       "terminal": true
+      },
+      {
+       "name": "Bettercap",
+       "exec": "bettercap",
+       "terminal": true
+      },
+      {
+       "name": "Reaver",
+       "exec": "reaver",
+       "terminal": true
+      },
+      {
+       "name": "Bully",
+       "exec": "bully",
+       "terminal": true
+      },
+      {
+       "name": "PixieWPS",
+       "exec": "pixiewps",
+       "terminal": true
+      },
+      {
+       "name": "hcxdumptool",
+       "exec": "hcxdumptool",
+       "terminal": true
+      },
+      {
+       "name": "hcxtools",
+       "exec": "hcxtools",
+       "terminal": true
+      },
+      {
+       "name": "MDK4",
+       "exec": "mdk4",
+       "terminal": true
+      },
+      {
+       "name": "Wifiphisher",
+       "exec": "wifiphisher",
+       "terminal": true
+      },
+      {
+       "name": "Wifipumpkin3",
+       "exec": "wifipumpkin3",
+       "terminal": true
+      },
+      {
+       "name": "Fluxion",
+       "exec": "fluxion",
+       "terminal": true
+      },
+      {
+       "name": "EAPHammer",
+       "exec": "eaphammer",
+       "terminal": true
+      },
+      {
+       "name": "Hostapd",
+       "exec": "hostapd",
+       "terminal": true
+      },
+      {
+       "name": "Hostapd-WPE",
+       "exec": "hostapd-wpe",
+       "terminal": true
+      },
+      {
+       "name": "Mana Toolkit",
+       "exec": "mana-toolkit",
+       "terminal": true
+      },
+      {
+       "name": "WiFi Pumpkin",
+       "exec": "wifi-pumpkin",
+       "terminal": true
+      },
+      {
+       "name": "Wifite2",
+       "exec": "wifite2",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "07 · Network Recon & Enumeration",
+     "items": [
+      {
+       "name": "Nmap",
+       "exec": "nmap",
+       "terminal": true
+      },
+      {
+       "name": "Masscan",
+       "exec": "masscan",
+       "terminal": true
+      },
+      {
+       "name": "RustScan",
+       "exec": "rustscan",
+       "terminal": true
+      },
+      {
+       "name": "Naabu",
+       "exec": "naabu",
+       "terminal": true
+      },
+      {
+       "name": "Unicornscan",
+       "exec": "unicornscan",
+       "terminal": true
+      },
+      {
+       "name": "Amap",
+       "exec": "amap",
+       "terminal": true
+      },
+      {
+       "name": "ZMap",
+       "exec": "zmap",
+       "terminal": true
+      },
+      {
+       "name": "Netdiscover",
+       "exec": "netdiscover",
+       "terminal": true
+      },
+      {
+       "name": "ARP-Scan",
+       "exec": "arp-scan",
+       "terminal": true
+      },
+      {
+       "name": "dnsx",
+       "exec": "dnsx",
+       "terminal": true
+      },
+      {
+       "name": "MassDNS",
+       "exec": "massdns",
+       "terminal": true
+      },
+      {
+       "name": "DNSRecon",
+       "exec": "dnsrecon",
+       "terminal": true
+      },
+      {
+       "name": "DNSenum",
+       "exec": "dnsenum",
+       "terminal": true
+      },
+      {
+       "name": "Fierce",
+       "exec": "fierce",
+       "terminal": true
+      },
+      {
+       "name": "NetExec",
+       "exec": "nxc",
+       "terminal": true
+      },
+      {
+       "name": "Enum4linux",
+       "exec": "enum4linux",
+       "terminal": true
+      },
+      {
+       "name": "Enum4linux-ng",
+       "exec": "enum4linux-ng",
+       "terminal": true
+      },
+      {
+       "name": "SMBMap",
+       "exec": "smbmap",
+       "terminal": true
+      },
+      {
+       "name": "rpcclient",
+       "exec": "rpcclient",
+       "terminal": true
+      },
+      {
+       "name": "ldapsearch",
+       "exec": "ldapsearch",
+       "terminal": true
+      },
+      {
+       "name": "nbtscan",
+       "exec": "nbtscan",
+       "terminal": true
+      },
+      {
+       "name": "snmpwalk",
+       "exec": "snmpwalk",
+       "terminal": true
+      },
+      {
+       "name": "snmp-check",
+       "exec": "snmp-check",
+       "terminal": true
+      },
+      {
+       "name": "onesixtyone",
+       "exec": "onesixtyone",
+       "terminal": true
+      },
+      {
+       "name": "SMTP-User-Enum",
+       "exec": "smtp-user-enum",
+       "terminal": true
+      },
+      {
+       "name": "NTLMRecon",
+       "exec": "ntlmrecon",
+       "terminal": true
+      },
+      {
+       "name": "NTLM-Scanner",
+       "exec": "ntlm-scanner",
+       "terminal": true
+      },
+      {
+       "name": "WhatWeb",
+       "exec": "whatweb",
+       "terminal": true
+      },
+      {
+       "name": "httpx",
+       "exec": "httpx",
+       "terminal": true
+      },
+      {
+       "name": "Aquatone",
+       "exec": "aquatone",
+       "terminal": true
+      },
+      {
+       "name": "EyeWitness",
+       "exec": "eyewitness",
+       "terminal": true
+      },
+      {
+       "name": "Gowitness",
+       "exec": "gowitness",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "08 · Network Attacks & MITM",
+     "items": [
+      {
+       "name": "Bettercap",
+       "exec": "bettercap",
+       "terminal": true
+      },
+      {
+       "name": "Ettercap",
+       "exec": "ettercap",
+       "terminal": true
+      },
+      {
+       "name": "Responder",
+       "exec": "responder",
+       "terminal": true
+      },
+      {
+       "name": "Inveigh",
+       "exec": "inveigh",
+       "terminal": true
+      },
+      {
+       "name": "Coercer",
+       "exec": "coercer",
+       "terminal": true
+      },
+      {
+       "name": "Scapy",
+       "exec": "scapy",
+       "terminal": true
+      },
+      {
+       "name": "Dsniff",
+       "exec": "dsniff",
+       "terminal": true
+      },
+      {
+       "name": "Arpspoof",
+       "exec": "arpspoof",
+       "terminal": true
+      },
+      {
+       "name": "DNSChef",
+       "exec": "dnschef",
+       "terminal": true
+      },
+      {
+       "name": "DNSSpoof",
+       "exec": "dnsspoof",
+       "terminal": true
+      },
+      {
+       "name": "MITMf",
+       "exec": "mitmf",
+       "terminal": true
+      },
+      {
+       "name": "SSLStrip",
+       "exec": "sslstrip",
+       "terminal": true
+      },
+      {
+       "name": "SSLsplit",
+       "exec": "sslsplit",
+       "terminal": true
+      },
+      {
+       "name": "Net-creds",
+       "exec": "net-creds",
+       "terminal": true
+      },
+      {
+       "name": "Pcredz",
+       "exec": "pcredz",
+       "terminal": true
+      },
+      {
+       "name": "ntlmrelayx",
+       "exec": "ntlmrelayx",
+       "terminal": true
+      },
+      {
+       "name": "ARPwner",
+       "exec": "arpwner",
+       "terminal": true
+      },
+      {
+       "name": "InveighZero",
+       "exec": "inveighzero",
+       "terminal": true
+      },
+      {
+       "name": "Chisel",
+       "exec": "chisel",
+       "terminal": true
+      },
+      {
+       "name": "Ligolo-ng",
+       "exec": "ligolo-ng",
+       "terminal": true
+      },
+      {
+       "name": "ProxyChains",
+       "exec": "proxychains",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "09 · Payloads, Shells & Delivery",
+     "items": [
+      {
+       "name": "MSFVenom",
+       "exec": "msfvenom",
+       "terminal": true
+      },
+      {
+       "name": "Metasploit Payloads",
+       "exec": "metasploit-payloads",
+       "terminal": true
+      },
+      {
+       "name": "Donut",
+       "exec": "donut",
+       "terminal": true
+      },
+      {
+       "name": "Shellter",
+       "exec": "shellter",
+       "terminal": true
+      },
+      {
+       "name": "Veil",
+       "exec": "veil",
+       "terminal": true
+      },
+      {
+       "name": "Unicorn",
+       "exec": "unicorn",
+       "terminal": true
+      },
+      {
+       "name": "Nishang",
+       "exec": "nishang",
+       "terminal": true
+      },
+      {
+       "name": "PowerSploit",
+       "exec": "powersploit",
+       "terminal": true
+      },
+      {
+       "name": "PowerShell Empire",
+       "exec": "powershell-empire",
+       "terminal": true
+      },
+      {
+       "name": "SharpHound",
+       "exec": "sharphound",
+       "terminal": true
+      },
+      {
+       "name": "SharpCollection",
+       "exec": "sharpcollection",
+       "terminal": true
+      },
+      {
+       "name": "Rubeus",
+       "exec": "rubeus",
+       "terminal": true
+      },
+      {
+       "name": "Mimikatz",
+       "exec": "mimikatz",
+       "terminal": true
+      },
+      {
+       "name": "Evil-WinRM",
+       "exec": "evil-winrm",
+       "terminal": true
+      },
+      {
+       "name": "Weevely",
+       "exec": "weevely",
+       "terminal": true
+      },
+      {
+       "name": "Netcat",
+       "exec": "netcat",
+       "terminal": true
+      },
+      {
+       "name": "Ncat",
+       "exec": "ncat",
+       "terminal": true
+      },
+      {
+       "name": "Socat",
+       "exec": "socat",
+       "terminal": true
+      },
+      {
+       "name": "Chisel",
+       "exec": "chisel",
+       "terminal": true
+      },
+      {
+       "name": "Ligolo-ng",
+       "exec": "ligolo-ng",
+       "terminal": true
+      },
+      {
+       "name": "WebShells",
+       "exec": "webshells",
+       "terminal": true
+      },
+      {
+       "name": "PHP Webshells",
+       "exec": "php-webshells",
+       "terminal": true
+      },
+      {
+       "name": "ASPX Webshells",
+       "exec": "aspx-webshells",
+       "terminal": true
+      },
+      {
+       "name": "JSP Webshells",
+       "exec": "jsp-webshells",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "10 · Exploitation & Pwn",
+     "items": [
+      {
+       "name": "Metasploit Framework",
+       "exec": "msfconsole",
+       "terminal": true
+      },
+      {
+       "name": "ExploitDB",
+       "exec": "exploitdb",
+       "terminal": true
+      },
+      {
+       "name": "SearchSploit",
+       "exec": "searchsploit",
+       "terminal": true
+      },
+      {
+       "name": "pwntools",
+       "exec": "pwntools",
+       "terminal": true
+      },
+      {
+       "name": "ROPgadget",
+       "exec": "ropgadget",
+       "terminal": true
+      },
+      {
+       "name": "Ropper",
+       "exec": "ropper",
+       "terminal": true
+      },
+      {
+       "name": "one_gadget",
+       "exec": "one_gadget",
+       "terminal": true
+      },
+      {
+       "name": "PEDA",
+       "exec": "peda",
+       "terminal": true
+      },
+      {
+       "name": "GEF",
+       "exec": "gef",
+       "terminal": true
+      },
+      {
+       "name": "pwndbg",
+       "exec": "pwndbg",
+       "terminal": true
+      },
+      {
+       "name": "Unicorn",
+       "exec": "unicorn",
+       "terminal": true
+      },
+      {
+       "name": "Keystone",
+       "exec": "keystone",
+       "terminal": true
+      },
+      {
+       "name": "Capstone",
+       "exec": "capstone",
+       "terminal": true
+      },
+      {
+       "name": "ShellNoob",
+       "exec": "shellnoob",
+       "terminal": true
+      },
+      {
+       "name": "ROPium",
+       "exec": "ropium",
+       "terminal": true
+      },
+      {
+       "name": "LibcSearcher",
+       "exec": "libcsearcher",
+       "terminal": true
+      },
+      {
+       "name": "Checksec",
+       "exec": "checksec",
+       "terminal": true
+      },
+      {
+       "name": "Seccomp Tools",
+       "exec": "seccomp",
+       "terminal": true
+      },
+      {
+       "name": "QEMU User",
+       "exec": "qemu-user",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "11 · C2 & Adversary Simulation",
+     "items": [
+      {
+       "name": "Sliver",
+       "exec": "sliver",
+       "terminal": true
+      },
+      {
+       "name": "Mythic",
+       "exec": "mythic",
+       "terminal": true
+      },
+      {
+       "name": "Havoc",
+       "exec": "havoc",
+       "terminal": true
+      },
+      {
+       "name": "Empire",
+       "exec": "empire",
+       "terminal": true
+      },
+      {
+       "name": "Covenant",
+       "exec": "covenant",
+       "terminal": true
+      },
+      {
+       "name": "Metasploit",
+       "exec": "msfconsole",
+       "terminal": true
+      },
+      {
+       "name": "PoshC2",
+       "exec": "poshc2",
+       "terminal": true
+      },
+      {
+       "name": "Merlin",
+       "exec": "merlin",
+       "terminal": true
+      },
+      {
+       "name": "Koadic",
+       "exec": "koadic",
+       "terminal": true
+      },
+      {
+       "name": "SILENTTRINITY",
+       "exec": "silenttrinity",
+       "terminal": true
+      },
+      {
+       "name": "Nimplant",
+       "exec": "nimplant",
+       "terminal": true
+      },
+      {
+       "name": "Villain",
+       "exec": "villain",
+       "terminal": true
+      },
+      {
+       "name": "Starkiller",
+       "exec": "starkiller",
+       "terminal": true
+      },
+      {
+       "name": "MITRE Caldera",
+       "exec": "mitre-caldera",
+       "terminal": true
+      },
+      {
+       "name": "Atomic Red Team",
+       "exec": "atomic-red-team",
+       "terminal": true
+      },
+      {
+       "name": "Prelude Operator",
+       "exec": "prelude-operator",
+       "terminal": true
+      },
+      {
+       "name": "MITRE ATT&CK Navigator",
+       "exec": "mitre-attck-navigator",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "12 · Post Exploitation",
+     "items": [
+      {
+       "name": "Impacket",
+       "exec": "impacket-secretsdump",
+       "terminal": true
+      },
+      {
+       "name": "NetExec",
+       "exec": "nxc",
+       "terminal": true
+      },
+      {
+       "name": "CrackMapExec",
+       "exec": "crackmapexec",
+       "terminal": true
+      },
+      {
+       "name": "Evil-WinRM",
+       "exec": "evil-winrm",
+       "terminal": true
+      },
+      {
+       "name": "PsExec",
+       "exec": "psexec",
+       "terminal": true
+      },
+      {
+       "name": "WMIExec",
+       "exec": "wmiexec",
+       "terminal": true
+      },
+      {
+       "name": "SMBExec",
+       "exec": "smbexec",
+       "terminal": true
+      },
+      {
+       "name": "DCOMExec",
+       "exec": "dcomexec",
+       "terminal": true
+      },
+      {
+       "name": "ATExec",
+       "exec": "atexec",
+       "terminal": true
+      },
+      {
+       "name": "Chisel",
+       "exec": "chisel",
+       "terminal": true
+      },
+      {
+       "name": "Ligolo-ng",
+       "exec": "ligolo-ng",
+       "terminal": true
+      },
+      {
+       "name": "ProxyChains",
+       "exec": "proxychains",
+       "terminal": true
+      },
+      {
+       "name": "LinPEAS",
+       "exec": "linpeas",
+       "terminal": true
+      },
+      {
+       "name": "WinPEAS",
+       "exec": "winpeas",
+       "terminal": true
+      },
+      {
+       "name": "LinEnum",
+       "exec": "linenum",
+       "terminal": true
+      },
+      {
+       "name": "Seatbelt",
+       "exec": "seatbelt",
+       "terminal": true
+      },
+      {
+       "name": "LaZagne",
+       "exec": "lazagne",
+       "terminal": true
+      },
+      {
+       "name": "PowerView",
+       "exec": "powerview",
+       "terminal": true
+      },
+      {
+       "name": "PowerSploit",
+       "exec": "powersploit",
+       "terminal": true
+      },
+      {
+       "name": "SharpHound",
+       "exec": "sharphound",
+       "terminal": true
+      },
+      {
+       "name": "ldapdomaindump",
+       "exec": "ldapdomaindump",
+       "terminal": true
+      },
+      {
+       "name": "secretsdump",
+       "exec": "secretsdump",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "13 · Active Directory",
+     "items": [
+      {
+       "name": "BloodHound",
+       "exec": "bloodhound",
+       "terminal": false
+      },
+      {
+       "name": "SharpHound",
+       "exec": "sharphound",
+       "terminal": true
+      },
+      {
+       "name": "Impacket",
+       "exec": "impacket-secretsdump",
+       "terminal": true
+      },
+      {
+       "name": "NetExec",
+       "exec": "nxc",
+       "terminal": true
+      },
+      {
+       "name": "CrackMapExec",
+       "exec": "crackmapexec",
+       "terminal": true
+      },
+      {
+       "name": "Certipy",
+       "exec": "certipy",
+       "terminal": true
+      },
+      {
+       "name": "Kerbrute",
+       "exec": "kerbrute",
+       "terminal": true
+      },
+      {
+       "name": "Rubeus",
+       "exec": "rubeus",
+       "terminal": true
+      },
+      {
+       "name": "ldapsearch",
+       "exec": "ldapsearch",
+       "terminal": true
+      },
+      {
+       "name": "AdFind",
+       "exec": "adfind",
+       "terminal": true
+      },
+      {
+       "name": "PowerView",
+       "exec": "powerview",
+       "terminal": true
+      },
+      {
+       "name": "PowerSploit",
+       "exec": "powersploit",
+       "terminal": true
+      },
+      {
+       "name": "Responder",
+       "exec": "responder",
+       "terminal": true
+      },
+      {
+       "name": "Inveigh",
+       "exec": "inveigh",
+       "terminal": true
+      },
+      {
+       "name": "Coercer",
+       "exec": "coercer",
+       "terminal": true
+      },
+      {
+       "name": "PetitPotam",
+       "exec": "petitpotam",
+       "terminal": true
+      },
+      {
+       "name": "ntlmrelayx",
+       "exec": "ntlmrelayx",
+       "terminal": true
+      },
+      {
+       "name": "secretsdump",
+       "exec": "secretsdump",
+       "terminal": true
+      },
+      {
+       "name": "GetUserSPNs",
+       "exec": "getuserspns",
+       "terminal": true
+      },
+      {
+       "name": "GetNPUsers",
+       "exec": "getnpusers",
+       "terminal": true
+      },
+      {
+       "name": "GetADUsers",
+       "exec": "getadusers",
+       "terminal": true
+      },
+      {
+       "name": "rpcdump",
+       "exec": "rpcdump",
+       "terminal": true
+      },
+      {
+       "name": "ldapdomaindump",
+       "exec": "ldapdomaindump",
+       "terminal": true
+      },
+      {
+       "name": "Certipy-AD",
+       "exec": "certipy-ad",
+       "terminal": true
+      },
+      {
+       "name": "PingCastle",
+       "exec": "pingcastle",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "14 · Privilege Escalation",
+     "items": [
+      {
+       "name": "LinPEAS",
+       "exec": "linpeas",
+       "terminal": true
+      },
+      {
+       "name": "WinPEAS",
+       "exec": "winpeas",
+       "terminal": true
+      },
+      {
+       "name": "LinEnum",
+       "exec": "linenum",
+       "terminal": true
+      },
+      {
+       "name": "Linux Exploit Suggester",
+       "exec": "linux-exploit-suggester",
+       "terminal": true
+      },
+      {
+       "name": "Windows Exploit Suggester",
+       "exec": "windows-exploit-suggester",
+       "terminal": true
+      },
+      {
+       "name": "Seatbelt",
+       "exec": "seatbelt",
+       "terminal": true
+      },
+      {
+       "name": "PowerUp",
+       "exec": "powerup",
+       "terminal": true
+      },
+      {
+       "name": "BeRoot",
+       "exec": "beroot",
+       "terminal": true
+      },
+      {
+       "name": "pspy",
+       "exec": "pspy",
+       "terminal": true
+      },
+      {
+       "name": "GTFOBins",
+       "exec": "gtfobins",
+       "terminal": true
+      },
+      {
+       "name": "LOLBAS",
+       "exec": "lolbas",
+       "terminal": true
+      },
+      {
+       "name": "Linux Smart Enumeration",
+       "exec": "linux-smart-enumeration",
+       "terminal": true
+      },
+      {
+       "name": "Unix-privesc-check",
+       "exec": "unix-privesc-check",
+       "terminal": true
+      },
+      {
+       "name": "SUID3NUM",
+       "exec": "suid3num",
+       "terminal": true
+      },
+      {
+       "name": "PrivescCheck",
+       "exec": "privesccheck",
+       "terminal": true
+      },
+      {
+       "name": "LES",
+       "exec": "les",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "15 · Evasion & Defense Evasion",
+     "items": [
+      {
+       "name": "Veil",
+       "exec": "veil",
+       "terminal": true
+      },
+      {
+       "name": "Shellter",
+       "exec": "shellter",
+       "terminal": true
+      },
+      {
+       "name": "Donut",
+       "exec": "donut",
+       "terminal": true
+      },
+      {
+       "name": "ScareCrow",
+       "exec": "scarecrow",
+       "terminal": true
+      },
+      {
+       "name": "Nimcrypt2",
+       "exec": "nimcrypt2",
+       "terminal": true
+      },
+      {
+       "name": "Freeze",
+       "exec": "freeze",
+       "terminal": true
+      },
+      {
+       "name": "Invoke-Obfuscation",
+       "exec": "invoke-obfuscation",
+       "terminal": true
+      },
+      {
+       "name": "ConfuserEx",
+       "exec": "confuserex",
+       "terminal": true
+      },
+      {
+       "name": "Hyperion",
+       "exec": "hyperion",
+       "terminal": true
+      },
+      {
+       "name": "Backdoor Factory",
+       "exec": "backdoor-factory",
+       "terminal": true
+      },
+      {
+       "name": "PEzor",
+       "exec": "pezor",
+       "terminal": true
+      },
+      {
+       "name": "NimPackt-v1",
+       "exec": "nimpackt-v1",
+       "terminal": true
+      },
+      {
+       "name": "AMSI.fail",
+       "exec": "amsi.fail",
+       "terminal": true
+      },
+      {
+       "name": "PESieve",
+       "exec": "pesieve",
+       "terminal": true
+      },
+      {
+       "name": "Moneta",
+       "exec": "moneta",
+       "terminal": true
+      },
+      {
+       "name": "Invisibility Cloak",
+       "exec": "invisibility-cloak",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "16 · Cloud Security",
+     "items": [
+      {
+       "name": "Prowler",
+       "exec": "prowler",
+       "terminal": true
+      },
+      {
+       "name": "ScoutSuite",
+       "exec": "scoutsuite",
+       "terminal": true
+      },
+      {
+       "name": "Pacu",
+       "exec": "pacu",
+       "terminal": true
+      },
+      {
+       "name": "CloudFox",
+       "exec": "cloudfox",
+       "terminal": true
+      },
+      {
+       "name": "CloudBrute",
+       "exec": "cloudbrute",
+       "terminal": true
+      },
+      {
+       "name": "CloudEnum",
+       "exec": "cloudenum",
+       "terminal": true
+      },
+      {
+       "name": "S3Scanner",
+       "exec": "s3scanner",
+       "terminal": true
+      },
+      {
+       "name": "S3Inspector",
+       "exec": "s3inspector",
+       "terminal": true
+      },
+      {
+       "name": "Enumerate-IAM",
+       "exec": "enumerate-iam",
+       "terminal": true
+      },
+      {
+       "name": "AWS CLI",
+       "exec": "aws",
+       "terminal": true
+      },
+      {
+       "name": "Azure CLI",
+       "exec": "azure",
+       "terminal": true
+      },
+      {
+       "name": "gcloud CLI",
+       "exec": "gcloud",
+       "terminal": true
+      },
+      {
+       "name": "ROADtools",
+       "exec": "roadtools",
+       "terminal": true
+      },
+      {
+       "name": "MicroBurst",
+       "exec": "microburst",
+       "terminal": true
+      },
+      {
+       "name": "PowerZure",
+       "exec": "powerzure",
+       "terminal": true
+      },
+      {
+       "name": "Azucar",
+       "exec": "azucar",
+       "terminal": true
+      },
+      {
+       "name": "CloudSploit",
+       "exec": "cloudsploit",
+       "terminal": true
+      },
+      {
+       "name": "Scout2",
+       "exec": "scout2",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "17 · Containers & Kubernetes",
+     "items": [
+      {
+       "name": "Docker",
+       "exec": "docker",
+       "terminal": true
+      },
+      {
+       "name": "Podman",
+       "exec": "podman",
+       "terminal": true
+      },
+      {
+       "name": "Trivy",
+       "exec": "trivy",
+       "terminal": true
+      },
+      {
+       "name": "Grype",
+       "exec": "grype",
+       "terminal": true
+      },
+      {
+       "name": "Syft",
+       "exec": "syft",
+       "terminal": true
+      },
+      {
+       "name": "Kube-bench",
+       "exec": "kube-bench",
+       "terminal": true
+      },
+      {
+       "name": "Kube-hunter",
+       "exec": "kube-hunter",
+       "terminal": true
+      },
+      {
+       "name": "Peirates",
+       "exec": "peirates",
+       "terminal": true
+      },
+      {
+       "name": "kubeletctl",
+       "exec": "kubeletctl",
+       "terminal": true
+      },
+      {
+       "name": "Kubescape",
+       "exec": "kubescape",
+       "terminal": true
+      },
+      {
+       "name": "Kubeaudit",
+       "exec": "kubeaudit",
+       "terminal": true
+      },
+      {
+       "name": "Falco",
+       "exec": "falco",
+       "terminal": true
+      },
+      {
+       "name": "Dive",
+       "exec": "dive",
+       "terminal": true
+      },
+      {
+       "name": "Dockle",
+       "exec": "dockle",
+       "terminal": true
+      },
+      {
+       "name": "Clair",
+       "exec": "clair",
+       "terminal": true
+      },
+      {
+       "name": "Cosign",
+       "exec": "cosign",
+       "terminal": true
+      },
+      {
+       "name": "Minikube",
+       "exec": "minikube",
+       "terminal": true
+      },
+      {
+       "name": "Kubernetes",
+       "exec": "kubernetes",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "18 · Source Code & Supply Chain",
+     "items": [
+      {
+       "name": "Semgrep",
+       "exec": "semgrep",
+       "terminal": true
+      },
+      {
+       "name": "CodeQL",
+       "exec": "codeql",
+       "terminal": true
+      },
+      {
+       "name": "Bandit",
+       "exec": "bandit",
+       "terminal": true
+      },
+      {
+       "name": "Brakeman",
+       "exec": "brakeman",
+       "terminal": true
+      },
+      {
+       "name": "Flawfinder",
+       "exec": "flawfinder",
+       "terminal": true
+      },
+      {
+       "name": "Cppcheck",
+       "exec": "cppcheck",
+       "terminal": true
+      },
+      {
+       "name": "Gitleaks",
+       "exec": "gitleaks",
+       "terminal": true
+      },
+      {
+       "name": "TruffleHog",
+       "exec": "trufflehog",
+       "terminal": true
+      },
+      {
+       "name": "detect-secrets",
+       "exec": "detect-secrets",
+       "terminal": true
+      },
+      {
+       "name": "Dependency-Check",
+       "exec": "dependency-check",
+       "terminal": true
+      },
+      {
+       "name": "Retire.js",
+       "exec": "retire.js",
+       "terminal": true
+      },
+      {
+       "name": "Syft",
+       "exec": "syft",
+       "terminal": true
+      },
+      {
+       "name": "Grype",
+       "exec": "grype",
+       "terminal": true
+      },
+      {
+       "name": "Checkov",
+       "exec": "checkov",
+       "terminal": true
+      },
+      {
+       "name": "Snyk",
+       "exec": "snyk",
+       "terminal": true
+      },
+      {
+       "name": "osv-scanner",
+       "exec": "osv-scanner",
+       "terminal": true
+      },
+      {
+       "name": "CycloneDX",
+       "exec": "cyclonedx",
+       "terminal": true
+      },
+      {
+       "name": "SBOM Tools",
+       "exec": "sbom",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "19 · Fuzzing",
+     "items": [
+      {
+       "name": "AFL++",
+       "exec": "afl++",
+       "terminal": true
+      },
+      {
+       "name": "AFL",
+       "exec": "afl",
+       "terminal": true
+      },
+      {
+       "name": "LibFuzzer",
+       "exec": "libfuzzer",
+       "terminal": true
+      },
+      {
+       "name": "Honggfuzz",
+       "exec": "honggfuzz",
+       "terminal": true
+      },
+      {
+       "name": "Boofuzz",
+       "exec": "boofuzz",
+       "terminal": true
+      },
+      {
+       "name": "Peach",
+       "exec": "peach",
+       "terminal": true
+      },
+      {
+       "name": "Radamsa",
+       "exec": "radamsa",
+       "terminal": true
+      },
+      {
+       "name": "Domato",
+       "exec": "domato",
+       "terminal": true
+      },
+      {
+       "name": "Sulley",
+       "exec": "sulley",
+       "terminal": true
+      },
+      {
+       "name": "Wfuzz",
+       "exec": "wfuzz",
+       "terminal": true
+      },
+      {
+       "name": "ffuf",
+       "exec": "ffuf",
+       "terminal": true
+      },
+      {
+       "name": "FuzzDB",
+       "exec": "fuzzdb",
+       "terminal": true
+      },
+      {
+       "name": "Dharma",
+       "exec": "dharma",
+       "terminal": true
+      },
+      {
+       "name": "Backfuzz",
+       "exec": "backfuzz",
+       "terminal": true
+      },
+      {
+       "name": "EasyFuzzer",
+       "exec": "easyfuzzer",
+       "terminal": true
+      },
+      {
+       "name": "Dizzy",
+       "exec": "dizzy",
+       "terminal": true
+      },
+      {
+       "name": "Choronzon",
+       "exec": "choronzon",
+       "terminal": true
+      },
+      {
+       "name": "Peach Fuzzer",
+       "exec": "peach-fuzzer",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "20 · Reverse Engineering",
+     "items": [
+      {
+       "name": "Ghidra",
+       "exec": "ghidra",
+       "terminal": false
+      },
+      {
+       "name": "Cutter",
+       "exec": "cutter",
+       "terminal": false
+      },
+      {
+       "name": "Radare2",
+       "exec": "radare2",
+       "terminal": true
+      },
+      {
+       "name": "Rizin",
+       "exec": "rizin",
+       "terminal": true
+      },
+      {
+       "name": "Binary Ninja",
+       "exec": "binary-ninja",
+       "terminal": true
+      },
+      {
+       "name": "IDA Free",
+       "exec": "ida-free",
+       "terminal": true
+      },
+      {
+       "name": "GDB",
+       "exec": "gdb",
+       "terminal": true
+      },
+      {
+       "name": "LLDB",
+       "exec": "lldb",
+       "terminal": true
+      },
+      {
+       "name": "pwndbg",
+       "exec": "pwndbg",
+       "terminal": true
+      },
+      {
+       "name": "GEF",
+       "exec": "gef",
+       "terminal": true
+      },
+      {
+       "name": "PEDA",
+       "exec": "peda",
+       "terminal": true
+      },
+      {
+       "name": "Binwalk",
+       "exec": "binwalk",
+       "terminal": true
+      },
+      {
+       "name": "objdump",
+       "exec": "objdump",
+       "terminal": true
+      },
+      {
+       "name": "readelf",
+       "exec": "readelf",
+       "terminal": true
+      },
+      {
+       "name": "nm",
+       "exec": "nm",
+       "terminal": true
+      },
+      {
+       "name": "strings",
+       "exec": "strings",
+       "terminal": true
+      },
+      {
+       "name": "ltrace",
+       "exec": "ltrace",
+       "terminal": true
+      },
+      {
+       "name": "strace",
+       "exec": "strace",
+       "terminal": true
+      },
+      {
+       "name": "Frida",
+       "exec": "frida",
+       "terminal": true
+      },
+      {
+       "name": "Frida-tools",
+       "exec": "frida-tools",
+       "terminal": true
+      },
+      {
+       "name": "Objection",
+       "exec": "objection",
+       "terminal": true
+      },
+      {
+       "name": "Angr",
+       "exec": "angr",
+       "terminal": true
+      },
+      {
+       "name": "angr-management",
+       "exec": "angr-management",
+       "terminal": true
+      },
+      {
+       "name": "Capstone",
+       "exec": "capstone",
+       "terminal": true
+      },
+      {
+       "name": "Keystone",
+       "exec": "keystone",
+       "terminal": true
+      },
+      {
+       "name": "Unicorn",
+       "exec": "unicorn",
+       "terminal": true
+      },
+      {
+       "name": "RetDec",
+       "exec": "retdec",
+       "terminal": true
+      },
+      {
+       "name": "BinDiff",
+       "exec": "bindiff",
+       "terminal": true
+      },
+      {
+       "name": "Diaphora",
+       "exec": "diaphora",
+       "terminal": true
+      },
+      {
+       "name": "Detect It Easy",
+       "exec": "detect-it-easy",
+       "terminal": true
+      },
+      {
+       "name": "Capa",
+       "exec": "capa",
+       "terminal": true
+      },
+      {
+       "name": "FLOSS",
+       "exec": "floss",
+       "terminal": true
+      },
+      {
+       "name": "YARA",
+       "exec": "yara",
+       "terminal": true
+      },
+      {
+       "name": "Apktool",
+       "exec": "apktool",
+       "terminal": true
+      },
+      {
+       "name": "JADX",
+       "exec": "jadx",
+       "terminal": true
+      },
+      {
+       "name": "Androguard",
+       "exec": "androguard",
+       "terminal": true
+      },
+      {
+       "name": "ILSpy",
+       "exec": "ilspy",
+       "terminal": true
+      },
+      {
+       "name": "UPX",
+       "exec": "upx",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "21 · Binary Exploitation",
+     "items": [
+      {
+       "name": "pwntools",
+       "exec": "pwntools",
+       "terminal": true
+      },
+      {
+       "name": "GDB",
+       "exec": "gdb",
+       "terminal": true
+      },
+      {
+       "name": "pwndbg",
+       "exec": "pwndbg",
+       "terminal": true
+      },
+      {
+       "name": "GEF",
+       "exec": "gef",
+       "terminal": true
+      },
+      {
+       "name": "PEDA",
+       "exec": "peda",
+       "terminal": true
+      },
+      {
+       "name": "ROPgadget",
+       "exec": "ropgadget",
+       "terminal": true
+      },
+      {
+       "name": "Ropper",
+       "exec": "ropper",
+       "terminal": true
+      },
+      {
+       "name": "one_gadget",
+       "exec": "one_gadget",
+       "terminal": true
+      },
+      {
+       "name": "LibcSearcher",
+       "exec": "libcsearcher",
+       "terminal": true
+      },
+      {
+       "name": "Checksec",
+       "exec": "checksec",
+       "terminal": true
+      },
+      {
+       "name": "Seccomp Tools",
+       "exec": "seccomp",
+       "terminal": true
+      },
+      {
+       "name": "ROPium",
+       "exec": "ropium",
+       "terminal": true
+      },
+      {
+       "name": "QEMU User",
+       "exec": "qemu-user",
+       "terminal": true
+      },
+      {
+       "name": "angr",
+       "exec": "angr",
+       "terminal": true
+      },
+      {
+       "name": "Unicorn",
+       "exec": "unicorn",
+       "terminal": true
+      },
+      {
+       "name": "Capstone",
+       "exec": "capstone",
+       "terminal": true
+      },
+      {
+       "name": "Keystone",
+       "exec": "keystone",
+       "terminal": true
+      },
+      {
+       "name": "Libc Database",
+       "exec": "libc-database",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "22 · Malware Analysis",
+     "items": [
+      {
+       "name": "CAPE Sandbox",
+       "exec": "cape-sandbox",
+       "terminal": true
+      },
+      {
+       "name": "Cuckoo",
+       "exec": "cuckoo",
+       "terminal": true
+      },
+      {
+       "name": "YARA",
+       "exec": "yara",
+       "terminal": true
+      },
+      {
+       "name": "Capa",
+       "exec": "capa",
+       "terminal": true
+      },
+      {
+       "name": "FLOSS",
+       "exec": "floss",
+       "terminal": true
+      },
+      {
+       "name": "Ghidra",
+       "exec": "ghidra",
+       "terminal": false
+      },
+      {
+       "name": "Radare2",
+       "exec": "radare2",
+       "terminal": true
+      },
+      {
+       "name": "Binwalk",
+       "exec": "binwalk",
+       "terminal": true
+      },
+      {
+       "name": "Volatility",
+       "exec": "volatility",
+       "terminal": true
+      },
+      {
+       "name": "Detect It Easy",
+       "exec": "detect-it-easy",
+       "terminal": true
+      },
+      {
+       "name": "PEStudio",
+       "exec": "pestudio",
+       "terminal": true
+      },
+      {
+       "name": "Exeinfo PE",
+       "exec": "exeinfo-pe",
+       "terminal": true
+      },
+      {
+       "name": "oledump",
+       "exec": "oledump",
+       "terminal": true
+      },
+      {
+       "name": "olevba",
+       "exec": "olevba",
+       "terminal": true
+      },
+      {
+       "name": "pdf-parser",
+       "exec": "pdf-parser",
+       "terminal": true
+      },
+      {
+       "name": "peepdf",
+       "exec": "peepdf",
+       "terminal": true
+      },
+      {
+       "name": "CyberChef",
+       "exec": "cyberchef",
+       "terminal": true
+      },
+      {
+       "name": "DidierStevensSuite",
+       "exec": "didierstevenssuite",
+       "terminal": true
+      },
+      {
+       "name": "REMnux Tools",
+       "exec": "remnux",
+       "terminal": true
+      },
+      {
+       "name": "Apktool",
+       "exec": "apktool",
+       "terminal": true
+      },
+      {
+       "name": "ProcDump",
+       "exec": "procdump",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "23 · Digital Forensics & DFIR",
+     "items": [
+      {
+       "name": "Autopsy",
+       "exec": "autopsy",
+       "terminal": false
+      },
+      {
+       "name": "Sleuth Kit",
+       "exec": "sleuth-kit",
+       "terminal": true
+      },
+      {
+       "name": "Volatility",
+       "exec": "volatility",
+       "terminal": true
+      },
+      {
+       "name": "Volatility3",
+       "exec": "volatility3",
+       "terminal": true
+      },
+      {
+       "name": "FTK Imager",
+       "exec": "ftk-imager",
+       "terminal": true
+      },
+      {
+       "name": "Guymager",
+       "exec": "guymager",
+       "terminal": true
+      },
+      {
+       "name": "dc3dd",
+       "exec": "dc3dd",
+       "terminal": true
+      },
+      {
+       "name": "dcfldd",
+       "exec": "dcfldd",
+       "terminal": true
+      },
+      {
+       "name": "Foremost",
+       "exec": "foremost",
+       "terminal": true
+      },
+      {
+       "name": "Scalpel",
+       "exec": "scalpel",
+       "terminal": true
+      },
+      {
+       "name": "Bulk Extractor",
+       "exec": "bulk-extractor",
+       "terminal": true
+      },
+      {
+       "name": "Binwalk",
+       "exec": "binwalk",
+       "terminal": true
+      },
+      {
+       "name": "ExifTool",
+       "exec": "exiftool",
+       "terminal": true
+      },
+      {
+       "name": "Plaso",
+       "exec": "plaso",
+       "terminal": true
+      },
+      {
+       "name": "Timesketch",
+       "exec": "timesketch",
+       "terminal": true
+      },
+      {
+       "name": "RegRipper",
+       "exec": "regripper",
+       "terminal": true
+      },
+      {
+       "name": "Chainsaw",
+       "exec": "chainsaw",
+       "terminal": true
+      },
+      {
+       "name": "Hayabusa",
+       "exec": "hayabusa",
+       "terminal": true
+      },
+      {
+       "name": "MFTECmd",
+       "exec": "mftecmd",
+       "terminal": true
+      },
+      {
+       "name": "PECmd",
+       "exec": "pecmd",
+       "terminal": true
+      },
+      {
+       "name": "LECmd",
+       "exec": "lecmd",
+       "terminal": true
+      },
+      {
+       "name": "AmcacheParser",
+       "exec": "amcacheparser",
+       "terminal": true
+      },
+      {
+       "name": "EvtxECmd",
+       "exec": "evtxecmd",
+       "terminal": true
+      },
+      {
+       "name": "AppCompatCacheParser",
+       "exec": "appcompatcacheparser",
+       "terminal": true
+      },
+      {
+       "name": "PhotoRec",
+       "exec": "photorec",
+       "terminal": true
+      },
+      {
+       "name": "TestDisk",
+       "exec": "testdisk",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "24 · OSINT & Intelligence",
+     "items": [
+      {
+       "name": "Maltego",
+       "exec": "maltego",
+       "terminal": false
+      },
+      {
+       "name": "SpiderFoot",
+       "exec": "spiderfoot",
+       "terminal": true
+      },
+      {
+       "name": "Recon-ng",
+       "exec": "recon-ng",
+       "terminal": true
+      },
+      {
+       "name": "theHarvester",
+       "exec": "theharvester",
+       "terminal": true
+      },
+      {
+       "name": "Amass",
+       "exec": "amass",
+       "terminal": true
+      },
+      {
+       "name": "Sherlock",
+       "exec": "sherlock",
+       "terminal": true
+      },
+      {
+       "name": "Maigret",
+       "exec": "maigret",
+       "terminal": true
+      },
+      {
+       "name": "Holehe",
+       "exec": "holehe",
+       "terminal": true
+      },
+      {
+       "name": "WhatsMyName",
+       "exec": "whatsmyname",
+       "terminal": true
+      },
+      {
+       "name": "GHunt",
+       "exec": "ghunt",
+       "terminal": true
+      },
+      {
+       "name": "Photon",
+       "exec": "photon",
+       "terminal": true
+      },
+      {
+       "name": "Metagoofil",
+       "exec": "metagoofil",
+       "terminal": true
+      },
+      {
+       "name": "ExifTool",
+       "exec": "exiftool",
+       "terminal": true
+      },
+      {
+       "name": "Socialscan",
+       "exec": "socialscan",
+       "terminal": true
+      },
+      {
+       "name": "Blackbird",
+       "exec": "blackbird",
+       "terminal": true
+      },
+      {
+       "name": "Ignorant",
+       "exec": "ignorant",
+       "terminal": true
+      },
+      {
+       "name": "PhoneInfoga",
+       "exec": "phoneinfoga",
+       "terminal": true
+      },
+      {
+       "name": "H8mail",
+       "exec": "h8mail",
+       "terminal": true
+      },
+      {
+       "name": "Trape",
+       "exec": "trape",
+       "terminal": true
+      },
+      {
+       "name": "Twint",
+       "exec": "twint",
+       "terminal": true
+      },
+      {
+       "name": "UserRecon",
+       "exec": "userrecon",
+       "terminal": true
+      },
+      {
+       "name": "Infoga",
+       "exec": "infoga",
+       "terminal": true
+      },
+      {
+       "name": "Instaloader",
+       "exec": "instaloader",
+       "terminal": true
+      },
+      {
+       "name": "Toutatis",
+       "exec": "toutatis",
+       "terminal": true
+      },
+      {
+       "name": "SpiderSuite",
+       "exec": "spidersuite",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "25 · Social Engineering & Phishing",
+     "items": [
+      {
+       "name": "Social-Engineer Toolkit",
+       "exec": "social-engineer-toolkit",
+       "terminal": true
+      },
+      {
+       "name": "Gophish",
+       "exec": "gophish",
+       "terminal": true
+      },
+      {
+       "name": "BeEF",
+       "exec": "beef",
+       "terminal": true
+      },
+      {
+       "name": "Evilginx",
+       "exec": "evilginx",
+       "terminal": true
+      },
+      {
+       "name": "King Phisher",
+       "exec": "king-phisher",
+       "terminal": true
+      },
+      {
+       "name": "Modlishka",
+       "exec": "modlishka",
+       "terminal": true
+      },
+      {
+       "name": "HiddenEye",
+       "exec": "hiddeneye",
+       "terminal": true
+      },
+      {
+       "name": "SocialFish",
+       "exec": "socialfish",
+       "terminal": true
+      },
+      {
+       "name": "BlackEye",
+       "exec": "blackeye",
+       "terminal": true
+      },
+      {
+       "name": "Zphisher",
+       "exec": "zphisher",
+       "terminal": true
+      },
+      {
+       "name": "EvilURL",
+       "exec": "evilurl",
+       "terminal": true
+      },
+      {
+       "name": "URLCrazy",
+       "exec": "urlcrazy",
+       "terminal": true
+      },
+      {
+       "name": "CredSniper",
+       "exec": "credsniper",
+       "terminal": true
+      },
+      {
+       "name": "Phishery",
+       "exec": "phishery",
+       "terminal": true
+      },
+      {
+       "name": "Swaks",
+       "exec": "swaks",
+       "terminal": true
+      },
+      {
+       "name": "SEToolkit",
+       "exec": "setoolkit",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "26 · Mobile Security",
+     "items": [
+      {
+       "name": "MobSF",
+       "exec": "mobsf",
+       "terminal": true
+      },
+      {
+       "name": "Apktool",
+       "exec": "apktool",
+       "terminal": true
+      },
+      {
+       "name": "JADX",
+       "exec": "jadx",
+       "terminal": true
+      },
+      {
+       "name": "Frida",
+       "exec": "frida",
+       "terminal": true
+      },
+      {
+       "name": "Frida-tools",
+       "exec": "frida-tools",
+       "terminal": true
+      },
+      {
+       "name": "Objection",
+       "exec": "objection",
+       "terminal": true
+      },
+      {
+       "name": "Drozer",
+       "exec": "drozer",
+       "terminal": true
+      },
+      {
+       "name": "Androguard",
+       "exec": "androguard",
+       "terminal": true
+      },
+      {
+       "name": "APKLeaks",
+       "exec": "apkleaks",
+       "terminal": true
+      },
+      {
+       "name": "QARK",
+       "exec": "qark",
+       "terminal": true
+      },
+      {
+       "name": "ADB",
+       "exec": "adb",
+       "terminal": true
+      },
+      {
+       "name": "Fastboot",
+       "exec": "fastboot",
+       "terminal": true
+      },
+      {
+       "name": "Scrcpy",
+       "exec": "scrcpy",
+       "terminal": false
+      },
+      {
+       "name": "Genymotion",
+       "exec": "genymotion",
+       "terminal": true
+      },
+      {
+       "name": "r2frida",
+       "exec": "r2frida",
+       "terminal": true
+      },
+      {
+       "name": "jadx-gui",
+       "exec": "jadx-gui",
+       "terminal": true
+      },
+      {
+       "name": "Uber APK Signer",
+       "exec": "uber-apk-signer",
+       "terminal": true
+      },
+      {
+       "name": "Magisk",
+       "exec": "magisk",
+       "terminal": true
+      },
+      {
+       "name": "Android Studio",
+       "exec": "android-studio",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "27 · Hardware / IoT / Embedded",
+     "items": [
+      {
+       "name": "CHIPSEC",
+       "exec": "chipsec",
+       "terminal": true
+      },
+      {
+       "name": "Binwalk",
+       "exec": "binwalk",
+       "terminal": true
+      },
+      {
+       "name": "Firmwalker",
+       "exec": "firmwalker",
+       "terminal": true
+      },
+      {
+       "name": "Firmware-Mod-Kit",
+       "exec": "firmware-mod-kit",
+       "terminal": true
+      },
+      {
+       "name": "FACT",
+       "exec": "fact",
+       "terminal": true
+      },
+      {
+       "name": "FirmAE",
+       "exec": "firmae",
+       "terminal": true
+      },
+      {
+       "name": "QEMU",
+       "exec": "qemu",
+       "terminal": true
+      },
+      {
+       "name": "OpenOCD",
+       "exec": "openocd",
+       "terminal": true
+      },
+      {
+       "name": "Flashrom",
+       "exec": "flashrom",
+       "terminal": true
+      },
+      {
+       "name": "ChipWhisperer",
+       "exec": "chipwhisperer",
+       "terminal": true
+      },
+      {
+       "name": "PCILeech",
+       "exec": "pcileech",
+       "terminal": true
+      },
+      {
+       "name": "USBPcap",
+       "exec": "usbpcap",
+       "terminal": true
+      },
+      {
+       "name": "Sigrok",
+       "exec": "sigrok",
+       "terminal": true
+      },
+      {
+       "name": "PulseView",
+       "exec": "pulseview",
+       "terminal": false
+      },
+      {
+       "name": "Minicom",
+       "exec": "minicom",
+       "terminal": true
+      },
+      {
+       "name": "Screen",
+       "exec": "screen",
+       "terminal": true
+      },
+      {
+       "name": "OpenFPGALoader",
+       "exec": "openfpgaloader",
+       "terminal": true
+      },
+      {
+       "name": "UART Tools",
+       "exec": "uart",
+       "terminal": true
+      },
+      {
+       "name": "SPI Tools",
+       "exec": "spi",
+       "terminal": true
+      },
+      {
+       "name": "JTAG Tools",
+       "exec": "jtag",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "28 · RFID / NFC / Bluetooth / SDR",
+     "items": [
+      {
+       "name": "Proxmark3",
+       "exec": "proxmark3",
+       "terminal": true
+      },
+      {
+       "name": "Proxmark3 Client",
+       "exec": "proxmark3",
+       "terminal": true
+      },
+      {
+       "name": "Flipper Zero Tools",
+       "exec": "flipper-zero",
+       "terminal": true
+      },
+      {
+       "name": "MFOC",
+       "exec": "mfoc",
+       "terminal": true
+      },
+      {
+       "name": "MFCUK",
+       "exec": "mfcuk",
+       "terminal": true
+      },
+      {
+       "name": "LibNFC",
+       "exec": "libnfc",
+       "terminal": true
+      },
+      {
+       "name": "NFC Tools",
+       "exec": "nfc",
+       "terminal": true
+      },
+      {
+       "name": "nfc-list",
+       "exec": "nfc-list",
+       "terminal": true
+      },
+      {
+       "name": "nfc-mfclassic",
+       "exec": "nfc-mfclassic",
+       "terminal": true
+      },
+      {
+       "name": "Bluetoothctl",
+       "exec": "bluetoothctl",
+       "terminal": true
+      },
+      {
+       "name": "Bettercap BLE",
+       "exec": "bettercap-ble",
+       "terminal": true
+      },
+      {
+       "name": "Ubertooth Tools",
+       "exec": "ubertooth",
+       "terminal": true
+      },
+      {
+       "name": "btlejack",
+       "exec": "btlejack",
+       "terminal": true
+      },
+      {
+       "name": "GATTacker",
+       "exec": "gattacker",
+       "terminal": true
+      },
+      {
+       "name": "GNU Radio",
+       "exec": "gnu-radio",
+       "terminal": true
+      },
+      {
+       "name": "GQRX",
+       "exec": "gqrx",
+       "terminal": false
+      },
+      {
+       "name": "SDR++",
+       "exec": "sdr++",
+       "terminal": true
+      },
+      {
+       "name": "Universal Radio Hacker",
+       "exec": "universal-radio-hacker",
+       "terminal": true
+      },
+      {
+       "name": "Inspectrum",
+       "exec": "inspectrum",
+       "terminal": true
+      },
+      {
+       "name": "CubicSDR",
+       "exec": "CubicSDR",
+       "terminal": false
+      },
+      {
+       "name": "rtl-sdr",
+       "exec": "rtl-sdr",
+       "terminal": true
+      },
+      {
+       "name": "HackRF Tools",
+       "exec": "hackrf",
+       "terminal": true
+      },
+      {
+       "name": "Airspy Tools",
+       "exec": "airspy",
+       "terminal": true
+      },
+      {
+       "name": "SoapySDR",
+       "exec": "soapysdr",
+       "terminal": true
+      },
+      {
+       "name": "gr-gsm",
+       "exec": "gr-gsm",
+       "terminal": true
+      },
+      {
+       "name": "Osmocom",
+       "exec": "osmocom",
+       "terminal": true
+      },
+      {
+       "name": "Multimon-ng",
+       "exec": "multimon-ng",
+       "terminal": true
+      },
+      {
+       "name": "SigDigger",
+       "exec": "sigdigger",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "29 · ICS / SCADA / VoIP",
+     "items": [
+      {
+       "name": "Nmap ICS Scripts",
+       "exec": "nmap-ics",
+       "terminal": true
+      },
+      {
+       "name": "PLCScan",
+       "exec": "plcscan",
+       "terminal": true
+      },
+      {
+       "name": "Modbus Tools",
+       "exec": "modbus",
+       "terminal": true
+      },
+      {
+       "name": "ModbusPal",
+       "exec": "modbuspal",
+       "terminal": true
+      },
+      {
+       "name": "S7Scan",
+       "exec": "s7scan",
+       "terminal": true
+      },
+      {
+       "name": "Snap7",
+       "exec": "snap7",
+       "terminal": true
+      },
+      {
+       "name": "BACnet Tools",
+       "exec": "bacnet",
+       "terminal": true
+      },
+      {
+       "name": "CoAP Tools",
+       "exec": "coap",
+       "terminal": true
+      },
+      {
+       "name": "MQTT Tools",
+       "exec": "mqtt",
+       "terminal": true
+      },
+      {
+       "name": "GRASSMARLIN",
+       "exec": "grassmarlin",
+       "terminal": true
+      },
+      {
+       "name": "Metasploit ICS Modules",
+       "exec": "metasploit-ics",
+       "terminal": true
+      },
+      {
+       "name": "RouterSploit",
+       "exec": "routersploit",
+       "terminal": true
+      },
+      {
+       "name": "SIPVicious",
+       "exec": "sipvicious",
+       "terminal": true
+      },
+      {
+       "name": "SIPScan",
+       "exec": "sipscan",
+       "terminal": true
+      },
+      {
+       "name": "Svmap",
+       "exec": "svmap",
+       "terminal": true
+      },
+      {
+       "name": "Svwar",
+       "exec": "svwar",
+       "terminal": true
+      },
+      {
+       "name": "Svcrack",
+       "exec": "svcrack",
+       "terminal": true
+      },
+      {
+       "name": "SIPPTS",
+       "exec": "sippts",
+       "terminal": true
+      },
+      {
+       "name": "VoIP Hopper",
+       "exec": "voip-hopper",
+       "terminal": true
+      },
+      {
+       "name": "RTPBreak",
+       "exec": "rtpbreak",
+       "terminal": true
+      },
+      {
+       "name": "UCSniff",
+       "exec": "ucsniff",
+       "terminal": true
+      }
+     ]
+    },
+    {
+     "name": "30 · AI & Offensive Agents",
+     "items": [
+      {
+       "name": "HexStrike AI",
+       "exec": "hexstrike-ai",
+       "terminal": true
+      },
+      {
+       "name": "LuaN1aoAgent",
+       "exec": "luan1aoagent",
+       "terminal": true
+      },
+      {
+       "name": "CAI",
+       "exec": "cai",
+       "terminal": true
+      },
+      {
+       "name": "AIMAP",
+       "exec": "aimap",
+       "terminal": true
+      },
+      {
+       "name": "Garak",
+       "exec": "garak",
+       "terminal": true
+      },
+      {
+       "name": "Promptfoo",
+       "exec": "promptfoo",
+       "terminal": true
+      },
+      {
+       "name": "PyRIT",
+       "exec": "pyrit",
+       "terminal": true
+      },
+      {
+       "name": "Giskard",
+       "exec": "giskard",
+       "terminal": true
+      },
+      {
+       "name": "LLM Guard",
+       "exec": "llm-guard",
+       "terminal": true
+      },
+      {
+       "name": "Rebuff",
+       "exec": "rebuff",
+       "terminal": true
+      },
+      {
+       "name": "ModelScan",
+       "exec": "modelscan",
+       "terminal": true
+      },
+      {
+       "name": "Adversarial Robustness Toolbox",
+       "exec": "adversarial-robustness-toolbox",
+       "terminal": true
+      },
+      {
+       "name": "CleverHans",
+       "exec": "cleverhans",
+       "terminal": true
+      },
+      {
+       "name": "TextAttack",
+       "exec": "textattack",
+       "terminal": true
+      },
+      {
+       "name": "Counterfit",
+       "exec": "counterfit",
+       "terminal": true
+      },
+      {
+       "name": "DeepExploit",
+       "exec": "deepexploit",
+       "terminal": true
+      },
+      {
+       "name": "PentestGPT",
+       "exec": "pentestgpt",
+       "terminal": true
+      },
+      {
+       "name": "MCP Security Tools",
+       "exec": "mcp-security",
+       "terminal": true
+      },
+      {
+       "name": "MCP Scanner",
+       "exec": "mcp-scanner",
+       "terminal": true
+      },
+      {
+       "name": "AI Recon Agents",
+       "exec": "ai-recon-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Bug Bounty Agents",
+       "exec": "ai-bug-bounty-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI OSINT Agents",
+       "exec": "ai-osint-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Web Pentest Agents",
+       "exec": "ai-web-pentest-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI API Security Agents",
+       "exec": "ai-api-security-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Cloud Security Agents",
+       "exec": "ai-cloud-security-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Binary Analysis Agents",
+       "exec": "ai-binary-analysis-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Malware Analysis Agents",
+       "exec": "ai-malware-analysis-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Exploit Development Agents",
+       "exec": "ai-exploit-development-agents",
+       "terminal": true
+      },
+      {
+       "name": "AI Security Research Agents",
+       "exec": "ai-security-research-agents",
+       "terminal": true
+      },
+      {
+       "name": "Prompt Injection Testing",
+       "exec": "prompt-injection-testing",
+       "terminal": true
+      },
+      {
+       "name": "RAG Security Testing",
+       "exec": "rag-security-testing",
+       "terminal": true
+      },
+      {
+       "name": "Agentic Security Testing",
+       "exec": "agentic-security-testing",
+       "terminal": true
+      },
+      {
+       "name": "Model Extraction Testing",
+       "exec": "model-extraction-testing",
+       "terminal": true
+      },
+      {
+       "name": "Model Poisoning Testing",
+       "exec": "model-poisoning-testing",
+       "terminal": true
+      },
+      {
+       "name": "Adversarial ML Testing",
+       "exec": "adversarial-ml-testing",
+       "terminal": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Privacy & Identity",
+   "icon": "🕶️",
+   "items": [
+    {
+     "name": "Tor",
+     "exec": "tor",
+     "terminal": true
+    },
+    {
+     "name": "Tor Browser",
+     "exec": "torbrowser-launcher",
+     "terminal": false
+    },
+    {
+     "name": "Torsocks",
+     "exec": "torsocks",
+     "terminal": true
+    },
+    {
+     "name": "ProxyChains",
+     "exec": "proxychains",
+     "terminal": true
+    },
+    {
+     "name": "AnonSurf",
+     "exec": "anonsurf",
+     "terminal": true
+    },
+    {
+     "name": "Macchanger",
+     "exec": "macchanger",
+     "terminal": true
+    },
+    {
+     "name": "WireGuard",
+     "exec": "wireguard",
+     "terminal": true
+    },
+    {
+     "name": "OpenVPN",
+     "exec": "openvpn",
+     "terminal": true
+    },
+    {
+     "name": "DNSCrypt",
+     "exec": "dnscrypt",
+     "terminal": true
+    },
+    {
+     "name": "Unbound",
+     "exec": "unbound",
+     "terminal": true
+    },
+    {
+     "name": "NetworkManager",
+     "exec": "networkmanager",
+     "terminal": true
+    },
+    {
+     "name": "Transparent Tor Gateway",
+     "exec": "transparent-tor-gateway",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Virtualization & Labs",
+   "icon": "🧪",
+   "items": [
+    {
+     "name": "QEMU",
+     "exec": "qemu",
+     "terminal": true
+    },
+    {
+     "name": "VirtualBox",
+     "exec": "virtualbox",
+     "terminal": false
+    },
+    {
+     "name": "VMware",
+     "exec": "vmware",
+     "terminal": true
+    },
+    {
+     "name": "GNOME Boxes",
+     "exec": "gnome-boxes",
+     "terminal": false
+    },
+    {
+     "name": "Docker",
+     "exec": "docker",
+     "terminal": true
+    },
+    {
+     "name": "Podman",
+     "exec": "podman",
+     "terminal": true
+    },
+    {
+     "name": "Distrobox",
+     "exec": "distrobox",
+     "terminal": true
+    },
+    {
+     "name": "libvirt",
+     "exec": "libvirt",
+     "terminal": true
+    },
+    {
+     "name": "virt-manager",
+     "exec": "virt-manager",
+     "terminal": false
+    },
+    {
+     "name": "Packer",
+     "exec": "packer",
+     "terminal": true
+    },
+    {
+     "name": "Vagrant",
+     "exec": "vagrant",
+     "terminal": true
+    },
+    {
+     "name": "Minikube",
+     "exec": "minikube",
+     "terminal": true
+    },
+    {
+     "name": "Kubernetes",
+     "exec": "kubernetes",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Performance",
+   "icon": "⚡",
+   "items": [
+    {
+     "name": "btop",
+     "exec": "btop",
+     "terminal": true
+    },
+    {
+     "name": "htop",
+     "exec": "htop",
+     "terminal": true
+    },
+    {
+     "name": "Mission Center",
+     "exec": "missioncenter",
+     "terminal": false
+    },
+    {
+     "name": "nvtop",
+     "exec": "nvtop",
+     "terminal": true
+    },
+    {
+     "name": "GPU Viewer",
+     "exec": "gpu-viewer",
+     "terminal": false
+    },
+    {
+     "name": "CPU-X",
+     "exec": "cpu-x",
+     "terminal": false
+    },
+    {
+     "name": "lm_sensors",
+     "exec": "lm_sensors",
+     "terminal": true
+    },
+    {
+     "name": "i7z",
+     "exec": "i7z",
+     "terminal": true
+    },
+    {
+     "name": "powertop",
+     "exec": "powertop",
+     "terminal": true
+    },
+    {
+     "name": "CoreCtrl",
+     "exec": "corectrl",
+     "terminal": false
+    },
+    {
+     "name": "LACT",
+     "exec": "lact",
+     "terminal": true
+    },
+    {
+     "name": "tuned",
+     "exec": "tuned",
+     "terminal": true
+    },
+    {
+     "name": "GameMode",
+     "exec": "gamemode",
+     "terminal": true
+    },
+    {
+     "name": "MangoHud",
+     "exec": "mangohud",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Utilities",
+   "icon": "🔧",
+   "items": [
+    {
+     "name": "Calculator",
+     "exec": "kcalc",
+     "terminal": false
+    },
+    {
+     "name": "Calendar",
+     "exec": "calendar",
+     "terminal": true
+    },
+    {
+     "name": "Clock",
+     "exec": "clock",
+     "terminal": true
+    },
+    {
+     "name": "Timer",
+     "exec": "timer",
+     "terminal": true
+    },
+    {
+     "name": "Stopwatch",
+     "exec": "stopwatch",
+     "terminal": true
+    },
+    {
+     "name": "Screenshot",
+     "exec": "screenshot",
+     "terminal": true
+    },
+    {
+     "name": "Grim",
+     "exec": "grim",
+     "terminal": true
+    },
+    {
+     "name": "Clipboard",
+     "exec": "clipboard",
+     "terminal": true
+    },
+    {
+     "name": "Character Map",
+     "exec": "character-map",
+     "terminal": true
+    },
+    {
+     "name": "Color Picker",
+     "exec": "color-picker",
+     "terminal": true
+    },
+    {
+     "name": "Font Manager",
+     "exec": "font-manager",
+     "terminal": false
+    },
+    {
+     "name": "Disk Usage",
+     "exec": "disk-usage",
+     "terminal": true
+    },
+    {
+     "name": "System Monitor",
+     "exec": "plasma-systemmonitor",
+     "terminal": false
+    },
+    {
+     "name": "Mission Center",
+     "exec": "missioncenter",
+     "terminal": false
+    },
+    {
+     "name": "Filelight",
+     "exec": "filelight",
+     "terminal": false
+    },
+    {
+     "name": "Yazi",
+     "exec": "yazi",
+     "terminal": true
+    },
+    {
+     "name": "jq",
+     "exec": "jq",
+     "terminal": true
+    },
+    {
+     "name": "ripgrep",
+     "exec": "ripgrep",
+     "terminal": true
+    },
+    {
+     "name": "fd",
+     "exec": "fd",
+     "terminal": true
+    },
+    {
+     "name": "fzf",
+     "exec": "fzf",
+     "terminal": true
+    },
+    {
+     "name": "bat",
+     "exec": "bat",
+     "terminal": true
+    },
+    {
+     "name": "eza",
+     "exec": "eza",
+     "terminal": true
+    },
+    {
+     "name": "fastfetch",
+     "exec": "fastfetch",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Accessibility",
+   "icon": "♿",
+   "items": [
+    {
+     "name": "Screen Reader",
+     "exec": "screen-reader",
+     "terminal": true
+    },
+    {
+     "name": "Magnifier",
+     "exec": "magnifier",
+     "terminal": true
+    },
+    {
+     "name": "On-Screen Keyboard",
+     "exec": "on-screen-keyboard",
+     "terminal": true
+    },
+    {
+     "name": "High Contrast",
+     "exec": "high-contrast",
+     "terminal": true
+    },
+    {
+     "name": "Accessibility Settings",
+     "exec": "accessibility-settings",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "System",
+   "icon": "⚙️",
+   "items": [
+    {
+     "name": "Settings",
+     "exec": "settings",
+     "terminal": true
+    },
+    {
+     "name": "Software Center",
+     "exec": "software-center",
+     "terminal": true
+    },
+    {
+     "name": "Update Manager",
+     "exec": "update-manager",
+     "terminal": true
+    },
+    {
+     "name": "pacman",
+     "exec": "pacman",
+     "terminal": true
+    },
+    {
+     "name": "paru",
+     "exec": "paru",
+     "terminal": true
+    },
+    {
+     "name": "BlackArch Repository",
+     "exec": "blackarch-repository",
+     "terminal": true
+    },
+    {
+     "name": "BlackArch Tool Groups",
+     "exec": "blackarch-tool-groups",
+     "terminal": true
+    },
+    {
+     "name": "Arch Wiki",
+     "exec": "arch-wiki",
+     "terminal": true
+    },
+    {
+     "name": "System Information",
+     "exec": "system-information",
+     "terminal": true
+    },
+    {
+     "name": "Hardware Information",
+     "exec": "hardware-information",
+     "terminal": true
+    },
+    {
+     "name": "Display",
+     "exec": "display",
+     "terminal": true
+    },
+    {
+     "name": "Sound",
+     "exec": "sound",
+     "terminal": true
+    },
+    {
+     "name": "Network",
+     "exec": "network",
+     "terminal": true
+    },
+    {
+     "name": "Power",
+     "exec": "power",
+     "terminal": true
+    },
+    {
+     "name": "Users & Accounts",
+     "exec": "users--accounts",
+     "terminal": true
+    },
+    {
+     "name": "Language & Region",
+     "exec": "language--region",
+     "terminal": true
+    },
+    {
+     "name": "Printers",
+     "exec": "printers",
+     "terminal": true
+    },
+    {
+     "name": "Firewall",
+     "exec": "firewall",
+     "terminal": true
+    },
+    {
+     "name": "Network Manager",
+     "exec": "network-manager",
+     "terminal": true
+    },
+    {
+     "name": "Service Manager",
+     "exec": "service-manager",
+     "terminal": true
+    },
+    {
+     "name": "Kernel Manager",
+     "exec": "kernel-manager",
+     "terminal": true
+    },
+    {
+     "name": "Boot Manager",
+     "exec": "boot-manager",
+     "terminal": true
+    },
+    {
+     "name": "Disk Management",
+     "exec": "disk-management",
+     "terminal": true
+    },
+    {
+     "name": "Backup & Restore",
+     "exec": "backup--restore",
+     "terminal": true
+    },
+    {
+     "name": "Recovery",
+     "exec": "recovery",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  }
+ ]
+}
