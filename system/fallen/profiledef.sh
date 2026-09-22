@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+iso_name="archangelos-fallen"
+iso_label="ARCHANGELOS_FALLEN_$(date +%Y%m)"
+iso_publisher="ArchangelOS Fallen Edition <https://arcangelo.net>"
+iso_application="ArchangelOS Fallen Edition"
+iso_version="${ARCHANGELOS_VERSION:-$(date +%Y.%m.%d)}"
+install_dir="archangelos"
+bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito' 'uefi-x64.systemd-boot.esp' 'uefi-x64.systemd-boot.eltorito')
+arch="x86_64"
+pacman_conf="pacman.conf"
+
+airootfs_image_type="squashfs"
+airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M' '-processors' '4')
+
+file_permissions=(
+  ["/etc/shadow"]="0:0:0400"
+  ["/etc/gshadow"]="0:0:0400"
+  ["/etc/sudoers.d"]="0:0:0750"
+  ["/etc/sudoers.d/wheel"]="0:0:0440"
+  ["/root"]="0:0:0700"
+  ["/root/customize_airootfs.sh"]="0:0:0755"
+  ["/usr/bin/archangelos-installer"]="0:0:0755"
+  ["/usr/bin/archangelos-gui-installer"]="0:0:0755"
+  ["/usr/bin/archangelos-dl"]="0:0:0755"
+  ["/usr/bin/archangelos-hyper-dl"]="0:0:0755"
+  ["/usr/bin/archangelos-demo.sh"]="0:0:0755"
+  ["/usr/bin/hexstrike-setup"]="0:0:0755"
+  ["/usr/bin/archangelos-wheel"]="0:0:0755"
+  ["/usr/bin/archangelos-radial"]="0:0:0755"
+  ["/usr/bin/archangelos-wallpaper"]="0:0:0755"
+  ["/usr/bin/archangelos-wallpaper-setup"]="0:0:0755"
+  ["/usr/bin/archangelos-lock"]="0:0:0755"
+  ["/usr/bin/archangelos-welcome"]="0:0:0755"
+  ["/usr/bin/archangelos-launcher"]="0:0:0755"
+  ["/usr/bin/arcfetch"]="0:0:0755"
+  ["/usr/bin/archangelos-launcher-toggle"]="0:0:0755"
+  ["/usr/bin/archangelos-redops-tools"]="0:0:0755"
+  ["/usr/bin/archangelos-install-tool"]="0:0:0755"
+  ["/usr/bin/archangelos-install-arsenal"]="0:0:0755"
+  ["/usr/bin/archangelos-fastfetch-setup"]="0:0:0755"
+)

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install ArchangelOS Linux (GUI)
+Comment=Standalone 100% Offline Graphical Installer for ArchangelOS Linux
+Exec=sudo /usr/bin/archangelos-installer
+Icon=/usr/share/sddm/themes/archangelos/assets/logo.png
+Terminal=false
+Categories=System;
+StartupNotify=true
+
