@@ -187,7 +187,7 @@ if [ -d /usr/share/wayland-sessions ] && [ -f /usr/share/wayland-sessions/hyprla
 fi
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
-AUR_PKGS="anki aseprite bottles duckstation dxvk-bin frozen-bubble geogebra gpu-screen-recorder gpu-viewer hedgewars heroic-games-launcher-bin jupyterlab lact lbreakout2 legendary mission-center pcsx2 playonlinux proton-mail-bin proton-pass-bin proton-vpn-gtk-app protonplus protonup-qt steamcmd streamlink-twitch-gui-bin subtitleeditor tauon-music-box umu-launcher vkbasalt vkd3d-proton-bin warpinator wps-office zotero-bin game-devices-udev"
+AUR_PKGS="anki mpvpaper aseprite bottles duckstation dxvk-bin frozen-bubble geogebra gpu-screen-recorder gpu-viewer hedgewars heroic-games-launcher-bin jupyterlab lact lbreakout2 legendary mission-center pcsx2 playonlinux proton-mail-bin proton-pass-bin proton-vpn-gtk-app protonplus protonup-qt steamcmd streamlink-twitch-gui-bin subtitleeditor tauon-music-box umu-launcher vkbasalt vkd3d-proton-bin warpinator wps-office zotero-bin game-devices-udev"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
