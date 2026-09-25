@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ArchangelOS Fallen Edition - HexStrike AI Setup Helper
+# Installs HexStrike AI (MCP-based LLM Red Team framework) for AI-driven
+# offensive security orchestration with AI agents and pentest automation.
+echo "========================================================"
+echo "    HexStrike AI - LLM Red Team & Pentest Agent Framework"
+echo "========================================================"
+if [ "$EUID" -ne 0 ]; then
+  echo "[!] Please run as root (sudo hexstrike-setup)"
+  exit 1
+fi
+
+HEXSTRIKE_DIR="/opt/hexstrike-ai"
+
+if [ -d "$HEXSTRIKE_DIR" ] && [ -f "$HEXSTRIKE_DIR/hexstrike_server.py" ]; then
+  echo "[+] HexStrike AI already installed at $HEXSTRIKE_DIR"
+  echo "[+] Starting HexStrike AI MCP server..."
+  cd "$HEXSTRIKE_DIR" || exit 1
+  echo "[!] Launch with: python3 hexstrike_server.py"
+  echo "[+] Point your AI agent (Claude, GPT, etc.) MCP client at: http://localhost:5000"
+else
+  echo "[*] Installing HexStrike AI from upstream..."
+  if git clone --depth 1 https://github.com/0x4m4/hexstrike-ai.git "$HEXSTRIKE_DIR"; then
+    cd "$HEXSTRIKE_DIR" || exit 1
+    echo "[*] Installing Python dependencies..."
+    pip install -r requirements.txt || true
+    echo "[+] HexStrike AI installed at $HEXSTRIKE_DIR"
+    echo "[!] Launch with: python3 hexstrike_server.py"
+    echo "[+] Connect your AI agent MCP client to: http://localhost:5000"
+    echo ""
+    echo "[i] Example MCP client config:"
+    echo '    "hexstrike-ai": { "command": "python3", "args": ["/opt/hexstrike-ai/hexstrike_mcp.py", "http://localhost:5000"] }'
+  else
+    echo "[-] Failed to clone HexStrike AI repository. Check network connectivity."
+    exit 1
+  fi
+fi

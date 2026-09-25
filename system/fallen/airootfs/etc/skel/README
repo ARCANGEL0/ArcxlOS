@@ -1,0 +1,19 @@
+[ NETWORK ]
+
+  - NetworkManager is enabled by default. Wi-Fi, Ethernet, and DNS will
+    be configured and connected automatically immediately after boot.
+
+[ INSTALL ]
+
+  - To install ArchangelOS simply run 'archangelos-install' and follow the
+    instructions.
+
+[ EXPLOITS ]
+
+  - A collection of exploits can be found in /usr/share/exploits. To update the
+    archive use 'sploitctl'.
+
+[ MISC ]
+
+  - A ChangeLog file of the ISO can be found in /root.
+  - Remember: HACK THE PLANET, D00R THE PLANET, RULE THE PLANET!

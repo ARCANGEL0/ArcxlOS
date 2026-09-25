@@ -1,0 +1,20 @@
+#!/bin/bash
+# ArchangelOS screenshot — pick a region with the animated selector, capture it
+# with grim, save under ~/Pictures/Screenshots, and copy it to the clipboard.
+# Bound to SUPER+SHIFT+S.
+set -u
+
+geom="$(/usr/bin/archangelos-region shot)" || exit 0   # cancelled → quiet exit
+[ -n "$geom" ] || exit 0
+
+dir="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+mkdir -p "$dir"
+file="$dir/screenshot-$(date +%Y%m%d-%H%M%S).png"
+
+if grim -g "$geom" "$file"; then
+  command -v wl-copy >/dev/null 2>&1 && wl-copy --type image/png < "$file" 2>/dev/null || true
+  notify-send -i "$file" "Screenshot saved" "$file" 2>/dev/null || true
+else
+  notify-send -u critical "Screenshot failed" "grim could not capture the region" 2>/dev/null || true
+  exit 1
+fi
