@@ -227,7 +227,7 @@ fi
 
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
-AUR_PKGS="anki geogebra jupyterlab proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box wps-office zotero-bin"
+AUR_PKGS="anki mpvpaper geogebra jupyterlab proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
