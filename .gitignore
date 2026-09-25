@@ -26,6 +26,9 @@ __pycache__/
 *~
 *.tmp
 
+# Build & runtime logs
+*.log
+
 # User gnupg & subversion
 .gnupg/
 .subversion/
