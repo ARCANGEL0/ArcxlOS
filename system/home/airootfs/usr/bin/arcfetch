@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# arcfetch — ArchangelOS branded system info banner with the real image logo.
+#   arcfetch              full banner with the pixel logo (chafa)
+#   arcfetch --logo none  info only
+#   arcfetch --help       fastfetch help
+set -u
+
+# System config first, then a per-user override if present.
+CONF="/usr/share/archangelos/arcfetch.jsonc"
+[ -f "${HOME}/.config/archangelos/arcfetch.jsonc" ] && CONF="${HOME}/.config/archangelos/arcfetch.jsonc"
+[ -n "${ARCHANGELOS_FF_CONF:-}" ] && CONF="${ARCHANGELOS_FF_CONF}"
+
+if command -v fastfetch >/dev/null 2>&1 && [ -f "${CONF}" ]; then
+  exec fastfetch -c "${CONF}" "$@"
+fi
+
+# Fallback: ASCII logo + minimal info if fastfetch/chafa is unavailable.
+[ -f /usr/share/archangelos/logo.txt ] && cat /usr/share/archangelos/logo.txt
+{
+  echo "OS       : $(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-ArchangelOS}")"
+  echo "KERNEL   : $(uname -r)"
+  echo "HOST     : $(uname -n)"
+  echo "UPTIME   : $(uptime -p 2>/dev/null | sed 's/up //')"
+} | column -t -s':'
+exit 0
