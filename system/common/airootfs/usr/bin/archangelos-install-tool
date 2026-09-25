@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -u
+
+ALIASES=/usr/share/archangelos/tool-aliases.conf
+
+resolve() {
+  local n="$1" m=""
+  if [ -f "$ALIASES" ]; then
+    m=$(awk -F= -v k="$n" '$1==k{gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$ALIASES")
+  fi
+  [ -n "$m" ] && echo "$m" || echo "$n"
+}
+
+as_user() {
+  local u="${PKEXEC_UID:-}"
+  [ -z "$u" ] && u="${SUDO_UID:-}"
+  if [ -n "$u" ]; then
+    id -nu "$u" 2>/dev/null && return
+  fi
+  logname 2>/dev/null || echo "${SUDO_USER:-}"
+}
+
+aur_install() {
+  local pkg="$1" u helper=""
+  for h in yay paru; do command -v "$h" >/dev/null 2>&1 && { helper="$h"; break; }; done
+  [ -z "$helper" ] && return 1
+  u="$(as_user)"
+  if [ -n "$u" ] && [ "$u" != "root" ]; then
+    su - "$u" -c "$helper -S --noconfirm --needed $pkg"
+  else
+    "$helper" -S --noconfirm --needed "$pkg"
+  fi
+}
+
+rc=0
+for name in "$@"; do
+  if command -v "$name" >/dev/null 2>&1; then
+    echo "[=] $name is already installed"
+    continue
+  fi
+  pkg="$(resolve "$name")"
+  echo "[*] Installing $pkg (for '$name') ..."
+  if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+    echo "[+] $pkg installed from the repositories"
+    continue
+  fi
+  if aur_install "$pkg"; then
+    echo "[+] $pkg installed from the AUR"
+    continue
+  fi
+  echo "[!] Could not install '$pkg' — check the tool name or your network connection"
+  rc=1
+done
+exit $rc

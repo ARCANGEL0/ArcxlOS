@@ -1,0 +1,1297 @@
+{
+ "edition": "Gaming Edition",
+ "categories": [
+  {
+   "name": "Internet",
+   "icon": "🌐",
+   "items": [
+    {
+     "name": "Firefox",
+     "exec": "firefox",
+     "terminal": false
+    },
+    {
+     "name": "LibreWolf",
+     "exec": "librewolf",
+     "terminal": false
+    },
+    {
+     "name": "Thunderbird",
+     "exec": "thunderbird",
+     "terminal": false
+    },
+    {
+     "name": "Telegram",
+     "exec": "telegram-desktop",
+     "terminal": false
+    },
+    {
+     "name": "Discord",
+     "exec": "discord",
+     "terminal": false
+    },
+    {
+     "name": "Cyberspace",
+     "exec": "cyberspace",
+     "terminal": false
+    },
+    {
+     "name": "Proton Mail",
+     "exec": "proton-mail",
+     "terminal": false
+    },
+    {
+     "name": "Proton VPN",
+     "exec": "proton-vpn",
+     "terminal": false
+    },
+    {
+     "name": "Proton Pass",
+     "exec": "proton-pass",
+     "terminal": false
+    },
+    {
+     "name": "Proton Drive",
+     "exec": "proton-drive",
+     "terminal": true
+    },
+    {
+     "name": "Twitch",
+     "exec": "twitch",
+     "terminal": true
+    },
+    {
+     "name": "qBittorrent",
+     "exec": "qbittorrent",
+     "terminal": false
+    },
+    {
+     "name": "FileZilla",
+     "exec": "filezilla",
+     "terminal": false
+    },
+    {
+     "name": "Remmina",
+     "exec": "remmina",
+     "terminal": false
+    },
+    {
+     "name": "Warpinator",
+     "exec": "warpinator",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Office",
+   "icon": "📄",
+   "items": [
+    {
+     "name": "WPS Office",
+     "exec": "wps",
+     "terminal": false
+    },
+    {
+     "name": "Okular",
+     "exec": "okular",
+     "terminal": false
+    },
+    {
+     "name": "Obsidian",
+     "exec": "obsidian",
+     "terminal": false
+    },
+    {
+     "name": "KOrganizer",
+     "exec": "korganizer",
+     "terminal": false
+    },
+    {
+     "name": "Zotero",
+     "exec": "zotero",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Graphics",
+   "icon": "🎨",
+   "items": [
+    {
+     "name": "GIMP",
+     "exec": "gimp",
+     "terminal": false
+    },
+    {
+     "name": "Krita",
+     "exec": "krita",
+     "terminal": false
+    },
+    {
+     "name": "Inkscape",
+     "exec": "inkscape",
+     "terminal": false
+    },
+    {
+     "name": "Aseprite",
+     "exec": "aseprite",
+     "terminal": false
+    },
+    {
+     "name": "Scribus",
+     "exec": "scribus",
+     "terminal": false
+    },
+    {
+     "name": "Darktable",
+     "exec": "darktable",
+     "terminal": false
+    },
+    {
+     "name": "digiKam",
+     "exec": "digikam",
+     "terminal": false
+    },
+    {
+     "name": "Gwenview",
+     "exec": "gwenview",
+     "terminal": false
+    },
+    {
+     "name": "Skanlite",
+     "exec": "skanlite",
+     "terminal": false
+    },
+    {
+     "name": "ImageMagick",
+     "exec": "imagemagick",
+     "terminal": true
+    },
+    {
+     "name": "Font Manager",
+     "exec": "font-manager",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Media",
+   "icon": "🎬",
+   "items": [
+    {
+     "name": "VLC",
+     "exec": "vlc",
+     "terminal": false
+    },
+    {
+     "name": "OBS Studio",
+     "exec": "obs",
+     "terminal": false
+    },
+    {
+     "name": "Kdenlive",
+     "exec": "kdenlive",
+     "terminal": false
+    },
+    {
+     "name": "Shotcut",
+     "exec": "shotcut",
+     "terminal": false
+    },
+    {
+     "name": "Audacity",
+     "exec": "audacity",
+     "terminal": false
+    },
+    {
+     "name": "HandBrake",
+     "exec": "ghb",
+     "terminal": false
+    },
+    {
+     "name": "MediaInfo",
+     "exec": "mediainfo",
+     "terminal": true
+    },
+    {
+     "name": "Subtitle Editor",
+     "exec": "subtitle-editor",
+     "terminal": true
+    },
+    {
+     "name": "FFmpeg",
+     "exec": "ffmpeg",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Music",
+   "icon": "🎵",
+   "items": [
+    {
+     "name": "Strawberry",
+     "exec": "strawberry",
+     "terminal": false
+    },
+    {
+     "name": "Elisa",
+     "exec": "elisa",
+     "terminal": false
+    },
+    {
+     "name": "Tauon Music Box",
+     "exec": "tauon-music-box",
+     "terminal": true
+    },
+    {
+     "name": "Quod Libet",
+     "exec": "quodlibet",
+     "terminal": false
+    },
+    {
+     "name": "cmus",
+     "exec": "cmus",
+     "terminal": true
+    },
+    {
+     "name": "ncmpcpp",
+     "exec": "ncmpcpp",
+     "terminal": true
+    },
+    {
+     "name": "MPD",
+     "exec": "mpd",
+     "terminal": true
+    },
+    {
+     "name": "EasyEffects",
+     "exec": "easyeffects",
+     "terminal": false
+    },
+    {
+     "name": "MuseScore",
+     "exec": "musescore",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Games",
+   "icon": "🎮",
+   "items": [
+    {
+     "name": "Steam",
+     "exec": "steam",
+     "terminal": false
+    },
+    {
+     "name": "Lutris",
+     "exec": "lutris",
+     "terminal": false
+    },
+    {
+     "name": "Heroic Games Launcher",
+     "exec": "heroic",
+     "terminal": false
+    },
+    {
+     "name": "PlayOnLinux",
+     "exec": "playonlinux",
+     "terminal": false
+    },
+    {
+     "name": "Bottles",
+     "exec": "bottles",
+     "terminal": false
+    },
+    {
+     "name": "Wine",
+     "exec": "wine",
+     "terminal": true
+    },
+    {
+     "name": "Winetricks",
+     "exec": "winetricks",
+     "terminal": true
+    },
+    {
+     "name": "ProtonUp-Qt",
+     "exec": "protonup-qt",
+     "terminal": false
+    },
+    {
+     "name": "ProtonPlus",
+     "exec": "protonplus",
+     "terminal": false
+    },
+    {
+     "name": "itch.io",
+     "exec": "itch.io",
+     "terminal": true
+    },
+    {
+     "name": "Legendary",
+     "exec": "legendary",
+     "terminal": true
+    },
+    {
+     "name": "Minecraft Launcher",
+     "exec": "minecraft-launcher",
+     "terminal": true
+    },
+    {
+     "name": "Roblox",
+     "exec": "roblox",
+     "terminal": true
+    },
+    {
+     "name": "RetroArch",
+     "exec": "retroarch",
+     "terminal": false
+    },
+    {
+     "name": "Dolphin Emulator",
+     "exec": "dolphin-emu",
+     "terminal": false
+    },
+    {
+     "name": "PCSX2",
+     "exec": "pcsx2",
+     "terminal": false
+    },
+    {
+     "name": "PPSSPP",
+     "exec": "PPSSPPQt",
+     "terminal": false
+    },
+    {
+     "name": "DuckStation",
+     "exec": "duckstation-qt",
+     "terminal": false
+    },
+    {
+     "name": "mGBA",
+     "exec": "mgba-qt",
+     "terminal": false
+    },
+    {
+     "name": "DOSBox",
+     "exec": "dosbox",
+     "terminal": true
+    },
+    {
+     "name": "ScummVM",
+     "exec": "scummvm",
+     "terminal": false
+    },
+    {
+     "name": "0 A.D.",
+     "exec": "0-a.d.",
+     "terminal": true
+    },
+    {
+     "name": "SuperTuxKart",
+     "exec": "supertuxkart",
+     "terminal": true
+    },
+    {
+     "name": "SuperTux",
+     "exec": "supertux",
+     "terminal": true
+    },
+    {
+     "name": "Hedgewars",
+     "exec": "hedgewars",
+     "terminal": true
+    },
+    {
+     "name": "Battle for Wesnoth",
+     "exec": "battle-for-wesnoth",
+     "terminal": true
+    },
+    {
+     "name": "OpenTTD",
+     "exec": "openttd",
+     "terminal": true
+    },
+    {
+     "name": "FreeCiv",
+     "exec": "freeciv",
+     "terminal": true
+    },
+    {
+     "name": "Frozen Bubble",
+     "exec": "frozen-bubble",
+     "terminal": true
+    },
+    {
+     "name": "LBreakout2",
+     "exec": "lbreakout2",
+     "terminal": true
+    },
+    {
+     "name": "Chess",
+     "exec": "chess",
+     "terminal": true
+    },
+    {
+     "name": "KPatience",
+     "exec": "kpatience",
+     "terminal": true
+    },
+    {
+     "name": "KMines",
+     "exec": "kmines",
+     "terminal": true
+    },
+    {
+     "name": "KBreakOut",
+     "exec": "kbreakout",
+     "terminal": true
+    },
+    {
+     "name": "KSnake",
+     "exec": "ksnake",
+     "terminal": true
+    },
+    {
+     "name": "Mahjongg",
+     "exec": "mahjongg",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Game Tools",
+   "icon": "🏆",
+   "items": [
+    {
+     "name": "MangoHud",
+     "exec": "mangohud",
+     "terminal": true
+    },
+    {
+     "name": "Gamescope",
+     "exec": "gamescope",
+     "terminal": true
+    },
+    {
+     "name": "GameMode",
+     "exec": "gamemode",
+     "terminal": true
+    },
+    {
+     "name": "vkBasalt",
+     "exec": "vkbasalt",
+     "terminal": true
+    },
+    {
+     "name": "Protontricks",
+     "exec": "protontricks",
+     "terminal": true
+    },
+    {
+     "name": "ProtonDB",
+     "exec": "protondb",
+     "terminal": true
+    },
+    {
+     "name": "ProtonUp-Qt",
+     "exec": "protonup-qt",
+     "terminal": false
+    },
+    {
+     "name": "Steam Runtime",
+     "exec": "steam-runtime",
+     "terminal": true
+    },
+    {
+     "name": "SteamCMD",
+     "exec": "steamcmd",
+     "terminal": true
+    },
+    {
+     "name": "GPU Screen Recorder",
+     "exec": "gpu-screen-recorder",
+     "terminal": true
+    },
+    {
+     "name": "DXVK",
+     "exec": "dxvk",
+     "terminal": true
+    },
+    {
+     "name": "VKD3D-Proton",
+     "exec": "vkd3d-proton",
+     "terminal": true
+    },
+    {
+     "name": "umu-launcher",
+     "exec": "umu-launcher",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Streaming",
+   "icon": "📺",
+   "items": [
+    {
+     "name": "OBS Studio",
+     "exec": "obs",
+     "terminal": false
+    },
+    {
+     "name": "Twitch",
+     "exec": "twitch",
+     "terminal": true
+    },
+    {
+     "name": "Streamlabs",
+     "exec": "streamlabs",
+     "terminal": true
+    },
+    {
+     "name": "GPU Screen Recorder",
+     "exec": "gpu-screen-recorder",
+     "terminal": true
+    },
+    {
+     "name": "FFmpeg",
+     "exec": "ffmpeg",
+     "terminal": true
+    },
+    {
+     "name": "VLC",
+     "exec": "vlc",
+     "terminal": false
+    },
+    {
+     "name": "Audacity",
+     "exec": "audacity",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Education",
+   "icon": "📚",
+   "items": [
+    {
+     "name": "Stellarium",
+     "exec": "stellarium",
+     "terminal": false
+    },
+    {
+     "name": "KStars",
+     "exec": "kstars",
+     "terminal": false
+    },
+    {
+     "name": "Marble",
+     "exec": "marble",
+     "terminal": false
+    },
+    {
+     "name": "GeoGebra",
+     "exec": "geogebra",
+     "terminal": false
+    },
+    {
+     "name": "KGeography",
+     "exec": "kgeography",
+     "terminal": true
+    },
+    {
+     "name": "KDE Edu",
+     "exec": "kde-edu",
+     "terminal": true
+    },
+    {
+     "name": "Anki",
+     "exec": "anki",
+     "terminal": false
+    },
+    {
+     "name": "Kalzium",
+     "exec": "kalzium",
+     "terminal": false
+    },
+    {
+     "name": "Kig",
+     "exec": "kig",
+     "terminal": true
+    },
+    {
+     "name": "KmPlot",
+     "exec": "kmplot",
+     "terminal": true
+    },
+    {
+     "name": "Cantor",
+     "exec": "cantor",
+     "terminal": true
+    },
+    {
+     "name": "GNU Octave",
+     "exec": "octave",
+     "terminal": true
+    },
+    {
+     "name": "JupyterLab",
+     "exec": "jupyterlab",
+     "terminal": true
+    },
+    {
+     "name": "GCompris",
+     "exec": "gcompris-qt",
+     "terminal": false
+    },
+    {
+     "name": "KWordQuiz",
+     "exec": "kwordquiz",
+     "terminal": true
+    },
+    {
+     "name": "KHangMan",
+     "exec": "khangman",
+     "terminal": true
+    },
+    {
+     "name": "Kiten",
+     "exec": "kiten",
+     "terminal": true
+    },
+    {
+     "name": "KTouch",
+     "exec": "ktouch",
+     "terminal": true
+    },
+    {
+     "name": "Parley",
+     "exec": "parley",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Development",
+   "icon": "💻",
+   "items": [
+    {
+     "name": "Geany",
+     "exec": "geany",
+     "terminal": false
+    },
+    {
+     "name": "Git",
+     "exec": "git",
+     "terminal": true
+    },
+    {
+     "name": "GitHub CLI",
+     "exec": "gh",
+     "terminal": true
+    },
+    {
+     "name": "GCC",
+     "exec": "gcc",
+     "terminal": true
+    },
+    {
+     "name": "G++",
+     "exec": "g++",
+     "terminal": true
+    },
+    {
+     "name": "GDB",
+     "exec": "gdb",
+     "terminal": true
+    },
+    {
+     "name": "Make",
+     "exec": "make",
+     "terminal": true
+    },
+    {
+     "name": "CMake",
+     "exec": "cmake",
+     "terminal": true
+    },
+    {
+     "name": "Ninja",
+     "exec": "ninja",
+     "terminal": true
+    },
+    {
+     "name": "pkg-config",
+     "exec": "pkg-config",
+     "terminal": true
+    },
+    {
+     "name": "Python",
+     "exec": "python",
+     "terminal": true
+    },
+    {
+     "name": "pip",
+     "exec": "pip",
+     "terminal": true
+    },
+    {
+     "name": "Node.js",
+     "exec": "node.js",
+     "terminal": true
+    },
+    {
+     "name": "npm",
+     "exec": "npm",
+     "terminal": true
+    },
+    {
+     "name": "OpenJDK",
+     "exec": "openjdk",
+     "terminal": true
+    },
+    {
+     "name": "Bash",
+     "exec": "bash",
+     "terminal": true
+    },
+    {
+     "name": "Zsh",
+     "exec": "zsh",
+     "terminal": true
+    },
+    {
+     "name": "Konsole",
+     "exec": "konsole",
+     "terminal": false
+    },
+    {
+     "name": "Vim",
+     "exec": "vim",
+     "terminal": true
+    },
+    {
+     "name": "Neovim",
+     "exec": "neovim",
+     "terminal": true
+    },
+    {
+     "name": "Nano",
+     "exec": "nano",
+     "terminal": true
+    },
+    {
+     "name": "tmux",
+     "exec": "tmux",
+     "terminal": true
+    },
+    {
+     "name": "htop",
+     "exec": "htop",
+     "terminal": true
+    },
+    {
+     "name": "btop",
+     "exec": "btop",
+     "terminal": true
+    },
+    {
+     "name": "curl",
+     "exec": "curl",
+     "terminal": true
+    },
+    {
+     "name": "wget",
+     "exec": "wget",
+     "terminal": true
+    },
+    {
+     "name": "jq",
+     "exec": "jq",
+     "terminal": true
+    },
+    {
+     "name": "tree",
+     "exec": "tree",
+     "terminal": true
+    },
+    {
+     "name": "rsync",
+     "exec": "rsync",
+     "terminal": true
+    },
+    {
+     "name": "OpenSSH",
+     "exec": "openssh",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Books",
+   "icon": "📖",
+   "items": [
+    {
+     "name": "Okular",
+     "exec": "okular",
+     "terminal": false
+    },
+    {
+     "name": "Calibre",
+     "exec": "calibre",
+     "terminal": false
+    },
+    {
+     "name": "Foliate",
+     "exec": "foliate",
+     "terminal": false
+    },
+    {
+     "name": "Zotero",
+     "exec": "zotero",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Security",
+   "icon": "🔐",
+   "items": [
+    {
+     "name": "Proton VPN",
+     "exec": "proton-vpn",
+     "terminal": false
+    },
+    {
+     "name": "Proton Pass",
+     "exec": "proton-pass",
+     "terminal": false
+    },
+    {
+     "name": "Firewalld",
+     "exec": "firewalld",
+     "terminal": true
+    },
+    {
+     "name": "FirewallD GUI",
+     "exec": "firewalld-gui",
+     "terminal": true
+    },
+    {
+     "name": "VeraCrypt",
+     "exec": "veracrypt",
+     "terminal": false
+    },
+    {
+     "name": "Kleopatra",
+     "exec": "kleopatra",
+     "terminal": false
+    },
+    {
+     "name": "Tor Browser",
+     "exec": "torbrowser-launcher",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Backup & Cloud",
+   "icon": "☁️",
+   "items": [
+    {
+     "name": "Proton Drive",
+     "exec": "proton-drive",
+     "terminal": true
+    },
+    {
+     "name": "Nextcloud",
+     "exec": "nextcloud",
+     "terminal": false
+    },
+    {
+     "name": "Timeshift",
+     "exec": "timeshift-launcher",
+     "terminal": false
+    },
+    {
+     "name": "KBackup",
+     "exec": "kbackup",
+     "terminal": false
+    },
+    {
+     "name": "Syncthing",
+     "exec": "syncthingtray",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Files",
+   "icon": "📦",
+   "items": [
+    {
+     "name": "Dolphin",
+     "exec": "dolphin",
+     "terminal": false
+    },
+    {
+     "name": "Ark",
+     "exec": "ark",
+     "terminal": false
+    },
+    {
+     "name": "Filelight",
+     "exec": "filelight",
+     "terminal": false
+    },
+    {
+     "name": "KFind",
+     "exec": "kfind",
+     "terminal": false
+    },
+    {
+     "name": "Bulk Rename",
+     "exec": "bulk-rename",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Printers & Scanners",
+   "icon": "🖨️",
+   "items": [
+    {
+     "name": "Print Manager",
+     "exec": "print-manager",
+     "terminal": true
+    },
+    {
+     "name": "Skanlite",
+     "exec": "skanlite",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Devices",
+   "icon": "📱",
+   "items": [
+    {
+     "name": "KDE Connect",
+     "exec": "kdeconnect-app",
+     "terminal": false
+    },
+    {
+     "name": "Bluetooth",
+     "exec": "bluetooth",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Performance",
+   "icon": "⚡",
+   "items": [
+    {
+     "name": "GameMode",
+     "exec": "gamemode",
+     "terminal": true
+    },
+    {
+     "name": "MangoHud",
+     "exec": "mangohud",
+     "terminal": true
+    },
+    {
+     "name": "Gamescope",
+     "exec": "gamescope",
+     "terminal": true
+    },
+    {
+     "name": "CoreCtrl",
+     "exec": "corectrl",
+     "terminal": false
+    },
+    {
+     "name": "LACT",
+     "exec": "lact",
+     "terminal": true
+    },
+    {
+     "name": "CPU-X",
+     "exec": "cpu-x",
+     "terminal": false
+    },
+    {
+     "name": "GPU Viewer",
+     "exec": "gpu-viewer",
+     "terminal": false
+    },
+    {
+     "name": "lm_sensors",
+     "exec": "lm_sensors",
+     "terminal": true
+    },
+    {
+     "name": "nvtop",
+     "exec": "nvtop",
+     "terminal": true
+    },
+    {
+     "name": "powertop",
+     "exec": "powertop",
+     "terminal": true
+    },
+    {
+     "name": "tuned",
+     "exec": "tuned",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Controllers",
+   "icon": "🎮",
+   "items": [
+    {
+     "name": "Steam Input",
+     "exec": "steam-input",
+     "terminal": true
+    },
+    {
+     "name": "SDL Gamepad Tool",
+     "exec": "sdl-gamepad",
+     "terminal": true
+    },
+    {
+     "name": "AntiMicroX",
+     "exec": "antimicrox",
+     "terminal": true
+    },
+    {
+     "name": "Gamepad Tester",
+     "exec": "gamepad-tester",
+     "terminal": true
+    },
+    {
+     "name": "Controller Settings",
+     "exec": "controller-settings",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Utilities",
+   "icon": "🔧",
+   "items": [
+    {
+     "name": "Calculator",
+     "exec": "kcalc",
+     "terminal": false
+    },
+    {
+     "name": "Calendar",
+     "exec": "calendar",
+     "terminal": true
+    },
+    {
+     "name": "Clock",
+     "exec": "clock",
+     "terminal": true
+    },
+    {
+     "name": "Timer",
+     "exec": "timer",
+     "terminal": true
+    },
+    {
+     "name": "Stopwatch",
+     "exec": "stopwatch",
+     "terminal": true
+    },
+    {
+     "name": "Screenshot",
+     "exec": "screenshot",
+     "terminal": true
+    },
+    {
+     "name": "Grim",
+     "exec": "grim",
+     "terminal": true
+    },
+    {
+     "name": "Clipboard",
+     "exec": "clipboard",
+     "terminal": true
+    },
+    {
+     "name": "Character Map",
+     "exec": "character-map",
+     "terminal": true
+    },
+    {
+     "name": "Color Picker",
+     "exec": "color-picker",
+     "terminal": true
+    },
+    {
+     "name": "Font Manager",
+     "exec": "font-manager",
+     "terminal": false
+    },
+    {
+     "name": "Disk Usage",
+     "exec": "disk-usage",
+     "terminal": true
+    },
+    {
+     "name": "System Monitor",
+     "exec": "plasma-systemmonitor",
+     "terminal": false
+    },
+    {
+     "name": "Mission Center",
+     "exec": "missioncenter",
+     "terminal": false
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "Accessibility",
+   "icon": "♿",
+   "items": [
+    {
+     "name": "Screen Reader",
+     "exec": "screen-reader",
+     "terminal": true
+    },
+    {
+     "name": "Magnifier",
+     "exec": "magnifier",
+     "terminal": true
+    },
+    {
+     "name": "On-Screen Keyboard",
+     "exec": "on-screen-keyboard",
+     "terminal": true
+    },
+    {
+     "name": "High Contrast",
+     "exec": "high-contrast",
+     "terminal": true
+    },
+    {
+     "name": "Accessibility Settings",
+     "exec": "accessibility-settings",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  },
+  {
+   "name": "System",
+   "icon": "⚙️",
+   "items": [
+    {
+     "name": "Settings",
+     "exec": "settings",
+     "terminal": true
+    },
+    {
+     "name": "Software Center",
+     "exec": "software-center",
+     "terminal": true
+    },
+    {
+     "name": "Update Manager",
+     "exec": "update-manager",
+     "terminal": true
+    },
+    {
+     "name": "System Information",
+     "exec": "system-information",
+     "terminal": true
+    },
+    {
+     "name": "Hardware Information",
+     "exec": "hardware-information",
+     "terminal": true
+    },
+    {
+     "name": "Display",
+     "exec": "display",
+     "terminal": true
+    },
+    {
+     "name": "Sound",
+     "exec": "sound",
+     "terminal": true
+    },
+    {
+     "name": "Network",
+     "exec": "network",
+     "terminal": true
+    },
+    {
+     "name": "Power",
+     "exec": "power",
+     "terminal": true
+    },
+    {
+     "name": "Users & Accounts",
+     "exec": "users--accounts",
+     "terminal": true
+    },
+    {
+     "name": "Language & Region",
+     "exec": "language--region",
+     "terminal": true
+    },
+    {
+     "name": "Printers",
+     "exec": "printers",
+     "terminal": true
+    },
+    {
+     "name": "Backup & Restore",
+     "exec": "backup--restore",
+     "terminal": true
+    },
+    {
+     "name": "Disk Management",
+     "exec": "disk-management",
+     "terminal": true
+    },
+    {
+     "name": "Recovery",
+     "exec": "recovery",
+     "terminal": true
+    }
+   ],
+   "subcats": []
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Toggle the ArchangelOS category app launcher (bound to SUPER+TAB).
+if pgrep -f "/usr/bin/archangelos-launcher" >/dev/null 2>&1; then
+  pkill -f "/usr/bin/archangelos-launcher"
+else
+  exec /usr/bin/archangelos-launcher
+fi
