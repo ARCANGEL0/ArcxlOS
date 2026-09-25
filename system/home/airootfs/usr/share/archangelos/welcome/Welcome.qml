@@ -56,7 +56,7 @@ Window {
 
         Image {
             anchors.fill: parent
-            source: "file:///usr/share/sddm/themes/archangelos/background.png"
+            source: "file:///usr/share/sddm/themes/archangelos/assets/background.png"
             fillMode: Image.PreserveAspectCrop
             opacity: 0.18
         }
@@ -111,7 +111,7 @@ Window {
 
             Image {
                 Layout.alignment: Qt.AlignHCenter
-                source: "file:///usr/share/sddm/themes/archangelos/logo.png"
+                source: "file:///usr/share/sddm/themes/archangelos/assets/logo.png"
                 sourceSize.width: 210
                 fillMode: Image.PreserveAspectFit
                 Layout.bottomMargin: 6
@@ -225,38 +225,46 @@ Window {
                 }
             }
 
-            RowLayout {
+            Item {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 14
-                spacing: 9
+                implicitWidth: startupRow.implicitWidth
+                implicitHeight: startupRow.implicitHeight
 
-                Rectangle {
-                    width: 14
-                    height: 14
-                    radius: 2
-                    color: win.showAtStartup ? win.cAccent : "transparent"
-                    border.color: win.showAtStartup ? win.cAccent : win.cFaint
-                    border.width: 1
+                Row {
+                    id: startupRow
+                    anchors.centerIn: parent
+                    spacing: 9
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 14
+                        height: 14
+                        radius: 2
+                        color: win.showAtStartup ? win.cAccent : "transparent"
+                        border.color: win.showAtStartup ? win.cAccent : win.cFaint
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: win.showAtStartup
+                            text: "✓"
+                            color: win.cInk
+                            font.pixelSize: 10
+                        }
+                    }
 
                     Text {
-                        anchors.centerIn: parent
-                        visible: win.showAtStartup
-                        text: "✓"
-                        color: win.cInk
-                        font.pixelSize: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Show this window at startup"
+                        color: win.cFaint
+                        font.family: fReg.name
+                        font.pixelSize: 11
                     }
-                }
-
-                Text {
-                    text: "Show this window at startup"
-                    color: win.cFaint
-                    font.family: fReg.name
-                    font.pixelSize: 11
                 }
 
                 MouseArea {
                     anchors.fill: parent
-                    anchors.margins: -8
                     cursorShape: Qt.PointingHandCursor
                     onClicked: win.showAtStartup = !win.showAtStartup
                 }

@@ -20,7 +20,7 @@ sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 enabled_services=('choose-mirror.service' 'sddm.service' 'pacman-init'
-  'NetworkManager' 'irqbalance' 'vboxservice')
+  'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 systemctl enable ${enabled_services[@]}
 systemctl set-default graphical.target
 
@@ -77,7 +77,7 @@ ln -sf /usr/share/applications/archangelos-cli-installer.desktop /etc/skel/Deskt
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /home/liveuser/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/archangelos-cli-installer.desktop /home/liveuser/Desktop/archangelos-cli-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/code.desktop /home/liveuser/Desktop/code.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/libreoffice-startcenter.desktop /home/liveuser/Desktop/office.desktop 2>/dev/null || true
+ln -sf /usr/share/applications/wps-office-prometheus.desktop /home/liveuser/Desktop/office.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/firefox.desktop /home/liveuser/Desktop/firefox.desktop 2>/dev/null || true
 chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/null || true
 
@@ -104,7 +104,11 @@ if [ ! -d "$ARCSHELL_DIR" ]; then
 fi
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
-  su - liveuser -c "cd $ARCSHELL_DIR && ./install.sh --yes" || true
+  # ArcShell's own installer self-destructs in a headless chroot (its bootstrap
+  # health gate needs a live systemd user session + running shell). Bake the
+  # fully-installed desktop directly instead — see archangelos-arcshell-bake.
+  chmod +x /usr/bin/archangelos-arcshell-bake 2>/dev/null || true
+  su - liveuser -c "/usr/bin/archangelos-arcshell-bake" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
   fi
@@ -115,6 +119,10 @@ fi
 
 if [ -x /usr/bin/archangelos-wallpaper-setup ]; then
   /usr/bin/archangelos-wallpaper-setup || true
+fi
+
+if [ -x /usr/bin/archangelos-theme-setup ]; then
+  /usr/bin/archangelos-theme-setup || true
 fi
 
 if [ -x /usr/bin/archangelos-fastfetch-setup ]; then
@@ -164,11 +172,6 @@ mkdir -p /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/10-archangelos.conf << 'SDDMEOF'
 [Theme]
 Current=archangelos
-
-[Autologin]
-User=liveuser
-Session=hyprland.desktop
-Relogin=false
 
 [General]
 GreeterEnvironment=QT_QUICK_CONTROLS_STYLE=Basic
@@ -224,7 +227,7 @@ fi
 
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
-AUR_PKGS="anki aseprite geogebra jupyterlab librewolf-bin proton-mail-bin proton-pass-bin proton-vpn-gtk-app rstudio-desktop-bin subtitleeditor tauon-music-box wps-office zotero-bin"
+AUR_PKGS="anki geogebra jupyterlab proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \

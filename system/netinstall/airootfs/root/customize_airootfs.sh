@@ -40,7 +40,11 @@ if [ ! -d "$ARCSHELL_DIR" ]; then
 fi
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
-  su - liveuser -c "cd $ARCSHELL_DIR && ./install.sh --yes" || true
+  # ArcShell's own installer self-destructs in a headless chroot (its bootstrap
+  # health gate needs a live systemd user session + running shell). Bake the
+  # fully-installed desktop directly instead — see archangelos-arcshell-bake.
+  chmod +x /usr/bin/archangelos-arcshell-bake 2>/dev/null || true
+  su - liveuser -c "/usr/bin/archangelos-arcshell-bake" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
   fi
@@ -51,6 +55,10 @@ fi
 
 if [ -x /usr/bin/archangelos-wallpaper-setup ]; then
   /usr/bin/archangelos-wallpaper-setup || true
+fi
+
+if [ -x /usr/bin/archangelos-theme-setup ]; then
+  /usr/bin/archangelos-theme-setup || true
 fi
 
 if [ -d /etc/skel/.config/rio ]; then
