@@ -1,3 +1,0 @@
-#!/bin/sh
-# ArchangelOS radial application launcher — Quickshell overlay (SUPER+TAB).
-exec qs -p /usr/share/archangelos/launcher/qml/shell.qml
