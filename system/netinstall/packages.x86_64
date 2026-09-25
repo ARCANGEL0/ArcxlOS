@@ -72,6 +72,7 @@ ttf-dejavu
 ### minimal Hyprland + ArcShell desktop (live session)
 base-devel
 hyprland
+librewolf
 quickshell
 hyprpaper
 hyprlock
@@ -86,10 +87,13 @@ starship
 grim
 slurp
 wl-clipboard
+wf-recorder
+libnotify
 polkit-gnome
 pipewire
 pipewire-pulse
 pipewire-alsa
+pipewire-jack
 wireplumber
 networkmanager
 network-manager-applet

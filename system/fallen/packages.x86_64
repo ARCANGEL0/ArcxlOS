@@ -19,6 +19,7 @@ b43-fwcutter
 backdoor-factory
 base
 base-devel
+power-profiles-daemon
 bash
 bash-completion
 bat
@@ -115,6 +116,7 @@ fierce
 findmyhash
 findomain
 firefox
+librewolf
 flawfinder
 fluxbox
 foremost
@@ -391,6 +393,7 @@ hyprlock
 hypridle
 swaybg
 awww
+mpvpaper
 qt6-multimedia
 qt6-multimedia-ffmpeg
 gst-plugins-base
@@ -401,6 +404,7 @@ xdg-desktop-portal-hyprland
 qt6-wayland
 qt5-wayland
 dolphin
+breeze
 kitty
 fastfetch
 fish
@@ -415,6 +419,8 @@ starship
 grim
 slurp
 wl-clipboard
+wf-recorder
+libnotify
 brightnessctl
 cliphist
 polkit-gnome
@@ -476,7 +482,6 @@ distrobox
 dnscrypt-proxy
 docker
 easyeffects
-element-desktop
 elisa
 eza
 fd
@@ -518,7 +523,6 @@ korganizer
 krename
 krita
 kstars
-libreoffice-fresh
 libvirt
 lm_sensors
 make
@@ -567,7 +571,6 @@ scribus
 seahorse
 shotcut
 sigil
-signal-desktop
 simple-scan
 skanlite
 stellarium
@@ -650,3 +653,8 @@ zaproxy
 
 ### arcfetch banner deps
 chafa
+
+### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
+libwpe
+wpebackend-fdo
+wpewebkit
