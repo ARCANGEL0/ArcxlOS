@@ -279,7 +279,7 @@ if [ -f /usr/bin/archangelos-wheel ]; then
   ln -sf /usr/bin/archangelos-wheel /usr/bin/archangelos-radial 2>/dev/null || true
 fi
 
-AUR_PKGS="anki geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
+AUR_PKGS="anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
