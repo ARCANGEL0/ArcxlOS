@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Cyberspace
+GenericName=Cyberspace Client
+Comment=Cyberspace network client
+Exec=cyberspace %u
+Icon=applications-internet
+Terminal=false
+Categories=Network;WebBrowser;
+Keywords=cyberspace;web;network;
+StartupNotify=true
