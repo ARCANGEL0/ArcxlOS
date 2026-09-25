@@ -14,7 +14,7 @@ sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 enabled_services=('choose-mirror.service' 'sddm.service' 'pacman-init'
-  'NetworkManager' 'irqbalance' 'vboxservice')
+  'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 # BlackArch's blackarch-config-lxdm claims /etc/systemd/system/display-manager.service
 # for lxdm, so `systemctl enable sddm.service` refuses to overwrite that symlink and
 # exits non-zero — which, under `set -eu`, aborts the whole build. Free the slot first
@@ -192,7 +192,11 @@ if [ ! -d "$ARCSHELL_DIR" ]; then
 fi
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
-  su - liveuser -c "cd $ARCSHELL_DIR && ./install.sh --yes" || true
+  # ArcShell's own installer self-destructs in a headless chroot (its bootstrap
+  # health gate needs a live systemd user session + running shell). Bake the
+  # fully-installed desktop directly instead — see archangelos-arcshell-bake.
+  chmod +x /usr/bin/archangelos-arcshell-bake 2>/dev/null || true
+  su - liveuser -c "/usr/bin/archangelos-arcshell-bake" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
   fi
@@ -203,6 +207,10 @@ fi
 
 if [ -x /usr/bin/archangelos-wallpaper-setup ]; then
   /usr/bin/archangelos-wallpaper-setup || true
+fi
+
+if [ -x /usr/bin/archangelos-theme-setup ]; then
+  /usr/bin/archangelos-theme-setup || true
 fi
 
 if [ -x /usr/bin/archangelos-fastfetch-setup ]; then
@@ -280,7 +288,7 @@ if [ -f /usr/bin/archangelos-wheel ]; then
 fi
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
-AUR_PKGS="anki aseprite geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact librewolf-bin mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
+AUR_PKGS="anki geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
