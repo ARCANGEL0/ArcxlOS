@@ -1,8 +1,0 @@
-#!/bin/sh
-# Toggle the ArchangelOS radial app launcher (bound to SUPER+TAB).
-MARK="archangelos/launcher/qml/shell.qml"
-if pgrep -f "$MARK" >/dev/null 2>&1; then
-  pkill -f "$MARK"
-else
-  exec /usr/bin/archangelos-launcher
-fi
