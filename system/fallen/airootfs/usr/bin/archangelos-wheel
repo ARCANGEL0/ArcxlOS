@@ -1,0 +1,415 @@
+#!/usr/bin/env python3
+"""
+ArchangelOS Fallen Edition - Radial Wheel Category Launcher
+A radial wheel menu exposing the full CyberSuite tools organized by
+categories (Network, Wireless, Forensics, Blue Team, Web Attacks, etc.),
+similar to the Kali categories menu.
+
+Default keybind: SUPER + TAB (Hyprland)
+"""
+
+import sys
+import os
+import re
+import math
+import subprocess
+
+from PyQt6.QtCore import Qt, QRectF, QPointF, QTimer
+from PyQt6.QtGui import (
+    QPixmap, QFont, QColor, QPainter, QPen, QBrush, QGuiApplication,
+    QKeySequence, QShortcut, QPainterPath, QConicalGradient, QRadialGradient
+)
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QLineEdit, QListWidget, QListWidgetItem, QPushButton, QFrame
+)
+
+COLOR_BG = "rgba(7, 9, 14, 235)"
+COLOR_SLICE_BASE = "#141a26"
+COLOR_SLICE_HOVER = "#241f33"
+COLOR_ACCENT = "#f85149"
+COLOR_ACCENT2 = "#00f3ff"
+COLOR_TEXT = "#f0f6fc"
+COLOR_MUTED = "#8b949e"
+COLOR_BORDER = "#2b3548"
+
+LOGO_PATH = "/usr/share/sddm/themes/archangelos/assets/logo.png"
+
+FALLBACK_TOOLS = {
+    "Network Attacks": [
+        ("hping", "hping"), ("masscan", "masscan"), ("zmap", "zmap"),
+        ("bettercap", "bettercap"), ("responder", "responder"),
+        ("macchanger", "macchanger"), ("netdiscover", "netdiscover"),
+        ("arp-scan", "arp-scan"), ("dsniff", "dsniff"), ("socat", "socat"),
+    ],
+    "Wireless Attacks": [
+        ("aircrack-ng", "aircrack-ng"), ("wifite", "wifite"),
+        ("kismet", "kismet"), ("hcxdumptool", "hcxdumptool"),
+        ("reaver", "reaver"), ("bully", "bully"), ("mdk4", "mdk4"),
+    ],
+    "Web Application Attacks": [
+        ("sqlmap", "sqlmap"), ("nikto", "nikto"), ("commix", "commix"),
+        ("ffuf", "ffuf"), ("dalfox", "dalfox"), ("wfuzz", "wfuzz"),
+        ("dirb", "dirb"), ("gobuster", "gobuster"), ("wafw00f", "wafw00f"),
+    ],
+    "Password Attacks": [
+        ("hashcat", "hashcat"), ("john", "john"), ("hydra", "hydra"),
+        ("ncrack", "ncrack"), ("crunch", "crunch"), ("cewl", "cewl"),
+    ],
+    "Exploitation Tools": [
+        ("metasploit", "msfconsole"), ("searchsploit", "searchsploit"),
+        ("routersploit", "routersploit"), ("setoolkit", "setoolkit"),
+    ],
+    "Reverse Engineering": [
+        ("radare2", "radare2"), ("ghidra", "ghidra"),
+        ("rizin", "rz-bin"), ("gdb", "gdb"), ("ropper", "ropper"),
+    ],
+    "Forensics": [
+        ("volatility3", "vol.py"), ("sleuthkit", "fls"),
+        ("autopsy", "autopsy"), ("binwalk", "binwalk"),
+        ("foremost", "foremost"), ("scalpel", "scalpel"),
+    ],
+    "Anonymization (Tor)": [
+        ("torbrowser-launcher", "torbrowser-launcher"),
+        ("torsocks", "torsocks"), ("proxychains", "proxychains"),
+        ("onionshare", "onionshare"),
+    ],
+    "Blue Team & Defense": [
+        ("lynis", "lynis"), ("rkhunter", "rkhunter"),
+        ("chkrootkit", "chkrootkit"), ("suricata", "suricata"),
+        ("clamav", "clamscan"), ("sshd", "sshd"),
+    ],
+    "Information Gathering": [
+        ("nmap", "nmap"), ("amass", "amass"), ("subfinder", "subfinder"),
+        ("dnsrecon", "dnsrecon"), ("theHarvester", "theHarvester"),
+        ("whatweb", "whatweb"),
+    ],
+}
+
+CATEGORY_RULES = [
+    (r"blackarch-wireless|wireless|wifi|aircrack", "Wireless Attacks"),
+    (r"blackarch-bluetooth|bluetooth", "Bluetooth & RF"),
+    (r"blackarch-forensic|forensic", "Forensics"),
+    (r"blackarch-defensive|defensive|antivirus|blue.?team", "Blue Team & Defense"),
+    (r"blackarch-webapp|webapp|web.?application", "Web Application Attacks"),
+    (r"blackarch-cracker|cracker|password", "Password Attacks"),
+    (r"blackarch-recon|blackarch-fingerprint|recon|osint|fingerprint", "Information Gathering"),
+    (r"blackarch-scanner|blackarch-vulnerability|scanner|vulnerability", "Vulnerability Analysis"),
+    (r"blackarch-exploitation|exploit", "Exploitation Tools"),
+    (r"blackarch-sniffer|blackarch-spoof|sniff|spoof|mitm", "Sniffing & Spoofing"),
+    (r"blackarch-reversing|blackarch-disassembler|blackarch-decompiler|reverse|disassembl|decompil|debugger", "Reverse Engineering"),
+    (r"blackarch-proxy|blackarch-tunnel|proxy|tunnel|anon|tor\b|vpn", "Anonymization (Tor)"),
+    (r"blackarch-social|social.?engineer", "Social Engineering"),
+    (r"blackarch-database|database|sql", "Database Assessment"),
+    (r"blackarch-malware|malware", "Malware Analysis"),
+    (r"blackarch-voip|voip", "VoIP Attacks"),
+    (r"blackarch-mobile|mobile|android", "Mobile Attacks"),
+    (r"blackarch-dos|\bdos\b|flooding", "DoS Attacks"),
+    (r"blackarch-nfc|blackarch-drone|blackarch-hardware|blackarch-firmware|nfc|drone|hardware|rfid", "Hardware & RF"),
+    (r"blackarch-automation|blackarch-misc|blackarch-packer|blackarch-unpacker|blackarch-keylogger|blackarch-honeypot|blackarch-threat-model|blackarch-windows", "Utility & Misc"),
+]
+
+DESKTOP_DIRS = [
+    "/usr/share/applications/blackarch",
+    "/usr/share/applications",
+]
+
+
+def parse_desktop_file(path):
+    """Parse a .desktop file and return (name, exec, categories, icon) or None."""
+    try:
+        name = exec_cmd = categories = icon = ""
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            in_main = True
+            for line in f:
+                line = line.strip()
+                if line.startswith("[") and line.endswith("]"):
+                    in_main = (line == "[Desktop Entry]")
+                    continue
+                if not in_main or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                if key == "Name":
+                    name = value
+                elif key == "Exec":
+                    exec_cmd = value
+                elif key == "Categories":
+                    categories = value
+                elif key == "Icon":
+                    icon = value
+        if not name or not exec_cmd:
+            return None
+        if os.path.basename(path).startswith("archangelos-"):
+            return None
+        return (name, exec_cmd, categories, icon)
+    except Exception:
+        return None
+
+
+def build_tool_catalog():
+    """Build category -> [(name, exec)] from installed .desktop files."""
+    catalog = {}
+    seen = set()
+    for d in DESKTOP_DIRS:
+        if not os.path.isdir(d):
+            continue
+        for fn in sorted(os.listdir(d)):
+            if not fn.endswith(".desktop"):
+                continue
+            path = os.path.join(d, fn)
+            parsed = parse_desktop_file(path)
+            if parsed is None:
+                continue
+            name, exec_cmd, categories, icon = parsed
+            key = name.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            haystack = f"{categories} {name}"
+            category = None
+            for pattern, friendly in CATEGORY_RULES:
+                if re.search(pattern, haystack, re.IGNORECASE):
+                    category = friendly
+                    break
+            if category is None:
+                category = "Utility & Misc"
+            catalog.setdefault(category, []).append((name, exec_cmd, icon))
+    for category, tools in FALLBACK_TOOLS.items():
+        if category not in catalog or not catalog[category]:
+            catalog[category] = [(n, e, "") for (n, e) in tools]
+    return catalog
+
+
+def launch_tool(exec_cmd):
+    """Launch a tool's Exec command detached from this process."""
+    cmd = exec_cmd.replace(" %F", "").replace(" %f", "").replace(" %U", "")
+    cmd = cmd.replace(" %u", "").replace(" %D", "").replace(" %d", "").replace(" %N", "").replace(" %n", "").replace(" %i", "").replace(" %c", "").replace(" %k", "").replace(" %m", "")
+    try:
+        subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+    except Exception:
+        pass
+
+
+class WheelView(QWidget):
+    """Radial pie wheel of security tool categories."""
+
+    def __init__(self, categories, parent=None):
+        super().__init__(parent)
+        self.categories = sorted(categories.keys())
+        self.parent_window = parent
+        self.hover_index = -1
+        self.setMouseTracking(True)
+
+    def slice_at(self, pos):
+        """Return category index at position, or -1."""
+        cx = self.width() / 2
+        cy = self.height() / 2
+        radius = min(self.width(), self.height()) * 0.32
+        dx = pos.x() - cx
+        dy = pos.y() - cy
+        dist = math.hypot(dx, dy)
+        if dist < radius * 0.25 or dist > radius * 1.35:
+            return -1
+        angle = math.degrees(math.atan2(dy, dx))
+        if angle < 0:
+            angle += 360
+        n = len(self.categories)
+        span = 360.0 / n
+        idx = int(((angle + span / 2) % 360) / span)
+        return idx if 0 <= idx < n else -1
+
+    def mouseMoveEvent(self, event):
+        idx = self.slice_at(event.position())
+        if idx != self.hover_index:
+            self.hover_index = idx
+            self.update()
+
+    def mousePressEvent(self, event):
+        idx = self.slice_at(event.position())
+        if idx >= 0 and self.parent_window is not None:
+            self.parent_window.open_category(self.categories[idx])
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        cx = self.width() / 2
+        cy = self.height() / 2
+        radius = min(self.width(), self.height()) * 0.32
+        n = max(len(self.categories), 1)
+        span = 360.0 / n
+        font = QFont("Sans-Serif", 11, QFont.Weight.Bold)
+        painter.setFont(font)
+
+        for i, category in enumerate(self.categories):
+            start = int(i * span - 90 - span / 2)
+            rect = QRectF(cx - radius, cy - radius, radius * 2, radius * 2)
+            hovered = (i == self.hover_index)
+            base = QColor(COLOR_SLICE_HOVER if hovered else COLOR_SLICE_BASE)
+            base.setAlpha(200 if hovered else 165)
+            painter.setBrush(QBrush(base))
+            pen = QPen(QColor(COLOR_ACCENT if hovered else COLOR_BORDER))
+            pen.setWidth(2 if hovered else 1)
+            painter.setPen(pen)
+            painter.drawPie(rect, start * 16, int(span * 16))
+
+            mid = math.radians(i * span - 90)
+            lr = radius * 0.68
+            lx = cx + lr * math.cos(mid)
+            ly = cy + lr * math.sin(mid)
+            label = category if len(category) <= 18 else category[:16] + "…"
+            painter.setPen(QColor(COLOR_TEXT if hovered else COLOR_MUTED))
+            painter.drawText(QPointF(lx - 60, ly), label)
+
+        hub = radius * 0.28
+        grad = QRadialGradient(cx, cy, hub)
+        grad.setColorAt(0, QColor(COLOR_ACCENT2))
+        grad.setColorAt(1, QColor("#0b0e14"))
+        painter.setBrush(QBrush(grad))
+        painter.setPen(QPen(QColor(COLOR_ACCENT), 2))
+        painter.drawEllipse(QPointF(cx, cy), hub, hub)
+        if os.path.exists(LOGO_PATH):
+            pix = QPixmap(LOGO_PATH).scaled(
+                int(hub * 1.4), int(hub * 1.4),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation)
+            painter.drawPixmap(int(cx - pix.width() / 2), int(cy - pix.height() / 2), pix)
+        else:
+            painter.setPen(QColor(COLOR_TEXT))
+            painter.drawText(QRectF(cx - hub, cy - hub, hub * 2, hub * 2),
+                             Qt.AlignmentFlag.AlignCenter, "AF")
+        painter.end()
+
+
+class WheelWindow(QWidget):
+    """Fullscreen radial wheel launcher overlay."""
+
+    def __init__(self):
+        super().__init__()
+        self.catalog = build_tool_catalog()
+        self.current_category = None
+        self.setWindowTitle("ArchangelOS Fallen - CyberSuite Radial Wheel")
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint |
+                            Qt.WindowType.WindowStaysOnTopHint |
+                            Qt.WindowType.Tool)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        screen = QGuiApplication.primaryScreen().availableGeometry()
+        self.setGeometry(screen)
+
+        self.setStyleSheet(f"""
+            QWidget {{ color: {COLOR_TEXT}; }}
+            QFrame#panel {{
+                background-color: {COLOR_BG};
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 14px;
+            }}
+            QLineEdit {{
+                background-color: #141a26;
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                color: {COLOR_TEXT};
+            }}
+            QListWidget {{
+                background-color: transparent;
+                border: none;
+                font-size: 13px;
+                outline: none;
+            }}
+            QListWidget::item {{ padding: 6px 8px; border-radius: 6px; }}
+            QListWidget::item:selected {{ background-color: #2a1420; color: {COLOR_ACCENT2}; }}
+            QListWidget::item:hover {{ background-color: #1c2230; }}
+            QPushButton {{
+                background-color: #1c2230;
+                border: 1px solid {COLOR_BORDER};
+                border-radius: 8px;
+                padding: 6px 14px;
+                color: {COLOR_TEXT};
+            }}
+            QPushButton:hover {{ border-color: {COLOR_ACCENT}; color: {COLOR_ACCENT2}; }}
+        """)
+
+        self.wheel_view = WheelView(self.catalog, parent=self)
+
+        self.panel = QFrame(self)
+        self.panel.setObjectName("panel")
+        self.panel.setVisible(False)
+        panel_layout = QVBoxLayout(self.panel)
+        panel_layout.setContentsMargins(14, 14, 14, 14)
+        self.panel_title = QLabel("")
+        self.panel_title.setStyleSheet(
+            f"font-size: 17px; font-weight: bold; color: {COLOR_ACCENT};")
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Search tools… (type to filter)")
+        self.search.textChanged.connect(self.filter_tools)
+        self.tool_list = QListWidget()
+        self.tool_list.itemDoubleClicked.connect(self.on_tool_selected)
+        back_btn = QPushButton("← Back to wheel  (Esc closes)")
+        back_btn.clicked.connect(self.show_wheel)
+        panel_layout.addWidget(self.panel_title)
+        panel_layout.addWidget(self.search)
+        panel_layout.addWidget(self.tool_list)
+        panel_layout.addWidget(back_btn)
+
+        QShortcut(QKeySequence("Esc"), self, activated=self.close)
+        QShortcut(QKeySequence("Return"), self, activated=self.on_enter)
+
+        self.wheel_view.raise_()
+
+    def resizeEvent(self, event):
+        w, h = self.width(), self.height()
+        self.wheel_view.setGeometry(0, 0, w, h)
+        pw = min(560, int(w * 0.5))
+        ph = min(640, int(h * 0.8))
+        self.panel.setGeometry(int((w - pw) / 2), int((h - ph) / 2), pw, ph)
+
+    def open_category(self, category):
+        self.current_category = category
+        self.panel_title.setText(f"☠ {category}  ({len(self.catalog.get(category, []))} tools)")
+        self.filter_tools("")
+        self.panel.setVisible(True)
+        self.panel.raise_()
+        self.search.setFocus()
+
+    def show_wheel(self):
+        self.panel.setVisible(False)
+        self.wheel_view.setVisible(True)
+        self.wheel_view.raise_()
+
+    def filter_tools(self, text):
+        self.tool_list.clear()
+        query = (text or "").lower()
+        for name, exec_cmd, icon in self.catalog.get(self.current_category, []):
+            if query and query not in name.lower():
+                continue
+            item = QListWidgetItem(f"▸ {name}")
+            item.setData(Qt.ItemDataRole.UserRole, exec_cmd)
+            self.tool_list.addItem(item)
+
+    def on_tool_selected(self, item):
+        exec_cmd = item.data(Qt.ItemDataRole.UserRole)
+        if exec_cmd:
+            launch_tool(exec_cmd)
+            self.close()
+
+    def on_enter(self):
+        item = self.tool_list.currentItem()
+        if item is not None:
+            self.on_tool_selected(item)
+
+    def mousePressEvent(self, event):
+        if self.panel.isVisible() and not self.panel.geometry().contains(event.position().toPoint()):
+            self.show_wheel()
+
+
+def main():
+    app = QApplication(sys.argv)
+    window = WheelWindow()
+    window.show()
+    window.show_wheel()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

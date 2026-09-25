@@ -1,0 +1,7 @@
+# ArchangelOS global environment (read by pam_env at login → applies to the
+# whole graphical session).
+
+# Qt/KDE apps (Dolphin, etc.) default to a light Fusion look on a non-Plasma
+# desktop. Force the Breeze widget style; the dark palette + Delight-2 icons come
+# from the per-user kdeglobals that archangelos-theme-setup writes.
+QT_STYLE_OVERRIDE=Breeze

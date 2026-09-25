@@ -1,0 +1,93 @@
+ArchangelOS
+Copyright (c) 2026 ArchangelOS. Released under the MIT License (see LICENSE).
+
+ArchangelOS is an Arch Linux–based distribution assembled with archiso. The
+ArchangelOS-authored parts of this repository (build system, GUI installer,
+category launcher, welcome window, SDDM/lockscreen theme, branding and
+configuration) are MIT-licensed. Everything ArchangelOS bundles into the
+generated ISO images remains under its own upstream license; this NOTICE
+credits those projects. Inclusion here is attribution, not a claim of
+ownership or endorsement by the upstreams.
+
+================================================================================
+Base system & tooling
+================================================================================
+- Arch Linux and pacman — https://archlinux.org
+  Package sets are pulled from the official core/extra/multilib repositories.
+- archiso (ISO build framework) — https://gitlab.archlinux.org/archlinux/archiso
+- Linux kernel — https://kernel.org (GPL-2.0)
+
+================================================================================
+Additional package repositories
+================================================================================
+- BlackArch Linux — https://blackarch.org
+  The Fallen (RedTeam) edition enables the [blackarch] repository and installs
+  BlackArch tool groups. BlackArch is bootstrapped via strap.sh and mirrored
+  from the public BlackArch mirror network, including:
+    ftp.halifax.rwth-aachen.de, mirrors.ocf.berkeley.edu, mirror.yandex.ru,
+    mirrors.tuna.tsinghua.edu.cn, mirror.team-cymru.com, www.blackarch.org
+  All BlackArch tools retain their individual upstream licenses.
+- Chaotic-AUR — https://aur.chaotic.cx
+  Prebuilt AUR binaries used to install applications that are not in the
+  official repositories. Served from cdn-mirror.chaotic.cx and
+  builds.garudalinux.org.
+- Arch User Repository (AUR) — https://aur.archlinux.org
+  Some applications are built at image-build time via an AUR helper.
+
+================================================================================
+Desktop shell & environment
+================================================================================
+- ArcShell (Quickshell-based Hyprland desktop shell) — sud0-L
+  https://github.com/sud0-L/arcshell
+  Cloned and installed at build time; provides the shell/launcher experience
+  layered under ArchangelOS.
+- Hyprland (Wayland compositor) — https://github.com/hyprwm/Hyprland
+- Quickshell — https://github.com/quickshell-mirror/quickshell
+- SDDM (display manager) — https://github.com/sddm/sddm
+- Qylock (Quickshell lockscreen) — Darkkal44
+  https://github.com/Darkkal44/qylock
+  The ArchangelOS lockscreen reuses the SDDM theme under Qylock's shim.
+- Rio terminal — https://github.com/raphamorim/rio
+
+================================================================================
+Fonts
+================================================================================
+- Quantico — SIL Open Font License 1.1
+- Shippori Mincho — SIL Open Font License 1.1
+  Bundled under /usr/share/fonts/archangelos for the installer, launcher,
+  welcome window and system theme.
+
+================================================================================
+Security tooling (Fallen / RedTeam edition)
+================================================================================
+The RedOps toolset is installed from a mix of the official repositories,
+BlackArch, the AUR/Chaotic-AUR, language ecosystems (PyPI, Go, npm, crates.io)
+and upstream Git repositories. Each tool is the property of its respective
+authors and is distributed under its own license. Notable frameworks cloned
+directly from source include (non-exhaustive):
+  Sliver (BishopFox), Havoc (HavocFramework), Mythic (its-a-feature),
+  Empire/Starkiller (BC-SECURITY), PoshC2 (nettitude), Merlin (Ne0nd0g),
+  SILENTTRINITY (byt3bl33d3r), MITRE Caldera (mitre), Atomic Red Team
+  (redcanaryco), NimPlant (chvancooten), Villain (t3l3machus),
+  HexStrike AI (0x4m4), PentestGPT (GreyDGL), the ProjectDiscovery suite,
+  PEASS-ng (carlospolop), PayloadsAllTheThings (swisskyrepo) and
+  SecLists (danielmiessler).
+
+These tools are provided for authorized security testing, research and
+education only. Users are responsible for complying with all applicable laws
+and for having explicit authorization before testing any system.
+
+================================================================================
+Applications
+================================================================================
+The Home, Gaming and Fallen editions bundle a large set of desktop and CLI
+applications from the Arch repositories, AUR/Chaotic-AUR and upstream sources
+(browsers, office suites, creative tools, media apps, developer tools, game
+launchers, and more). Each application is distributed under its own license
+by its respective authors.
+
+================================================================================
+Trademarks
+================================================================================
+All product names, logos and brands are property of their respective owners.
+Use of these names does not imply endorsement.
