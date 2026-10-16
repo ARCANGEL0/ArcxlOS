@@ -14,6 +14,7 @@ import qs.ns
 import qs.ns.components
 import qs.ns.services
 import qs.ns.modules.bar
+import "../../src" as Frame
 
 PanelWindow {
     id: bar
@@ -105,21 +106,85 @@ PanelWindow {
         color: "transparent"
         visible: !bar.fullscreenHere   // hide widgets under a fullscreen window
 
+    // --- ArchangelOS mark (top-left corner) — the head of the bar, level with ArcShell's
+    // workspace tab beside it. Opens ArcShell's control menu out of the bar's edge. ---
+    Item {
+        id: markBtn
+        x: 0; y: 8
+        width: parent.width; height: 40
+        Rectangle {
+            anchors.centerIn: parent
+            width: 40; height: 32; radius: 10
+            color: markMa.containsMouse || Frame.Popups.archMenuOpen ? Config.container : "transparent"
+            Behavior on color { ColorAnim {} }
+        }
+        Image {
+            anchors.centerIn: parent
+            source: "file:///usr/share/archangelos/logo-mark.svg"
+            sourceSize: Qt.size(56, 41)
+            width: 26; height: 19
+            smooth: true
+            scale: markMa.pressed ? 0.9 : 1.0
+            Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        }
+        MouseArea {
+            id: markMa
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                if (!Frame.Popups.archMenuOpen) {
+                    Frame.SurfaceState.open("leftCenter", "archMenu")
+                    Frame.Popups.archMenuPinned = true
+                } else {
+                    Frame.SurfaceState.close()
+                }
+            }
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 12
-        anchors.bottomMargin: 12
+        // ArchangelOS: the bar grows down out of ArcShell's top-left notch (logo and
+        // workspaces live there), so the column starts below it.
+        anchors.topMargin: 64
+        anchors.bottomMargin: 16
         spacing: 10
 
-        // --- Arch logo (top) — opens the app launcher ---
-        ArchLogo {
+        // --- Monitors (ArchangelOS): live system readings, sampled while the bar is up ---
+        ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
-            implicitWidth: 22
-            implicitHeight: 22
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Shell.launcherVisible = !Shell.launcherVisible
+            spacing: 12
+            Component.onCompleted: Sys.active = true
+
+            BarMeter { icon: "speed";           value: Sys.cpu;  valueText: Math.round(Sys.cpu * 100);  tint: Config.severity(Sys.cpu, Config.series[0], 0.75, 0.85) }
+            BarMeter { icon: "memory";          value: Sys.mem;  valueText: Math.round(Sys.mem * 100);  tint: Config.severity(Sys.mem, Config.series[1], 0.8, 0.9) }
+            BarMeter { icon: "developer_board"; value: Sys.gpu;  valueText: Math.round(Sys.gpu * 100);  tint: Config.severity(Sys.gpu, Config.series[2], 0.8, 0.9); visible: Sys.hasGpu }
+            BarMeter { icon: "storage";         value: Sys.disk; valueText: Math.round(Sys.disk * 100); tint: Config.severity(Sys.disk, Config.series[3], 0.8, 0.9) }
+            BarMeter { icon: "thermostat";      value: Math.min(1, Sys.temp / 100); valueText: Sys.temp + "°"; tint: Config.severity(Sys.temp / 100, Config.series[4], 0.7, 0.8) }
+
+            // network rates, stacked
+            ColumnLayout {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 2
+                spacing: 1
+                Repeater {
+                    model: [["south", Sys.down, Config.accent], ["north", Sys.up, Config.tertiary]]
+                    ColumnLayout {
+                        id: rate
+                        required property var modelData
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 0
+                        MatIcon { Layout.alignment: Qt.AlignHCenter; text: rate.modelData[0]; font.pixelSize: 11; color: rate.modelData[2] }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: Shell.fmtSpeed(rate.modelData[1])
+                            color: Config.dim
+                            font.family: Config.textFont
+                            font.pixelSize: 8
+                        }
+                    }
+                }
             }
         }
 
@@ -587,30 +652,7 @@ PanelWindow {
             }
         }
 
-        // --- Power (bottom) — hover (or click) opens the session popout ---
-        Rectangle {
-            id: powerWidget
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 4
-            implicitWidth: 34; implicitHeight: 34; radius: 10
-            color: powerMa.containsMouse ? Config.container : "transparent"
-            Behavior on color { ColorAnim {} }
-            MatIcon {
-                anchors.centerIn: parent
-                text: "power_settings_new"
-                color: Config.error
-            }
-            MouseArea {
-                id: powerMa
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                // Hover-opened like the rest; the click stays so tapping the icon opens it too.
-                onEntered: bar.showPopout("power")
-                onExited: bar.hidePopout()
-                onClicked: bar.showPopout("power")
-            }
-        }
+        // (ArchangelOS: power lives in the top-right panel.)
     }
     }
 
@@ -624,5 +666,4 @@ PanelWindow {
     VpnPopout        { bar: bar; widget: vpnWidget }
     // The anchor moves: whichever tray icon the cursor is on.
     TrayMenuPopout   { bar: bar; widget: bar.trayMenuAnchor }
-    PowerPopout      { bar: bar; widget: powerWidget }
 }

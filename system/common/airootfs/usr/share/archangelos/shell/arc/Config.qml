@@ -117,16 +117,16 @@ Singleton {
             property var vpnProviders: []
             property string vpnSelected: ""
             property string fontPreset: "departure"
-            property bool barWorkspaces: true
-            property bool barWindow: true
-            property bool barTray: true
-            property bool barClock: true
+            property bool barWorkspaces: false   // ArchangelOS: in ArcShell's top-left notch
+            property bool barWindow: false       // ArchangelOS: the top-centre island shows it
+            property bool barTray: false         // ArchangelOS: top-right
+            property bool barClock: false        // ArchangelOS: top-centre island
             property bool barClock12h: false
-            property bool barVolume: true
+            property bool barVolume: false       // ArchangelOS: top-right
             property bool barBrightness: true
             property bool barKeyboard: true
-            property bool barBattery: true
-            property bool barControls: true
+            property bool barBattery: false      // ArchangelOS: top-right
+            property bool barControls: false     // ArchangelOS: top-right (network, bluetooth)
             property int dashTab: 0
             property int overviewWidth: 380
             property bool overviewThumbs: true

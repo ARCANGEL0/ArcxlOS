@@ -60,6 +60,10 @@ Shape {
     property real brnWidth: SurfaceState.isBottomRightExpanded ? Math.round(Theme.popupMaxWidth * localScale) : innerRadius
 
     readonly property real t: frameThickness
+    // ArchangelOS: where the inner boundary runs on the left. Wider than the frame
+    // when a vertical bar owns that edge; the left notches melt into it.
+    property real leftEdge: frameThickness
+    readonly property real le: Math.max(t, leftEdge)
     readonly property real r: innerRadius
     readonly property real fr: flareRadius
     readonly property real w: width
@@ -69,8 +73,7 @@ Shape {
     readonly property real cnFr: Math.min(fr, centerNotchHeight)
     readonly property real cnR:  Math.min(r, centerNotchHeight)
 
-    // ArchangelOS: collapsed whenever it is corner-sized (the left notch is retired)
-    property bool _lnCollapsed: leftNotchHeight <= r + 2
+    property bool _lnCollapsed: ShellState.focusMode && leftNotchHeight <= r + 2
     property bool _rnCollapsed: ShellState.focusMode && rightNotchHeight <= r + 2
 
     property real lnRightFlare: _lnCollapsed ? r : Math.min(fr, leftNotchHeight)
@@ -136,23 +139,23 @@ Shape {
         PathLine { x: 0; y: h }
         PathLine { x: 0; y: 0 }
         
-        PathLine { x: t; y: t + leftNotchHeight + lnLeftMelt }
+        PathLine { x: le; y: t + leftNotchHeight + lnLeftMelt }
         
         // --- INNER BOUNDARY (Counter-Clockwise) ---
         
         // LEFT-CENTER NOTCH
-        PathLine { x: t; y: (h/2) - (lcnHeight/2) - lcnFr }
-        PathArc { x: t + lcnFr; y: (h/2) - (lcnHeight/2); radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
-        PathLine { x: t + lcnDepth - lcnR; y: (h/2) - (lcnHeight/2) }
-        PathArc { x: t + lcnDepth; y: (h/2) - (lcnHeight/2) + lcnR; radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
-        PathLine { x: t + lcnDepth; y: (h/2) + (lcnHeight/2) - lcnR }
-        PathArc { x: t + lcnDepth - lcnR; y: (h/2) + (lcnHeight/2); radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
-        PathLine { x: t + lcnFr; y: (h/2) + (lcnHeight/2) }
-        PathArc { x: t; y: (h/2) + (lcnHeight/2) + lcnFr; radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
+        PathLine { x: le; y: (h/2) - (lcnHeight/2) - lcnFr }
+        PathArc { x: le + lcnFr; y: (h/2) - (lcnHeight/2); radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
+        PathLine { x: le + lcnDepth - lcnR; y: (h/2) - (lcnHeight/2) }
+        PathArc { x: le + lcnDepth; y: (h/2) - (lcnHeight/2) + lcnR; radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
+        PathLine { x: le + lcnDepth; y: (h/2) + (lcnHeight/2) - lcnR }
+        PathArc { x: le + lcnDepth - lcnR; y: (h/2) + (lcnHeight/2); radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
+        PathLine { x: le + lcnFr; y: (h/2) + (lcnHeight/2) }
+        PathArc { x: le; y: (h/2) + (lcnHeight/2) + lcnFr; radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
 
         // Left edge going down to corner
-        PathLine { x: t; y: h-t-r }
-        PathArc { x: t+r; y: h-t; radiusX: r; radiusY: r; direction: PathArc.Counterclockwise }
+        PathLine { x: le; y: h-t-r }
+        PathArc { x: le+r; y: h-t; radiusX: r; radiusY: r; direction: PathArc.Counterclockwise }
         
         // BOTTOM-CENTER NOTCH
         PathLine { x: (w/2) - (bcnWidth/2) - bcnFr; y: h-t }
@@ -240,12 +243,12 @@ Shape {
         PathArc { x: t + leftNotchWidth - lnInnerR; y: t + leftNotchHeight; radiusX: lnInnerR; radiusY: lnInnerR; direction: PathArc.Clockwise }
         
         // Bottom edge of left notch
-        PathLine { x: t + lnLeftMelt; y: t + leftNotchHeight }
+        PathLine { x: le + lnLeftMelt; y: t + leftNotchHeight }
         
         // Left melt (Concave, curves down and left into the left frame)
-        PathArc { x: t; y: t + leftNotchHeight + lnLeftMelt; radiusX: lnLeftMelt; radiusY: lnLeftMelt; direction: PathArc.Counterclockwise }
+        PathArc { x: le; y: t + leftNotchHeight + lnLeftMelt; radiusX: lnLeftMelt; radiusY: lnLeftMelt; direction: PathArc.Counterclockwise }
         
         // Close inner loop
-        PathLine { x: t; y: t + leftNotchHeight + lnLeftMelt }
+        PathLine { x: le; y: t + leftNotchHeight + lnLeftMelt }
     }
 }
