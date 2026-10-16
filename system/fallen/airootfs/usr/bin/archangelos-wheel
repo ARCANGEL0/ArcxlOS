@@ -16,14 +16,15 @@ Default keybind: SUPER + SHIFT + TAB (Hyprland; SUPER + TAB is the app launcher)
 import sys
 import os
 import re
+import json
 import math
 import subprocess
 
-from PyQt6.QtCore import Qt, QRectF, QPointF, QTimer, QSize
+from PyQt6.QtCore import Qt, QRectF, QPointF, QTimer, QSize, QByteArray
 from PyQt6.QtGui import (
     QPixmap, QImage, QFont, QFontDatabase, QColor, QPainter, QPen, QBrush,
     QGuiApplication, QKeySequence, QShortcut, QPainterPath, QRadialGradient,
-    QLinearGradient, QFontMetrics
+    QCursor
 )
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -47,8 +48,73 @@ SUBTEXT     = QColor(138, 136, 132)      # #8a8884
 STEEL       = QColor(185, 182, 174)      # #B9B6AE
 BLADE       = QColor(120, 128, 140)      # cold steel for the katana stroke
 
-LOGO_SVG = "/usr/share/archangelos/logo-mark.svg"
-LOGO_PNG = "/usr/share/archangelos/logo.png"
+SWORD_SVG = "/usr/share/archangelos/wheel/sword.svg"   # the archangel sword, centre of the wheel
+# where the art sits inside that file's 590 x 590 canvas: x, y, width, height
+SWORD_BOX = (114, 0, 359, 587)
+
+
+def _emblem_svg():
+    """Michael's sword: an upright steel blade with spread archangel wings.
+    Built symmetrically — the right wing is drawn, then mirrored to the left."""
+    cx = 120.0
+    # right-wing feathers: (tip_x, tip_y, belly_dx, belly_dy) long → short, high → low
+    feathers = [
+        (214, 84, -8, 20),
+        (198, 96, -8, 20),
+        (182, 108, -7, 19),
+        (165, 118, -7, 18),
+        (149, 126, -6, 16),
+    ]
+    root = (131, 126)
+    # one wing as an SVG path, mirrored about cx when sgn = -1
+    def wing(sgn):
+        mx = lambda x: cx + sgn * (x - cx)
+        tx, ty = feathers[0][0], feathers[0][1]
+        d = [f"M {mx(root[0]):.1f} {root[1]:.1f}"]
+        # upper edge: smooth sweep from the root out to the top feather tip
+        d.append(f"C {mx(150):.1f} 96 {mx(188):.1f} 82 {mx(tx):.1f} {ty:.1f}")
+        # lower edge: a rounded belly per feather, stepping back toward the root
+        for (fx, fy, bdx, bdy) in feathers[1:]:
+            d.append(f"Q {mx(fx + bdx):.1f} {fy + bdy:.1f} {mx(fx):.1f} {fy:.1f}")
+        d.append(f"L {mx(root[0]):.1f} {root[1]:.1f} Z")
+        return " ".join(d)
+    # feather separator lines, one wing
+    def quills(sgn):
+        mx = lambda x: cx + sgn * (x - cx)
+        out = []
+        for (fx, fy, _, _) in feathers[1:4]:
+            out.append(f'<path d="M {mx(root[0]):.1f} {root[1]:.1f} '
+                       f'L {mx(fx):.1f} {fy:.1f}" stroke="#4a1418" '
+                       f'stroke-width="1.4" fill="none" opacity="0.5"/>')
+        return "".join(out)
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 220">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#969EAA"/><stop offset="0.5" stop-color="#F2F4F7"/>
+      <stop offset="1" stop-color="#788090"/>
+    </linearGradient>
+    <linearGradient id="wing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8626C"/><stop offset="1" stop-color="#7A2228"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#wing)" stroke="#EC9A9C" stroke-width="1.2" stroke-linejoin="round">
+    <path d="{wing(1)}"/><path d="{wing(-1)}"/>
+  </g>
+  {quills(1)}{quills(-1)}
+  <!-- blade -->
+  <path d="M 120 20 L 128 78 L 123.5 150 L 116.5 150 L 112 78 Z"
+        fill="url(#steel)" stroke="#C24A52" stroke-width="1.4" stroke-linejoin="round"/>
+  <line x1="120" y1="30" x2="120" y2="148" stroke="#FFFFFF" stroke-width="1.1" opacity="0.8"/>
+  <!-- crossguard -->
+  <path d="M 90 150 Q 85 141 99 146 L 141 146 Q 155 141 150 150 Q 120 160 90 150 Z"
+        fill="url(#steel)" stroke="#C24A52" stroke-width="1.2" stroke-linejoin="round"/>
+  <!-- grip + pommel -->
+  <rect x="115.5" y="150" width="9" height="26" rx="3" fill="#8A9099" stroke="#C24A52" stroke-width="1"/>
+  <path d="M 120 178 L 127 186 L 120 194 L 113 186 Z" fill="#C24A52" stroke="#ECEAE4" stroke-width="1.2"/>
+</svg>'''
+
+
+EMBLEM_SVG = _emblem_svg()
 
 # Nerd Font glyphs per category, for a touch of arsenal flavour on each spoke.
 CATEGORY_GLYPH = {
@@ -146,6 +212,25 @@ DESKTOP_DIRS = [
 ]
 
 
+def cursor_position(argv):
+    """Global cursor position: `--at=X,Y`, else hyprctl, else Qt's (stale on Wayland)."""
+    for a in argv[1:]:
+        if a.startswith("--at="):
+            try:
+                x, y = a[5:].split(",")
+                return QPointF(float(x), float(y))
+            except ValueError:
+                pass
+    try:
+        out = subprocess.run(["hyprctl", "cursorpos", "-j"], capture_output=True,
+                             text=True, timeout=0.6).stdout
+        j = json.loads(out)
+        return QPointF(float(j["x"]), float(j["y"]))
+    except Exception:
+        pass
+    return QPointF(QCursor.pos())
+
+
 def mono_family():
     """Prefer JetFrames Mono (the shell's font); fall back to any monospace."""
     for fam in ("JetFramesMono Nerd Font", "JetFramesMonoNL Nerd Font",
@@ -233,30 +318,6 @@ def launch_tool(exec_cmd):
         pass
 
 
-def load_logo(size):
-    """Render the ArchangelOS mark to a pixmap at the given size, or None."""
-    if QSvgRenderer is not None and os.path.exists(LOGO_SVG):
-        r = QSvgRenderer(LOGO_SVG)
-        if r.isValid():
-            img = QImage(size, size, QImage.Format.Format_ARGB32)
-            img.fill(Qt.GlobalColor.transparent)
-            p = QPainter(img)
-            vb = r.viewBoxF()
-            if vb.width() > 0 and vb.height() > 0:
-                scale = min(size / vb.width(), size / vb.height()) * 0.92
-                w, h = vb.width() * scale, vb.height() * scale
-                r.render(p, QRectF((size - w) / 2, (size - h) / 2, w, h))
-            else:
-                r.render(p)
-            p.end()
-            return QPixmap.fromImage(img)
-    if os.path.exists(LOGO_PNG):
-        return QPixmap(LOGO_PNG).scaled(
-            size, size, Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation)
-    return None
-
-
 class WheelView(QWidget):
     """Radial donut of security-tool categories, cyber-samurai HUD."""
 
@@ -267,10 +328,14 @@ class WheelView(QWidget):
         self.parent_window = parent
         self.mono = mono
         self.hover_index = 0
-        self.logo = None
-        self._logo_px = 0
         self.setMouseTracking(True)
         self.phase = 0.0
+        # Mini wheel, fixed pixel size, drawn around a cursor-anchored centre.
+        self.outer = 136
+        self.inner = 78
+        self.center = None            # QPointF in widget coords; set on open
+        self._emblem = None
+        self._emblem_px = 0
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
         self._timer.start(40)
@@ -279,12 +344,17 @@ class WheelView(QWidget):
         self.phase += 0.04
         self.update()
 
+    def set_center(self, pt):
+        self.center = pt
+        self.update()
+
     # --- geometry ----------------------------------------------------------
     def _metrics(self):
-        cx, cy = self.width() / 2, self.height() / 2
-        outer = min(self.width(), self.height()) * 0.40
-        inner = outer * 0.54
-        return cx, cy, outer, inner
+        if self.center is not None:
+            cx, cy = self.center.x(), self.center.y()
+        else:
+            cx, cy = self.width() / 2, self.height() / 2
+        return cx, cy, self.outer, self.inner
 
     def slice_at(self, pos):
         cx, cy, outer, inner = self._metrics()
@@ -309,6 +379,11 @@ class WheelView(QWidget):
         if 0 <= self.hover_index < len(self.categories):
             return self.categories[self.hover_index]
         return None
+
+    def enterEvent(self, event):
+        if self.parent_window is not None:
+            self.parent_window.on_pointer_enter(event.position())
+        super().enterEvent(event)
 
     def mouseMoveEvent(self, event):
         idx = self.slice_at(event.position())
@@ -352,20 +427,8 @@ class WheelView(QWidget):
         gap = min(2.6, span * 0.10)
 
         fam = self.mono
-        label_pt = 10 if n <= 12 else (9 if n <= 16 else 8)
-        label_font = QFont(fam, label_pt, QFont.Weight.Bold)
-        glyph_font = QFont(fam, label_pt + 5)
+        glyph_font = QFont(fam, 13)
         label_r = (inner + outer) / 2.0
-
-        # soft shadow hugging the ring, so it reads on bright wallpapers too
-        shadow = QRadialGradient(cx, cy, outer * 1.16)
-        shadow.setColorAt(0.0, QColor(0, 0, 0, 0))
-        shadow.setColorAt(inner / (outer * 1.16), QColor(0, 0, 0, 0))
-        shadow.setColorAt(0.80, QColor(0, 0, 0, 120))
-        shadow.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(shadow))
-        p.drawEllipse(QPointF(cx, cy), outer * 1.16, outer * 1.16)
 
         for i, category in enumerate(self.categories):
             c0 = i * span - span / 2 + gap / 2
@@ -375,98 +438,106 @@ class WheelView(QWidget):
 
             if hovered:
                 grad = QRadialGradient(cx, cy, outer)
-                grad.setColorAt(inner / outer, QColor(40, 18, 20))
-                grad.setColorAt(1.0, QColor(90, 30, 34))
+                grad.setColorAt(inner / outer, QColor(70, 26, 29))
+                grad.setColorAt(1.0, QColor(120, 38, 43))
                 p.setBrush(QBrush(grad))
-                p.setPen(QPen(ACCENT, 1.6))
+                p.setPen(QPen(ACCENT, 1.4))
             else:
                 base = QColor(SURFACE_HI)
-                base.setAlpha(238)
+                base.setAlpha(232)
                 p.setBrush(QBrush(base))
                 p.setPen(QPen(OUTLINE, 1.0))
             p.drawPath(seg)
 
+            # icon-only spokes keep the wheel small; the name shows below on hover
             mid = math.radians(i * span - 90)
             lx = cx + label_r * math.cos(mid)
             ly = cy + label_r * math.sin(mid)
-
-            # glyph above, label below — centred on the spoke's mid-radius point
             p.setFont(glyph_font)
-            p.setPen(ACCENT if hovered else STEEL)
-            p.drawText(QRectF(lx - 40, ly - 26, 80, 22),
+            p.setPen(TEXT if hovered else STEEL)
+            p.drawText(QRectF(lx - 18, ly - 13, 36, 26),
                        Qt.AlignmentFlag.AlignCenter,
                        CATEGORY_GLYPH.get(category, DEFAULT_GLYPH))
 
-            p.setFont(label_font)
-            label = category.upper()
-            if len(label) > 15:
-                label = label[:14] + "…"
-            p.setPen(TEXT if hovered else SUBTEXT)
-            p.drawText(QRectF(lx - 70, ly - 4, 140, 20),
-                       Qt.AlignmentFlag.AlignCenter, label)
-
-            # count chip for the hovered spoke
-            if hovered:
-                p.setFont(QFont(fam, label_pt - 2))
-                p.setPen(ACCENT)
-                p.drawText(QRectF(lx - 70, ly + 14, 140, 16),
-                           Qt.AlignmentFlag.AlignCenter,
-                           f"[ {self.counts[category]:02d} ]")
-
         self._draw_hub(p, cx, cy, inner, fam)
+
+        # selected category name + count, just under the wheel
+        cat = self.current_category()
+        if cat:
+            name = cat.upper()
+            p.setFont(QFont(fam, 9, QFont.Weight.Bold))
+            p.setPen(TEXT)
+            p.drawText(QRectF(cx - 150, cy + outer + 8, 300, 16),
+                       Qt.AlignmentFlag.AlignCenter, name)
+            p.setFont(QFont(fam, 7))
+            p.setPen(ACCENT)
+            p.drawText(QRectF(cx - 150, cy + outer + 24, 300, 14),
+                       Qt.AlignmentFlag.AlignCenter,
+                       f"{self.counts[cat]:02d} tools")
         p.end()
 
     def _draw_hub(self, p, cx, cy, inner, fam):
-        hub = inner * 0.80
-        # reticle: dashed ring + crosshair ticks (the wallpaper's targeting circle)
+        # Transparent centre: only the reticle and the archangel sword are drawn,
+        # so the desktop shows through the hole.
+        hub = inner * 0.82
         p.setBrush(Qt.BrushStyle.NoBrush)
         ring = QPen(ACCENT_DIM, 1.0)
         ring.setStyle(Qt.PenStyle.DashLine)
         p.setPen(ring)
-        p.drawEllipse(QPointF(cx, cy), hub * 1.16, hub * 1.16)
-        p.setPen(QPen(ACCENT, 1.4))
+        p.drawEllipse(QPointF(cx, cy), hub * 1.02, hub * 1.02)
+        p.setPen(QPen(ACCENT, 1.2))
         for a in (0, 90, 180, 270):
             r = math.radians(a + self.phase * 18)
-            x0 = cx + hub * 1.06 * math.cos(r)
-            y0 = cy + hub * 1.06 * math.sin(r)
-            x1 = cx + hub * 1.26 * math.cos(r)
-            y1 = cy + hub * 1.26 * math.sin(r)
+            x0 = cx + hub * 0.92 * math.cos(r)
+            y0 = cy + hub * 0.92 * math.sin(r)
+            x1 = cx + hub * 1.10 * math.cos(r)
+            y1 = cy + hub * 1.10 * math.sin(r)
             p.drawLine(QPointF(x0, y0), QPointF(x1, y1))
+        self._draw_sword(p, cx, cy, hub)
 
-        # hub plate
-        plate = QRadialGradient(cx, cy - hub * 0.2, hub)
-        plate.setColorAt(0, SURFACE_HI)
-        plate.setColorAt(1, BG)
-        p.setBrush(QBrush(plate))
-        p.setPen(QPen(ACCENT, 1.6))
-        p.drawEllipse(QPointF(cx, cy), hub, hub)
+    def _build_emblem(self, size):
+        """Render the sword art into a size x size square.
 
-        # logo mark
-        px = int(hub * 1.25)
-        if self.logo is None or self._logo_px != px:
-            self.logo = load_logo(px)
-            self._logo_px = px
-        if self.logo is not None:
-            p.drawPixmap(int(cx - self.logo.width() / 2),
-                         int(cy - self.logo.height() / 2 - hub * 0.12),
-                         self.logo)
-        # label
-        p.setFont(QFont(fam, 10, QFont.Weight.Bold))
-        p.setPen(TEXT)
-        p.drawText(QRectF(cx - hub, cy + hub * 0.20, hub * 2, 18),
-                   Qt.AlignmentFlag.AlignCenter, "ARSENAL")
-        p.setFont(QFont(fam, 7))
-        p.setPen(SUBTEXT)
-        p.drawText(QRectF(cx - hub, cy + hub * 0.52, hub * 2, 14),
-                   Qt.AlignmentFlag.AlignCenter,
-                   f"{len(self.categories):02d} VECTORS")
+        The art is 359 x 587 (tall); it is cropped to its own bounds and squashed to a
+        square so it sits compactly in the hub instead of reaching up and down the hole."""
+        user_art = os.path.exists(SWORD_SVG)
+        r = QSvgRenderer(SWORD_SVG) if user_art else None
+        if r is None or not r.isValid() or r.viewBoxF().width() <= 0:
+            # missing or unreadable art: fall back to the built-in emblem
+            r = QSvgRenderer(QByteArray(EMBLEM_SVG.encode("utf-8")))
+            user_art = False
+        vb = r.viewBoxF()
+        bx, by, bw, bh = SWORD_BOX if user_art else (vb.x(), vb.y(), vb.width(), vb.height())
+
+        img = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
+        img.fill(Qt.GlobalColor.transparent)
+        q = QPainter(img)
+        q.setRenderHint(QPainter.RenderHint.Antialiasing)
+        q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        q.scale(size / bw, size / bh)       # non-uniform: the flattening
+        q.translate(-bx, -by)
+        r.render(q, vb)                     # the whole canvas, 1:1 in SVG units
+        q.end()
+        return QPixmap.fromImage(img)
+
+    def _draw_sword(self, p, cx, cy, hub):
+        """The archangel sword, small and squared, in the middle of the hole."""
+        if QSvgRenderer is None:
+            return
+        size = int(self.inner * 1.30)     # ~100 px: clear of the ring, inside the reticle
+        if self._emblem is None or self._emblem_px != size:
+            self._emblem = self._build_emblem(size)
+            self._emblem_px = size
+        p.drawPixmap(int(cx - size / 2), int(cy - size / 2), self._emblem)
 
 
 class WheelWindow(QWidget):
     """Fullscreen radial wheel launcher overlay."""
 
-    def __init__(self):
+    def __init__(self, screen, gpos):
         super().__init__()
+        self.gpos = gpos                      # global cursor position when opened
+        self.screen_origin = screen.geometry().topLeft()
         self.mono = mono_family()
         self.catalog = build_tool_catalog()
         self.current_category = None
@@ -475,8 +546,8 @@ class WheelWindow(QWidget):
                             Qt.WindowType.WindowStaysOnTopHint |
                             Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        screen = QGuiApplication.primaryScreen().availableGeometry()
-        self.setGeometry(screen)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setGeometry(screen.geometry())
 
         self.setStyleSheet(f"""
             QWidget {{ color: {TEXT.name()}; font-family: "{self.mono}"; }}
@@ -539,14 +610,58 @@ class WheelWindow(QWidget):
         QShortcut(QKeySequence("Up"), self, activated=lambda: self._nav_list(-1))
         QShortcut(QKeySequence("Down"), self, activated=lambda: self._nav_list(1))
 
+        self.origin = None
+        self._entered = False
         self.wheel_view.raise_()
 
+    # --- placement: the wheel opens centred on the cursor --------------------
+    def _compute_origin(self, local=None):
+        if local is None:
+            local = QPointF(self.gpos.x() - self.screen_origin.x(),
+                            self.gpos.y() - self.screen_origin.y())
+        x, y = float(local.x()), float(local.y())
+        r = self.wheel_view.outer
+        padx, padtop, padbot = r + 24, r + 24, r + 64   # room for the name below
+        x = max(padx, min(self.width() - padx, x))
+        y = max(padtop, min(self.height() - padbot, y))
+        return QPointF(x, y)
+
+    def _apply_origin(self):
+        if self.origin is None:
+            self.origin = self._compute_origin()
+        self.wheel_view.set_center(self.origin)
+        self._place_panel()
+
+    def _place_panel(self):
+        if self.origin is None:
+            return
+        pw, ph = 380, 440
+        x = int(self.origin.x() - pw / 2)
+        y = int(self.origin.y() - ph / 2)
+        x = max(16, min(self.width() - pw - 16, x))
+        y = max(16, min(self.height() - ph - 16, y))
+        self.panel.setGeometry(x, y, pw, ph)
+
+    def showEvent(self, event):
+        self.origin = self._compute_origin()
+        self._apply_origin()
+        super().showEvent(event)
+
+    def on_pointer_enter(self, pos):
+        """The first pointer-enter carries the cursor in window coordinates — exact, whatever
+        offset the compositor gave the window (bar, gaps); hyprctl's position is only the
+        first guess drawn before this arrives."""
+        if self._entered:
+            return
+        self._entered = True
+        self.origin = self._compute_origin(pos)
+        self._apply_origin()
+
     def resizeEvent(self, event):
-        w, h = self.width(), self.height()
-        self.wheel_view.setGeometry(0, 0, w, h)
-        pw = min(560, int(w * 0.42))
-        ph = min(660, int(h * 0.74))
-        self.panel.setGeometry(int((w - pw) / 2), int((h - ph) / 2), pw, ph)
+        if not hasattr(self, "wheel_view"):
+            return
+        self.wheel_view.setGeometry(0, 0, self.width(), self.height())
+        self._apply_origin()
 
     # --- interaction -------------------------------------------------------
     def _nav(self, step):
@@ -588,6 +703,11 @@ class WheelWindow(QWidget):
         self.update()
 
     def show_wheel(self):
+        # Hand keyboard focus back to the window: a hidden search box that keeps it would
+        # swallow Left/Right (line edits claim them), and the wheel could no longer rotate.
+        self.search.clearFocus()
+        self.tool_list.clearFocus()
+        self.setFocus()
         self.panel.setVisible(False)
         self.wheel_view.setVisible(True)
         self.wheel_view.raise_()
@@ -636,7 +756,9 @@ def main():
     app = QApplication(sys.argv)
     # Wayland app_id, matched by the Hyprland rule in archangelos.lua
     QGuiApplication.setDesktopFileName("archangelos-wheel")
-    window = WheelWindow()
+    gpos = cursor_position(sys.argv)
+    screen = QGuiApplication.screenAt(gpos.toPoint()) or QGuiApplication.primaryScreen()
+    window = WheelWindow(screen, gpos)
     window.show()
     window.show_wheel()
     sys.exit(app.exec())
