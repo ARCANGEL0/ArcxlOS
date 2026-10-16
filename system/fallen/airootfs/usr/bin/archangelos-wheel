@@ -5,7 +5,12 @@ A radial wheel menu exposing the full CyberSuite tools organized by
 categories (Network, Wireless, Forensics, Blue Team, Web Attacks, etc.),
 similar to the Kali categories menu.
 
-Default keybind: SUPER + TAB (Hyprland)
+Themed to match the ArchangelOS desktop shell: matte near-black, crimson
+accent, hairline edges — with a red-team / cyber-samurai read (reticle hub,
+monospace labels, arsenal glyphs). Only the wheel is drawn: no backdrop, the
+desktop stays visible around it. Click off the wheel (or Esc) to close.
+
+Default keybind: SUPER + SHIFT + TAB (Hyprland; SUPER + TAB is the app launcher)
 """
 
 import sys
@@ -14,26 +19,52 @@ import re
 import math
 import subprocess
 
-from PyQt6.QtCore import Qt, QRectF, QPointF, QTimer
+from PyQt6.QtCore import Qt, QRectF, QPointF, QTimer, QSize
 from PyQt6.QtGui import (
-    QPixmap, QFont, QColor, QPainter, QPen, QBrush, QGuiApplication,
-    QKeySequence, QShortcut, QPainterPath, QConicalGradient, QRadialGradient
+    QPixmap, QImage, QFont, QFontDatabase, QColor, QPainter, QPen, QBrush,
+    QGuiApplication, QKeySequence, QShortcut, QPainterPath, QRadialGradient,
+    QLinearGradient, QFontMetrics
 )
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QPushButton, QFrame
+    QLineEdit, QListWidget, QListWidgetItem, QFrame
 )
 
-COLOR_BG = "rgba(7, 9, 14, 235)"
-COLOR_SLICE_BASE = "#141a26"
-COLOR_SLICE_HOVER = "#241f33"
-COLOR_ACCENT = "#f85149"
-COLOR_ACCENT2 = "#00f3ff"
-COLOR_TEXT = "#f0f6fc"
-COLOR_MUTED = "#8b949e"
-COLOR_BORDER = "#2b3548"
+try:
+    from PyQt6.QtSvg import QSvgRenderer
+except Exception:  # pragma: no cover
+    QSvgRenderer = None
 
-LOGO_PATH = "/usr/share/sddm/themes/archangelos/assets/logo.png"
+# --- Palette (matches the desktop shell: src/PrefsService overrides) ----------
+BG          = QColor(8, 8, 8)            # #080808 matte near-black
+SURFACE     = QColor(16, 16, 16)         # #101010
+SURFACE_HI  = QColor(26, 26, 25)         # #1a1a19
+OUTLINE     = QColor(46, 45, 43)         # #2e2d2b hairline
+ACCENT      = QColor(194, 74, 82)        # #C24A52 crimson
+ACCENT_DIM  = QColor(194, 74, 82, 70)
+TEXT        = QColor(236, 234, 228)      # #ECEAE4
+SUBTEXT     = QColor(138, 136, 132)      # #8a8884
+STEEL       = QColor(185, 182, 174)      # #B9B6AE
+BLADE       = QColor(120, 128, 140)      # cold steel for the katana stroke
+
+LOGO_SVG = "/usr/share/archangelos/logo-mark.svg"
+LOGO_PNG = "/usr/share/archangelos/logo.png"
+
+# Nerd Font glyphs per category, for a touch of arsenal flavour on each spoke.
+CATEGORY_GLYPH = {
+    "Network Attacks": "", "Wireless Attacks": "",
+    "Bluetooth & RF": "", "Web Application Attacks": "",
+    "Password Attacks": "", "Exploitation Tools": "",
+    "Reverse Engineering": "", "Forensics": "",
+    "Anonymization (Tor)": "", "Blue Team & Defense": "",
+    "Information Gathering": "", "Vulnerability Analysis": "",
+    "Sniffing & Spoofing": "", "Social Engineering": "",
+    "Database Assessment": "", "Malware Analysis": "",
+    "VoIP Attacks": "", "Mobile Attacks": "",
+    "DoS Attacks": "", "Hardware & RF": "",
+    "Utility & Misc": "",
+}
+DEFAULT_GLYPH = ""  # crosshair
 
 FALLBACK_TOOLS = {
     "Network Attacks": [
@@ -115,6 +146,15 @@ DESKTOP_DIRS = [
 ]
 
 
+def mono_family():
+    """Prefer JetFrames Mono (the shell's font); fall back to any monospace."""
+    for fam in ("JetFramesMono Nerd Font", "JetFramesMonoNL Nerd Font",
+                "JetFrames Mono", "DepartureMono", "Noto Sans Mono"):
+        if fam in QFontDatabase.families():
+            return fam
+    return "monospace"
+
+
 def parse_desktop_file(path):
     """Parse a .desktop file and return (name, exec, categories, icon) or None."""
     try:
@@ -147,7 +187,7 @@ def parse_desktop_file(path):
 
 
 def build_tool_catalog():
-    """Build category -> [(name, exec)] from installed .desktop files."""
+    """Build category -> [(name, exec, icon)] from installed .desktop files."""
     catalog = {}
     seen = set()
     for d in DESKTOP_DIRS:
@@ -182,8 +222,10 @@ def build_tool_catalog():
 
 def launch_tool(exec_cmd):
     """Launch a tool's Exec command detached from this process."""
-    cmd = exec_cmd.replace(" %F", "").replace(" %f", "").replace(" %U", "")
-    cmd = cmd.replace(" %u", "").replace(" %D", "").replace(" %d", "").replace(" %N", "").replace(" %n", "").replace(" %i", "").replace(" %c", "").replace(" %k", "").replace(" %m", "")
+    cmd = exec_cmd
+    for tok in (" %F", " %f", " %U", " %u", " %D", " %d",
+                " %N", " %n", " %i", " %c", " %k", " %m"):
+        cmd = cmd.replace(tok, "")
     try:
         subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
@@ -191,94 +233,233 @@ def launch_tool(exec_cmd):
         pass
 
 
-class WheelView(QWidget):
-    """Radial pie wheel of security tool categories."""
+def load_logo(size):
+    """Render the ArchangelOS mark to a pixmap at the given size, or None."""
+    if QSvgRenderer is not None and os.path.exists(LOGO_SVG):
+        r = QSvgRenderer(LOGO_SVG)
+        if r.isValid():
+            img = QImage(size, size, QImage.Format.Format_ARGB32)
+            img.fill(Qt.GlobalColor.transparent)
+            p = QPainter(img)
+            vb = r.viewBoxF()
+            if vb.width() > 0 and vb.height() > 0:
+                scale = min(size / vb.width(), size / vb.height()) * 0.92
+                w, h = vb.width() * scale, vb.height() * scale
+                r.render(p, QRectF((size - w) / 2, (size - h) / 2, w, h))
+            else:
+                r.render(p)
+            p.end()
+            return QPixmap.fromImage(img)
+    if os.path.exists(LOGO_PNG):
+        return QPixmap(LOGO_PNG).scaled(
+            size, size, Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
+    return None
 
-    def __init__(self, categories, parent=None):
+
+class WheelView(QWidget):
+    """Radial donut of security-tool categories, cyber-samurai HUD."""
+
+    def __init__(self, categories, mono, parent=None):
         super().__init__(parent)
         self.categories = sorted(categories.keys())
+        self.counts = {c: len(categories[c]) for c in self.categories}
         self.parent_window = parent
-        self.hover_index = -1
+        self.mono = mono
+        self.hover_index = 0
+        self.logo = None
+        self._logo_px = 0
         self.setMouseTracking(True)
+        self.phase = 0.0
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self._tick)
+        self._timer.start(40)
+
+    def _tick(self):
+        self.phase += 0.04
+        self.update()
+
+    # --- geometry ----------------------------------------------------------
+    def _metrics(self):
+        cx, cy = self.width() / 2, self.height() / 2
+        outer = min(self.width(), self.height()) * 0.40
+        inner = outer * 0.54
+        return cx, cy, outer, inner
 
     def slice_at(self, pos):
-        """Return category index at position, or -1."""
-        cx = self.width() / 2
-        cy = self.height() / 2
-        radius = min(self.width(), self.height()) * 0.32
-        dx = pos.x() - cx
-        dy = pos.y() - cy
+        cx, cy, outer, inner = self._metrics()
+        dx, dy = pos.x() - cx, pos.y() - cy
         dist = math.hypot(dx, dy)
-        if dist < radius * 0.25 or dist > radius * 1.35:
+        if dist < inner * 0.82 or dist > outer * 1.08:
             return -1
-        angle = math.degrees(math.atan2(dy, dx))
-        if angle < 0:
-            angle += 360
+        angle = math.degrees(math.atan2(dy, dx)) + 90.0  # 0 at top
+        angle %= 360
         n = len(self.categories)
         span = 360.0 / n
-        idx = int(((angle + span / 2) % 360) / span)
+        idx = int((angle + span / 2) % 360 / span)
         return idx if 0 <= idx < n else -1
+
+    def move_selection(self, step):
+        n = len(self.categories)
+        if n:
+            self.hover_index = (self.hover_index + step) % n
+            self.update()
+
+    def current_category(self):
+        if 0 <= self.hover_index < len(self.categories):
+            return self.categories[self.hover_index]
+        return None
 
     def mouseMoveEvent(self, event):
         idx = self.slice_at(event.position())
-        if idx != self.hover_index:
+        if idx >= 0 and idx != self.hover_index:
             self.hover_index = idx
             self.update()
 
+    def on_wheel(self, pos):
+        cx, cy, outer, _ = self._metrics()
+        return math.hypot(pos.x() - cx, pos.y() - cy) <= outer * 1.08
+
     def mousePressEvent(self, event):
         idx = self.slice_at(event.position())
-        if idx >= 0 and self.parent_window is not None:
+        if self.parent_window is None:
+            return
+        if idx >= 0:
+            self.hover_index = idx
             self.parent_window.open_category(self.categories[idx])
+        elif not self.on_wheel(event.position()):
+            self.parent_window.close()
+
+    def _segment_path(self, cx, cy, outer, inner, a0, a1):
+        path = QPainterPath()
+        outer_rect = QRectF(cx - outer, cy - outer, outer * 2, outer * 2)
+        inner_rect = QRectF(cx - inner, cy - inner, inner * 2, inner * 2)
+        # Qt angles: 0 at 3 o'clock, CCW positive. Our a0/a1 measured from top, CW.
+        qa0 = 90 - a0
+        span = -(a1 - a0)
+        path.arcMoveTo(outer_rect, qa0)
+        path.arcTo(outer_rect, qa0, span)
+        path.arcTo(inner_rect, qa0 + span, -span)
+        path.closeSubpath()
+        return path
 
     def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        cx = self.width() / 2
-        cy = self.height() / 2
-        radius = min(self.width(), self.height()) * 0.32
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        cx, cy, outer, inner = self._metrics()
         n = max(len(self.categories), 1)
         span = 360.0 / n
-        font = QFont("Sans-Serif", 11, QFont.Weight.Bold)
-        painter.setFont(font)
+        gap = min(2.6, span * 0.10)
+
+        fam = self.mono
+        label_pt = 10 if n <= 12 else (9 if n <= 16 else 8)
+        label_font = QFont(fam, label_pt, QFont.Weight.Bold)
+        glyph_font = QFont(fam, label_pt + 5)
+        label_r = (inner + outer) / 2.0
+
+        # soft shadow hugging the ring, so it reads on bright wallpapers too
+        shadow = QRadialGradient(cx, cy, outer * 1.16)
+        shadow.setColorAt(0.0, QColor(0, 0, 0, 0))
+        shadow.setColorAt(inner / (outer * 1.16), QColor(0, 0, 0, 0))
+        shadow.setColorAt(0.80, QColor(0, 0, 0, 120))
+        shadow.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(shadow))
+        p.drawEllipse(QPointF(cx, cy), outer * 1.16, outer * 1.16)
 
         for i, category in enumerate(self.categories):
-            start = int(i * span - 90 - span / 2)
-            rect = QRectF(cx - radius, cy - radius, radius * 2, radius * 2)
+            c0 = i * span - span / 2 + gap / 2
+            c1 = i * span + span / 2 - gap / 2
             hovered = (i == self.hover_index)
-            base = QColor(COLOR_SLICE_HOVER if hovered else COLOR_SLICE_BASE)
-            base.setAlpha(200 if hovered else 165)
-            painter.setBrush(QBrush(base))
-            pen = QPen(QColor(COLOR_ACCENT if hovered else COLOR_BORDER))
-            pen.setWidth(2 if hovered else 1)
-            painter.setPen(pen)
-            painter.drawPie(rect, start * 16, int(span * 16))
+            seg = self._segment_path(cx, cy, outer, inner, c0, c1)
+
+            if hovered:
+                grad = QRadialGradient(cx, cy, outer)
+                grad.setColorAt(inner / outer, QColor(40, 18, 20))
+                grad.setColorAt(1.0, QColor(90, 30, 34))
+                p.setBrush(QBrush(grad))
+                p.setPen(QPen(ACCENT, 1.6))
+            else:
+                base = QColor(SURFACE_HI)
+                base.setAlpha(238)
+                p.setBrush(QBrush(base))
+                p.setPen(QPen(OUTLINE, 1.0))
+            p.drawPath(seg)
 
             mid = math.radians(i * span - 90)
-            lr = radius * 0.68
-            lx = cx + lr * math.cos(mid)
-            ly = cy + lr * math.sin(mid)
-            label = category if len(category) <= 18 else category[:16] + "…"
-            painter.setPen(QColor(COLOR_TEXT if hovered else COLOR_MUTED))
-            painter.drawText(QPointF(lx - 60, ly), label)
+            lx = cx + label_r * math.cos(mid)
+            ly = cy + label_r * math.sin(mid)
 
-        hub = radius * 0.28
-        grad = QRadialGradient(cx, cy, hub)
-        grad.setColorAt(0, QColor(COLOR_ACCENT2))
-        grad.setColorAt(1, QColor("#0b0e14"))
-        painter.setBrush(QBrush(grad))
-        painter.setPen(QPen(QColor(COLOR_ACCENT), 2))
-        painter.drawEllipse(QPointF(cx, cy), hub, hub)
-        if os.path.exists(LOGO_PATH):
-            pix = QPixmap(LOGO_PATH).scaled(
-                int(hub * 1.4), int(hub * 1.4),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation)
-            painter.drawPixmap(int(cx - pix.width() / 2), int(cy - pix.height() / 2), pix)
-        else:
-            painter.setPen(QColor(COLOR_TEXT))
-            painter.drawText(QRectF(cx - hub, cy - hub, hub * 2, hub * 2),
-                             Qt.AlignmentFlag.AlignCenter, "AF")
-        painter.end()
+            # glyph above, label below — centred on the spoke's mid-radius point
+            p.setFont(glyph_font)
+            p.setPen(ACCENT if hovered else STEEL)
+            p.drawText(QRectF(lx - 40, ly - 26, 80, 22),
+                       Qt.AlignmentFlag.AlignCenter,
+                       CATEGORY_GLYPH.get(category, DEFAULT_GLYPH))
+
+            p.setFont(label_font)
+            label = category.upper()
+            if len(label) > 15:
+                label = label[:14] + "…"
+            p.setPen(TEXT if hovered else SUBTEXT)
+            p.drawText(QRectF(lx - 70, ly - 4, 140, 20),
+                       Qt.AlignmentFlag.AlignCenter, label)
+
+            # count chip for the hovered spoke
+            if hovered:
+                p.setFont(QFont(fam, label_pt - 2))
+                p.setPen(ACCENT)
+                p.drawText(QRectF(lx - 70, ly + 14, 140, 16),
+                           Qt.AlignmentFlag.AlignCenter,
+                           f"[ {self.counts[category]:02d} ]")
+
+        self._draw_hub(p, cx, cy, inner, fam)
+        p.end()
+
+    def _draw_hub(self, p, cx, cy, inner, fam):
+        hub = inner * 0.80
+        # reticle: dashed ring + crosshair ticks (the wallpaper's targeting circle)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        ring = QPen(ACCENT_DIM, 1.0)
+        ring.setStyle(Qt.PenStyle.DashLine)
+        p.setPen(ring)
+        p.drawEllipse(QPointF(cx, cy), hub * 1.16, hub * 1.16)
+        p.setPen(QPen(ACCENT, 1.4))
+        for a in (0, 90, 180, 270):
+            r = math.radians(a + self.phase * 18)
+            x0 = cx + hub * 1.06 * math.cos(r)
+            y0 = cy + hub * 1.06 * math.sin(r)
+            x1 = cx + hub * 1.26 * math.cos(r)
+            y1 = cy + hub * 1.26 * math.sin(r)
+            p.drawLine(QPointF(x0, y0), QPointF(x1, y1))
+
+        # hub plate
+        plate = QRadialGradient(cx, cy - hub * 0.2, hub)
+        plate.setColorAt(0, SURFACE_HI)
+        plate.setColorAt(1, BG)
+        p.setBrush(QBrush(plate))
+        p.setPen(QPen(ACCENT, 1.6))
+        p.drawEllipse(QPointF(cx, cy), hub, hub)
+
+        # logo mark
+        px = int(hub * 1.25)
+        if self.logo is None or self._logo_px != px:
+            self.logo = load_logo(px)
+            self._logo_px = px
+        if self.logo is not None:
+            p.drawPixmap(int(cx - self.logo.width() / 2),
+                         int(cy - self.logo.height() / 2 - hub * 0.12),
+                         self.logo)
+        # label
+        p.setFont(QFont(fam, 10, QFont.Weight.Bold))
+        p.setPen(TEXT)
+        p.drawText(QRectF(cx - hub, cy + hub * 0.20, hub * 2, 18),
+                   Qt.AlignmentFlag.AlignCenter, "ARSENAL")
+        p.setFont(QFont(fam, 7))
+        p.setPen(SUBTEXT)
+        p.drawText(QRectF(cx - hub, cy + hub * 0.52, hub * 2, 14),
+                   Qt.AlignmentFlag.AlignCenter,
+                   f"{len(self.categories):02d} VECTORS")
 
 
 class WheelWindow(QWidget):
@@ -286,6 +467,7 @@ class WheelWindow(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.mono = mono_family()
         self.catalog = build_tool_catalog()
         self.current_category = None
         self.setWindowTitle("ArchangelOS Fallen - CyberSuite Radial Wheel")
@@ -297,85 +479,119 @@ class WheelWindow(QWidget):
         self.setGeometry(screen)
 
         self.setStyleSheet(f"""
-            QWidget {{ color: {COLOR_TEXT}; }}
+            QWidget {{ color: {TEXT.name()}; font-family: "{self.mono}"; }}
             QFrame#panel {{
-                background-color: {COLOR_BG};
-                border: 1px solid {COLOR_BORDER};
-                border-radius: 14px;
+                background-color: rgb(10,10,10);
+                border: 1px solid {OUTLINE.name()};
+                border-radius: 16px;
             }}
+            QLabel#title {{ font-size: 15px; font-weight: bold; color: {ACCENT.name()};
+                            letter-spacing: 1px; }}
             QLineEdit {{
-                background-color: #141a26;
-                border: 1px solid {COLOR_BORDER};
-                border-radius: 8px;
-                padding: 8px 12px;
-                font-size: 14px;
-                color: {COLOR_TEXT};
-            }}
-            QListWidget {{
-                background-color: transparent;
-                border: none;
+                background-color: {SURFACE.name()};
+                border: 1px solid {OUTLINE.name()};
+                border-radius: 9px;
+                padding: 9px 12px;
                 font-size: 13px;
-                outline: none;
+                color: {TEXT.name()};
+                selection-background-color: {ACCENT.name()};
             }}
-            QListWidget::item {{ padding: 6px 8px; border-radius: 6px; }}
-            QListWidget::item:selected {{ background-color: #2a1420; color: {COLOR_ACCENT2}; }}
-            QListWidget::item:hover {{ background-color: #1c2230; }}
-            QPushButton {{
-                background-color: #1c2230;
-                border: 1px solid {COLOR_BORDER};
-                border-radius: 8px;
-                padding: 6px 14px;
-                color: {COLOR_TEXT};
+            QLineEdit:focus {{ border-color: {ACCENT.name()}; }}
+            QListWidget {{
+                background-color: transparent; border: none;
+                font-size: 13px; outline: none;
             }}
-            QPushButton:hover {{ border-color: {COLOR_ACCENT}; color: {COLOR_ACCENT2}; }}
+            QListWidget::item {{ padding: 7px 10px; border-radius: 7px; color: {STEEL.name()}; }}
+            QListWidget::item:selected {{ background-color: rgba(194,74,82,46);
+                                          color: {TEXT.name()}; }}
+            QListWidget::item:hover {{ background-color: {SURFACE_HI.name()}; }}
         """)
 
-        self.wheel_view = WheelView(self.catalog, parent=self)
+        self.wheel_view = WheelView(self.catalog, self.mono, parent=self)
 
         self.panel = QFrame(self)
         self.panel.setObjectName("panel")
         self.panel.setVisible(False)
-        panel_layout = QVBoxLayout(self.panel)
-        panel_layout.setContentsMargins(14, 14, 14, 14)
+        pl = QVBoxLayout(self.panel)
+        pl.setContentsMargins(18, 16, 18, 16)
+        pl.setSpacing(10)
         self.panel_title = QLabel("")
-        self.panel_title.setStyleSheet(
-            f"font-size: 17px; font-weight: bold; color: {COLOR_ACCENT};")
+        self.panel_title.setObjectName("title")
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Search tools… (type to filter)")
+        self.search.setPlaceholderText("› search tools")
         self.search.textChanged.connect(self.filter_tools)
+        self.search.returnPressed.connect(self.on_enter)
         self.tool_list = QListWidget()
+        self.tool_list.itemActivated.connect(self.on_tool_selected)
         self.tool_list.itemDoubleClicked.connect(self.on_tool_selected)
-        back_btn = QPushButton("← Back to wheel  (Esc closes)")
-        back_btn.clicked.connect(self.show_wheel)
-        panel_layout.addWidget(self.panel_title)
-        panel_layout.addWidget(self.search)
-        panel_layout.addWidget(self.tool_list)
-        panel_layout.addWidget(back_btn)
+        self.hint = QLabel("▸ open   ↑↓ move   esc back")
+        self.hint.setStyleSheet(f"color:{SUBTEXT.name()}; font-size:10px;")
+        pl.addWidget(self.panel_title)
+        pl.addWidget(self.search)
+        pl.addWidget(self.tool_list, 1)
+        pl.addWidget(self.hint)
 
-        QShortcut(QKeySequence("Esc"), self, activated=self.close)
+        QShortcut(QKeySequence("Esc"), self, activated=self.on_escape)
         QShortcut(QKeySequence("Return"), self, activated=self.on_enter)
+        QShortcut(QKeySequence("Enter"), self, activated=self.on_enter)
+        QShortcut(QKeySequence("Left"), self, activated=lambda: self._nav(-1))
+        QShortcut(QKeySequence("Right"), self, activated=lambda: self._nav(1))
+        QShortcut(QKeySequence("Up"), self, activated=lambda: self._nav_list(-1))
+        QShortcut(QKeySequence("Down"), self, activated=lambda: self._nav_list(1))
 
         self.wheel_view.raise_()
 
     def resizeEvent(self, event):
         w, h = self.width(), self.height()
         self.wheel_view.setGeometry(0, 0, w, h)
-        pw = min(560, int(w * 0.5))
-        ph = min(640, int(h * 0.8))
+        pw = min(560, int(w * 0.42))
+        ph = min(660, int(h * 0.74))
         self.panel.setGeometry(int((w - pw) / 2), int((h - ph) / 2), pw, ph)
+
+    # --- interaction -------------------------------------------------------
+    def _nav(self, step):
+        if not self.panel.isVisible():
+            self.wheel_view.move_selection(step)
+
+    def _nav_list(self, step):
+        if self.panel.isVisible():
+            row = self.tool_list.currentRow()
+            self.tool_list.setCurrentRow(max(0, min(self.tool_list.count() - 1, row + step)))
+
+    def keyPressEvent(self, event):
+        # Type on the wheel → jump into the highlighted category and search.
+        if not self.panel.isVisible():
+            t = event.text()
+            if t and t.isprintable() and (t.isalnum() or t == "/"):
+                cat = self.wheel_view.current_category()
+                if cat:
+                    self.open_category(cat)
+                    if t != "/":
+                        self.search.setText(t)
+                return
+        super().keyPressEvent(event)
 
     def open_category(self, category):
         self.current_category = category
-        self.panel_title.setText(f"☠ {category}  ({len(self.catalog.get(category, []))} tools)")
+        glyph = CATEGORY_GLYPH.get(category, DEFAULT_GLYPH)
+        self.panel_title.setText(
+            f"{glyph}  {category.upper()}   — {len(self.catalog.get(category, []))} tools")
+        self.search.clear()
         self.filter_tools("")
+        # the panel replaces the wheel instead of sitting on top of it
+        self.wheel_view.setVisible(False)
         self.panel.setVisible(True)
         self.panel.raise_()
         self.search.setFocus()
+        if self.tool_list.count():
+            self.tool_list.setCurrentRow(0)
+        self.update()
 
     def show_wheel(self):
         self.panel.setVisible(False)
         self.wheel_view.setVisible(True)
         self.wheel_view.raise_()
+        self.update()
 
     def filter_tools(self, text):
         self.tool_list.clear()
@@ -383,9 +599,11 @@ class WheelWindow(QWidget):
         for name, exec_cmd, icon in self.catalog.get(self.current_category, []):
             if query and query not in name.lower():
                 continue
-            item = QListWidgetItem(f"▸ {name}")
+            item = QListWidgetItem(f"▸  {name}")
             item.setData(Qt.ItemDataRole.UserRole, exec_cmd)
             self.tool_list.addItem(item)
+        if self.tool_list.count():
+            self.tool_list.setCurrentRow(0)
 
     def on_tool_selected(self, item):
         exec_cmd = item.data(Qt.ItemDataRole.UserRole)
@@ -394,9 +612,20 @@ class WheelWindow(QWidget):
             self.close()
 
     def on_enter(self):
-        item = self.tool_list.currentItem()
-        if item is not None:
-            self.on_tool_selected(item)
+        if self.panel.isVisible():
+            item = self.tool_list.currentItem()
+            if item is not None:
+                self.on_tool_selected(item)
+        else:
+            cat = self.wheel_view.current_category()
+            if cat:
+                self.open_category(cat)
+
+    def on_escape(self):
+        if self.panel.isVisible():
+            self.show_wheel()
+        else:
+            self.close()
 
     def mousePressEvent(self, event):
         if self.panel.isVisible() and not self.panel.geometry().contains(event.position().toPoint()):
@@ -405,6 +634,8 @@ class WheelWindow(QWidget):
 
 def main():
     app = QApplication(sys.argv)
+    # Wayland app_id, matched by the Hyprland rule in archangelos.lua
+    QGuiApplication.setDesktopFileName("archangelos-wheel")
     window = WheelWindow()
     window.show()
     window.show_wheel()

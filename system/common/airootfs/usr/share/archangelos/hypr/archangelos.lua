@@ -47,3 +47,10 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("bash -c 'command -v gsettings >/dev/null && gsettings set org.gnome.desktop.interface icon-theme Zafiro-Nord-Dark-Black; gsettings set org.gnome.desktop.interface cursor-theme Future-dark-cursors; true'")
     hl.exec_cmd("bash -c 'pgrep -x hypridle >/dev/null || hypridle'")
 end)
+
+-- Fallen: the CyberSuite radial wheel (archangelos-wheel) — SUPER + SHIFT + TAB toggles it.
+-- A no-op on editions that don't ship the wheel. It draws only the wheel on a transparent
+-- window, so it floats over the whole monitor with the desktop visible around it.
+hl.bind("SUPER + SHIFT + TAB", hl.dsp.exec_cmd("bash -c 'command -v archangelos-wheel >/dev/null || exit 0; pkill -f \"/usr/bin/[a]rchangelos-wheel\" || exec archangelos-wheel'"),
+    { description = "CyberSuite wheel (Fallen)" })
+hl.window_rule({ match = { class = "^archangelos-wheel$" }, float = true, center = true, size = "monitor_w monitor_h" })
