@@ -167,8 +167,6 @@ go
 rustup
 
 ### applications
-chromium
-firefox
 librewolf
 #hexchat
 htop
@@ -228,7 +226,6 @@ python-pillow
 
 
 ### office & productivity (shared with Home Edition)
-thunderbird
 qbittorrent
 filezilla
 gimp
@@ -240,7 +237,6 @@ vlc
 mpv
 
 ### editors & developer tools
-code
 micro
 neovim
 nodejs

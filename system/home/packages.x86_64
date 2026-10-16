@@ -153,6 +153,7 @@ networkmanager-vpnc
 ### file management
 dolphin
 breeze
+plasma-integration
 gvfs
 gvfs-mtp
 udisks2
@@ -167,19 +168,15 @@ go
 rustup
 
 ### applications
-chromium
-firefox
 librewolf
 #hexchat
 htop
 galculator
-parole
 xarchiver
 
 ### fonts
 noto-fonts
 ttf-roboto
-adobe-source-han-sans-otc-fonts
 ttf-jetbrains-mono
 ttf-nerd-fonts-symbols
 ttf-dejavu
@@ -228,19 +225,18 @@ python-pillow
 
 
 ### office & productivity
-thunderbird
 qbittorrent
 filezilla
 gimp
 krita
 inkscape
 audacity
-blender
 vlc
 mpv
 
 ### editors & developer tools
-code
+geany
+zed
 micro
 neovim
 nodejs
@@ -289,12 +285,9 @@ ark
 bash
 bluedevil
 btop
-calibre
 cantor
 cmus
 curl
-darktable
-digikam
 discord
 easyeffects
 elisa
@@ -305,11 +298,8 @@ foliate
 font-manager
 clang
 gcc
-gcompris-qt
-geany
 github-cli
 gwenview
-handbrake
 imagemagick
 jdk-openjdk
 jq
@@ -330,16 +320,12 @@ kmplot
 konsole
 korganizer
 krename
-kstars
 ktouch
 kwordquiz
 librecad
 make
-marble
 mediainfo-gui
-mpd
 musescore
-ncmpcpp
 nextcloud-client
 ninja
 obsidian
@@ -352,15 +338,11 @@ pkgconf
 plasma-systemmonitor
 print-manager
 python
-quodlibet
-rclone
 remmina
 ruby
 rust
-scribus
 skanlite
 stellarium
-strawberry
 syncthing
 telegram-desktop
 timeshift
@@ -381,7 +363,6 @@ hyprpicker
 gpu-screen-recorder
 bluez-utils
 playerctl
-ttf-jetbrains-mono-nerd
 
 ### Rio terminal symbol glyphs ("Symbols Nerd Font Mono") + Qt xcb cursor fallback
 ttf-nerd-fonts-symbols-mono

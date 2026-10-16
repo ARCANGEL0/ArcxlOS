@@ -1,6 +1,6 @@
 #!/bin/bash
 # ArchangelOS — force the default GTK/Qt dark theme (Adwaita-dark / Breeze-Dark),
-# icon theme (Delight-2) and cursor theme (Future-dark-cursors) into every home,
+# icon theme (Zafiro-Nord-Dark-Black) and cursor theme (Future-dark-cursors) into every home,
 # run at image-build time AFTER ArcShell has laid down its own ~/.config (which may
 # otherwise ship its own GTK settings). System-wide defaults also live in
 # /usr/share/icons/default (Xcursor) and /etc/dconf/db/local.d (dconf); this pins
@@ -8,7 +8,7 @@
 set -u
 
 GTK_THEME="Adwaita-dark"
-ICON_THEME="Delight-2"
+ICON_THEME="Zafiro-Nord-Dark-Black"
 CURSOR_THEME="Future-dark-cursors"
 CURSOR_SIZE=24
 # Qt/KDE apps (Dolphin, plasma-systemmonitor) read kdeglobals directly; BreezeDark

@@ -115,7 +115,6 @@ ffuf
 fierce
 findmyhash
 findomain
-firefox
 librewolf
 flawfinder
 fluxbox
@@ -434,7 +433,6 @@ qt6-svg
 qt6-5compat
 
 ### developer & GUI tooling
-code
 ghidra
 jdk-openjdk
 zenmap
@@ -461,14 +459,12 @@ aria2
 ark
 audacity
 aws-cli-v2
-blender
 bluedevil
 blueman
 borg
 btop
 calibre
 celluloid
-chromium
 cmake
 cmus
 corectrl
@@ -576,7 +572,6 @@ stellarium
 strawberry
 syncthing
 telegram-desktop
-thunderbird
 timeshift
 tmux
 torbrowser-launcher
