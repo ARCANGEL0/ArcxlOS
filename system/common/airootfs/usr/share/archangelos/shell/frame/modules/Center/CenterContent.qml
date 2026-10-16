@@ -21,6 +21,7 @@ import QtQuick.Effects
 import Quickshell.Hyprland
 import Quickshell.Io
 import "../../"
+import "../Right/"
 
 // CenterContent — scrollable dynamic island carousel.
 //
@@ -42,7 +43,11 @@ Item {
 	id: root
 
 	property real localScale: 1.0
-	width:  Math.round(Theme.cNotchMinWidth * localScale)
+	// ArchangelOS: the clock rides at the island's head, beside the carousel (moved here from
+	// the top-right panel), so the island is that much wider.
+	readonly property int clockW: Math.round(84 * localScale)
+	width:  Math.round(Theme.cNotchMinWidth * localScale) + clockW
+	implicitWidth: width
 	height: Math.round(30 * localScale)
 
 	// ── Required notch width for the current carousel item ────────────────────
@@ -234,8 +239,31 @@ Item {
 	readonly property var _bars:     CavaService.bars
 
 	// ── Carousel ──────────────────────────────────────────────────────────────
+	// ── Clock (ArchangelOS) ───────────────────────────────────────────────────
+	Item {
+		width: root.clockW
+		height: parent.height
+		opacity: Popups.dashboardOpen ? 0 : 1
+		visible: opacity > 0
+		Behavior on opacity { NumberAnimation { duration: Anim.mediumFast} }
+
+		Clock {
+			localScale: root.localScale
+			anchors.horizontalCenter: parent.horizontalCenter
+			anchors.horizontalCenterOffset: Math.round(-4 * root.localScale)
+		}
+		Rectangle {
+			anchors.right: parent.right
+			anchors.verticalCenter: parent.verticalCenter
+			width: 1
+			height: Math.round(14 * root.localScale)
+			color: Theme.border
+		}
+	}
+
 	Item {
 		anchors.fill: parent
+		anchors.leftMargin: root.clockW
 
 		opacity: Popups.dashboardOpen ? 0 : 1
 		visible: opacity > 0
