@@ -3,38 +3,40 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-// One per screen. The window spans the whole screen so panels can grow out
-// of the notch, but its input mask is only the top strip while at rest.
+// One per screen: the left sidebar plus the panels that pour out of it.
+// The window spans the screen so panels have room, but at rest its input
+// mask is only the sidebar.
 PanelWindow {
     id: win
 
     required property var modelData
     screen: modelData
 
-    readonly property int barHeight: 36
+    readonly property int sideWidth: 52
     readonly property bool focusedScreen: !Hyprland.focusedMonitor
         || Hyprland.focusedMonitor.name === modelData.name
-    readonly property bool open: ShellState.panel !== "" && focusedScreen
+    readonly property string panel: focusedScreen ? ShellState.panel : ""
+    readonly property bool open: panel !== ""
 
-    anchors { top: true; left: true; right: true }
-    implicitHeight: modelData.height
+    anchors { top: true; bottom: true; left: true }
+    implicitWidth: modelData.width
     color: "transparent"
     exclusionMode: ExclusionMode.Normal
-    exclusiveZone: barHeight
+    exclusiveZone: sideWidth
 
     WlrLayershell.namespace: "archangelos-shell"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    mask: Region { item: win.open ? backdrop : strip }
+    mask: Region { item: win.open ? backdrop : sidebar }
 
-    // Veil behind an open panel; clicking it puts the panel away.
+    // Dims the desktop behind an open panel; clicking it puts the panel away.
     Rectangle {
         id: backdrop
         anchors.fill: parent
         color: "black"
-        opacity: win.open ? 0.42 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.medium; easing.type: Easing.OutCubic } }
+        opacity: win.open ? 0.38 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.slow; easing.type: Easing.OutCubic } }
         MouseArea {
             anchors.fill: parent
             enabled: win.open
@@ -42,30 +44,28 @@ PanelWindow {
         }
     }
 
-    Item {
-        id: strip
-        anchors { top: parent.top; left: parent.left; right: parent.right }
-        height: win.barHeight
-
-        Rectangle {
-            anchors.fill: parent
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.62) }
-                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0) }
-            }
-        }
-
-        Workspaces {
-            anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
-        }
-
-        Status {
-            anchors { right: parent.right; rightMargin: 22; verticalCenter: parent.verticalCenter }
-        }
+    FlowPanel {
+        x: win.sideWidth
+        shown: win.panel === "launcher"
+        size: Qt.size(launcher.width, Math.min(launcher.height, win.height - 48))
+        originY: sidebar.launcherOriginY
+        targetY: (win.height - size.height) / 2
+        LauncherView { id: launcher; active: win.panel === "launcher" }
     }
 
-    Notch {
-        anchors { top: parent.top; horizontalCenter: parent.horizontalCenter }
-        panel: win.focusedScreen ? ShellState.panel : ""
+    FlowPanel {
+        x: win.sideWidth
+        shown: win.panel === "session"
+        size: Qt.size(session.width, session.height)
+        originY: sidebar.sessionOriginY
+        targetY: Math.max(16, sidebar.sessionOriginY + 20 - session.height)
+        SessionView { id: session; active: win.panel === "session" }
+    }
+
+    // Above the panels, so their flared necks tuck in under it.
+    Sidebar {
+        id: sidebar
+        width: win.sideWidth
+        height: parent.height
     }
 }
