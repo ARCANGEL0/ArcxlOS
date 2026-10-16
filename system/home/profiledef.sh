@@ -11,7 +11,7 @@ arch="x86_64"
 pacman_conf="pacman.conf"
 
 airootfs_image_type="squashfs"
-airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M' '-processors' '4')
+airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '22' '-b' '1M' '-processors' '4')
 
 file_permissions=(
   ["/etc/shadow"]="0:0:0400"
@@ -29,12 +29,18 @@ file_permissions=(
   ["/usr/bin/archangelos-wallpaper-setup"]="0:0:0755"
   ["/usr/bin/archangelos-lock"]="0:0:0755"
   ["/usr/bin/archangelos-welcome"]="0:0:0755"
+  ["/usr/bin/archangelos-region"]="0:0:0755"
+  ["/usr/bin/archangelos-screenshot"]="0:0:0755"
+  ["/usr/bin/archangelos-screenrecord"]="0:0:0755"
+  ["/usr/bin/archangelos-theme-setup"]="0:0:0755"
   ["/usr/bin/archangelos-launcher"]="0:0:0755"
   ["/usr/bin/arcfetch"]="0:0:0755"
+  ["/usr/bin/cyberspace"]="0:0:0755"
   ["/usr/bin/archangelos-launcher-toggle"]="0:0:0755"
   ["/usr/bin/archangelos-redops-tools"]="0:0:0755"
   ["/usr/bin/archangelos-install-tool"]="0:0:0755"
   ["/usr/bin/archangelos-fastfetch-setup"]="0:0:0755"
+  ["/usr/bin/archangelos-menugen"]="0:0:0755"
   ["/usr/bin/archangelos-hyper-dl"]="0:0:0755"
   ["/usr/bin/archangelos-dl"]="0:0:0755"
   ["/usr/bin/archangelos-hyperdl.sh"]="0:0:0755"

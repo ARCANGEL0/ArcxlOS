@@ -120,6 +120,7 @@ vulkan-swrast
 libva-intel-driver
 intel-media-driver
 cpupower
+power-profiles-daemon
 
 ### base and base-devel
 base
@@ -151,6 +152,8 @@ networkmanager-vpnc
 
 ### file management
 dolphin
+breeze
+plasma-integration
 gvfs
 gvfs-mtp
 udisks2
@@ -165,18 +168,15 @@ go
 rustup
 
 ### applications
-chromium
-firefox
+librewolf
 #hexchat
 htop
 galculator
-parole
 xarchiver
 
 ### fonts
 noto-fonts
 ttf-roboto
-adobe-source-han-sans-otc-fonts
 ttf-jetbrains-mono
 ttf-nerd-fonts-symbols
 ttf-dejavu
@@ -225,20 +225,18 @@ python-pillow
 
 
 ### office & productivity
-libreoffice-fresh
-thunderbird
 qbittorrent
 filezilla
 gimp
 krita
 inkscape
 audacity
-blender
 vlc
 mpv
 
 ### editors & developer tools
-code
+geany
+zed
 micro
 neovim
 nodejs
@@ -270,6 +268,8 @@ starship
 grim
 slurp
 wl-clipboard
+wf-recorder
+libnotify
 brightnessctl
 cliphist
 polkit-gnome
@@ -285,12 +285,9 @@ ark
 bash
 bluedevil
 btop
-calibre
 cantor
 cmus
 curl
-darktable
-digikam
 discord
 easyeffects
 elisa
@@ -299,12 +296,10 @@ filelight
 firewalld
 foliate
 font-manager
+clang
 gcc
-gcompris-qt
-geany
 github-cli
 gwenview
-handbrake
 imagemagick
 jdk-openjdk
 jq
@@ -325,16 +320,12 @@ kmplot
 konsole
 korganizer
 krename
-kstars
 ktouch
 kwordquiz
 librecad
 make
-marble
 mediainfo-gui
-mpd
 musescore
-ncmpcpp
 nextcloud-client
 ninja
 obsidian
@@ -347,17 +338,11 @@ pkgconf
 plasma-systemmonitor
 print-manager
 python
-quodlibet
-r
-rclone
 remmina
 ruby
 rust
-scribus
-signal-desktop
 skanlite
 stellarium
-strawberry
 syncthing
 telegram-desktop
 timeshift
@@ -368,3 +353,22 @@ wget
 
 ### arcfetch banner deps
 chafa
+
+### ArcShell desktop dependencies (required or ArcShell aborts before deploying
+### its Hyprland/quickshell config, leaving a bare default Hyprland)
+matugen
+thunar
+mate-polkit
+hyprpicker
+gpu-screen-recorder
+bluez-utils
+playerctl
+
+### Rio terminal symbol glyphs ("Symbols Nerd Font Mono") + Qt xcb cursor fallback
+ttf-nerd-fonts-symbols-mono
+xcb-util-cursor
+
+### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
+libwpe
+wpebackend-fdo
+wpewebkit

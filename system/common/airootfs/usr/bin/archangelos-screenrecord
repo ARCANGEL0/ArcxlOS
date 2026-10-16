@@ -1,0 +1,41 @@
+#!/bin/bash
+# ArchangelOS screen recorder — toggle. First invocation picks a region with the
+# animated selector and starts recording it with wf-recorder; invoking it again
+# while a recording is running stops it (the file is finalized cleanly).
+# Saves under ~/Videos/Recordings. Bound to SUPER+SHIFT+R.
+set -u
+
+# Already recording? → stop and finalize.
+if pgrep -x wf-recorder >/dev/null 2>&1; then
+  pkill -INT -x wf-recorder 2>/dev/null || true
+  # tear down the region dim-mask overlay too
+  pkill -f 'archangelos/capture/qml/recmask.qml' 2>/dev/null || true
+  notify-send "Recording stopped" "Saved to ~/Videos/Recordings" 2>/dev/null || true
+  exit 0
+fi
+
+command -v wf-recorder >/dev/null 2>&1 || {
+  notify-send -u critical "Recording unavailable" "wf-recorder is not installed" 2>/dev/null || true
+  exit 1
+}
+
+geom="$(/usr/bin/archangelos-region rec)" || exit 0    # cancelled → quiet exit
+[ -n "$geom" ] || exit 0
+
+dir="${XDG_VIDEOS_DIR:-$HOME/Videos}/Recordings"
+mkdir -p "$dir"
+file="$dir/recording-$(date +%Y%m%d-%H%M%S).mp4"
+
+notify-send "Recording started" "SUPER+SHIFT+R again to stop" 2>/dev/null || true
+# wf-recorder accepts grim-style geometry via -g "X,Y WxH". Detach so the
+# recorder outlives this launcher process.
+setsid -f wf-recorder -g "$geom" -f "$file" >/dev/null 2>&1
+
+# Dim everything except the recorded region as a live capture indicator. The
+# mask is click-through and draws its accent frame OUTSIDE the region, so it is
+# never part of the region-only recording. Detach so it survives this process;
+# the stop branch above kills it. Skip quietly if the overlay isn't present.
+RECMASK_QML="/usr/share/archangelos/capture/qml/recmask.qml"
+if command -v qs >/dev/null 2>&1 && [ -f "$RECMASK_QML" ]; then
+  ARCHANGELOS_REC_GEOM="$geom" setsid -f qs --path "$RECMASK_QML" >/dev/null 2>&1 || true
+fi

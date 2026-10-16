@@ -1,0 +1,28 @@
+#!/bin/bash
+# ArchangelOS region picker — shows the animated Quickshell selector overlay and
+# prints the chosen region as grim/slurp-style "X,Y WxH" on stdout. Exits non-zero
+# if the user cancels (Esc / right-click) or picks nothing.
+#
+#   archangelos-region [shot|rec]
+#
+# "rec" is passed through to the overlay as a hint (ARCHANGELOS_CAP_MODE); it does
+# not change the output format.
+set -u
+
+MODE="${1:-shot}"
+SHELL_QML="/usr/share/archangelos/capture/qml/shell.qml"
+
+command -v qs >/dev/null 2>&1 || { echo "quickshell (qs) not found" >&2; exit 2; }
+[ -f "$SHELL_QML" ] || { echo "selector not found: $SHELL_QML" >&2; exit 2; }
+
+OUT="$(mktemp -t archangelos-region.XXXXXX)"
+trap 'rm -f "$OUT"' EXIT
+: > "$OUT"
+
+# The overlay writes the picked geometry to $ARCHANGELOS_CAP_OUT then quits.
+ARCHANGELOS_CAP_OUT="$OUT" ARCHANGELOS_CAP_MODE="$MODE" \
+  qs --path "$SHELL_QML" >/dev/null 2>&1
+
+geom="$(cat "$OUT" 2>/dev/null)"
+[ -n "$geom" ] || exit 1
+printf '%s\n' "$geom"
