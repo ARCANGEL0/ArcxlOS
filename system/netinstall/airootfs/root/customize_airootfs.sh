@@ -38,6 +38,8 @@ ARCSHELL_DIR="/opt/arcshell"
 if [ ! -d "$ARCSHELL_DIR" ]; then
   git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
 fi
+# Drop VCS history from the shallow clone — not needed at runtime, keeps it out of the ISO.
+rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
   # ArcShell's own installer self-destructs in a headless chroot (its bootstrap

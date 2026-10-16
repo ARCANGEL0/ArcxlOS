@@ -1,0 +1,7 @@
+# ArchangelOS default desktop theming (GNOME/GTK interface schema)
+[org/gnome/desktop/interface]
+gtk-theme='Adwaita-dark'
+icon-theme='Zafiro-Nord-Dark-Black'
+cursor-theme='Future-dark-cursors'
+cursor-size=24
+color-scheme='prefer-dark'

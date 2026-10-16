@@ -139,6 +139,38 @@ fi
 vp="/usr/share/archangelos/arcshell/ax-wallpaper-video-patch.py"
 [ -f "$vp" ] && python3 "$vp" "$SRC" || log "video-wallpaper patcher absent; skipping"
 
+# 0d) ArchangelOS lock everywhere — route every ArcShell lock path to
+# /usr/bin/archangelos-lock (hyprlock themed to match the SDDM login). ArcShell
+# otherwise locks with its OWN hyprlock: on idle via the hypridle.conf that
+# idlectl.sh generates, and via the Control-Center Lock button / `arcshell ipc
+# session lock` through sessionctl.sh — the lockscreen that hangs on
+# "authenticating". Patched into $SRC before the artifact build. Non-fatal.
+idl="$SRC/scripts/idlectl.sh"
+if [ -f "$idl" ]; then
+  sed -i \
+    -e 's@lock_cmd = pidof hyprlock || hyprlock@lock_cmd = /usr/bin/archangelos-lock@' \
+    -e 's@before_sleep_cmd = loginctl lock-session@before_sleep_cmd = /usr/bin/archangelos-lock@' \
+    -e 's@on-timeout = loginctl lock-session@on-timeout = /usr/bin/archangelos-lock@' \
+    "$idl" && log "idlectl.sh: idle lock -> archangelos-lock" || log "idlectl.sh lock patch skipped"
+fi
+ssl="$SRC/scripts/sessionctl.sh"
+if [ -f "$ssl" ]; then
+  sed -i 's@exec hyprlock --config "$lock_config"@exec /usr/bin/archangelos-lock@' \
+    "$ssl" && log "sessionctl.sh: manual lock -> archangelos-lock" || log "sessionctl.sh lock patch skipped"
+fi
+
+# 0e) ArchangelOS relabel — ArcShell's avatar picker reuses the Wallpaper grid and
+# titles itself "Personal image", so it reads like a second, redundant wallpaper
+# tab. Rename its heading + subtitle to name the profile-image picker it actually
+# is. Patched into $SRC before the artifact build. Idempotent + non-fatal.
+wpp="$SRC/panels/WallpaperPage.qml"
+if [ -f "$wpp" ]; then
+  sed -i \
+    -e 's@"Personal image"@"Profile avatar"@' \
+    -e 's@"Choose from your wallpaper library"@"Choose an image for your profile"@' \
+    "$wpp" && log "WallpaperPage.qml: Personal image -> Profile avatar" || log "WallpaperPage relabel skipped"
+fi
+
 # 1) Build + independently verify the local release artifact (works headless).
 VERSION="$(tr -d '[:space:]' < "$SRC/VERSION")"
 art="$tmp/arcshell.ody"
@@ -208,12 +240,20 @@ for f in "${split_files[@]}"; do
     # mimeapps + desktop shortcut wiring in customize_airootfs.sh), but ArcShell
     # ships SUPER+E -> thunar in its own keybinds.lua. Repoint it to dolphin so
     # the whole desktop is consistent, on the live ISO and after install.
-    sed -i 's/exec_cmd("thunar")/exec_cmd("dolphin")/g; s/Open file manager (Thunar)/Open file manager (Dolphin)/g' \
+    sed -i 's/exec_cmd("thunar")/exec_cmd("dolphin")/g; s/Open file manager (Thunar)/Open file manager (Dolphin)/g; s/exec_cmd("kitty")/exec_cmd("rio")/g' \
       "$split_dir/$f"
   else
     cp -f "$src" "$split_dir/$f"
   fi
 done
+
+# ArchangelOS distro override: Rio is the default terminal. ArcShell ships kitty in
+# both the SUPER+Return keybind (handled by the keybinds.lua sed above) and the
+# TERMINAL env in environment.lua (what apps / "open a terminal" actions resolve).
+if [ -f "$split_dir/environment.lua" ]; then
+  sed -i 's/hl.env("TERMINAL", "kitty")/hl.env("TERMINAL", "rio")/' "$split_dir/environment.lua" \
+    && log "environment.lua: TERMINAL -> rio" || true
+fi
 
 # arcshell.lua host integration (render_integration, lua branch).
 cat > "$hypr_dir/arcshell.lua" <<'LUAEOF'
@@ -299,6 +339,9 @@ if [ ! -f "$ody_state/settings.json" ]; then
     "appearance": {
       "material": "glass",
       "surfaceOpacity": 0.72
+    },
+    "idle": {
+      "managed": false
     }
   }
 }
