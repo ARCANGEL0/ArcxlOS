@@ -1,0 +1,181 @@
+/*
+ * ArcShell
+ * Copyright (C) 2026 arcxlo (ArchangelOS)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import QtQuick
+import QtQuick.Effects
+import Quickshell
+import Quickshell.Io
+import "../../"
+import "../../components"
+
+// Profile card — circular avatar, username, window manager, uptime.
+
+StatCard {
+    id: root
+    padding: 0
+
+    property real localScale: 1.0
+    property string avatarPath: ""
+    readonly property string _resolvedAvatarPath: {
+        if (!root.avatarPath || root.avatarPath === "") return ""
+        var p = root.avatarPath
+        if (p.startsWith("file://")) p = p.substring(7)
+        if (p.startsWith("~")) p = p.replace(/^~/, Quickshell.env("HOME"))
+        return p
+    }
+
+    property string _user:   ""
+    property string _wm:     ""
+    property string _uptime: ""
+
+    Process {
+        command: ["bash", "-c", "echo $USER"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(line) {
+                if (line.trim() !== "") root._user = line.trim()
+            }
+        }
+    }
+
+    Process {
+        command: ["bash", "-c", "echo ${XDG_CURRENT_DESKTOP:-Hyprland}"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(line) {
+                if (line.trim() !== "") root._wm = line.trim()
+            }
+        }
+    }
+
+    Process {
+        id: uptimeProc
+        command: ["bash", "-c",
+            "uptime -p | sed 's/up //' | sed 's/ hours\\?/h/' | " +
+            "sed 's/ minutes\\?/m/' | sed 's/ days\\?/d/' | sed 's/, / /g'"]
+        running: false
+        stdout: SplitParser {
+            onRead: function(line) {
+                if (line.trim() !== "") root._uptime = line.trim()
+            }
+        }
+    }
+
+    Timer {
+        interval: 60000; running: true; repeat: true
+        onTriggered: { uptimeProc.running = false; uptimeProc.running = true }
+    }
+
+    Component.onCompleted: uptimeProc.running = true
+
+    Row {
+        anchors {
+            left:           parent.left;  leftMargin:  Math.round(16 * localScale)
+            right:          parent.right; rightMargin: Math.round(16 * localScale)
+            verticalCenter: parent.verticalCenter
+        }
+        spacing: Math.round(18 * localScale)
+
+        // Circular avatar
+        Item {
+            width: Math.round(72 * localScale); height: Math.round(72 * localScale)
+            anchors.verticalCenter: parent.verticalCenter
+
+            Rectangle {
+                anchors.fill: parent
+                radius: width / 2
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22) }
+                    GradientStop { position: 1.0; color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.10) }
+                }
+                border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
+                border.width: 1
+            }
+
+            Rectangle {
+                id: photoMask
+                anchors.fill: parent
+                radius: width / 2
+                visible: false
+                layer.enabled: true
+            }
+
+            Image {
+                anchors.fill: parent
+                source:   root._resolvedAvatarPath !== "" ? ("file://" + root._resolvedAvatarPath) : ""
+                fillMode: Image.PreserveAspectCrop
+                smooth:   true
+                visible:  root._resolvedAvatarPath !== ""
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    maskEnabled:      true
+                    maskSource:       photoMask
+                    maskThresholdMin: 0.5
+                    maskSpreadAtMin:  1.0
+                }
+            }
+
+            Text {
+                anchors.centerIn: parent
+                text:           "󰀄"
+                font.pixelSize: Math.round(28 * localScale)
+                color:          Theme.active
+                visible:        root._resolvedAvatarPath === ""
+            }
+        }
+
+        // Text stats
+        Column {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Math.round(10 * localScale)
+
+            Text {
+                text:           root._user
+                font.pixelSize: Math.round(17 * localScale); font.weight: Font.DemiBold
+                color:          Theme.active
+            }
+
+            Row {
+                spacing: Math.round(8 * localScale)
+                Text {
+                    text: "󰣇"; font.pixelSize: Math.round(12 * localScale); color: Theme.active
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: root._wm; font.pixelSize: Math.round(12 * localScale)
+                    color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            Row {
+                spacing: Math.round(8 * localScale)
+                Text {
+                    text: "󰔚"; font.pixelSize: Math.round(12 * localScale); color: Theme.active
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: root._uptime; font.pixelSize: Math.round(12 * localScale)
+                    font.family: "JetFrames Mono"
+                    color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+    }
+}
