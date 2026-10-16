@@ -496,10 +496,12 @@ class WheelView(QWidget):
         self._draw_sword(p, cx, cy, hub)
 
     def _build_emblem(self, size):
-        """Render the sword art into a size x size square.
+        """Render the sword art into a size x size square, over a soft crimson glow.
 
         The art is 359 x 587 (tall); it is cropped to its own bounds and squashed to a
-        square so it sits compactly in the hub instead of reaching up and down the hole."""
+        square so it sits compactly in the hub. The glow (the art's own alpha, blurred and
+        tinted) keeps the near-black blade readable on dark wallpapers; it is kept faint and
+        padded so it fades out inside the reticle ring."""
         user_art = os.path.exists(SWORD_SVG)
         r = QSvgRenderer(SWORD_SVG) if user_art else None
         if r is None or not r.isValid() or r.viewBoxF().width() <= 0:
@@ -509,26 +511,50 @@ class WheelView(QWidget):
         vb = r.viewBoxF()
         bx, by, bw, bh = SWORD_BOX if user_art else (vb.x(), vb.y(), vb.width(), vb.height())
 
-        img = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
-        img.fill(Qt.GlobalColor.transparent)
-        q = QPainter(img)
+        pad = max(4, size // 6)
+        full = size + 2 * pad
+        fmt = QImage.Format.Format_ARGB32_Premultiplied
+        art = QImage(full, full, fmt)
+        art.fill(Qt.GlobalColor.transparent)
+        q = QPainter(art)
         q.setRenderHint(QPainter.RenderHint.Antialiasing)
         q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        q.translate(pad, pad)
         q.scale(size / bw, size / bh)       # non-uniform: the flattening
         q.translate(-bx, -by)
         r.render(q, vb)                     # the whole canvas, 1:1 in SVG units
         q.end()
-        return QPixmap.fromImage(img)
+
+        small = max(6, full // 6)
+        glow = art.scaled(small, small, Qt.AspectRatioMode.IgnoreAspectRatio,
+                          Qt.TransformationMode.SmoothTransformation)
+        glow = glow.scaled(full, full, Qt.AspectRatioMode.IgnoreAspectRatio,
+                           Qt.TransformationMode.SmoothTransformation)
+        g = QPainter(glow)
+        g.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+        g.fillRect(glow.rect(), ACCENT)
+        g.end()
+
+        out = QImage(full, full, fmt)
+        out.fill(Qt.GlobalColor.transparent)
+        o = QPainter(out)
+        o.setOpacity(0.55)                  # a faint glow
+        o.drawImage(0, 0, glow)
+        o.setOpacity(1.0)
+        o.drawImage(0, 0, art)
+        o.end()
+        return QPixmap.fromImage(out)
 
     def _draw_sword(self, p, cx, cy, hub):
-        """The archangel sword, small and squared, in the middle of the hole."""
+        """The archangel sword, small and squared, inside the reticle ring."""
         if QSvgRenderer is None:
             return
-        size = int(self.inner * 1.30)     # ~100 px: clear of the ring, inside the reticle
+        size = int(self.inner)            # ~78 px: the art's corners stay inside the ring
         if self._emblem is None or self._emblem_px != size:
             self._emblem = self._build_emblem(size)
             self._emblem_px = size
-        p.drawPixmap(int(cx - size / 2), int(cy - size / 2), self._emblem)
+        p.drawPixmap(int(cx - self._emblem.width() / 2),
+                     int(cy - self._emblem.height() / 2), self._emblem)
 
 
 class WheelWindow(QWidget):
