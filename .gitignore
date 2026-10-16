@@ -34,3 +34,73 @@ __pycache__/
 .subversion/
 .MTREE
 .PKGINFO
+
+# Build-staged copies of system/common/airootfs (regenerated into each
+# edition by ax_stage on every build). Common is the source of truth and
+# stays tracked; these edition copies are derived noise. Only edition-owned
+# files (paths not present in common) remain tracked.
+system/*/airootfs/etc/dconf/
+system/*/airootfs/etc/hypr/
+system/*/airootfs/etc/skel/.config/cyberspace_client/
+system/*/airootfs/etc/skel/.config/fish/
+system/*/airootfs/etc/skel/.config/gtk-3.0/
+system/*/airootfs/etc/skel/.config/gtk-4.0/
+system/*/airootfs/etc/skel/.config/rio/
+system/*/airootfs/usr/share/archangelos/capture/
+system/*/airootfs/usr/share/archangelos/hypr/
+system/*/airootfs/usr/share/archangelos/launcher/qml/
+system/*/airootfs/usr/share/archangelos/arcshell/
+system/*/airootfs/usr/share/archangelos/rio/
+system/*/airootfs/usr/share/archangelos/welcome/
+system/*/airootfs/usr/share/fonts/
+system/*/airootfs/usr/share/icons/
+system/*/airootfs/usr/share/sddm/
+system/*/airootfs/var/
+system/*/airootfs/etc/environment
+system/*/airootfs/usr/bin/__pycache__/archangelos-launchercpython-314.pyc
+system/*/airootfs/usr/bin/arcfetch
+system/*/airootfs/usr/bin/archangelos-menugen
+!system/common/airootfs/usr/bin/archangelos-menugen
+
+# ...but system/common IS the source of truth, and the `system/*/` globs above
+# match it too, which silently drops new common files (that is how the capture
+# overlay and the icon theme went missing). Re-include common for every path it
+# owns; the edition copies stay ignored.
+!system/common/airootfs/etc/dconf/
+# the generic `db/` rule above also swallows dconf's db/ drop-in dir
+!system/common/airootfs/etc/dconf/db/
+!system/common/airootfs/etc/hypr/
+!system/common/airootfs/usr/share/archangelos/capture/
+!system/common/airootfs/usr/share/archangelos/hypr/
+!system/common/airootfs/usr/share/archangelos/launcher/qml/
+!system/common/airootfs/usr/share/archangelos/arcshell/
+!system/common/airootfs/usr/share/archangelos/rio/
+!system/common/airootfs/usr/share/archangelos/welcome/
+!system/common/airootfs/usr/share/fonts/
+!system/common/airootfs/usr/share/icons/
+!system/common/airootfs/usr/share/sddm/
+
+# never track compiled python, wherever it lands
+__pycache__/
+*.pyc
+system/*/airootfs/usr/bin/archangelos-fastfetch-setup
+system/*/airootfs/usr/bin/archangelos-install-tool
+system/*/airootfs/usr/bin/archangelos-launcher
+system/*/airootfs/usr/bin/archangelos-launcher-toggle
+system/*/airootfs/usr/bin/archangelos-lock
+system/*/airootfs/usr/bin/archangelos-arcshell-bake
+system/*/airootfs/usr/bin/archangelos-redops-tools
+system/*/airootfs/usr/bin/archangelos-region
+system/*/airootfs/usr/bin/archangelos-screenrecord
+system/*/airootfs/usr/bin/archangelos-screenshot
+system/*/airootfs/usr/bin/archangelos-theme-setup
+system/*/airootfs/usr/bin/archangelos-wallpaper
+system/*/airootfs/usr/bin/archangelos-wallpaper-setup
+system/*/airootfs/usr/bin/archangelos-welcome
+system/*/airootfs/usr/bin/cyberspace
+system/*/airootfs/usr/share/applications/cyberspace.desktop
+system/*/airootfs/usr/share/archangelos/arcfetch.jsonc
+system/*/airootfs/usr/share/archangelos/fastfetch.jsonc
+system/*/airootfs/usr/share/archangelos/logo.png
+system/*/airootfs/usr/share/archangelos/logo.txt
+system/*/airootfs/usr/share/archangelos/tool-aliases.conf

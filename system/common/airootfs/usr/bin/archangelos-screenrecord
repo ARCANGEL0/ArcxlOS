@@ -8,6 +8,8 @@ set -u
 # Already recording? → stop and finalize.
 if pgrep -x wf-recorder >/dev/null 2>&1; then
   pkill -INT -x wf-recorder 2>/dev/null || true
+  # tear down the region dim-mask overlay too
+  pkill -f 'archangelos/capture/qml/recmask.qml' 2>/dev/null || true
   notify-send "Recording stopped" "Saved to ~/Videos/Recordings" 2>/dev/null || true
   exit 0
 fi
@@ -28,3 +30,12 @@ notify-send "Recording started" "SUPER+SHIFT+R again to stop" 2>/dev/null || tru
 # wf-recorder accepts grim-style geometry via -g "X,Y WxH". Detach so the
 # recorder outlives this launcher process.
 setsid -f wf-recorder -g "$geom" -f "$file" >/dev/null 2>&1
+
+# Dim everything except the recorded region as a live capture indicator. The
+# mask is click-through and draws its accent frame OUTSIDE the region, so it is
+# never part of the region-only recording. Detach so it survives this process;
+# the stop branch above kills it. Skip quietly if the overlay isn't present.
+RECMASK_QML="/usr/share/archangelos/capture/qml/recmask.qml"
+if command -v qs >/dev/null 2>&1 && [ -f "$RECMASK_QML" ]; then
+  ARCHANGELOS_REC_GEOM="$geom" setsid -f qs --path "$RECMASK_QML" >/dev/null 2>&1 || true
+fi

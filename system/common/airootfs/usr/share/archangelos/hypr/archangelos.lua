@@ -15,15 +15,10 @@ hl.bind("SUPER + L", hl.dsp.exec_cmd("/usr/bin/archangelos-lock"),
 -- (archangelos-arcshell-bake), because Hyprland stacks duplicate binds rather than
 -- overriding them — an overlay bind here would fire *in addition to* ArcShell's.
 
--- Window resize — CTRL + SHIFT + arrows (unused by ArcShell; safe to add here)
-hl.bind("CTRL + SHIFT + right", hl.dsp.window.resize({ x = 100, y = 0 }),
-    { repeating = true, description = "Grow window width" })
-hl.bind("CTRL + SHIFT + left", hl.dsp.window.resize({ x = -100, y = 0 }),
-    { repeating = true, description = "Shrink window width" })
-hl.bind("CTRL + SHIFT + down", hl.dsp.window.resize({ x = 0, y = 100 }),
-    { repeating = true, description = "Grow window height" })
-hl.bind("CTRL + SHIFT + up", hl.dsp.window.resize({ x = 0, y = -100 }),
-    { repeating = true, description = "Shrink window height" })
+-- (Removed) CTRL+SHIFT+arrow window-resize binds. The hl.dsp.window.resize({x,y})
+-- table form raised "Runtime error in lua: Invalid size ''" in the post-arcshell
+-- overlay context. Dropped entirely — keyboard resize was never a requested
+-- feature and the error was noise on every arrow press.
 
 -- Region screenshot — SUPER + SHIFT + S (animated selector → grim → clipboard)
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("/usr/bin/archangelos-screenshot"),
@@ -38,9 +33,8 @@ hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, cen
 hl.window_rule({ match = { title = "^archangelos-welcome$" },  float = true, center = true })
 hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true, center = true, size = "1040 700" })
 
--- Rio terminal always opens floating, centered, at its own default size.
-hl.window_rule({ match = { class = "^rio$" }, float = true, center = true })
-hl.window_rule({ match = { class = "^Rio$" }, float = true, center = true })
+-- Rio terminal always opens as a small, floating, centered window.
+hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1000 640" })
 
 -- Startup: set the ArchangelOS wallpaper, apply the default cursor/icon theme,
 -- and ensure the idle-lock daemon runs.
@@ -50,6 +44,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprctl setcursor Future-dark-cursors 24")
     hl.exec_cmd("hyprctl keyword env XCURSOR_THEME,Future-dark-cursors")
     hl.exec_cmd("hyprctl keyword env XCURSOR_SIZE,24")
-    hl.exec_cmd("bash -c 'command -v gsettings >/dev/null && gsettings set org.gnome.desktop.interface icon-theme Delight-2; gsettings set org.gnome.desktop.interface cursor-theme Future-dark-cursors; true'")
+    hl.exec_cmd("bash -c 'command -v gsettings >/dev/null && gsettings set org.gnome.desktop.interface icon-theme Zafiro-Nord-Dark-Black; gsettings set org.gnome.desktop.interface cursor-theme Future-dark-cursors; true'")
     hl.exec_cmd("bash -c 'pgrep -x hypridle >/dev/null || hypridle'")
 end)

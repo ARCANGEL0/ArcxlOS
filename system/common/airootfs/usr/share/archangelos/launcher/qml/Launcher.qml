@@ -31,6 +31,37 @@ Item {
     property int hoverApp: -1
     property bool intro: false    // entrance-animation gate
 
+    // ── Apps grid state ──
+    // The "Apps" category (first, emitted by archangelos-menugen) is shown as a
+    // full icon grid instead of the organic fan: the constellation lifts away
+    // and every installed app is laid out in icon-top cells.
+    property bool gridMode: focused >= 0 && focused < cats.length
+                            && clean(cats[focused].name) === "Apps"
+    property string gridQuery: ""     // type-to-filter within the grid
+    property int gridSel: 0
+    property int hoverGrid: -1
+    property var gridItems: {
+        if (!gridMode) return []
+        var all = (cats[focused] && cats[focused].items) ? cats[focused].items : []
+        var q = gridQuery.trim().toLowerCase()
+        if (q.length === 0) return all
+        var out = []
+        for (var i = 0; i < all.length; i++) {
+            if (("" + (all[i].name || "")).toLowerCase().indexOf(q) >= 0) out.push(all[i])
+        }
+        return out
+    }
+    onGridModeChanged: { gridQuery = ""; gridSel = 0; hoverGrid = -1 }
+    onGridItemsChanged: gridSel = 0
+    // resolve a .desktop Icon= (theme name or absolute path) to an Image source,
+    // honouring the active icon theme; falls back to a generic executable glyph.
+    function iconFor(ic) {
+        if (!ic) return Quickshell.iconPath("application-x-executable", true)
+        if (("" + ic).indexOf("/") === 0) return "file://" + ic
+        var p = Quickshell.iconPath(ic, true)
+        return (p && p.length > 0) ? p : Quickshell.iconPath("application-x-executable", true)
+    }
+
     // ── live search state ──
     property string query: ""     // typed text; non-empty = search overlay up
     property bool searching: query.length > 0   // hides the constellation
@@ -122,6 +153,12 @@ Item {
     }
 
     // ── menu loading ──
+    // Apps are enumerated dynamically every time the launcher opens:
+    // archangelos-menugen scans the installed .desktop files and prints the
+    // catalog on stdout, so the menu always mirrors what is actually installed
+    // (never a hardcoded list). Only if the generator is missing or fails do we
+    // fall back to the shipped static menu.json.
+    property bool dynamicLoaded: false
     function parseMenu(txt) {
         try {
             var d = JSON.parse(txt)
@@ -134,13 +171,34 @@ Item {
         connCanvas.requestPaint()
     }
     Timer { id: focusStartTimer; interval: 120; onTriggered: root.focused = root.startFocus }
+    Process {
+        id: menuGen
+        command: ["/usr/bin/archangelos-menugen"]
+        running: false
+        stdout: StdioCollector {
+            id: menuGenOut
+            onStreamFinished: {
+                var good = false
+                try {
+                    var d = JSON.parse(menuGenOut.text)
+                    good = d && d.categories && d.categories.length > 0
+                } catch (e) { good = false }
+                if (good) { root.dynamicLoaded = true; root.parseMenu(menuGenOut.text) }
+            }
+        }
+        onExited: function(code, status) {
+            // generator unavailable / errored → load the shipped static catalog
+            if (!root.dynamicLoaded) menuFile.path = root.menuPath
+        }
+    }
     FileView {
         id: menuFile
-        path: root.menuPath
-        onLoaded: root.parseMenu(menuFile.text())
+        // path is left unset so the dynamic generator is preferred; it is only
+        // assigned (triggering a load) when menuGen fails, above.
+        onLoaded: if (!root.dynamicLoaded) root.parseMenu(menuFile.text())
         onLoadFailed: console.warn("menu load failed:", root.menuPath)
     }
-    Component.onCompleted: introTimer.start()
+    Component.onCompleted: { introTimer.start(); menuGen.running = true }
     Timer { id: introTimer; interval: 40; onTriggered: root.intro = true }
     // ── launching (install-on-demand, detached) ──
     // Fully detach the child from the launcher process: dismiss() tears the
@@ -153,17 +211,38 @@ Item {
         var pkg = item.pkg ? item.pkg : bin
         var findTerm = "for t in rio konsole alacritty foot kitty wezterm xterm; do command -v $t >/dev/null 2>&1 && { TERM_EMU=$t; break; }; done"
         var run = item.terminal ? ("$TERM_EMU -e " + exe) : ("setsid " + exe + " >/dev/null 2>&1 &")
-        var script = findTerm + "; "
-            + "if command -v " + bin + " >/dev/null 2>&1; then " + run + "; "
-            + "else $TERM_EMU -e bash -lc "
-            + "'archangelos-install-tool " + pkg + "; "
-            + "command -v " + bin + " >/dev/null 2>&1 && { " + run + "; }'; fi"
+        var script = findTerm + "\n"
+            + "if command -v " + bin + " >/dev/null 2>&1; then\n" + run + "\nelse\n"
+            + "$TERM_EMU -e bash -lc '"
+            + "archangelos-install-tool " + pkg + "; "
+            + "command -v " + bin + " >/dev/null 2>&1 && " + run + "'\nfi"
         Quickshell.execDetached(["sh", "-lc", script])
         root.dismiss()
     }
 
     // ── keyboard ──
     Keys.onPressed: function(e) {
+        // Apps grid: typing filters the grid in place; arrows walk the cells.
+        if (root.gridMode) {
+            if (e.key === Qt.Key_Escape) {
+                if (root.gridQuery.length > 0) root.gridQuery = ""
+                else root.focused = -1
+                e.accepted = true; return
+            }
+            if (e.key === Qt.Key_Backspace) { root.gridQuery = root.gridQuery.slice(0, -1); e.accepted = true; return }
+            var gi = root.gridItems
+            if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) {
+                if (gi.length > 0) root.launchItem(gi[Math.max(0, Math.min(root.gridSel, gi.length - 1))])
+                e.accepted = true; return
+            }
+            var gcols = appGrid.columnsShown
+            if (e.key === Qt.Key_Right) { root.gridSel = Math.min(root.gridSel + 1, gi.length - 1); e.accepted = true; return }
+            if (e.key === Qt.Key_Left)  { root.gridSel = Math.max(root.gridSel - 1, 0); e.accepted = true; return }
+            if (e.key === Qt.Key_Down)  { root.gridSel = Math.min(root.gridSel + gcols, gi.length - 1); e.accepted = true; return }
+            if (e.key === Qt.Key_Up)    { root.gridSel = Math.max(root.gridSel - gcols, 0); e.accepted = true; return }
+            if (e.text.length === 1 && e.text >= " ") { root.gridQuery += e.text; e.accepted = true; return }
+            e.accepted = true; return
+        }
         // live search takes priority whenever a query is active
         if (root.query.length > 0) {
             if (e.key === Qt.Key_Escape) { root.query = ""; e.accepted = true; return }
@@ -246,7 +325,7 @@ Item {
     Canvas {
         id: connCanvas
         anchors.fill: parent
-        opacity: (root.intro && !root.searching) ? 1 : 0
+        opacity: (root.intro && !root.searching && !root.gridMode) ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 300 } }
         function elbow(ctx, x0, y0, x1, y1) {
             var dx = x1 - x0, dy = y1 - y0
@@ -258,7 +337,10 @@ Item {
         }
         onPaint: {
             var ctx = getContext("2d"); ctx.reset(); ctx.clearRect(0, 0, width, height)
-            if (root.n === 0) return
+            // In Apps grid mode the constellation is replaced by the icon grid;
+            // bail immediately so no elbow traces flash during the flow-up
+            // animation (the opacity fade alone lags a few frames and glitches).
+            if (root.n === 0 || root.gridMode) return
             if (root.focused < 0) {
                 for (var i = 0; i < root.n; i++) {
                     var hot = (i === root.hoverCat || i === root.selCat)
@@ -285,8 +367,13 @@ Item {
     Item {
         id: graph
         anchors.fill: parent
-        opacity: (root.intro && !root.searching) ? 1 : 0
+        opacity: (root.intro && !root.searching && !root.gridMode) ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 300 } }
+        // lift the whole constellation upward as the Apps grid takes over
+        transform: Translate {
+            y: root.gridMode ? -root.height * 0.16 : 0
+            Behavior on y { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
+        }
 
         // central hub — the ArchangelOS mark with APPS beneath it
         Item {
@@ -408,7 +495,7 @@ Item {
     }
     // ── application fan (level 2) ──
     Repeater {
-        model: (root.focused >= 0 && !root.searching) ? (root.cats[root.focused].items || []) : []
+        model: (root.focused >= 0 && !root.searching && !root.gridMode) ? (root.cats[root.focused].items || []) : []
         delegate: appNode
     }
     Component {
@@ -471,6 +558,67 @@ Item {
             }
         }
     }
+    // ── Apps grid (icon-top cells; replaces the fan for the "Apps" category) ──
+    Item {
+        id: gridLayer
+        anchors.fill: parent
+        z: 40
+        visible: root.gridMode && !root.searching
+        opacity: visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 320 } }
+        transform: Translate {
+            y: gridLayer.visible ? 0 : 46
+            Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
+        }
+        GridView {
+            id: appGrid
+            anchors.fill: parent
+            anchors.topMargin: 150; anchors.bottomMargin: 78
+            anchors.leftMargin: 64; anchors.rightMargin: 64
+            clip: true
+            cellWidth: 150; cellHeight: 128
+            property int columnsShown: Math.max(1, Math.floor(width / cellWidth))
+            model: root.gridItems
+            currentIndex: root.gridSel
+            boundsBehavior: Flickable.StopAtBounds
+            onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
+            delegate: Item {
+                id: cell
+                width: appGrid.cellWidth; height: appGrid.cellHeight
+                property bool hot: index === root.gridSel || index === root.hoverGrid
+                Rectangle {
+                    anchors.fill: parent; anchors.margins: 6; radius: 12
+                    color: cell.hot ? "#2a251d" : "transparent"
+                    border.width: cell.hot ? 1 : 0; border.color: Theme.a3
+                    Behavior on color { ColorAnimation { duration: 130 } }
+                }
+                Column {
+                    anchors.centerIn: parent; spacing: 9; width: parent.width - 20
+                    Image {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        source: root.iconFor(modelData.icon)
+                        sourceSize.width: 52; sourceSize.height: 52
+                        width: 52; height: 52; asynchronous: true; smooth: true; mipmap: true
+                        fillMode: Image.PreserveAspectFit
+                    }
+                    Text {
+                        width: parent.width; horizontalAlignment: Text.AlignHCenter
+                        text: modelData.name; elide: Text.ElideRight
+                        maximumLineCount: 2; wrapMode: Text.WordWrap
+                        font.family: Theme.display; font.pixelSize: 12
+                        color: cell.hot ? Theme.a4 : Theme.fg
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent; hoverEnabled: true
+                    onEntered: root.hoverGrid = index
+                    onExited: if (root.hoverGrid === index) root.hoverGrid = -1
+                    onClicked: root.launchItem(modelData)
+                }
+            }
+        }
+    }
+
     // ── focused-category heading (top-left title, clear of the app spray) ──
     Column {
         x: 36
@@ -484,7 +632,9 @@ Item {
             font.letterSpacing: 4; color: Theme.fg
         }
         Text {
-            text: root.focused >= 0 ? ((root.cats[root.focused].items || []).length + " APPLICATIONS") : ""
+            text: root.focused >= 0 ? (root.gridMode
+                    ? (root.gridItems.length + (root.gridQuery.length > 0 ? " OF " + ((root.cats[root.focused].items || []).length) + " APPLICATIONS" : " APPLICATIONS"))
+                    : ((root.cats[root.focused].items || []).length + " APPLICATIONS")) : ""
             font.family: Theme.mono; font.pixelSize: 10; font.letterSpacing: 3; color: Theme.a3
         }
     }
@@ -503,9 +653,54 @@ Item {
         opacity: root.intro ? 0.7 : 0
         Behavior on opacity { NumberAnimation { duration: 500 } }
         text: root.query.length > 0 ? "type to search · enter to launch · esc to clear"
+            : (root.gridMode ? "type to filter · arrows to move · enter to launch · esc to go back"
             : (root.focused < 0 ? "click a node · type to search · esc to close"
-                                : "click an app · type to search · esc to go back")
+                                : "click an app · type to search · esc to go back"))
         font.family: Theme.mono; font.pixelSize: 9; font.letterSpacing: 2.5; color: Theme.a3
+    }
+
+    // ── Apps-grid input bubble (top-right; shows the type-to-filter text) ──
+    // While filtering the Apps grid there is no full-screen search prompt, so
+    // this little ink bubble pops in at the top-right to echo what is typed.
+    Item {
+        id: inputBubble
+        z: 55
+        anchors.right: parent.right; anchors.top: parent.top
+        anchors.rightMargin: 34; anchors.topMargin: 52
+        width: Math.max(150, bubbleCol.width + 34)
+        height: bubbleCol.height + 22
+        visible: root.gridMode
+        opacity: (root.gridMode && root.gridQuery.length > 0) ? 1 : 0
+        scale: (root.gridMode && root.gridQuery.length > 0) ? 1 : 0.88
+        transformOrigin: Item.TopRight
+        Behavior on opacity { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 190; easing.type: Easing.OutBack } }
+        // ink wash bubble
+        Rectangle {
+            anchors.fill: parent; radius: 11
+            color: "#17140f"; opacity: 0.96
+            border.width: 1; border.color: Theme.lnm
+        }
+        Column {
+            id: bubbleCol
+            anchors.centerIn: parent; spacing: 3
+            Row {
+                spacing: 5
+                Text {
+                    text: root.gridQuery
+                    font.family: Theme.display; font.pixelSize: 18; color: Theme.a4
+                }
+                Rectangle {   // blinking caret
+                    width: 2; height: 18; color: Theme.a4
+                    anchors.verticalCenter: parent.verticalCenter
+                    SequentialAnimation on opacity {
+                        running: inputBubble.opacity > 0; loops: Animation.Infinite
+                        NumberAnimation { to: 0; duration: 520 }
+                        NumberAnimation { to: 1; duration: 520 }
+                    }
+                }
+            }
+        }
     }
 
     // ── live search overlay (floats above everything while typing) ──
