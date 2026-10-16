@@ -1,0 +1,13 @@
+# ArchangelOS global environment (read by pam_env at login → applies to the
+# whole graphical session).
+
+# Qt/KDE apps (Dolphin, etc.) default to a light Fusion look on a non-Plasma
+# desktop. Force the Breeze widget style; the dark palette + Zafiro-Nord-Dark-Black icons come
+# from the per-user kdeglobals that archangelos-theme-setup writes.
+QT_STYLE_OVERRIDE=Breeze
+
+# Point Qt at the KDE platform theme plugin (plasma-integration) so it actually
+# reads the per-user kdeglobals — dark BreezeDark palette + Zafiro-Nord-Dark-Black icons.
+# Without this, kdeglobals is dead config on a non-Plasma (Hyprland) desktop and
+# Qt apps render with the default light palette + fallback Breeze icons.
+QT_QPA_PLATFORMTHEME=kde

@@ -1,0 +1,80 @@
+#!/bin/bash
+# ArchangelOS — force the default GTK/Qt dark theme (Adwaita-dark / Breeze-Dark),
+# icon theme (Zafiro-Nord-Dark-Black) and cursor theme (Future-dark-cursors) into every home,
+# run at image-build time AFTER ArcShell has laid down its own ~/.config (which may
+# otherwise ship its own GTK settings). System-wide defaults also live in
+# /usr/share/icons/default (Xcursor) and /etc/dconf/db/local.d (dconf); this pins
+# the per-user GTK + Qt/KDE bits so the whole desktop comes up dark-grey.
+set -u
+
+GTK_THEME="Adwaita-dark"
+ICON_THEME="Zafiro-Nord-Dark-Black"
+CURSOR_THEME="Future-dark-cursors"
+CURSOR_SIZE=24
+# Qt/KDE apps (Dolphin, plasma-systemmonitor) read kdeglobals directly; BreezeDark
+# is the grey-dark scheme that ships with the breeze package.
+QT_COLOR_SCHEME="BreezeDark"
+QT_WIDGET_STYLE="Breeze"
+
+write_gtk() {
+  local base="$1"
+  local d
+  for d in "$base/.config/gtk-3.0" "$base/.config/gtk-4.0"; do
+    mkdir -p "$d"
+    cat > "$d/settings.ini" << EOF
+[Settings]
+gtk-theme-name=$GTK_THEME
+gtk-icon-theme-name=$ICON_THEME
+gtk-cursor-theme-name=$CURSOR_THEME
+gtk-cursor-theme-size=$CURSOR_SIZE
+gtk-application-prefer-dark-theme=1
+EOF
+  done
+  # per-user Xcursor default (mirrors /usr/share/icons/default)
+  mkdir -p "$base/.icons/default"
+  cat > "$base/.icons/default/index.theme" << EOF
+[Icon Theme]
+Inherits=$CURSOR_THEME
+EOF
+  # Qt/KDE apps: dark color scheme + Breeze style + matching icon theme.
+  mkdir -p "$base/.config"
+  cat > "$base/.config/kdeglobals" << EOF
+[General]
+ColorScheme=$QT_COLOR_SCHEME
+widgetStyle=$QT_WIDGET_STYLE
+
+[Icons]
+Theme=$ICON_THEME
+
+[KDE]
+widgetStyle=$QT_WIDGET_STYLE
+EOF
+  # A bare `ColorScheme=BreezeDark` only names a scheme — KColorScheme (used by
+  # Dolphin and other KDE apps) reads the actual [Colors:*]/[WM] blocks straight
+  # from kdeglobals, and without them falls back to its built-in *light* palette
+  # (the "white Dolphin" bug). Inline the real BreezeDark palette so the dark
+  # colours apply even with no Plasma platform-theme plugin present.
+  if [ -f /usr/share/color-schemes/BreezeDark.colors ]; then
+    awk '
+      /^\[/ { keep = ($0 ~ /^\[Colors:/ || $0 ~ /^\[WM\]/) }
+      keep { print }
+    ' /usr/share/color-schemes/BreezeDark.colors >> "$base/.config/kdeglobals"
+  fi
+}
+
+for home in /etc/skel /home/liveuser /root; do
+  [ -d "$home" ] || continue
+  write_gtk "$home"
+done
+
+# ownership for the live user's copies
+if id -u liveuser >/dev/null 2>&1; then
+  chown -R liveuser:users /home/liveuser/.config /home/liveuser/.icons 2>/dev/null || true
+fi
+
+# compile system dconf defaults if the source drop-ins are staged
+if command -v dconf >/dev/null 2>&1 && [ -d /etc/dconf/db/local.d ]; then
+  dconf update 2>/dev/null || true
+fi
+
+exit 0

@@ -120,6 +120,7 @@ vulkan-swrast
 libva-intel-driver
 intel-media-driver
 cpupower
+power-profiles-daemon
 
 ### base and base-devel
 base
@@ -151,6 +152,7 @@ networkmanager-vpnc
 
 ### file management
 dolphin
+breeze
 gvfs
 gvfs-mtp
 udisks2
@@ -165,8 +167,7 @@ go
 rustup
 
 ### applications
-chromium
-firefox
+librewolf
 #hexchat
 htop
 galculator
@@ -225,8 +226,6 @@ python-pillow
 
 
 ### office & productivity (shared with Home Edition)
-libreoffice-fresh
-thunderbird
 qbittorrent
 filezilla
 gimp
@@ -238,7 +237,6 @@ vlc
 mpv
 
 ### editors & developer tools
-code
 micro
 neovim
 nodejs
@@ -270,6 +268,8 @@ starship
 grim
 slurp
 wl-clipboard
+wf-recorder
+libnotify
 brightnessctl
 cliphist
 polkit-gnome
@@ -392,14 +392,12 @@ print-manager
 protontricks
 python
 quodlibet
-r
 rclone
 remmina
 retroarch
 scribus
 scummvm
 shotcut
-signal-desktop
 skanlite
 stellarium
 strawberry
@@ -415,3 +413,8 @@ wget
 
 ### arcfetch banner deps
 chafa
+
+### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
+libwpe
+wpebackend-fdo
+wpewebkit

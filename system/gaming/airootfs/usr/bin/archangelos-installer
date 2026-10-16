@@ -402,6 +402,16 @@ run_cmd "arch-chroot /mnt useradd -m -g users -G wheel,power,audio,video,storage
 echo "$NEW_USER:$NEW_PASSWORD" | arch-chroot /mnt chpasswd
 echo "root:$NEW_PASSWORD" | arch-chroot /mnt chpasswd
 
+# Materialize the ArcShell desktop for the freshly-created on-disk user. useradd
+# built the home from /etc/skel, which carries the hypr/systemd config but NOT the
+# per-user ArcShell release runtime (~/.local/share/arcshell) or launcher
+# (~/.local/bin/arcshell), and skel's keybinds.lua still points at liveuser's path.
+# Re-baking fixes all of that with the correct paths for $NEW_USER. Non-fatal:
+# a failure here must not abort a disk install.
+log_info "Baking the ArcShell desktop for $NEW_USER..."
+arch-chroot /mnt su - "$NEW_USER" -c /usr/bin/archangelos-engine-init \
+    || log_warn "ArcShell desktop bake failed for $NEW_USER; the desktop may need manual setup on first login."
+
 echo "%wheel ALL=(ALL:ALL) ALL" >> /mnt/etc/sudoers
 
 log_info "Configuring mkinitcpio.conf and linux.preset for the target system..."

@@ -73,8 +73,8 @@
      "terminal": false
     },
     {
-     "name": "Signal",
-     "exec": "signal-desktop",
+     "name": "Cyberspace",
+     "exec": "cyberspace",
      "terminal": false
     },
     {
@@ -164,11 +164,6 @@
     {
      "name": "Inkscape",
      "exec": "inkscape",
-     "terminal": false
-    },
-    {
-     "name": "Aseprite",
-     "exec": "aseprite",
      "terminal": false
     },
     {
@@ -365,16 +360,6 @@
     {
      "name": "JupyterLab",
      "exec": "jupyterlab",
-     "terminal": true
-    },
-    {
-     "name": "R",
-     "exec": "R",
-     "terminal": true
-    },
-    {
-     "name": "RStudio",
-     "exec": "rstudio",
      "terminal": true
     },
     {

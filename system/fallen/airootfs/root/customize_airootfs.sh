@@ -14,7 +14,7 @@ sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 enabled_services=('choose-mirror.service' 'sddm.service' 'pacman-init'
-  'NetworkManager' 'irqbalance' 'vboxservice')
+  'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 # BlackArch's blackarch-config-lxdm claims /etc/systemd/system/display-manager.service
 # for lxdm, so `systemctl enable sddm.service` refuses to overwrite that symlink and
 # exits non-zero — which, under `set -eu`, aborts the whole build. Free the slot first
@@ -82,7 +82,6 @@ chmod -R 755 /home/liveuser/Desktop
 
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /etc/skel/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /home/liveuser/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/code.desktop /home/liveuser/Desktop/code.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/org.wireshark.Wireshark.desktop /home/liveuser/Desktop/wireshark.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/zenmap.desktop /home/liveuser/Desktop/zenmap.desktop 2>/dev/null || true
 chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/null || true
@@ -190,9 +189,15 @@ ARCSHELL_DIR="/opt/arcshell"
 if [ ! -d "$ARCSHELL_DIR" ]; then
   git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
 fi
+# Drop VCS history from the shallow clone — not needed at runtime, keeps it out of the ISO.
+rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
-  su - liveuser -c "cd $ARCSHELL_DIR && ./install.sh --yes" || true
+  # ArcShell's own installer self-destructs in a headless chroot (its bootstrap
+  # health gate needs a live systemd user session + running shell). Bake the
+  # fully-installed desktop directly instead — see archangelos-engine-init.
+  chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
+  su - liveuser -c "/usr/bin/archangelos-engine-init" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
   fi
@@ -203,6 +208,10 @@ fi
 
 if [ -x /usr/bin/archangelos-wallpaper-setup ]; then
   /usr/bin/archangelos-wallpaper-setup || true
+fi
+
+if [ -x /usr/bin/archangelos-theme-setup ]; then
+  /usr/bin/archangelos-theme-setup || true
 fi
 
 if [ -x /usr/bin/archangelos-fastfetch-setup ]; then
@@ -280,7 +289,7 @@ if [ -f /usr/bin/archangelos-wheel ]; then
 fi
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
-AUR_PKGS="anki aseprite geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact librewolf-bin mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
+AUR_PKGS="anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \

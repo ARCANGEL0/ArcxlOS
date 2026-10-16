@@ -773,6 +773,13 @@ class InstallWorkerThread(QThread):
             self.run_cmd(f"echo '{user_name}:{password}' | arch-chroot /mnt chpasswd")
             self.run_cmd(f"echo 'root:{root_password}' | arch-chroot /mnt chpasswd")
 
+            # Materialize the ArcShell desktop for the on-disk user. useradd built the
+            # home from /etc/skel (hypr/systemd config only) and lacks the per-user
+            # ArcShell release runtime + launcher; re-baking fixes the paths for the
+            # new user. Non-fatal ('|| true') so a bake hiccup never aborts install.
+            self.log(81, f"Baking the ArcShell desktop for '{user_name}'...")
+            self.run_cmd(f"arch-chroot /mnt su - '{user_name}' -c /usr/bin/archangelos-engine-init || true")
+
             with open("/mnt/etc/sudoers.d/wheel", "w") as f:
                 f.write("%wheel ALL=(ALL:ALL) ALL\n")
             os.chmod("/mnt/etc/sudoers.d/wheel", 0o440)
