@@ -8,8 +8,8 @@ Item {
 
     property real targetY: 0
     property real targetHeight: 0
-    property int fast: 200
-    property int slow: 480
+    property int fast: 200 * Theme.motion
+    property int slow: 480 * Theme.motion
 
     property real head: targetY
     property real tail: targetY + targetHeight

@@ -1,13 +1,12 @@
 import QtQuick
 import Quickshell
 
-// Left sidebar: launcher button (logo), workspaces, then readouts, clock
+// Left sidebar: launcher button (logo, opens the constellation launcher), workspaces, then readouts, clock
 // and the session button at the foot. Panels pour out of its right edge.
 Item {
     id: side
 
-    // Where panels emerge from, in sidebar coordinates.
-    readonly property real launcherOriginY: logo.y + logo.height / 2
+    // Where the session panel emerges from, in sidebar coordinates.
     readonly property real sessionOriginY: power.y + power.height / 2
 
     Rectangle {
@@ -25,7 +24,7 @@ Item {
         Rectangle {
             anchors.centerIn: parent
             width: 38; height: 38; radius: 10
-            color: Qt.alpha(Theme.accent, ShellState.panel === "launcher" ? 0.18 : logoHover.containsMouse ? 0.10 : 0)
+            color: Qt.alpha(Theme.accent, logoHover.containsMouse ? 0.12 : 0)
             Behavior on color { ColorAnimation { duration: Theme.medium } }
         }
         Image {
@@ -40,7 +39,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: ShellState.toggle("launcher")
+            onClicked: ShellState.openLauncher()
         }
     }
 
