@@ -14,7 +14,7 @@ sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 enabled_services=('choose-mirror.service' 'sddm.service' 'pacman-init'
-  'NetworkManager' 'irqbalance' 'vboxservice')
+  'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 rm -f /etc/systemd/system/display-manager.service
 systemctl enable ${enabled_services[@]}
 systemctl set-default graphical.target
@@ -78,7 +78,6 @@ chmod -R 755 /home/liveuser/Desktop
 
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /etc/skel/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /home/liveuser/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/code.desktop /home/liveuser/Desktop/code.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/org.wireshark.Wireshark.desktop /home/liveuser/Desktop/wireshark.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/zenmap.desktop /home/liveuser/Desktop/zenmap.desktop 2>/dev/null || true
 chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/null || true
@@ -185,9 +184,11 @@ ARCSHELL_DIR="/opt/arcshell"
 if [ ! -d "$ARCSHELL_DIR" ]; then
   git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
 fi
+rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
-  su - liveuser -c "cd $ARCSHELL_DIR && ./install.sh --yes" || true
+  chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
+  su - liveuser -c "/usr/bin/archangelos-engine-init" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
   fi
@@ -198,6 +199,10 @@ fi
 
 if [ -x /usr/bin/archangelos-wallpaper-setup ]; then
   /usr/bin/archangelos-wallpaper-setup || true
+fi
+
+if [ -x /usr/bin/archangelos-theme-setup ]; then
+  /usr/bin/archangelos-theme-setup || true
 fi
 
 if [ -x /usr/bin/archangelos-fastfetch-setup ]; then
@@ -274,7 +279,7 @@ if [ -f /usr/bin/archangelos-wheel ]; then
   ln -sf /usr/bin/archangelos-wheel /usr/bin/archangelos-radial 2>/dev/null || true
 fi
 
-AUR_PKGS="anki aseprite geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact librewolf-bin mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
+AUR_PKGS="anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
