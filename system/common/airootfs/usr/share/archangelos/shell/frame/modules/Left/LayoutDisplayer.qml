@@ -1,0 +1,198 @@
+/*
+ * ArcShell
+ * Copyright (C) 2026 arcxlo (ArchangelOS)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+import "../../"
+
+// ─── LayoutDisplayer ────────────────────────────────────────────────────────
+// Small icon button beside the Workspaces module.
+// Shows the active tiling layout for the focused workspace.
+//
+// Layout → symbol map:
+//   dwindle  →       (nf-md-view_quilt)
+//   master   →       (nf-md-view_split_vertical)
+//   monocle  → 󰊓     (nf-md-fullscreen)
+//   scroller → 󰔧     (nf-md-scroll_horizontal)
+//
+// Update triggers (event-driven, no forever-loop):
+//   • Component.onCompleted     — initial read
+//   • focusedWorkspaceChanged   — workspace switch
+//   • focusedToplevelChanged    — window focus change (covers most layout shifts)
+//   • 4 s safety timer          — catches layout change with no following event
+// ────────────────────────────────────────────────────────────────────────────
+
+Item {
+    id: root
+
+    property real localScale: 1.0
+
+    implicitWidth:  Math.round(26 * localScale)
+    implicitHeight: Math.round(26 * localScale)
+
+    // ── State ────────────────────────────────────────────────────────────────
+
+    property string configProvider: ShellState.configProvider
+    property string currentLayout: ""
+    property string numWindows: ""
+    property var availableLayouts: ["dwindle", "master", "monocle", "scrolling"]
+
+    // ── Symbol map ───────────────────────────────────────────────────────────
+
+    function layoutSymbol(name) {
+        switch (name.toLowerCase()) {
+            case "dwindle":  return "><"   // nf-md-view_quilt
+            case "master":   return "M"   // nf-md-view_split_vertical
+            case "monocle":  return "|"+root.numWindows+"|"  // nf-md-fullscreen
+            case "scrolling": return "<"+root.numWindows+">"  // nf-md-scroll_horizontal (hyprscroller)
+            default:         return "Unknown"  // nf-md-view_dashboard (unknown fallback)
+        }
+    }
+
+    // ── hyprctl query ────────────────────────────────────────────────────────
+    // Runs `hyprctl -j activeworkspace` and parses `lastlayout` from the JSON.
+
+    Process {
+        id: queryProc
+
+        command: ["hyprctl", "-j", "activeworkspace"]
+        running: false
+
+        stdout: StdioCollector {
+            id: collector
+            onStreamFinished: {
+                try {
+                    const obj = JSON.parse(collector.text)
+                    if (obj && obj.tiledLayout) {
+                        root.currentLayout = obj.tiledLayout.toLowerCase()
+                        root.numWindows = obj.windows > 0 ? obj.windows.toString() : "  "
+                    } 
+                } catch (e) {
+                    // malformed JSON — keep current value
+                }
+            }
+        }
+    }
+
+    function refresh() {
+        if (!queryProc.running) queryProc.running = true
+    }
+
+    // ── Triggers ─────────────────────────────────────────────────────────────
+
+    Component.onCompleted: refresh()
+
+    Connections {
+        target: Hyprland
+
+        // Quickshell emits (name, data) for raw events
+        function onRawEvent(event) {
+            refresh()  // Refresh on every event; the proc will ignore if still running
+        }
+    }
+
+    // Safety net: catches the case where the user changes layout
+    // but no window event follows (e.g. switch layout on an empty workspace).
+    Timer {
+        interval: 4000
+        running:  true
+        repeat:   true
+        onTriggered: root.refresh()
+    }
+    // ── Layout Changer ───────────────────────────────────────────────────────
+    Process {
+        id: setLayoutProc
+        running: false
+    }
+
+    function cycleLayout(step) {
+        let idx = availableLayouts.indexOf(root.currentLayout)
+        if (idx === -1) idx = 0 // Fallback if unknown
+        
+        // Calculate next index (handles negative steps for right-click)
+        idx = (idx + step + availableLayouts.length) % availableLayouts.length
+        let newLayout = availableLayouts[idx]
+
+        // 1. Run the hyprctl command silently based on config style
+        if (root.configProvider === "lua") {
+            setLayoutProc.command = ["hyprctl", "eval", `hl.config({ general = { layout = "${newLayout}" } })`]
+        } else {
+            setLayoutProc.command = ["hyprctl", "keyword", "general:layout", newLayout]
+        }
+        
+        setLayoutProc.running = true
+
+        // 2. Optimistically update the UI instantly (no waiting for IPC/Timer)
+        root.currentLayout = newLayout
+    }
+
+    // ── Visual ───────────────────────────────────────────────────────────────
+
+    Rectangle {
+        id: bg
+        anchors.fill: parent
+        radius: Math.round(6 * localScale)
+        color: mouseArea.containsMouse ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08) : "transparent"
+
+        Behavior on color {
+            ColorAnimation { duration: Anim.color}
+        }
+
+        MouseArea {
+            id: mouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.LeftButton) {
+                    cycleLayout(1)  // Forward
+                } else if (mouse.button === Qt.RightButton) {
+                    cycleLayout(-1) // Backward
+                }
+            }
+        }
+
+        Text {
+            id: icon
+            anchors.centerIn: parent
+            text: root.currentLayout !== "" ? layoutSymbol(root.currentLayout) : "…"
+            font.family: "JetFramesMono Nerd Font"
+            font.pixelSize: Math.round(14 * localScale)
+            color: Theme.text
+
+            // Brief scale-pop on symbol change
+            Behavior on text {
+                SequentialAnimation {
+                    NumberAnimation {
+                        target: icon; property: "scale"
+                        to: 0.6; duration: Anim.superFast
+                        easing.type: Anim.inQuad
+                    }
+                    NumberAnimation {
+                        target: icon; property: "scale"
+                        to: 1.0; duration: Anim.color
+                        easing.type: Anim.outBack; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+[config]
+# Mandatory config section for matugen
+
+[templates.arcshell]
+input_path = './arcshell-colors.json.example'
+output_path = '~/.config/ArcShell/matugen/colors.json'
+
+[templates.hyprland_colors]
+input_path = "colors.conf.template"
+output_path = "~/.config/ArcShell/matugen/colors.conf"
