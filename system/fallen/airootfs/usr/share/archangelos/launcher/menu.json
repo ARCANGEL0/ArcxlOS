@@ -52,13 +52,8 @@
      "terminal": false
     },
     {
-     "name": "Signal",
-     "exec": "signal-desktop",
-     "terminal": false
-    },
-    {
-     "name": "Element",
-     "exec": "element-desktop",
+     "name": "Cyberspace",
+     "exec": "cyberspace",
      "terminal": false
     },
     {
@@ -154,11 +149,6 @@
      "terminal": false
     },
     {
-     "name": "LibreOffice",
-     "exec": "libreoffice",
-     "terminal": false
-    },
-    {
      "name": "Pandoc",
      "exec": "pandoc",
      "terminal": true
@@ -183,11 +173,6 @@
     {
      "name": "Inkscape",
      "exec": "inkscape",
-     "terminal": false
-    },
-    {
-     "name": "Aseprite",
-     "exec": "aseprite",
      "terminal": false
     },
     {

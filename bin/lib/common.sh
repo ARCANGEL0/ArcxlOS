@@ -90,7 +90,16 @@ ax_stage() {
   chmod +x "${airootfs}/usr/bin/archangelos-wallpaper" \
            "${airootfs}/usr/bin/archangelos-wallpaper-setup" \
            "${airootfs}/usr/bin/archangelos-lock" \
-           "${airootfs}/usr/bin/archangelos-fastfetch-setup" 2>/dev/null || true
+           "${airootfs}/usr/bin/archangelos-fastfetch-setup" \
+           "${airootfs}/usr/bin/archangelos-theme-setup" \
+           "${airootfs}/usr/bin/archangelos-region" \
+           "${airootfs}/usr/bin/archangelos-screenshot" \
+           "${airootfs}/usr/bin/archangelos-screenrecord" \
+           "${airootfs}/usr/bin/archangelos-launcher" \
+           "${airootfs}/usr/bin/archangelos-launcher-toggle" \
+           "${airootfs}/usr/bin/archangelos-welcome" \
+           "${airootfs}/usr/bin/arcfetch" \
+           "${airootfs}/usr/bin/archangelos-redops-tools" 2>/dev/null || true
 
   ax_log "Stamping release version (system/${edition}/airootfs/etc/archangelos/version)..."
   mkdir -p "${airootfs}/etc/archangelos"

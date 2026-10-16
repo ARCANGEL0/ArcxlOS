@@ -20,7 +20,7 @@ sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 enabled_services=('choose-mirror.service' 'sddm.service' 'pacman-init'
-  'NetworkManager' 'irqbalance' 'vboxservice')
+  'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 systemctl enable ${enabled_services[@]}
 systemctl set-default graphical.target
 
@@ -76,9 +76,8 @@ ln -sf /usr/share/applications/archangelos-gui-installer.desktop /etc/skel/Deskt
 ln -sf /usr/share/applications/archangelos-cli-installer.desktop /etc/skel/Desktop/archangelos-cli-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /home/liveuser/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/archangelos-cli-installer.desktop /home/liveuser/Desktop/archangelos-cli-installer.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/code.desktop /home/liveuser/Desktop/code.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/libreoffice-startcenter.desktop /home/liveuser/Desktop/office.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/firefox.desktop /home/liveuser/Desktop/firefox.desktop 2>/dev/null || true
+ln -sf /usr/share/applications/wps-office-prometheus.desktop /home/liveuser/Desktop/office.desktop 2>/dev/null || true
+ln -sf /usr/share/applications/librewolf.desktop /home/liveuser/Desktop/librewolf.desktop 2>/dev/null || true
 chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/null || true
 
 cp -r /etc/skel/. /root/.
@@ -102,9 +101,22 @@ ARCSHELL_DIR="/opt/arcshell"
 if [ ! -d "$ARCSHELL_DIR" ]; then
   git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
 fi
+# Drop VCS history from the shallow clone — not needed at runtime, keeps it out of the ISO.
+rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
+# The desktop bake (archangelos-arcshell-bake) runs as liveuser and patches this
+# tree IN PLACE (SUPER+T=Rio in keybinds.lua, AMOLED dark surfaces, the video
+# wallpaper patch). The clone above runs as root, so those writes silently fail
+# on a root-owned tree — hand it to liveuser first.
+if id -u liveuser >/dev/null 2>&1; then
+  chown -R liveuser:users "$ARCSHELL_DIR" 2>/dev/null || true
+fi
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
-  su - liveuser -c "cd $ARCSHELL_DIR && ./install.sh --yes" || true
+  # ArcShell's own installer self-destructs in a headless chroot (its bootstrap
+  # health gate needs a live systemd user session + running shell). Bake the
+  # fully-installed desktop directly instead — see archangelos-arcshell-bake.
+  chmod +x /usr/bin/archangelos-arcshell-bake 2>/dev/null || true
+  su - liveuser -c "/usr/bin/archangelos-arcshell-bake" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
   fi
@@ -115,6 +127,10 @@ fi
 
 if [ -x /usr/bin/archangelos-wallpaper-setup ]; then
   /usr/bin/archangelos-wallpaper-setup || true
+fi
+
+if [ -x /usr/bin/archangelos-theme-setup ]; then
+  /usr/bin/archangelos-theme-setup || true
 fi
 
 if [ -x /usr/bin/archangelos-fastfetch-setup ]; then
@@ -157,18 +173,21 @@ for target in /home/liveuser/.config/mimeapps.list /root/.config/mimeapps.list /
   grep -q '^\[Default Applications\]' "$target" 2>/dev/null || printf '[Default Applications]\n' >> "$target"
   grep -q '^inode/directory=' "$target" 2>/dev/null || \
     sed -i '/^\[Default Applications\]/a inode/directory=org.kde.dolphin.desktop' "$target"
+  # LibreWolf is the sole browser — make it the default web handler.
+  for h in x-scheme-handler/http x-scheme-handler/https text/html x-scheme-handler/about x-scheme-handler/unknown; do
+    grep -q "^${h}=" "$target" 2>/dev/null || \
+      sed -i "/^\[Default Applications\]/a ${h}=librewolf.desktop" "$target"
+  done
 done
 chown liveuser:users /home/liveuser/.config/mimeapps.list 2>/dev/null || true
+if [ -x /usr/bin/librewolf ]; then
+  su - liveuser -c 'xdg-settings set default-web-browser librewolf.desktop' 2>/dev/null || true
+fi
 
 mkdir -p /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/10-archangelos.conf << 'SDDMEOF'
 [Theme]
 Current=archangelos
-
-[Autologin]
-User=liveuser
-Session=hyprland.desktop
-Relogin=false
 
 [General]
 GreeterEnvironment=QT_QUICK_CONTROLS_STYLE=Basic
@@ -224,7 +243,7 @@ fi
 
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
-AUR_PKGS="anki aseprite geogebra jupyterlab librewolf-bin proton-mail-bin proton-pass-bin proton-vpn-gtk-app rstudio-desktop-bin subtitleeditor tauon-music-box wps-office zotero-bin"
+AUR_PKGS="anki mpvpaper fresh-editor geogebra jupyterlab proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
@@ -235,6 +254,17 @@ if [ -d /home/liveuser ]; then
 fi
 
 cp -rf /etc/skel/. /home/liveuser/
+# The skel copy above overwrites liveuser's hyprland.lua, dropping the welcome
+# require that archangelos-wallpaper-setup added (skel never gets it — welcome is
+# live-session only). Re-assert it here so the welcome window loads at first login.
+lhl=/home/liveuser/.config/hypr/hyprland.lua
+if [ -f "$lhl" ]; then
+  mkdir -p /home/liveuser/.config/hypr/config
+  cp -f /usr/share/archangelos/hypr/archangelos-welcome.lua \
+    /home/liveuser/.config/hypr/config/archangelos-welcome.lua 2>/dev/null || true
+  grep -q 'require("config.archangelos-welcome")' "$lhl" 2>/dev/null || \
+    printf '\nrequire("config.archangelos-welcome")\n' >> "$lhl"
+fi
 cp -rf /etc/skel/. /root/
 chown -R liveuser:users /home/liveuser
 chown -R root:root /root
