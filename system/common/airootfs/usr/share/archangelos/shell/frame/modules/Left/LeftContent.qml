@@ -26,11 +26,8 @@ Row {
 	spacing: Math.round(5 * localScale)
 	// Note: Do NOT add anchors.centerIn: parent here. TopBar handles that.
 
-	// 1. Arch Icon (Power Menu Trigger)
-	ControlPanel{ 
-		localScale: parent.localScale
-		anchors.verticalCenter: parent.verticalCenter
-	}
+	// 1. ArchangelOS: the mark (menu trigger) heads arcshell's left bar now — see
+	//    ns/modules/Bar.qml — so this tab starts at the workspaces, right off the bar.
 
 	// 2. Workspaces
 	Workspaces { 
