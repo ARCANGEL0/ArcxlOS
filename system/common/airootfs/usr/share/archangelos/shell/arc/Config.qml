@@ -226,7 +226,9 @@ Singleton {
     readonly property color outline:   rawPal.outline              ?? "#30363d"
     readonly property color dim:       rawPal.dim                  ?? "#7d8590"
     readonly property color fg:        rawPal.surfaceText          ?? "#e6edf3"
-    readonly property color accent:    rawPal.primary              ?? "#ff8c7a"
+    // ArchangelOS: set from ArcShell's accent (shell.qml), so one pick colours both shells.
+    property string accentOverride: ""
+    readonly property color accent:    accentOverride !== "" ? accentOverride : (rawPal.primary ?? "#ff8c7a")
     readonly property color tertiary:  rawPal.secondary            ?? "#ff7b72"
     readonly property color error:     rawPal.error                ?? "#ff7b72"
     // Semantic anchors, hue-rotated when a source omits them, so a nine-key palette still works.

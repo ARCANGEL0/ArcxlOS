@@ -46,6 +46,8 @@ QtObject {
     property string scheme:       "smart"
     property bool   applying:     false
     property string wallpaperDir: "~/Pictures/Wallpapers"
+    // ArchangelOS: the ISO's own wallpapers are listed alongside the user's folder.
+    readonly property string systemWallDir: "/usr/share/backgrounds/archangelos/wallpapers"
 
     readonly property var schemes: [
         "content", "tonal-spot", "fidelity", "fruit-salad", "neutral", "monochrome", "expressive", "rainbow", "vibrant", "smart"
@@ -92,9 +94,9 @@ QtObject {
     property var listProc: Process {
         command: [
             "bash", "-c",
-            "find '" + root.wallpaperDir.replace(/^~/, Quickshell.env("HOME")).replace(/'/g, "'\\''") + "' -maxdepth 1 -type f " +
+            "find '" + root.wallpaperDir.replace(/^~/, Quickshell.env("HOME")).replace(/'/g, "'\\''") + "' '" + root.systemWallDir + "' -maxdepth 1 -type f " +
             "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' " +
-            "-o -iname '*.gif' -o -iname '*.webp' \\) | sort"
+            "-o -iname '*.gif' -o -iname '*.webp' \\) 2>/dev/null | sort"
         ]
         stdout: SplitParser {
             onRead: function(line) {
@@ -153,7 +155,7 @@ QtObject {
                 } catch(e) {}
             }
             if (root.currentWall === "") {
-                var defaultWall = Paths.installDir + "/src/assets/wallpapers/arcshell-default-0.png"
+                var defaultWall = root.systemWallDir + "/default.png"   // ArchangelOS default
                 root.apply(defaultWall)
             }
             root.refresh()
