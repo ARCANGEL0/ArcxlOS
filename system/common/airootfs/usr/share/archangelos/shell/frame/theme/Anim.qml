@@ -57,7 +57,7 @@ QtObject {
     readonly property int verySlow:   Math.max(0, Math.round(500 / speedMultiplier))
     readonly property int extraSlow:  Math.max(0, Math.round(600 / speedMultiplier))
     readonly property int megaSlow:   Math.max(0, Math.round(900 / speedMultiplier))
-    readonly property int transition: Math.max(0, Math.round(320 / speedMultiplier))
+    readonly property int transition: Math.max(0, Math.round(460 / speedMultiplier))   // ArchangelOS: 320 → 460, slower and fluid
 
     // Global Curve Modifier
     readonly property int globalCurve: {
@@ -66,7 +66,7 @@ QtObject {
         if (curveStyle === "cinematic") return Easing.InOutQuart;
         if (curveStyle === "linear") return Easing.Linear;
         if (curveStyle === "sharp") return Easing.InQuint;
-        return Easing.OutQuart; // Default to smooth
+        return Easing.OutQuint; // Default to smooth (ArchangelOS: Quart → Quint, a longer glide)
     }
     
     // Physics Parameters
