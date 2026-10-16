@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+# ArchangelOS — dynamic launcher catalog generator.
+#
+# Scans installed .desktop files (system + per-user) at RUN TIME and prints a
+# menu.json document on stdout in the schema the Quickshell launcher expects:
+#
+#   {"edition": "...", "categories": [ {"name": "...",
+#       "items": [ {"name","exec","icon","terminal","pkg"} , ... ]}, ... ]}
+#
+# Nothing is hardcoded: the launcher invokes this every time it opens, so the
+# menu always reflects what is actually installed. Apps whose Exec binary is not
+# on PATH, and NoDisplay/Hidden/Type!=Application entries, are dropped — which is
+# why CLI-only tools (git, gcc, make: no .desktop file) never appear, and why an
+# uninstalled Firefox/Thunderbird/GCompris can no longer show up as a dead node.
+#
+# The first category is always "Apps": the de-duplicated, alphabetically sorted
+# union of every installed app (this is what the launcher's grid view lists).
+import os
+import shutil
+import sys
+import json
+
+# Search path per the freedesktop desktop-entry spec: $XDG_DATA_HOME and each
+# $XDG_DATA_DIRS entry, plus the usual system/user fallbacks.
+def app_dirs():
+    dirs = []
+    home = os.path.expanduser("~")
+    xdg_data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local/share")
+    xdg_data_dirs = os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
+    seen = set()
+    for base in [xdg_data_home] + xdg_data_dirs.split(":"):
+        base = base.strip()
+        if not base:
+            continue
+        d = os.path.join(base, "applications")
+        if d not in seen and os.path.isdir(d):
+            seen.add(d)
+            dirs.append(d)
+    # explicit fallbacks in case the environment is bare (e.g. launched by a hook)
+    for d in ("/usr/share/applications",
+              os.path.join(home, ".local/share/applications")):
+        if d not in seen and os.path.isdir(d):
+            seen.add(d)
+            dirs.append(d)
+    return dirs
+
+
+# freedesktop main/additional Category -> launcher display category.
+# First match in this order wins; anything unmatched lands in "Utilities".
+CATEGORY_MAP = [
+    ("Internet",    ("Network", "WebBrowser", "Email", "InstantMessaging",
+                     "Chat", "FileTransfer", "P2P", "News", "RemoteAccess")),
+    ("Development", ("Development", "IDE", "TextEditor", "Debugger", "GUIDesigner",
+                     "Building", "Profiling", "RevisionControl", "WebDevelopment")),
+    ("Media",       ("AudioVideo", "Video", "Player", "TV", "Recorder", "DVD")),
+    ("Music",       ("Audio", "Music", "Midi", "Mixer", "Sequencer", "Tuner")),
+    ("Graphics",    ("Graphics", "Photography", "2DGraphics", "3DGraphics",
+                     "RasterGraphics", "VectorGraphics", "Viewer", "Scanning")),
+    ("Games",       ("Game", "Emulator", "ActionGame", "ArcadeGame",
+                     "BoardGame", "StrategyGame", "Simulation")),
+    ("Office",      ("Office", "WordProcessor", "Spreadsheet", "Presentation",
+                     "Calendar", "ContactManagement", "Finance", "Dictionary")),
+    ("Education",   ("Education", "Science", "Math", "Astronomy", "Biology",
+                     "Chemistry", "Geology", "Physics")),
+    ("System",      ("System", "Settings", "Security", "Monitor",
+                     "HardwareSettings", "PackageManager", "TerminalEmulator")),
+    ("Utilities",   ("Utility", "Accessories", "Archiving", "Compression",
+                     "FileTools", "FileManager", "Calculator", "Clock")),
+]
+
+EDITION_DEFAULT = "ArchangelOS"
+
+
+def parse_desktop(path):
+    """Parse the [Desktop Entry] group of a .desktop file into a dict.
+    Returns None if the entry should not appear in a launcher."""
+    entry = {}
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            in_group = False
+            for raw in fh:
+                line = raw.rstrip("\n")
+                s = line.strip()
+                if s.startswith("[") and s.endswith("]"):
+                    # only the primary [Desktop Entry] group interests us
+                    in_group = (s == "[Desktop Entry]")
+                    continue
+                if not in_group or not s or s.startswith("#") or "=" not in s:
+                    continue
+                key, val = s.split("=", 1)
+                key = key.strip()
+                if key not in entry:            # first value wins (plain before localized)
+                    entry[key] = val.strip()
+    except OSError:
+        return None
+
+    if entry.get("Type", "Application") != "Application":
+        return None
+    if entry.get("NoDisplay", "").lower() == "true":
+        return None
+    if entry.get("Hidden", "").lower() == "true":
+        return None
+
+    name = entry.get("Name", "").strip()
+    exec_raw = entry.get("Exec", "").strip()
+    if not name or not exec_raw:
+        return None
+
+    exec_clean = strip_field_codes(exec_raw)
+    if not exec_clean:
+        return None
+
+    # must actually be installed: the launch binary has to be on PATH.
+    probe = entry.get("TryExec", "").strip() or exec_clean.split()[0]
+    probe = probe.strip('"')
+    if not binary_available(probe):
+        return None
+
+    return {
+        "name": name,
+        "exec": exec_clean,
+        "icon": entry.get("Icon", "").strip(),
+        "terminal": entry.get("Terminal", "").lower() == "true",
+        "categories": [c for c in entry.get("Categories", "").split(";") if c],
+    }
+
+
+def strip_field_codes(exec_str):
+    """Drop Exec field codes (%f %u %U %i %c %k …) and collapse whitespace."""
+    out = []
+    i = 0
+    while i < len(exec_str):
+        ch = exec_str[i]
+        if ch == "%" and i + 1 < len(exec_str):
+            nxt = exec_str[i + 1]
+            if nxt == "%":
+                out.append("%")
+            # any other %<letter> is a field code -> drop both chars
+            i += 2
+            continue
+        out.append(ch)
+        i += 1
+    return " ".join("".join(out).split())
+
+
+def binary_available(cmd):
+    if not cmd:
+        return False
+    if os.path.isabs(cmd):
+        return os.path.isfile(cmd) and os.access(cmd, os.X_OK)
+    return shutil.which(cmd) is not None
+
+
+def classify(categories):
+    cats = set(categories)
+    for display, keys in CATEGORY_MAP:
+        if cats.intersection(keys):
+            return display
+    return "Utilities"
+
+
+def main():
+    apps = {}          # desktop-id (basename) -> item, for de-duplication
+    for d in app_dirs():
+        try:
+            names = sorted(os.listdir(d))
+        except OSError:
+            continue
+        for fn in names:
+            if not fn.endswith(".desktop"):
+                continue
+            item = parse_desktop(os.path.join(d, fn))
+            if item is None:
+                continue
+            # per-user entries (scanned first) shadow system ones of the same id
+            apps.setdefault(fn, item)
+
+    items = list(apps.values())
+    items.sort(key=lambda it: it["name"].lower())
+
+    # bucket into display categories
+    buckets = {}
+    for it in items:
+        buckets.setdefault(classify(it["categories"]), []).append(it)
+
+    def item_out(it):
+        return {
+            "name": it["name"],
+            "exec": it["exec"],
+            "icon": it["icon"],
+            "terminal": it["terminal"],
+        }
+
+    categories = [{"name": "Apps", "items": [item_out(it) for it in items]}]
+    # emit the mapped categories in the CATEGORY_MAP display order, non-empty only
+    order = [d for d, _ in CATEGORY_MAP]
+    for display in order:
+        bucket = buckets.get(display)
+        if bucket:
+            categories.append({"name": display,
+                               "items": [item_out(it) for it in bucket]})
+
+    doc = {"edition": edition_name(), "categories": categories}
+    json.dump(doc, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+
+
+def edition_name():
+    env = os.environ.get("ARCHANGELOS_EDITION")
+    if env:
+        return env
+    # customize_airootfs writes "ArchangelOS" here on every edition.
+    try:
+        with open("/etc/arch-release", "r", encoding="utf-8", errors="replace") as fh:
+            val = fh.read().strip()
+            if val:
+                return val
+    except OSError:
+        pass
+    try:
+        with open("/etc/os-release", "r", encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if line.startswith("PRETTY_NAME=") or line.startswith("NAME="):
+                    val = line.split("=", 1)[1].strip().strip('"')
+                    if val:
+                        return val
+    except OSError:
+        pass
+    return EDITION_DEFAULT
+
+
+if __name__ == "__main__":
+    main()
