@@ -78,7 +78,6 @@ chmod -R 755 /home/liveuser/Desktop
 
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /etc/skel/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /home/liveuser/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
-ln -sf /usr/share/applications/code.desktop /home/liveuser/Desktop/code.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/org.wireshark.Wireshark.desktop /home/liveuser/Desktop/wireshark.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/zenmap.desktop /home/liveuser/Desktop/zenmap.desktop 2>/dev/null || true
 chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/null || true
@@ -185,6 +184,7 @@ ARCSHELL_DIR="/opt/arcshell"
 if [ ! -d "$ARCSHELL_DIR" ]; then
   git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
 fi
+rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
 if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
   chmod +x "$ARCSHELL_DIR/install.sh"
   chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
