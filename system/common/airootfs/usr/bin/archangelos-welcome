@@ -19,12 +19,22 @@ EDITION="$(cat /etc/archangelos/edition 2>/dev/null || true)"
 VERSION="$(cat /etc/archangelos/version 2>/dev/null || true)"
 [ -n "${EDITION}" ] || EDITION="ArchangelOS"
 
-"${QMLRUN}" "${WELCOME_QML}" "edition=${EDITION}" "version=${VERSION}"
+# Pass edition/version after `--` so qml6 treats them as application arguments
+# (Qt.application.arguments) rather than trying to load them as extra QML files.
+"${QMLRUN}" "${WELCOME_QML}" -- "edition=${EDITION}" "version=${VERSION}"
 rc=$?
 
 case "${rc}" in
   10)
-    exec sudo /usr/bin/archangelos-gui-installer
+    # Launch the installer as root, but on the running Wayland session: sudo
+    # strips WAYLAND_DISPLAY/XDG_RUNTIME_DIR, so a bare `sudo` app falls back to
+    # xcb, fails to reach Xwayland (:1) with no auth, and aborts. Force the
+    # wayland Qt platform and hand root the live user's runtime dir/socket.
+    exec sudo env \
+      QT_QPA_PLATFORM=wayland \
+      WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+      XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
+      /usr/bin/archangelos-gui-installer
     ;;
   42)
     mkdir -p "$(dirname "${DISABLED}")"

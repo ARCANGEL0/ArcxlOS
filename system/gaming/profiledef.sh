@@ -31,6 +31,7 @@ file_permissions=(
   ["/usr/bin/archangelos-welcome"]="0:0:0755"
   ["/usr/bin/archangelos-launcher"]="0:0:0755"
   ["/usr/bin/arcfetch"]="0:0:0755"
+  ["/usr/bin/cyberspace"]="0:0:0755"
   ["/usr/bin/archangelos-launcher-toggle"]="0:0:0755"
   ["/usr/bin/archangelos-redops-tools"]="0:0:0755"
   ["/usr/bin/archangelos-install-tool"]="0:0:0755"
