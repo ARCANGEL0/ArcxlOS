@@ -60,6 +60,15 @@ QtObject {
     readonly property string thumbCacheDir: (Quickshell.env("XDG_CACHE_HOME") ? Quickshell.env("XDG_CACHE_HOME") : (Quickshell.env("HOME") + "/.cache")) + "/ArcShell/thumbnails"
     signal thumbnailsUpdated()
 
+    // ArchangelOS: video wallpapers (played by mpvpaper) and their poster frames.
+    function isVideo(p) { return /\.(mp4|webm|mkv|mov)$/i.test(p || "") }
+    function posterFor(p) { return isVideo(p) ? root.thumbCacheDir + "/" + Qt.md5(p) + "-poster.jpg" : p }
+    // Show without remembering it (the picker's live preview); apply() persists.
+    function show(path) {
+        if (!path) return
+        Quickshell.execDetached(["bash", Paths.installDir + "/src/scripts/show_wallpaper.sh", path, root.posterFor(path), "preview"])
+    }
+
     function getThumbnail(filePath) {
         if (!filePath || filePath === "") return ""
         return root.thumbCacheDir + "/" + Qt.md5(filePath) + ".jpg"
@@ -92,11 +101,10 @@ QtObject {
     }
 
     property var listProc: Process {
+        // ArchangelOS: stills and videos from both folders; videos get a poster frame.
         command: [
-            "bash", "-c",
-            "find '" + root.wallpaperDir.replace(/^~/, Quickshell.env("HOME")).replace(/'/g, "'\\''") + "' '" + root.systemWallDir + "' -maxdepth 1 -type f " +
-            "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' " +
-            "-o -iname '*.gif' -o -iname '*.webp' \\) 2>/dev/null | sort"
+            "bash", Paths.installDir + "/src/scripts/list_wallpapers.sh", root.thumbCacheDir,
+            root.wallpaperDir.replace(/^~/, Quickshell.env("HOME")), root.systemWallDir
         ]
         stdout: SplitParser {
             onRead: function(line) {
@@ -186,16 +194,15 @@ QtObject {
         if (root.applying || path === "") return
         root.applying    = true
         root.currentWall = path
+        // ArchangelOS: shown by show_wallpaper.sh (stills via awww, videos live via mpvpaper);
+        // matugen reads the still, or the video's poster frame.
         applyProc.command = [
             "bash", "-c",
-            "awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\" " +
-            "&& ln -sf \"" + path + "\" ~/.curr_wall " +
-            "&& (if [[ \"" + path + "\" == *.gif ]]; then " +
-            "rm -f ~/.curr_wall_static.jpg; magick \"" + path + "[0]\" ~/.curr_wall_static.jpg || true; " +
-            "else ln -sf \"" + path + "\" ~/.curr_wall_static.jpg; fi) " +
+            "bash \"$0\" \"$1\" \"$2\" apply " +
             (PrefsService.dynamicThemeOverride ? "" :
             "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -c \"" + Paths.installDir + "/src/config/matugen.toml\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme + " " +
-            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme) + " || true"
+            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme) + " || true",
+            Paths.installDir + "/src/scripts/show_wallpaper.sh", path, root.posterFor(path)
         ]
         applyProc.running = true
     }
