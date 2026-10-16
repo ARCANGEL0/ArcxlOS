@@ -1,0 +1,245 @@
+/*
+ * ArcShell
+ * Copyright (C) 2026 arcxlo (ArchangelOS)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import "../"
+
+// ============================================================
+// WallpaperService — wallpaper list + apply pipeline
+//
+// Flow:
+//   Component.onCompleted → readConfigProc (sets currentWall etc.)
+//                         → refresh() (populates wallpapers list)
+//   apply(path)           → awww img + ln -sf ~/.curr_wall + matugen
+//                         → saveConfig() (writes src/user_data/wallpaper.json)
+// ============================================================
+
+QtObject {
+    id: root
+
+    // ── Config path — src/user_data/wallpaper.json (relative to this file) ──────
+	readonly property string configPath: ShellState.userDataDir + "/wallpaper.json"
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    property var    wallpapers:   []
+    property var    tempWalls:   []
+    property string currentWall:  ""
+    property string previewWall:  ""
+    property string scheme:       "smart"
+    property bool   applying:     false
+    property string wallpaperDir: "~/Pictures/Wallpapers"
+
+    readonly property var schemes: [
+        "content", "tonal-spot", "fidelity", "fruit-salad", "neutral", "monochrome", "expressive", "rainbow", "vibrant", "smart"
+    ]
+
+    // Emitted when the full apply pipeline exits cleanly (exitCode === 0).
+    signal wallpaperApplied(string path)
+
+    // ── Thumbnails ────────────────────────────────────────────────────────────
+    readonly property string thumbCacheDir: (Quickshell.env("XDG_CACHE_HOME") ? Quickshell.env("XDG_CACHE_HOME") : (Quickshell.env("HOME") + "/.cache")) + "/ArcShell/thumbnails"
+    signal thumbnailsUpdated()
+
+    function getThumbnail(filePath) {
+        if (!filePath || filePath === "") return ""
+        return root.thumbCacheDir + "/" + Qt.md5(filePath) + ".jpg"
+    }
+
+    function _generateThumbnails() {
+        if (thumbProc.running) return
+        var dir = root.wallpaperDir.replace(/^~/, Quickshell.env("HOME"))
+        thumbProc.command = [
+            "bash",
+            Paths.installDir + "/src/scripts/generate_wallpaper_thumbnails.sh",
+            dir,
+            root.thumbCacheDir
+        ]
+        thumbProc.running = true
+    }
+
+    property Process thumbProc: Process {
+        command: []
+        onExited: function(code, status) {
+            root.thumbnailsUpdated()
+        }
+    }
+
+    // ── File listing ──────────────────────────────────────────────────────────
+    function refresh() {
+        if (listProc.running) return
+        root.tempWalls = [] // Clear the temp array, not the live one yet
+        listProc.running = true
+    }
+
+    property var listProc: Process {
+        command: [
+            "bash", "-c",
+            "find '" + root.wallpaperDir.replace(/^~/, Quickshell.env("HOME")).replace(/'/g, "'\\''") + "' -maxdepth 1 -type f " +
+            "\\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' " +
+            "-o -iname '*.gif' -o -iname '*.webp' \\) | sort"
+        ]
+        stdout: SplitParser {
+            onRead: function(line) {
+                var t = line.trim()
+                if (t !== "") root.tempWalls.push(t)
+            }
+        }
+        onExited: function() {
+            var changed = (root.tempWalls.length !== root.wallpapers.length)
+            if (!changed) {
+                for (var i = 0; i < root.tempWalls.length; i++) {
+                    if (root.tempWalls[i] !== root.wallpapers[i]) {
+                        changed = true
+                        break
+                    }
+                }
+            }
+            if (changed) {
+                root.wallpapers = root.tempWalls
+            }
+            root._generateThumbnails()
+        }
+    }
+
+    property var _themeConn: Connections {
+        target: Theme
+        function onActiveChanged() { root.updateBorders(); }
+    }
+
+    property var _prefsConn: Connections {
+        target: PrefsService
+        function onDarkModeChanged() {
+            if (root.currentWall !== "") {
+                root.apply(root.currentWall);
+            }
+        }
+        function onDynamicThemeOverrideChanged() {
+            root.updateBorders();
+        }
+    }
+
+    // ── Config read — runs on startup, then calls refresh() ────────────ww──────
+    property string _cfgBuf: ""
+    property var readConfigProc: Process {
+        command: ["bash", "-c", "cat '" + root.configPath + "' 2>/dev/null"]
+        stdout: SplitParser {
+            onRead: function(line) { root._cfgBuf += line }
+        }
+        onExited: function() {
+            if (root._cfgBuf !== "") {
+                try {
+                    var obj = JSON.parse(root._cfgBuf)
+                    if (obj.currentWall  && obj.currentWall  !== "") root.currentWall  = obj.currentWall
+                    if (obj.wallpaperDir && obj.wallpaperDir !== "") root.wallpaperDir = obj.wallpaperDir
+                    if (obj.scheme       && obj.scheme       !== "") root.scheme       = obj.scheme
+                } catch(e) {}
+            }
+            if (root.currentWall === "") {
+                var defaultWall = Paths.installDir + "/src/assets/wallpapers/arcshell-default-0.png"
+                root.apply(defaultWall)
+            }
+            root.refresh()
+        }
+    }
+
+    // ── Config write — called after a successful apply ────────────────────────
+    function saveConfig() {
+        var json = JSON.stringify({
+            currentWall:  root.currentWall,
+            wallpaperDir: root.wallpaperDir,
+            scheme:       root.scheme
+        })
+        // Use printf so the content is never misinterpreted as shell commands.
+        // Single-quote the config path (paths rarely contain single quotes).
+        saveConfigProc.command = [
+            "bash", "-c",
+            "mkdir -p \"$(dirname '" + root.configPath + "')\" && " +
+            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > '" + root.configPath + "'"
+        ]
+        saveConfigProc.running = true
+    }
+
+    property var saveConfigProc: Process {}   // silent — no stdout/stderr needed
+
+    // ── Apply pipeline ────────────────────────────────────────────────────────
+    function apply(path) {
+        if (root.applying || path === "") return
+        root.applying    = true
+        root.currentWall = path
+        applyProc.command = [
+            "bash", "-c",
+            "awww img --transition-type grow --transition-step 200 --transition-duration 1.2 --transition-fps 60 --transition-pos bottom \"" + path + "\" " +
+            "&& ln -sf \"" + path + "\" ~/.curr_wall " +
+            "&& (if [[ \"" + path + "\" == *.gif ]]; then " +
+            "rm -f ~/.curr_wall_static.jpg; magick \"" + path + "[0]\" ~/.curr_wall_static.jpg || true; " +
+            "else ln -sf \"" + path + "\" ~/.curr_wall_static.jpg; fi) " +
+            (PrefsService.dynamicThemeOverride ? "" :
+            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -c \"" + Paths.installDir + "/src/config/matugen.toml\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme + " " +
+            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme) + " || true"
+        ]
+        applyProc.running = true
+    }
+    
+    property Process applyProc: Process {
+        onExited: function(exitCode, exitStatus) {
+            root.applying = false
+            if (exitCode === 0) {
+                root.wallpaperApplied(root.currentWall)
+                root.saveConfig()
+
+                // Trigger border update after wallpaper application finishes
+                updateBorders()
+            }
+        }
+    }
+
+    function updateBorders() {
+        let cleanCol = String(Theme.active).replace('#', '')
+
+        // Build command based on config provider
+        if (ShellState.configProvider === "lua") {
+            // Using hl.config with RGB strings in Lua
+            borderUpdateProc.command = [
+                "bash", "-c",
+                "hyprctl eval 'hl.config({ general = { [\"col.active_border\"] = { colors = { \"rgb(" + cleanCol + ")\" } } } })'"
+            ]
+        } else {
+            // Using hyprctl keyword for .conf
+            borderUpdateProc.command = [
+                "bash", "-c",
+                "hyprctl keyword general:col.active_border \"rgb(" + cleanCol + ")\""
+            ]
+        }
+        
+        borderUpdateProc.running = true
+    }
+
+    property Process borderUpdateProc: Process {
+        command: []
+    }
+
+    Component.onCompleted: {
+        readConfigProc.running = true
+        if (Theme.active && String(Theme.active).trim() !== "") {
+            updateBorders()
+        }
+    }
+}

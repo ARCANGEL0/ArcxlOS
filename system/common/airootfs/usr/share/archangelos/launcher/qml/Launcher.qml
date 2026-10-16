@@ -1,10 +1,11 @@
 //  ArchangelOS — radial "ink constellation" application launcher.
-//  Level 1: a hub ("APPS") ringed by category nodes, joined by geometric
-//  (horizontal / vertical / 45°) connectors. Click a category and the whole
+//  Level 1: a hub ("APPS") at the heart of a two-armed spiral; category
+//  nodes ride the arms, which are drawn in from the hub when it opens. Click a category and the whole
 //  constellation flows toward it; its applications fan out, each wired back
 //  with the same geometric traces. Monochrome sumi-e to match the samurai
 //  wallpaper — soft ink pills and hairlines, no color, no hard 90° chrome.
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 
@@ -13,7 +14,7 @@ Item {
     focus: true
 
     property string menuPath: "/usr/share/archangelos/launcher/menu.json"
-    property string logoPath: "/usr/share/archangelos/logo.png"
+    property string logoPath: "/usr/share/archangelos/logo-mark.svg"
     property int startFocus: -1
     property string startQuery: ""   // debug/screenshot aid: pre-fill the search
     signal dismiss()
@@ -107,14 +108,28 @@ Item {
     }
 
     // ── layout helpers (home = screen coords with the graph at rest) ──
-    // nodes are scattered on a jittered ring so the constellation feels
-    // hand-inked, not laid out on a rigid ellipse (angle + radius wobble).
-    function catAng(i) {
-        return (-90 + i * 360 / Math.max(n, 1) + (jf(i, 1) - 0.5) * 11) * Math.PI / 180
+    // Categories ride a two-armed spiral that winds out of the hub: node i
+    // sits on arm i % 2, spaced along it, so the field reads as a galaxy
+    // turning around the mark rather than a ring.
+    readonly property real spTurns: 0.95
+    function spR(t) { return 0.46 + 0.74 * (Math.exp(1.7 * t) - 1) / (Math.exp(1.7) - 1) }
+    function spAng(t, arm) { return -Math.PI * 0.62 + arm * Math.PI + t * spTurns * 2 * Math.PI }
+    function spX(t, arm) { return cx + rx * spR(t) * Math.cos(spAng(t, arm)) }
+    function spY(t, arm) { return cy + ry * spR(t) * Math.sin(spAng(t, arm)) }
+    function catArm(i) { return i % 2 }
+    function catT(i) {
+        var per = Math.ceil(Math.max(n, 1) / 2)
+        return per <= 1 ? 0.5 : 0.08 + 0.84 * Math.floor(i / 2) / (per - 1)
     }
-    function catTier(i) { return 0.98 + jf(i, 2) * 0.30 }   // 0.98 .. 1.28
-    function catHomeX(i) { return cx + rx * catTier(i) * Math.cos(catAng(i)) }
-    function catHomeY(i) { return cy + ry * catTier(i) * Math.sin(catAng(i)) }
+    function catHomeX(i) { return spX(catT(i), catArm(i)) }
+    function catHomeY(i) { return spY(catT(i), catArm(i)) }
+
+    // 0 → 1 as the launcher opens: the arms ink outward and nodes surface
+    // as the stroke reaches them.
+    property real drawIn: intro ? 1 : 0
+    Behavior on drawIn { NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
+    onDrawInChanged: connCanvas.requestPaint()
+    function surfaced(i) { return Math.max(0, Math.min(1, (drawIn - catT(i) * 0.8) * 5)) }
     // apps: a loose organic spray to the right of the anchored category node.
     // columns only guard against collisions; per-column phase + per-item jitter
     // break any table-like alignment so it reads scattered, not gridded.
@@ -321,12 +336,45 @@ Item {
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
     }
-    // ── geometric connectors (horizontal / vertical / 45° only) ──
+    // ── twinkling stars ──
+    Repeater {
+        model: 40
+        Rectangle {
+            required property int index
+            readonly property real sz: 1 + root.jf(index, 11) * 2.2
+            x: root.jf(index, 12) * root.width
+            y: root.jf(index, 13) * root.height
+            width: sz; height: sz; radius: sz / 2
+            color: "#f4f1ea"
+            opacity: 0
+            SequentialAnimation on opacity {
+                running: root.intro
+                loops: Animation.Infinite
+                PauseAnimation { duration: root.jf(index, 14) * 3000 }
+                NumberAnimation { to: 0.15 + root.jf(index, 15) * 0.55; duration: 1400 + root.jf(index, 16) * 1800; easing.type: Easing.InOutSine }
+                NumberAnimation { to: 0.04; duration: 1400 + root.jf(index, 17) * 1800; easing.type: Easing.InOutSine }
+            }
+        }
+    }
+
+    // ── connectors: spiral arms (ring view), 45° traces (app fan) ──
     Canvas {
         id: connCanvas
         anchors.fill: parent
         opacity: (root.intro && !root.searching && !root.gridMode) ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 300 } }
+        // stroke one spiral arm from t0 to t1 (graph-relative)
+        function spiral(ctx, arm, t0, t1) {
+            if (t1 <= t0) return
+            var steps = Math.max(2, Math.ceil((t1 - t0) * 120))
+            ctx.beginPath()
+            for (var s = 0; s <= steps; s++) {
+                var t = t0 + (t1 - t0) * s / steps
+                var x = root.spX(t, arm) + root.gx, y = root.spY(t, arm) + root.gy
+                if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+            }
+            ctx.stroke()
+        }
         function elbow(ctx, x0, y0, x1, y1) {
             var dx = x1 - x0, dy = y1 - y0
             var sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1
@@ -342,11 +390,40 @@ Item {
             // animation (the opacity fade alone lags a few frames and glitches).
             if (root.n === 0 || root.gridMode) return
             if (root.focused < 0) {
-                for (var i = 0; i < root.n; i++) {
-                    var hot = (i === root.hoverCat || i === root.selCat)
-                    ctx.strokeStyle = hot ? "rgba(247,246,242,0.75)" : "rgba(231,229,224,0.16)"
-                    ctx.lineWidth = hot ? 1.5 : 1.0
-                    elbow(ctx, root.cx, root.cy, root.catHomeX(i) + root.gx, root.catHomeY(i) + root.gy)
+                var reach = root.drawIn
+                for (var arm = 0; arm < 2; arm++) {
+                    var tEnd = 0
+                    for (var k = 0; k < root.n; k++)
+                        if (root.catArm(k) === arm) tEnd = Math.max(tEnd, root.catT(k))
+                    tEnd = Math.min(1, tEnd + 0.1) * reach
+                    // the arm: a faint dashed trace…
+                    ctx.setLineDash([2, 6])
+                    ctx.strokeStyle = "rgba(231,229,224,0.22)"
+                    ctx.lineWidth = 1.0
+                    spiral(ctx, arm, 0, tEnd)
+                    ctx.setLineDash([])
+                    // …dusted with stars that drift either side of it
+                    for (var d = 0; d < 34; d++) {
+                        var td = d / 34
+                        if (td > tEnd) break
+                        var off = (root.jf(d + arm * 50, 21) - 0.5) * 46
+                        var a = root.spAng(td, arm) + Math.PI / 2
+                        var px = root.spX(td, arm) + root.gx + Math.cos(a) * off
+                        var py = root.spY(td, arm) + root.gy + Math.sin(a) * off * 0.6
+                        var rr = 0.7 + root.jf(d + arm * 50, 22) * 1.4
+                        ctx.fillStyle = "rgba(244,241,234," + (0.18 + root.jf(d + arm * 50, 23) * 0.45) + ")"
+                        ctx.beginPath(); ctx.arc(px, py, rr, 0, 6.2832); ctx.fill()
+                    }
+                }
+                // the lit node's arm glows from the hub out to it
+                var h = root.hoverCat >= 0 ? root.hoverCat : root.selCat
+                if (h >= 0 && h < root.n) {
+                    ctx.strokeStyle = "rgba(247,246,242,0.85)"
+                    ctx.lineWidth = 1.6
+                    ctx.shadowColor = "rgba(247,246,242,0.7)"
+                    ctx.shadowBlur = 10
+                    spiral(ctx, root.catArm(h), 0, Math.min(root.catT(h), reach))
+                    ctx.shadowBlur = 0
                 }
             } else {
                 var fx = root.catHomeX(root.focused) + root.gx
@@ -385,12 +462,29 @@ Item {
             Column {
                 anchors.centerIn: parent; spacing: 8
                 Image {
+                    id: hubMark
                     anchors.horizontalCenter: parent.horizontalCenter
                     source: "file://" + root.logoPath
                     fillMode: Image.PreserveAspectFit
-                    sourceSize.height: 200
-                    height: 96; width: 120
-                    smooth: true; mipmap: true; asynchronous: true
+                    sourceSize: Qt.size(260, 190)
+                    height: 88; width: 120
+                    smooth: true; asynchronous: true
+                    // soft silver halo that breathes
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        shadowEnabled: true
+                        shadowColor: Qt.rgba(1, 1, 1, 0.35)
+                        shadowBlur: 1.0
+                        shadowHorizontalOffset: 0
+                        shadowVerticalOffset: 0
+                        shadowOpacity: hubMark.glow
+                    }
+                    property real glow: 0.15
+                    SequentialAnimation on glow {
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.4; duration: 3200; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0.15; duration: 3200; easing.type: Easing.InOutSine }
+                    }
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter; text: "APPS"
@@ -412,10 +506,57 @@ Item {
             }
             MouseArea { anchors.fill: parent; onClicked: if (root.focused >= 0) root.focused = -1 }
             onXChanged: connCanvas.requestPaint()
+
+            // a slow orbit round the mark, a diamond riding it
+            Item {
+                anchors.centerIn: parent
+                z: -1
+                width: 250; height: 250
+                transform: Scale { origin.x: 125; origin.y: 125; yScale: 0.42 }
+                Rectangle {
+                    anchors.fill: parent; radius: width / 2
+                    color: "transparent"; border.width: 1
+                    border.color: Qt.rgba(231/255, 229/255, 224/255, 0.13)
+                }
+                Item {
+                    anchors.fill: parent
+                    RotationAnimation on rotation { from: 0; to: 360; duration: 26000; loops: Animation.Infinite }
+                    Rectangle {
+                        x: parent.width / 2 - 3.5; y: -3.5
+                        width: 7; height: 7; rotation: 45; antialiasing: true
+                        color: "#C24A52"
+                    }
+                }
+            }
         }
 
         Repeater { model: root.cats; delegate: catNode }
     }
+    // ── capsule behind every node: matte ink with a barely-there rim and a
+    //    soft black aura, so nodes sit in shadow rather than shine ──
+    component InkGlass: Item {
+        id: glass
+        property bool hot: false
+        // the aura: dark smoke bleeding out round the capsule
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -10
+            radius: height / 2
+            color: Qt.rgba(0, 0, 0, glass.hot ? 0.55 : 0.4)
+            layer.enabled: true
+            layer.effect: MultiEffect { blurEnabled: true; blur: 1.0; blurMax: 24 }
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: height / 2
+            color: glass.hot ? Qt.rgba(0.075, 0.072, 0.068, 0.97) : Qt.rgba(0.035, 0.034, 0.032, 0.94)
+            border.width: 1
+            border.color: glass.hot ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.06)
+            Behavior on color { ColorAnimation { duration: 160 } }
+            Behavior on border.color { ColorAnimation { duration: 160 } }
+        }
+    }
+
     // ── category node delegate ──
     Component {
         id: catNode
@@ -429,45 +570,19 @@ Item {
             x: root.catHomeX(index) + root.gx - width / 2
             y: root.catHomeY(index) + root.gy - height / 2
             z: active ? 5 : 1
-            opacity: root.focused < 0 ? 1 : (active ? 1 : 0.05)
-            Behavior on opacity { NumberAnimation { duration: 380 } }
+            opacity: root.focused < 0 ? root.surfaced(index) : (active ? 1 : 0.05)
+            scale: nd.hot ? 1.05 : 1
+            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
             onXChanged: connCanvas.requestPaint()
 
             TextMetrics {
                 id: tm; text: nd.label
                 font.family: Theme.display; font.pixelSize: 12; font.letterSpacing: 1.6
             }
-            // ink brushstroke — borderless, fades to nothing at both ends
-            // (no capsule, no button edge; a soft wash the label rides on)
+            InkGlass { anchors.fill: parent; hot: nd.hot }
             Rectangle {
-                anchors.fill: parent; radius: 3
-                opacity: nd.hot ? 0.95 : 0.84
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.07; color: nd.hot ? "#332f28" : "#191713" }
-                    GradientStop { position: 0.93; color: nd.hot ? "#252119" : "#131110" }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-            }
-            // brush-stroke underline — the ink signature, tapered at the ends
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom; anchors.bottomMargin: 5
-                width: parent.width - 30; height: nd.hot ? 1.8 : 1.0; radius: height / 2
-                opacity: nd.hot ? 0.95 : 0.42
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.14; color: nd.hot ? Theme.a4 : Theme.a3 }
-                    GradientStop { position: 0.86; color: nd.hot ? Theme.a4 : Theme.a3 }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-                Behavior on opacity { NumberAnimation { duration: 160 } }
-            }
-            Rectangle {
-                width: 6; height: 6; radius: 3; x: 16; color: Theme.fg
+                width: 6; height: 6; rotation: 45; x: 16; antialiasing: true
+                color: nd.hot ? "#C24A52" : Theme.a2
                 anchors.verticalCenter: parent.verticalCenter
             }
             Text {
@@ -510,40 +625,16 @@ Item {
             opacity: 0
             Component.onCompleted: appIn.start()
             NumberAnimation on opacity { id: appIn; to: 1; duration: 300; easing.type: Easing.OutCubic }
-            // ink brushstroke — borderless, fades at both ends (not a button)
-            Rectangle {
-                anchors.fill: parent; radius: 3
-                opacity: an.hot ? 0.95 : 0.82
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.07; color: an.hot ? "#312d26" : "#191713" }
-                    GradientStop { position: 0.93; color: an.hot ? "#241f18" : "#131110" }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-                Behavior on opacity { NumberAnimation { duration: 150 } }
-            }
-            // brush underline
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom; anchors.bottomMargin: 4
-                width: parent.width - 26; height: an.hot ? 1.6 : 1.0; radius: height / 2
-                opacity: an.hot ? 0.92 : 0.34
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.14; color: an.hot ? Theme.a4 : Theme.a3 }
-                    GradientStop { position: 0.86; color: an.hot ? Theme.a4 : Theme.a3 }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-                Behavior on opacity { NumberAnimation { duration: 150 } }
-            }
-            Rectangle {
-                width: 5; height: 5; radius: 2.5; x: 15; color: Theme.fg
+            InkGlass { anchors.fill: parent; hot: an.hot }
+            Image {
+                x: 12; width: 16; height: 16
                 anchors.verticalCenter: parent.verticalCenter
+                source: root.iconFor(modelData.icon)
+                sourceSize: Qt.size(32, 32)
+                asynchronous: true; smooth: true
             }
             Text {
-                anchors.left: parent.left; anchors.leftMargin: 28
+                anchors.left: parent.left; anchors.leftMargin: 36
                 anchors.right: parent.right; anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: -1
                 text: modelData.name; elide: Text.ElideRight
@@ -778,37 +869,16 @@ Item {
                 Component.onCompleted: rin.start()
                 NumberAnimation on opacity { id: rin; to: 1; duration: 260; easing.type: Easing.OutCubic }
                 TextMetrics { id: rtm; text: modelData.item.name; font.family: Theme.display; font.pixelSize: 15 }
-                Rectangle {
-                    anchors.fill: parent; radius: 3
-                    opacity: ri.hot ? 0.96 : 0.82
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.08; color: ri.hot ? "#332f28" : "#191713" }
-                        GradientStop { position: 0.92; color: ri.hot ? "#251f18" : "#131110" }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-                    Behavior on opacity { NumberAnimation { duration: 130 } }
-                }
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom; anchors.bottomMargin: 4
-                    width: parent.width - 34; height: ri.hot ? 1.6 : 1.0; radius: height / 2
-                    opacity: ri.hot ? 0.92 : 0.34
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.14; color: ri.hot ? Theme.a4 : Theme.a3 }
-                        GradientStop { position: 0.86; color: ri.hot ? Theme.a4 : Theme.a3 }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-                }
-                Rectangle {
-                    width: 6; height: 6; radius: 3; x: 16; color: Theme.fg
+                InkGlass { anchors.fill: parent; hot: ri.hot }
+                Image {
+                    x: 13; width: 18; height: 18
                     anchors.verticalCenter: parent.verticalCenter
+                    source: root.iconFor(modelData.item.icon)
+                    sourceSize: Qt.size(36, 36)
+                    asynchronous: true; smooth: true
                 }
                 Text {
-                    anchors.left: parent.left; anchors.leftMargin: 30
+                    anchors.left: parent.left; anchors.leftMargin: 38
                     anchors.right: parent.right; anchors.rightMargin: 14
                     anchors.verticalCenter: parent.verticalCenter
                     text: modelData.item.name; elide: Text.ElideRight

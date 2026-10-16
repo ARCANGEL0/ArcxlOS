@@ -1,0 +1,87 @@
+/*
+ * ArcShell
+ * Copyright (C) 2026 arcxlo (ArchangelOS)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+pragma Singleton
+import QtQuick
+import Quickshell.Services.Notifications
+import "../../"
+
+// ─────────────────────────────────────────────────────────────
+// NotificationService — global singleton
+// ─────────────────────────────────────────────────────────────
+
+NotificationServer {
+    id: root
+
+    bodyMarkupSupported:   true
+    bodySupported:         true
+    actionsSupported:      true
+    keepOnReload:          true
+    
+    signal notificationAdded(var notification)
+    
+    property var list: []
+    readonly property int count: list.length
+
+    property bool _ready: false
+    
+    property Timer _startupTimer: Timer {
+        interval: 500 
+        running: true
+        onTriggered: root._ready = true
+    }
+    
+    onNotification: function(n) {
+        n.tracked = true
+
+        if (root.list.includes(n)) return 
+
+        root.list = [n, ...root.list]
+        
+        if (ShellState.dnd) return
+        
+        if (root._ready) {
+            root.notificationAdded(n)
+        }
+
+         n.onClosed.connect(function() {
+            root.list = root.list.filter(function(x) { return x !== n })
+        })
+
+        if (n.expireTimeout > 0) {
+            var ms = Math.round(n.expireTimeout < 1000 ? n.expireTimeout * 1000 : n.expireTimeout)
+            var timer = Qt.createQmlObject('import QtQuick; Timer { interval: ' + ms + '; running: true; repeat: false }', root)
+            timer.triggered.connect(function() {
+                if (n && n.tracked) {
+                    n.expire()
+                }
+                timer.destroy()
+            })
+            n.onClosed.connect(function() {
+                timer.stop()
+                timer.destroy()
+            })
+        }
+    }
+
+    function dismissAll() {
+        if (!root.list) return
+        const list = [...root.list]
+        for (const n of list) n.dismiss()
+    }
+}

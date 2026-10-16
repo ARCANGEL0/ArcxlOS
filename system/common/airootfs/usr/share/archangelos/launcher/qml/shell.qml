@@ -18,7 +18,7 @@ ShellRoot {
     // Absolute path to the ArchangelOS mark shown at the hub.
     property string logoPath: {
         var p = Quickshell.env("ARCHANGELOS_LOGO")
-        return (p && p.length > 0) ? p : "/usr/share/archangelos/logo.png"
+        return (p && p.length > 0) ? p : "/usr/share/archangelos/logo-mark.svg"
     }
 
     function dismiss() { Qt.quit() }

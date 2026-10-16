@@ -1,0 +1,193 @@
+/*
+ * ArcShell
+ * Copyright (C) 2026 arcxlo (ArchangelOS)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import QtQuick
+import "../../"
+import "../../components"
+
+// Calendar card — month grid with prev/next navigation.
+// Self-contained: owns all calendar state.
+
+StatCard {
+    id: root
+    padding: 0
+
+    property real localScale: 1.0
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    property int    _year:  0
+    property int    _month: 0
+    property int    _today: 0
+    property var    _days:  []
+    property string _label: ""
+
+    readonly property var _monthNames: [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+    ]
+    readonly property var _dowNames: ["Su","Mo","Tu","We","Th","Fr","Sa"]
+
+    Component.onCompleted: {
+        var now   = new Date()
+        _year     = now.getFullYear()
+        _month    = now.getMonth()
+        _today    = now.getDate()
+        _rebuild()
+    }
+
+    function _rebuild() {
+        _label = _monthNames[_month].substring(0,3).toUpperCase() + "  " + _year
+        var firstDow   = new Date(_year, _month, 1).getDay()
+        var daysInMon  = new Date(_year, _month + 1, 0).getDate()
+        var daysInPrev = new Date(_year, _month, 0).getDate()
+        var days = []
+        for (var p = firstDow - 1; p >= 0; p--)
+            days.push({ n: daysInPrev - p, cur: false })
+        for (var d = 1; d <= daysInMon; d++)
+            days.push({ n: d, cur: true })
+        var tail = 42 - days.length
+        for (var t = 1; t <= tail; t++)
+            days.push({ n: t, cur: false })
+        _days = days
+    }
+
+    function _prev() {
+        if (_month === 0) { _month = 11; _year-- } else _month--
+        _rebuild()
+    }
+    function _next() {
+        if (_month === 11) { _month = 0; _year++ } else _month++
+        _rebuild()
+    }
+
+	Timer {
+		running: true
+		Component.onCompleted: {
+			var now = new Date()
+			var tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+			interval = tomorrow - now // Set interval to exact time until midnight
+		}
+		onTriggered: {
+			var now = new Date()
+			root._year  = now.getFullYear()
+			root._month = now.getMonth()
+			root._today = now.getDate()
+			root._rebuild()
+
+			interval = 86400000 // Reset to 24 hours for the next day
+			restart()
+		}
+	}
+
+    // ── UI ────────────────────────────────────────────────────────────────────
+    Item {
+        anchors { fill: parent; margins: Math.round(12 * localScale) }
+
+        // Header
+        Item {
+            id: hdr
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: Math.round(22 * localScale)
+
+            Text {
+                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                text: "‹"; font.pixelSize: Math.round(15 * localScale)
+                color: pH.hovered ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.7) : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.25)
+                Behavior on color { ColorAnimation { duration: Anim.fast} }
+                HoverHandler { id: pH; cursorShape: Qt.PointingHandCursor }
+                MouseArea { anchors.fill: parent; onClicked: root._prev() }
+            }
+            Text {
+                anchors.centerIn: parent
+                text: root._label; font.pixelSize: Math.round(10 * localScale); font.weight: Font.Bold
+                color: Theme.text
+            }
+            Text {
+                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                text: "›"; font.pixelSize: Math.round(15 * localScale)
+                color: nH.hovered ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.7) : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.25)
+                Behavior on color { ColorAnimation { duration: Anim.fast} }
+                HoverHandler { id: nH; cursorShape: Qt.PointingHandCursor }
+                MouseArea { anchors.fill: parent; onClicked: root._next() }
+            }
+        }
+
+        // DOW row
+        Item {
+            id: dow
+            anchors { left: parent.left; right: parent.right; top: hdr.bottom; topMargin: Math.round(3 * localScale) }
+            height: Math.round(16 * localScale)
+            Row {
+                anchors.fill: parent
+                Repeater {
+                    model: root._dowNames
+                    delegate: Text {
+                        width: Math.floor(dow.width / 7)
+                        horizontalAlignment: Text.AlignHCenter
+                        text: modelData; font.pixelSize: Math.round(8 * localScale); font.weight: Font.Bold
+                        color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.2)
+                    }
+                }
+            }
+        }
+
+        // Day grid
+        Grid {
+            id: grid
+            anchors { left: parent.left; right: parent.right; top: dow.bottom; topMargin: Math.round(2 * localScale); bottom: parent.bottom }
+            columns: 7; rows: 6
+
+            readonly property real cW: width  / 7
+            readonly property real cH: height / 6
+
+            Repeater {
+                model: root._days
+                delegate: Item {
+                    required property var modelData
+                    required property int index
+                    width: grid.cW; height: grid.cH
+
+                    readonly property bool isToday:
+                        modelData.cur && modelData.n === root._today &&
+                        root._month === new Date().getMonth() &&
+                        root._year  === new Date().getFullYear()
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Math.min(parent.width, parent.height) - Math.round(4 * localScale)
+                        height: width; radius: width / 2
+                        color: isToday ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+                               : dH.hovered && modelData.cur ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.07) : "transparent"
+                        border.color: isToday ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.3) : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: Anim.superFast} }
+                        Text {
+                            anchors.centerIn: parent; text: modelData.n
+                            font.pixelSize: Math.round(9 * localScale); font.family: "JetFrames Mono"
+                            font.weight: isToday ? Font.Bold : Font.Normal
+                            color: isToday ? Theme.active
+                                   : modelData.cur ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
+                                                   : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.13)
+                        }
+                    }
+                    HoverHandler { id: dH; enabled: modelData.cur; cursorShape: Qt.PointingHandCursor }
+                }
+            }
+        }
+    }
+}
