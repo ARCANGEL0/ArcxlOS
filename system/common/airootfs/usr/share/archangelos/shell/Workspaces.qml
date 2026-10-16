@@ -1,87 +1,64 @@
 import QtQuick
 import Quickshell.Hyprland
 
-// Logo + workspaces as kanji numerals. A single blade underline glides to
-// the active workspace instead of each numeral lighting up on its own.
+// Vertical workspace column for the sidebar. The active marker is a liquid
+// drop that stretches toward the next workspace before settling.
 Item {
     id: ws
 
-    readonly property int cell: 26
-    readonly property int gap: 2
+    readonly property int cell: 34
     readonly property var ids: Hyprland.workspaces.values.map(w => w.id).filter(i => i > 0)
     readonly property int count: Math.max(5, ...ids)
     readonly property int activeId: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1
 
-    implicitWidth: row.width
-    implicitHeight: 28
+    implicitWidth: 52
+    implicitHeight: count * cell
 
-    Row {
-        id: row
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 0
-
-        Image {
-            source: "file:///usr/share/archangelos/logo.png"
-            width: 18
-            height: 18
-            anchors.verticalCenter: parent.verticalCenter
-            fillMode: Image.PreserveAspectFit
-            mipmap: true
-        }
-
-        Item { width: 12; height: 1 }
-
-        Rectangle {
-            width: 1
-            height: 12
-            anchors.verticalCenter: parent.verticalCenter
-            color: Theme.line
-        }
-
-        Item { width: 8; height: 1 }
-
-        Repeater {
-            id: numerals
-            model: ws.count
-
-            Item {
-                required property int index
-                readonly property int wsId: index + 1
-                readonly property bool active: wsId === ws.activeId
-                readonly property bool occupied: ws.ids.indexOf(wsId) !== -1
-
-                width: ws.cell + ws.gap
-                height: ws.cell
-
-                Text {
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: -1
-                    text: Theme.kanji(parent.wsId)
-                    font.family: Theme.serif
-                    font.pixelSize: 15
-                    color: parent.active ? Theme.fg : parent.occupied ? Theme.dim : Theme.faint
-                    opacity: parent.active || parent.occupied ? 1 : 0.7
-                    Behavior on color { ColorAnimation { duration: Theme.medium } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Hyprland.dispatch("workspace " + parent.wsId)
-                }
-            }
-        }
+    Liquid {
+        x: 8
+        width: parent.width - 16
+        targetY: (ws.activeId - 1) * ws.cell + 3
+        targetHeight: ws.cell - 6
+        Rectangle { anchors.fill: parent; radius: 9; color: Qt.alpha(Theme.accent, 0.16) }
     }
 
-    Rectangle {
-        id: blade
-        readonly property int firstX: 18 + 12 + 1 + 8
-        width: 12
-        height: 2
-        radius: 1
-        color: Theme.accent
-        y: parent.height / 2 + 10
-        x: firstX + (ws.activeId - 1) * (ws.cell + ws.gap) + (ws.cell - width) / 2
-        Behavior on x { NumberAnimation { duration: Theme.morph; easing.type: Theme.curve } }
+    Liquid {
+        x: 0
+        width: 3
+        targetY: (ws.activeId - 1) * ws.cell + 9
+        targetHeight: ws.cell - 18
+        Rectangle { anchors.fill: parent; radius: 1.5; color: Theme.accent }
+    }
+
+    Repeater {
+        model: ws.count
+
+        Item {
+            required property int index
+            readonly property int wsId: index + 1
+            readonly property bool active: wsId === ws.activeId
+            readonly property bool occupied: ws.ids.indexOf(wsId) !== -1
+
+            y: index * ws.cell
+            width: ws.width
+            height: ws.cell
+
+            Text {
+                anchors.centerIn: parent
+                text: String(parent.wsId).padStart(2, "0")
+                font.family: Theme.sans
+                font.pixelSize: 12
+                font.bold: parent.active
+                font.letterSpacing: 1
+                color: parent.active ? Theme.fg : parent.occupied ? Theme.dim : Theme.faint
+                Behavior on color { ColorAnimation { duration: Theme.medium } }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Hyprland.dispatch("workspace " + parent.wsId)
+            }
+        }
     }
 }

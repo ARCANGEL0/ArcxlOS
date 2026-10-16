@@ -3,140 +3,114 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// App catalogue for the launcher.
-//  - categories come from the edition's curated menu.json
-//  - icons are borrowed from matching .desktop entries when installed
-//  - items whose binary is missing install on launch via archangelos-install-tool
-//  - launches are counted so the "Recent" rail ranks what you actually use
+// Data side of the ArchangelOS launcher, ported from /usr/bin/archangelos-launcher:
+// the edition's menu.json, category + subcategory rows, search across every
+// item, and launch-or-install for each app.
 Singleton {
     id: apps
 
     readonly property string menuPath: "/usr/share/archangelos/launcher/menu.json"
-    readonly property string stateDir: Quickshell.env("HOME") + "/.local/state/archangelos"
 
     property string edition: "ArchangelOS"
     property var categories: []
     property var installed: ({})
-    property var usage: ({})
 
-    readonly property var allItems: {
-        const seen = {}, out = []
-        for (const c of categories)
-            for (const it of c.items)
-                if (!seen[it.name]) { seen[it.name] = true; out.push(it) }
+    // One row per category, followed by its subcategories, as in the sidebar.
+    readonly property var rows: {
+        const out = []
+        categories.forEach((cat, ci) => {
+            out.push({ kind: "cat", ci: ci, si: -1, label: ((cat.icon || "") + "  " + cat.name).trim() })
+            ;(cat.subcats || []).forEach((sub, si) =>
+                out.push({ kind: "sub", ci: ci, si: si, label: sub.name }))
+        })
         return out
     }
 
-    readonly property var recent: allItems
-        .filter(it => usage[it.name])
-        .sort((a, b) => score(b) - score(a))
-        .slice(0, 12)
+    function itemsFor(row) {
+        if (!row) return []
+        const cat = categories[row.ci]
+        if (row.kind === "sub") return cat.subcats[row.si].items
+        let items = (cat.items || []).slice()
+        for (const s of (cat.subcats || [])) items = items.concat(s.items)
+        return items
+    }
 
-    // What the category rail shows: recent launches first, then the menu.
-    readonly property var rail: recent.length
-        ? [{ name: "Recent", items: recent }].concat(categories)
-        : categories
+    function titleFor(row) {
+        if (!row) return ""
+        const cat = categories[row.ci]
+        return row.kind === "sub" ? cat.name + " · " + cat.subcats[row.si].name : cat.name
+    }
+
+    function search(text) {
+        const q = text.trim().toLowerCase()
+        const seen = {}, res = []
+        for (const cat of categories) {
+            let items = cat.items || []
+            for (const s of (cat.subcats || [])) items = items.concat(s.items)
+            for (const it of items)
+                if (it.name.toLowerCase().includes(q) && !seen[it.name]) {
+                    seen[it.name] = true
+                    res.push(it)
+                }
+        }
+        return res
+    }
 
     function binOf(item) { return item.exec.split(" ")[0] }
     function isInstalled(item) { return installed[binOf(item)] === true }
 
-    function score(item) {
-        const u = usage[item.name]
-        if (!u) return 0
-        const ageH = (Date.now() - u.last) / 3600000
-        const recency = ageH < 4 ? 4 : ageH < 24 ? 3 : ageH < 168 ? 2 : 1
-        return u.count * recency
-    }
-
-    function search(query) {
-        const q = query.trim().toLowerCase()
-        if (!q) return []
-        return allItems
-            .map(it => {
-                const n = it.name.toLowerCase()
-                const rank = n.startsWith(q) ? 3 : n.includes(" " + q) ? 2 : n.includes(q) ? 1
-                    : binOf(it).toLowerCase().includes(q) ? 0.5 : 0
-                return { it: it, rank: rank + score(it) / 100 }
-            })
-            .filter(r => r.rank > 0)
-            .sort((a, b) => b.rank - a.rank)
-            .map(r => r.it)
-    }
-
-    function iconFor(item) {
-        const bin = binOf(item)
-        const entry = DesktopEntries.applications.values.find(e => {
-            const cmd = (e.command && e.command.length) ? e.command[0] : (e.execString || "").split(" ")[0]
-            return cmd.split("/").pop() === bin
-        })
-        return entry && entry.icon ? Quickshell.iconPath(entry.icon, true) : ""
-    }
-
     function shq(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
 
-    // Runs the command inside the first terminal found.
-    function inTerminal(script) {
+    // Same terminal preference as the Python launcher.
+    function inTerminal(args) {
         return ["sh", "-c",
-            'for t in rio kitty foot alacritty konsole xterm; do command -v "$t" >/dev/null 2>&1 && exec "$t" -e bash -lc "$1"; done',
-            "sh", script]
+            'for t in rio konsole alacritty foot kitty wezterm xterm; do command -v "$t" >/dev/null 2>&1 && exec "$t" -e "$@"; done',
+            "sh"].concat(args)
     }
 
     function launch(item) {
+        const exe = item.exec
         const bin = binOf(item)
-        if (isInstalled(item)) {
-            Quickshell.execDetached(item.terminal ? inTerminal(item.exec) : ["sh", "-c", item.exec])
-        } else {
-            const after = item.terminal ? item.exec : "setsid " + item.exec + " >/dev/null 2>&1 &"
-            Quickshell.execDetached(inTerminal(
-                "archangelos-install-tool " + shq(item.pkg || bin)
+        if (!isInstalled(item)) {
+            const after = item.terminal ? exe : "setsid " + exe + " >/dev/null 2>&1 &"
+            const script = "archangelos-install-tool " + shq(item.pkg || bin)
                 + "; if command -v " + shq(bin) + " >/dev/null 2>&1; then " + after
-                + "; else echo; read -rp 'Install failed. Press Enter to close...'; fi"))
+                + "; else echo; read -rp 'Install failed. Press Enter to close...'; fi"
+            Quickshell.execDetached(inTerminal(["bash", "-lc", script]))
+        } else if (item.terminal) {
+            Quickshell.execDetached(inTerminal([exe]))
+        } else {
+            Quickshell.execDetached(["sh", "-c", exe])
         }
-        const u = usage[item.name] || { count: 0, last: 0 }
-        const next = Object.assign({}, usage)
-        next[item.name] = { count: u.count + 1, last: Date.now() }
-        usage = next
-        usageFile.setText(JSON.stringify(usage))
     }
 
     function refreshInstalled() { probe.running = true }
 
-    function _ingest(raw) {
-        let data
-        try { data = JSON.parse(raw) } catch (e) { console.warn("menu.json:", e); return }
-        edition = data.edition || edition
-        categories = (data.categories || []).map(c => {
-            const items = (c.items || []).slice()
-            for (const s of (c.subcats || [])) items.push(...s.items)
-            const seen = {}
-            return {
-                // menu.json names carry emoji; the shell's type is clean caps
-                name: c.name.replace(/^[^A-Za-z0-9]+/, "").trim(),
-                items: items.filter(it => !seen[it.name] && (seen[it.name] = true))
-            }
-        })
-        refreshInstalled()
-    }
-
     FileView {
         path: apps.menuPath
-        onLoaded: apps._ingest(text())
-    }
-
-    FileView {
-        id: usageFile
-        path: apps.stateDir + "/launcher-usage.json"
-        printErrors: false
         onLoaded: {
-            try { apps.usage = JSON.parse(text()) } catch (e) { apps.usage = ({}) }
+            try {
+                const data = JSON.parse(text())
+                apps.edition = data.edition || apps.edition
+                apps.categories = data.categories || []
+                apps.refreshInstalled()
+            } catch (e) {
+                console.warn("menu.json:", e)
+            }
         }
     }
 
     Process {
         id: probe
-        command: ["sh", "-c",
-            'for b in "$@"; do command -v "$b" >/dev/null 2>&1 && echo "$b"; done', "sh"]
-            .concat(apps.allItems.map(it => apps.binOf(it)))
+        command: {
+            const bins = []
+            for (const cat of apps.categories) {
+                let items = cat.items || []
+                for (const s of (cat.subcats || [])) items = items.concat(s.items)
+                for (const it of items) bins.push(apps.binOf(it))
+            }
+            return ["sh", "-c", 'for b in "$@"; do command -v "$b" >/dev/null 2>&1 && echo "$b"; done', "sh"].concat(bins)
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 const found = {}
@@ -145,6 +119,4 @@ Singleton {
             }
         }
     }
-
-    Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", stateDir])
 }
