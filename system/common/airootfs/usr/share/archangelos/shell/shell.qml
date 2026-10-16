@@ -19,15 +19,24 @@ import Quickshell.Io
 import "src/windows"
 import qs.ns.modules as NS
 import qs.ns.services as NSS
+import qs.ns as NSRoot
+import "src" as Frame
 
 ShellRoot {
+    // arcshell's frame goes first, so it stacks underneath: ArcShell's surface (which
+    // also covers the bar's column) draws the one silhouette — bar, workspace tab, island,
+    // notches — over it, and only arcshell's bulges (launcher, bar popouts) show through.
+    Variants { model: Quickshell.screens; NS.Frame {} }
+
     // ArcShell: frame, notches and their panels.
     ShellHost {}
 
-    // arcshell: the left bar (drawn by its frame surface) and the launcher.
-    Variants { model: Quickshell.screens; NS.Frame {} }
+    // arcshell: the left bar's widgets and the launcher, above both frames.
     Variants { model: Quickshell.screens; NS.Bar {} }
     Variants { model: Quickshell.screens; NS.Launcher {} }
+
+    // One accent for both shells: ArcShell's (set from the wallpaper picker's swatches).
+    Binding { target: NSRoot.Config; property: "accentOverride"; value: Frame.PrefsService.overrideActive }
 
     // arcshell's entry points (from its shell.qml), for keybinds:
     //   qs -p /usr/share/archangelos/shell ipc call launcher toggle

@@ -17,6 +17,7 @@
  */
 
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
@@ -166,6 +167,66 @@ PanelWindow {
         HoverHandler { id: fmRightHov }
     }
 
+    // --- ArchangelOS: black smoke --------------------------------------------------------
+    // The frame's silhouette, blurred at quarter resolution and pushed through drifting noise
+    // (assets/shaders/smoke.frag): a shadow that curls off every edge and notch and follows them
+    // as they morph. It drifts while something is open or moving and rests otherwise.
+    Item {
+        id: smoke
+        anchors.fill: parent
+        readonly property bool busy: SurfaceState.activeSurface !== "none" || NSS.Shell.launcherVisible
+        onBusyChanged: settle.restart()
+        readonly property bool stirred: busy || settle.running
+        Timer { id: settle; interval: 1600 }
+
+        ShaderEffectSource {
+            id: silhouette
+            anchors.fill: parent
+            sourceItem: surfaceShape
+            hideSource: false
+            visible: false
+            textureSize: Qt.size(Math.max(1, Math.round(width / 4)), Math.max(1, Math.round(height / 4)))
+        }
+        MultiEffect {
+            id: silhouetteBlur
+            anchors.fill: parent
+            source: silhouette
+            autoPaddingEnabled: false
+            blurEnabled: true
+            blur: 1.0
+            blurMax: 64
+            blurMultiplier: 1.5
+        }
+        ShaderEffectSource {
+            id: blurred
+            anchors.fill: parent
+            sourceItem: silhouetteBlur
+            hideSource: true
+            visible: false
+            textureSize: silhouette.textureSize
+        }
+        ShaderEffect {
+            anchors.fill: parent
+            property var src: blurred
+            property vector2d res: Qt.vector2d(width, height)
+            property real time: 0
+            property real strength: smoke.stirred ? 0.9 : 0.7
+            property real reach: Math.round(70 * root.localScale)
+            property color tint: "#000000"
+            Behavior on strength { NumberAnimation { duration: 900; easing.type: Easing.InOutSine } }
+            NumberAnimation on time {
+                running: smoke.stirred
+                from: 0; to: 100000
+                duration: 100000 * 1000
+                loops: Animation.Infinite
+            }
+            layer.enabled: true
+            layer.smooth: true
+            layer.textureSize: Qt.size(Math.max(1, Math.round(width / 2)), Math.max(1, Math.round(height / 2)))
+            fragmentShader: Qt.resolvedUrl("../assets/shaders/smoke.frag.qsb")
+        }
+    }
+
     SurfaceShape {
         id: surfaceShape
         anchors.fill: parent
@@ -313,6 +374,10 @@ PanelWindow {
 
         Dashboard {
             id: dashboardView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - dashboardView.opacity; brightness: -0.5 * (1 - dashboardView.opacity) }
+
             localScale: root.localScale
             anchors.top: parent.top
             anchors.left: parent.left
@@ -372,6 +437,10 @@ PanelWindow {
 
         NetworkPopup {
             id: networkPopupView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - networkPopupView.opacity; brightness: -0.5 * (1 - networkPopupView.opacity) }
+
             localScale: root.localScale
             anchors.top: parent.top
             anchors.left: parent.left
@@ -390,6 +459,10 @@ PanelWindow {
 
         NotificationsPopup {
             id: notifsPopupView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - notifsPopupView.opacity; brightness: -0.5 * (1 - notifsPopupView.opacity) }
+
             localScale: root.localScale
             anchors.top: parent.top
             anchors.left: parent.left
@@ -430,6 +503,10 @@ PanelWindow {
 
         ArchMenu {
             id: archMenuPopupView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - archMenuPopupView.opacity; brightness: -0.5 * (1 - archMenuPopupView.opacity) }
+
             localScale: root.localScale
             anchors.fill: parent
             opacity: SurfaceState.activeContent === "archMenu" ? 1 : 0
@@ -451,6 +528,10 @@ PanelWindow {
 
         AudioPopup {
             id: audioPopupView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - audioPopupView.opacity; brightness: -0.5 * (1 - audioPopupView.opacity) }
+
             localScale: root.localScale
             anchors.fill: parent
             opacity: SurfaceState.activeContent === "audio" ? 1 : 0
@@ -462,6 +543,10 @@ PanelWindow {
 
         QuickControl {
             id: quickControlPopupView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - quickControlPopupView.opacity; brightness: -0.5 * (1 - quickControlPopupView.opacity) }
+
             localScale: root.localScale
             anchors.fill: parent
             opacity: SurfaceState.activeContent === "quick" ? 1 : 0
@@ -492,7 +577,8 @@ PanelWindow {
             Behavior on opacity { NumberAnimation { duration: Anim.mediumFast } }
         }
 
-        WallpaperPopup {
+        // ArchangelOS: a coverflow in place of ArcShell's grid (WallpaperPopup.qml).
+        WallpaperFlow {
             id: wallpaperPopupView
             localScale: root.localScale
             anchors.fill: parent
@@ -516,6 +602,10 @@ PanelWindow {
 
         ClipboardPopup {
             id: clipboardPopupView
+            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - clipboardPopupView.opacity; brightness: -0.5 * (1 - clipboardPopupView.opacity) }
+
             localScale: root.localScale
             anchors.fill: parent
             opacity: SurfaceState.activeContent === "clipboard" ? 1 : 0
