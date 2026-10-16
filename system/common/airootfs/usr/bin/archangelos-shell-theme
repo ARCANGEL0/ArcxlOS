@@ -19,7 +19,7 @@ MONO_CHROMA = 0.22
 
 MONO = {
     "accent": BRAND,
-    "ink": "#0E0E0D",
+    "ink": "#0C0C0B",
     "surface": "#161615",
     "fg": "#ECEBE8",
     "dim": "#9A9895",
