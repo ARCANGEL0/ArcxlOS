@@ -4,6 +4,8 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 
 // One per screen: the left sidebar plus the panels that pour out of it.
+// The app launcher is the standalone constellation launcher
+// (/usr/share/archangelos/launcher/qml), opened via archangelos-launcher-toggle.
 // The window spans the screen so panels have room, but at rest its input
 // mask is only the sidebar.
 PanelWindow {
@@ -42,15 +44,6 @@ PanelWindow {
             enabled: win.open
             onClicked: ShellState.close()
         }
-    }
-
-    FlowPanel {
-        x: win.sideWidth
-        shown: win.panel === "launcher"
-        size: Qt.size(launcher.width, Math.min(launcher.height, win.height - 48))
-        originY: sidebar.launcherOriginY
-        targetY: (win.height - size.height) / 2
-        LauncherView { id: launcher; active: win.panel === "launcher" }
     }
 
     FlowPanel {

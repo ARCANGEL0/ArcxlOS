@@ -13,7 +13,7 @@ ShellRoot {
 
     IpcHandler {
         target: "shell"
-        function launcher(): void { ShellState.toggle("launcher") }
+        function launcher(): void { ShellState.openLauncher() }
         function session(): void { ShellState.toggle("session") }
         function close(): void { ShellState.close() }
     }

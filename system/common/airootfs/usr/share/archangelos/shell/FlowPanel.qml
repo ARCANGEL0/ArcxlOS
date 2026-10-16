@@ -63,7 +63,7 @@ Item {
 
     property real time: 0
     NumberAnimation on time {
-        from: 0; to: 3600; duration: 3600000
+        from: 0; to: 3600; duration: 3600000 * Theme.motion
         loops: Animation.Infinite
         running: flow.live
     }
