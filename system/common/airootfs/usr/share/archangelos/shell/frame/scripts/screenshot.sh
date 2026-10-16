@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+DIR="$HOME/Pictures/Screenshots"
+mkdir -p "$DIR"
+FILE="$DIR/Screenshot-$(date +'%Y-%m-%d_%H-%M-%S').png"
+
+if SLURP_ARGS="-b 00000000" grimblast --freeze copysave area "$FILE"; then
+    ACTION=$(notify-send "Screenshot Captured" "Region saved to Pictures and clipboard" \
+        -i "$FILE" \
+        -t 600000 \
+        --action="icat=View in Terminal" \
+        --action="folder=Open Folder")
+
+    case "$ACTION" in
+        "icat")
+            ${ARCSHELL_TERMINAL:-kitty} --hold sh -c "kitten icat '$FILE'" > /dev/null 2>&1 &
+            ;;
+        "folder")
+            ${ARCSHELL_TERMINAL:-kitty} ranger --selectfile="$FILE" > /dev/null 2>&1 &
+            ;;
+    esac
+fi

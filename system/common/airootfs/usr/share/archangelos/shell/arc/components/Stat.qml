@@ -1,0 +1,33 @@
+// Compact vertical stat: icon over a small value.
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+import qs.ns
+ColumnLayout {
+    id: stat
+    property string icon
+    property string value
+    property color tint: Config.tertiary
+    // What the figure means: the value is a bare number and the glyph is invisible to a reader.
+    property string label: ""
+    Layout.alignment: Qt.AlignHCenter
+    spacing: -1
+
+    Accessible.role: Accessible.StaticText
+    Accessible.name: stat.label
+    Accessible.description: stat.value
+    MatIcon {
+        Layout.alignment: Qt.AlignHCenter
+        text: stat.icon
+        font.pixelSize: 15
+        color: stat.tint
+    }
+    Text {
+        Layout.alignment: Qt.AlignHCenter
+        text: stat.value
+        font.family: Config.textFont
+        font.pixelSize: 9
+        color: Config.dim
+    }
+}
