@@ -56,10 +56,7 @@ Item {
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter
         }
-        Clock{ 
-            localScale: root.localScale
-            anchors.verticalCenter: parent.verticalCenter
-        }
+        // (ArchangelOS: the clock lives in the top-centre island — Center/CenterContent.qml.)
         SysTray{ 
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter

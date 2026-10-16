@@ -27,6 +27,8 @@ import "../components"
 import "../modules/Right/"
 import "../modules/Center/"
 import "../modules/Left/"
+import "../modules/Bottom/"
+import qs.ns.services as NSS
 
 // A morphing Wayland window layer for the unified screen frame
 PanelWindow {
@@ -65,6 +67,8 @@ PanelWindow {
     }
     
     WlrLayershell.layer: WlrLayer.Top
+    // ArchangelOS: the bottom-centre quick dock rests unless the launcher has the edge.
+    readonly property bool dockResting: !NSS.Shell.launcherVisible && !ShellState.focusMode
     WlrLayershell.namespace: "arcshell-frame"
     WlrLayershell.keyboardFocus: (SurfaceState.activeSurface !== "none" || (ShellState.screenRecord && !ScreenRecService.recording)) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -98,7 +102,7 @@ PanelWindow {
         Region { x: Math.round(root.width / 2 - (160 * root.localScale) / 2); y: 0; width: Math.round(160 * root.localScale); height: 1 }
         
         // Side Notches
-        Region { x: 0; y: root.height / 2 - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
+        Region { x: 0; y: root.height / 2 - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.le + surfaceShape.lcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
         Region { x: root.width - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)); y: root.height / 2 - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale) }
         
         // Bottom Notches
@@ -194,13 +198,15 @@ PanelWindow {
             if (SurfaceState.activeContent === "archMenu") return archMenuPopupView.popupHeight + Math.round(Theme.cornerRadius * root.localScale * 2); 
             return Math.round(Theme.popupMaxHeight * root.localScale); 
         }
+        // ArchangelOS: at rest the bottom-centre notch holds the quick dock; it folds away while
+        // arcshell's launcher rises from the same edge.
         bcnWidth: { 
-            if (!SurfaceState.isBottomCenterExpanded) return 0.001; 
+            if (!SurfaceState.isBottomCenterExpanded) return (root.dockResting ? quickDock.implicitWidth + Math.round(Theme.notchPadding * 2 * root.localScale) : 0.001); 
             if (SurfaceState.activeContent === "wallpaper") return wallpaperPopupView.popupWidth + Math.round(Theme.cornerRadius * root.localScale * 2); 
             return Math.round(Theme.popupMaxWidth * root.localScale); 
         } 
         bcnDepth: { 
-            if (!SurfaceState.isBottomCenterExpanded) return 0.001; 
+            if (!SurfaceState.isBottomCenterExpanded) return (root.dockResting ? Math.round(Theme.notchHeight * root.localScale) : 0.001); 
             if (SurfaceState.activeContent === "wallpaper") return wallpaperPopupView.popupHeight + Math.round(Theme.cornerRadius * root.localScale); 
             return Math.round(Theme.popupMaxHeight * root.localScale); 
         }
@@ -210,10 +216,11 @@ PanelWindow {
             return Math.round(Theme.popupMaxHeight * root.localScale);
         }
         
-        // ArchangelOS: the top-left notch is retired; arcshell's vertical bar
-        // (ns/modules/Bar.qml) owns the left edge, so this corner stays a plain curve.
-        leftNotchWidth: 0.001
-        leftNotchHeight: surfaceShape.innerRadius
+        // ArchangelOS: the left edge of the inner boundary is arcshell's vertical bar
+        // (ns/modules/Bar.qml), which grows down out of this notch.
+        leftEdge: 56
+        leftNotchWidth: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmLeftHov.hovered || leftNotchHover.hovered))) ? 0.001 : (surfaceShape.le - surfaceShape.frameThickness) + Math.max(Math.round(Theme.lNotchMinWidth * localScale), Math.min(Math.round(Theme.lNotchMaxWidth * localScale), leftContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
+        leftNotchHeight: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmLeftHov.hovered || leftNotchHover.hovered))) ? surfaceShape.innerRadius : Math.round(Theme.notchHeight * root.localScale)
         centerNotchWidth: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmCenterHov.hovered || centerNotchHover.hovered)) && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording && !Popups.miniPlayerOpen) ? 0.001 : (SurfaceState.isTopExpanded ? Math.round(Popups.dashboardPageWidth * root.localScale) : Math.max(Math.round(Theme.cNotchMinWidth * localScale), Math.min(Math.round(Theme.cNotchMaxWidth * localScale), centerContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale))))
         centerNotchHeight: {
             if (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmCenterHov.hovered || centerNotchHover.hovered)) && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording && !Popups.miniPlayerOpen) return 0.001;
@@ -259,8 +266,7 @@ PanelWindow {
         anchors.topMargin: Math.round(Theme.borderWidth * root.localScale)
         clip: true
         
-        opacity: 0          // ArchangelOS: retired, see leftNotchWidth
-        visible: false
+        opacity: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmLeftHov.hovered || leftNotchHover.hovered)) && !SurfaceState.isTopExpanded) ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
         
         Item {
@@ -273,6 +279,8 @@ PanelWindow {
                 localScale: root.localScale
                 id: leftContent
                 anchors.centerIn: parent
+                // ArchangelOS: the tab spans the bar's head too; centre the content beside it.
+                anchors.horizontalCenterOffset: (surfaceShape.le - surfaceShape.frameThickness) / 2
             }
         }
     }
@@ -417,7 +425,7 @@ PanelWindow {
         width: surfaceShape.lcnDepth
         height: surfaceShape.lcnHeight
         anchors.left: parent.left
-        anchors.leftMargin: Math.round(Theme.borderWidth * root.localScale)
+        anchors.leftMargin: surfaceShape.le     // ArchangelOS: out of the bar's edge
         anchors.verticalCenter: parent.verticalCenter
 
         ArchMenu {
@@ -472,6 +480,17 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Math.round(Theme.borderWidth * root.localScale)
+
+        QuickDock {
+            id: quickDock
+            localScale: root.localScale
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Math.round((Theme.notchHeight * root.localScale - height) / 2)
+            opacity: root.dockResting && !SurfaceState.isBottomCenterExpanded ? 1 : 0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: Anim.mediumFast } }
+        }
 
         WallpaperPopup {
             id: wallpaperPopupView
