@@ -128,8 +128,10 @@ Shape {
 
     ShapePath {
         fillColor: frameColor
-        strokeColor: "transparent"
-        strokeWidth: 0
+        // ArchangelOS: a hairline lip round the whole silhouette — bar, tabs, island, notches —
+        // where arcshell's bevel used to cut across them.
+        strokeColor: Qt.rgba(1, 1, 1, 0.07)
+        strokeWidth: 1
         fillRule: ShapePath.OddEvenFill
         
         // --- OUTER BOUNDARY ---
@@ -139,7 +141,8 @@ Shape {
         PathLine { x: 0; y: h }
         PathLine { x: 0; y: 0 }
         
-        PathLine { x: le; y: t + leftNotchHeight + lnLeftMelt }
+        // (ArchangelOS: a move, not a line — the hairline stroke would draw the jump.)
+        PathMove { x: le; y: t + leftNotchHeight + lnLeftMelt }
         
         // --- INNER BOUNDARY (Counter-Clockwise) ---
         
