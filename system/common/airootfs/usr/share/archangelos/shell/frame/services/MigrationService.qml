@@ -1,0 +1,85 @@
+/*
+ * ArcShell
+ * Copyright (C) 2026 arcxlo (ArchangelOS)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import "../state"
+import "../"
+
+Item {
+    id: root
+
+    property string _flagPath: Paths.configDir + "/.v0.2.0_migrated"
+    property string _scriptPath: Paths.installDir + "/src/scripts/migrate_v0.2.0.sh"
+
+    property bool isMigrating: false
+
+    property bool isLegacyPath: !Paths.isNix && Paths.installDir.indexOf(".local/src/ArcShell") !== -1
+
+    Process {
+        id: checkerProc
+        command: ["bash", "-c", "[ -f '" + root._flagPath + "' ]"]
+        running: false
+        onExited: function(code) {
+            if (code !== 0) {
+                root.isMigrating = true
+                migratorProc.running = true
+            }
+        }
+    }
+
+    Process {
+        id: migratorProc
+        command: ["bash", root._scriptPath]
+        running: false
+        onExited: function(code) {
+            root.isMigrating = false
+            if (code === 0) {
+                Popups.showConfirm(
+                    "v0.2.0 Migration Complete",
+                    "Your configuration was successfully backed up and migrated to the new v0.2.0 modular architecture.\n\nSince v0.2.0 was just installed, a system logout is strictly required to apply the new Hyprland configurations, or ArcShell will not function correctly.",
+                    "Logout Now",
+                    "logout",
+                    "", // gfxMode
+                    "Quit ArcShell",
+                    "quit"
+                )
+            } else if (code === 2) {
+                // Silently recovered flag
+            } else {
+                Popups.showConfirm(
+                    "Migration Failed",
+                    "The v0.2.0 migration script failed to execute properly. Please check the logs.",
+                    "Quit ArcShell",
+                    "quit",
+                    "",
+                    "Ignore",
+                    ""
+                )
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (!Paths.isNix && root.isLegacyPath) {
+            checkerProc.running = true
+        }
+    }
+}

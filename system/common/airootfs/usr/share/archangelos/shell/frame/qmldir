@@ -1,0 +1,17 @@
+singleton Theme      theme/Theme.qml
+singleton Anim       theme/Anim.qml
+singleton Popups     state/Popups.qml
+singleton IpcManager state/IpcManager.qml
+singleton ShellState state/ShellState.qml
+singleton ClockState state/ClockState.qml
+singleton ScreenRecService services/ScreenRecService.qml
+singleton CavaService services/CavaService.qml
+singleton ClipboardService services/ClipboardService.qml
+singleton KeybindService services/KeybindService.qml
+singleton UpdateService services/UpdateService.qml
+singleton PrefsService services/PrefsService.qml
+singleton SurfaceState state/SurfaceState.qml
+singleton MediaService services/MediaService.qml
+singleton FrecencyService services/FrecencyService.qml
+singleton Paths          utils/Paths.qml
+singleton KanbanService  services/KanbanService.qml
