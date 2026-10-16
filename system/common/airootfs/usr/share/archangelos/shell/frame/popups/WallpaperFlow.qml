@@ -81,7 +81,7 @@ Item {
         } else if (!committed && original !== "" && previewing !== original) {
             // Closed without Enter: put the old one back.
             previewTimer.stop()
-            Quickshell.execDetached(["awww", "img", "--transition-type", "fade", "--transition-duration", "0.6", original])
+            WallpaperService.show(original)
             previewing = original
         }
     }
@@ -101,7 +101,7 @@ Item {
             probe.load()
             if (!root.shown || root.selected === "" || root.selected === root.previewing) return
             root.previewing = root.selected
-            Quickshell.execDetached(["awww", "img", "--transition-type", "fade", "--transition-duration", "0.7", root.selected])
+            WallpaperService.show(root.selected)
         }
     }
 
@@ -110,8 +110,20 @@ Item {
         id: probe
         property string path: ""
         property real bytes: 0
-        function load() { if (root.selected !== path) { path = root.selected; bytes = 0; sizeProc.running = false; sizeProc.running = true } }
-        Image { id: probeImg; visible: false; asynchronous: true; source: probe.path !== "" ? "file://" + probe.path : "" }
+        readonly property bool video: WallpaperService.isVideo(path)
+        property string videoInfo: ""      // "1920,1080,25.000" from ffprobe
+        function load() {
+            if (root.selected === path) return
+            path = root.selected; bytes = 0; videoInfo = ""
+            sizeProc.running = false; sizeProc.running = true
+            if (video) { vidProc.running = false; vidProc.running = true }
+        }
+        Image { id: probeImg; visible: false; asynchronous: true; source: probe.path !== "" && !probe.video ? "file://" + probe.path : "" }
+        Process {
+            id: vidProc
+            command: ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration", "-of", "csv=p=0:s=,", probe.path]
+            stdout: StdioCollector { onStreamFinished: probe.videoInfo = text.trim().split("\n").join(",") }
+        }
         Process {
             id: sizeProc
             command: ["stat", "-Lc", "%s", probe.path]
@@ -126,7 +138,7 @@ Item {
         width: 24; height: 14
         visible: false
         renderStrategy: Canvas.Immediate
-        property string src: probe.path !== "" ? "file://" + probe.path : ""
+        property string src: probe.path !== "" ? "file://" + WallpaperService.posterFor(probe.path) : ""
         onSrcChanged: if (src !== "") loadImage(src)
         onImageLoaded: requestPaint()
         onPaint: {
@@ -248,7 +260,7 @@ Item {
 
                         Image {
                             anchors.fill: parent
-                            source: "file://" + card.modelData
+                            source: "file://" + WallpaperService.posterFor(card.modelData)
                             sourceSize: Qt.size(Math.round(root.cw), Math.round(root.ch))
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
@@ -265,6 +277,35 @@ Item {
                             Behavior on opacity { NumberAnimation { duration: Anim.normal } }
                         }
                     }
+                    // live wallpaper: a small play mark (bottom-left on the big card, centred on slices)
+                    Rectangle {
+                        visible: WallpaperService.isVideo(card.modelData)
+                        readonly property bool big: card.ad < 0.5
+                        x: big ? Math.round(14 * root.s) : (parent.width - width) / 2
+                        y: parent.height - height - Math.round((big ? 14 : 10) * root.s)
+                        width: big ? playRow.implicitWidth + Math.round(16 * root.s) : Math.round(22 * root.s)
+                        height: Math.round(22 * root.s)
+                        radius: height / 2
+                        color: Qt.rgba(0, 0, 0, 0.62)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.12)
+                        Row {
+                            id: playRow
+                            anchors.centerIn: parent
+                            spacing: Math.round(5 * root.s)
+                            Text { text: "▶"; color: Theme.active; font.pixelSize: Math.round(9 * root.s); anchors.verticalCenter: parent.verticalCenter }
+                            Text {
+                                visible: parent.parent.big
+                                text: "LIVE"
+                                color: Theme.text
+                                font.pixelSize: Math.round(9.5 * root.s)
+                                font.bold: true
+                                font.letterSpacing: 1.2
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+
                     // hairline edge; the accent marks the selected card
                     Rectangle {
                         anchors.fill: parent
@@ -305,10 +346,15 @@ Item {
                 font.pixelSize: Math.round(11.5 * root.s)
                 text: {
                     var parts = []
-                    if (probeImg.status === Image.Ready && probe.path === root.selected)
+                    var here = probe.path === root.selected
+                    if (here && probe.video && probe.videoInfo !== "") {
+                        var v = probe.videoInfo.split(",")
+                        parts.push(v[0] + " × " + v[1])
+                        if (v.length > 2 && parseFloat(v[2]) > 0) parts.push(Math.round(parseFloat(v[2])) + " s loop")
+                    } else if (here && probeImg.status === Image.Ready)
                         parts.push(probeImg.implicitWidth + " × " + probeImg.implicitHeight)
                     if (probe.bytes > 0 && probe.path === root.selected) parts.push(root.humanSize(probe.bytes))
-                    parts.push(root.ext(root.selected))
+                    parts.push(probe.video && here ? root.ext(root.selected) + " live" : root.ext(root.selected))
                     parts.push((root.index + 1) + " of " + root.count)
                     return parts.join("  ·  ")
                 }
