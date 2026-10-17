@@ -199,6 +199,9 @@ medusa
 memtest86+
 mercurial
 mesa
+vulkan-swrast
+vulkan-intel
+vulkan-radeon
 metasploit
 mfoc
 mitmproxy
