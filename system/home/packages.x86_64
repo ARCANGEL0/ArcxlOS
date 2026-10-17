@@ -348,6 +348,7 @@ syncthing
 telegram-desktop
 timeshift
 torbrowser-launcher
+tor
 tree
 veracrypt
 wget
@@ -361,7 +362,6 @@ matugen
 thunar
 mate-polkit
 hyprpicker
-gpu-screen-recorder
 bluez-utils
 playerctl
 

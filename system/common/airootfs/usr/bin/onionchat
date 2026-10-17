@@ -1,0 +1,7 @@
+#!/bin/sh
+# onionchat — anonymous P2P chat over a Tor hidden service (arcangel0/onionchat).
+# The program and its vendored node deps live here; it uses the system `tor`.
+OC_DIR=/usr/share/archangelos/onionchat
+command -v node >/dev/null 2>&1 || { echo "onionchat: nodejs is required but not installed" >&2; exit 1; }
+command -v tor  >/dev/null 2>&1 || { echo "onionchat: the 'tor' package is required but not installed" >&2; exit 1; }
+exec node "$OC_DIR/chat.js" "$@"

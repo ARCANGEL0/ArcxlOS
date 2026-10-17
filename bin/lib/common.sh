@@ -99,6 +99,7 @@ ax_stage() {
            "${airootfs}/usr/bin/archangelos-launcher-toggle" \
            "${airootfs}/usr/bin/archangelos-welcome" \
            "${airootfs}/usr/bin/arcfetch" \
+           "${airootfs}/usr/bin/onionchat" \
            "${airootfs}/usr/bin/archangelos-redops-tools" 2>/dev/null || true
 
   ax_log "Stamping release version (system/${edition}/airootfs/etc/archangelos/version)..."

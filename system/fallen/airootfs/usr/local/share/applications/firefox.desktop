@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Firefox
-Exec=firefox %U
-# ArchangelOS Fallen: installed only as the engine for the web-screenshot tools
-# (aquatone, gowitness, eyewitness), so it stays out of the menus. Overrides
-# /usr/share/applications/firefox.desktop via XDG_DATA_DIRS precedence.
-NoDisplay=true
