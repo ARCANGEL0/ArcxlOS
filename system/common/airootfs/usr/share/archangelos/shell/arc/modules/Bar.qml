@@ -50,7 +50,8 @@ PanelWindow {
     // still be stale at report time (the tray menu).
     function reportPopBox(widget, popup, anim, height) {
         const gcy = widget.mapToItem(null, 0, widget.height / 2).y;   // widget center, screen y
-        const ph = height === undefined ? popup.implicitHeight : height;
+        const tp0 = popup.topPad !== undefined ? popup.topPad : 0;
+        const ph = height === undefined ? popup.implicitHeight - tp0 : height;
         const bh = ph - Config.popFillet * 2;                         // body height (minus fillets)
         const pf = Config.popFillet;
         // Skirt under the body: normally a full fillet so the SDF cove has room to curve back
@@ -61,6 +62,16 @@ PanelWindow {
         const bp = gcy + bh / 2 + pf > bar.height ? 12 : pf;
         if (popup.botPad !== undefined) popup.botPad = bp;
         let top = gcy - bh / 2;
+        // ArchangelOS: the pane grows out of the main shell surface, whose top-left notch owns the
+        // corner above it — keep the body below that, padding the popup so its content follows.
+        const reserve = Frame.Theme.borderWidth + Frame.Theme.notchHeight + Frame.Theme.cornerRadius * 2 + 6;
+        let tp = 0;
+        if (top < reserve) {
+            tp = 2 * (reserve - top);                                 // popup still centred on the widget
+            if (gcy - (bh + pf * 2 + tp) / 2 < 0) tp = reserve - pf;  // popup slid to the screen top
+            top = reserve;
+        }
+        if (popup.topPad !== undefined && Math.abs(popup.topPad - tp) > 0.5) popup.topPad = tp;
         top = Math.max(pf, Math.min(top, bar.height - bh - bp));      // keep body on-screen
         // Where the bulge grows from and collapses back to, as a fraction of the box. Left edge
         // (0) is the bar; the vertical share is the WIDGET's centre, not the box's — once the
