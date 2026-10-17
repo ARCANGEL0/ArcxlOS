@@ -65,5 +65,9 @@ Item {
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter
         }
+        Power{ 
+            localScale: root.localScale
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 }

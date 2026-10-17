@@ -45,8 +45,7 @@ Item {
 	property real localScale: 1.0
 	// ArchangelOS: the clock rides at the island's head, beside the carousel (moved here from
 	// the top-right panel), so the island is that much wider.
-	readonly property int clockW: Math.round(84 * localScale)
-	width:  Math.round(Theme.cNotchMinWidth * localScale) + clockW
+	width:  Math.round(Theme.cNotchMinWidth * localScale)
 	implicitWidth: width
 	height: Math.round(30 * localScale)
 
@@ -113,7 +112,7 @@ Item {
 	}
 
 	// ── Dynamic item list ─────────────────────────────────────────────────────
-	property var  _items:         ["title"]
+	property var  _items:         ["clock"]
 	property int  _carouselIndex: 0
     on_CarouselIndexChanged: {
         CavaService.notchMusicVisible = (_items.indexOf("music") >= 0 && _carouselIndex === _items.indexOf("music"))
@@ -122,9 +121,9 @@ Item {
 
 	function _rebuildItems(autoScrollType) {
 		var currentType = (_items.length > _carouselIndex)
-		? _items[_carouselIndex] : "title"
+		? _items[_carouselIndex] : "clock"
 
-		var list = ["title"]
+		var list = ["clock"]
 		if (PrefsService.enableVisualiser && (root.player !== null || CavaService.audioActive)) list.push("music")
 		if (ClockState.timerStarted)                   list.push("timer")
 		if (ClockState.swStarted)                      list.push("stopwatch")
@@ -238,32 +237,9 @@ Item {
 	readonly property int _cavaBars: CavaService.barCount
 	readonly property var _bars:     CavaService.bars
 
-	// ── Carousel ──────────────────────────────────────────────────────────────
-	// ── Clock (ArchangelOS) ───────────────────────────────────────────────────
-	Item {
-		width: root.clockW
-		height: parent.height
-		opacity: Popups.dashboardOpen ? 0 : 1
-		visible: opacity > 0
-		Behavior on opacity { NumberAnimation { duration: Anim.mediumFast} }
-
-		Clock {
-			localScale: root.localScale
-			anchors.horizontalCenter: parent.horizontalCenter
-			anchors.horizontalCenterOffset: Math.round(-4 * root.localScale)
-		}
-		Rectangle {
-			anchors.right: parent.right
-			anchors.verticalCenter: parent.verticalCenter
-			width: 1
-			height: Math.round(14 * root.localScale)
-			color: Theme.border
-		}
-	}
-
+	// ── Carousel (clock by default; music / timer / recording scroll in) ───────
 	Item {
 		anchors.fill: parent
-		anchors.leftMargin: root.clockW
 
 		opacity: Popups.dashboardOpen ? 0 : 1
 		visible: opacity > 0
@@ -337,16 +313,11 @@ Item {
 				width:  Math.round(Theme.cNotchMinWidth * localScale)
 				height: statusList.height
 
-				// ── Title ──────────────────────────────────────────────────────
-				Text {
-					anchors.fill: parent
-					visible:      modelData === "title"
-					text:         root.activeTitle
-					color:        Theme.text
-					font.pixelSize: Math.round(13 * localScale)
-					verticalAlignment:   Text.AlignVCenter
-					horizontalAlignment: Text.AlignHCenter
-					elide:        Text.ElideRight
+				// ── Clock (centred, the island's resting face) ──────────────────
+				Clock {
+					visible:      modelData === "clock"
+					localScale:   root.localScale
+					anchors.centerIn: parent
 				}
 
 				// ── Music ──────────────────────────────────────────────────────
