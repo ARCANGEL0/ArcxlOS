@@ -47,17 +47,17 @@ Item {
 	// the top-right panel), so the island is that much wider.
 	// ArchangelOS: when a track plays, the island carries the media controls under a small clock
 	readonly property bool mediaUp: MediaService.activePlayer !== null
-	// the island stays a small clock; it only expands to the player while hovered
+	// with a track the island keeps its idle size (clock over cava); hover expands it to the player
 	property bool notchHovered: false
 	readonly property bool showMedia: mediaUp && notchHovered
 	width:  Math.round(Theme.cNotchMinWidth * localScale)
 	implicitWidth: width
-	height: Math.round((showMedia ? 66 : 30) * localScale)
+	height: Math.round((showMedia ? 62 : (mediaUp ? 34 : 30)) * localScale)
 
 	// feed the notch visualiser whenever media is on the island
 	Binding {
 		target: CavaService; property: "notchMusicVisible"
-		value: root.showMedia && PrefsService.enableVisualiser
+		value: root.mediaUp && PrefsService.enableVisualiser
 	}
 
 	// ── Required notch width for the current carousel item ────────────────────
@@ -324,117 +324,106 @@ Item {
 				height: statusList.height
 
 				// ── Clock + media (the island's resting face) ──────────────────
+				// idle: the time alone; with a track: a small clock riding over the cava strip;
+				// hovered: full date + time, the strip beneath, then the controls
 				Column {
 					visible: modelData === "clock"
-					anchors.horizontalCenter: parent.horizontalCenter
-					anchors.verticalCenter: root.showMedia ? undefined : parent.verticalCenter
-					anchors.top: root.showMedia ? parent.top : undefined
-					anchors.topMargin: root.showMedia ? Math.round(11 * localScale) : 0
-					spacing: root.showMedia ? Math.round(2 * localScale) : 0
+					anchors.centerIn: parent
+					spacing: Math.round((root.showMedia ? 4 : 1) * localScale)
 
-					Item {
+					Row {
 						anchors.horizontalCenter: parent.horizontalCenter
-						width:  clk.implicitWidth
-						height: Math.round((root.showMedia ? 19 : 22) * localScale)
-						Clock {
-							id: clk
-							localScale: root.localScale
-							anchors.centerIn: parent
-							scale: root.showMedia ? 0.74 : 1.0
-							Behavior on scale { NumberAnimation { duration: Anim.mediumFast; easing.type: Anim.outCubic } }
+						spacing: Math.round(6 * localScale)
+						Text {
+							id: dateText
+							anchors.verticalCenter: parent.verticalCenter
+							visible: root.showMedia
+							text: Qt.formatDateTime(new Date(), "dddd, d MMMM")
+							color: Theme.subtext
+							font.pixelSize: Math.round(12 * localScale)
+							font.bold: true
+							Timer { interval: 30000; running: root.showMedia; repeat: true; triggeredOnStart: true
+								onTriggered: dateText.text = Qt.formatDateTime(new Date(), "dddd, d MMMM") }
+						}
+						Text {
+							visible: root.showMedia
+							anchors.verticalCenter: parent.verticalCenter
+							text: "·"; color: Theme.subtext
+							font.pixelSize: Math.round(12 * localScale)
+						}
+						Item {
+							anchors.verticalCenter: parent.verticalCenter
+							width:  clk.implicitWidth * clk.scale
+							height: Math.round((root.mediaUp && !root.showMedia ? 15 : 20) * localScale)
+							Clock {
+								id: clk
+								localScale: root.localScale
+								anchors.centerIn: parent
+								scale: root.showMedia ? 0.8 : (root.mediaUp ? 0.72 : 1.0)
+								Behavior on scale { NumberAnimation { duration: Anim.mediumFast; easing.type: Anim.outCubic } }
+							}
 						}
 					}
 
-					// media: fading title/artist, controls, and a cava strip spanning the island
-					Column {
-						visible: root.showMedia
-						opacity: root.showMedia ? 1 : 0
-						Behavior on opacity { NumberAnimation { duration: Anim.transition } }
-						anchors.horizontalCenter: parent.horizontalCenter
+					// cava — spans the island corner to corner
+					Item {
+						id: cavaStrip
+						visible: root.mediaUp && PrefsService.enableVisualiser
 						width: Math.round((Theme.cNotchMinWidth - Theme.notchPadding * 2) * localScale)
-						spacing: Math.round(2 * localScale)
-
-						// fading title / artist — full island width
-						Item {
-							id: nowText
-							width: parent.width
-							height: Math.round(13 * localScale)
-							property bool showArtist: false
-							Timer { interval: 3400; running: root.showMedia; repeat: true; onTriggered: nowText.showArtist = !nowText.showArtist }
-							Text {
-								anchors.fill: parent
-								text: MediaService.title || "Unknown track"
-								color: Theme.text; font.pixelSize: Math.round(11 * localScale); font.bold: true
-								horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
-								opacity: nowText.showArtist ? 0 : 1
-								Behavior on opacity { NumberAnimation { duration: 450 } }
-							}
-							Text {
-								anchors.fill: parent
-								text: MediaService.artist || ""
-								color: Theme.subtext; font.pixelSize: Math.round(11 * localScale)
-								horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
-								opacity: nowText.showArtist ? 1 : 0
-								Behavior on opacity { NumberAnimation { duration: 450 } }
-							}
-						}
-
-						// controls — centred
+						height: Math.round((root.showMedia ? 14 : 10) * localScale)
+						Behavior on height { NumberAnimation { duration: Anim.mediumFast; easing.type: Anim.outCubic } }
+						readonly property int n: 44
+						readonly property real bw: Math.round(2 * localScale)
 						Row {
-							anchors.horizontalCenter: parent.horizontalCenter
-							spacing: Math.round(16 * localScale)
+							anchors.fill: parent
+							spacing: Math.max(1, (cavaStrip.width - cavaStrip.n * cavaStrip.bw) / (cavaStrip.n - 1))
 							Repeater {
-								model: ["prev", "play", "next"]
+								model: cavaStrip.n
 								delegate: Item {
-									required property string modelData
-									readonly property bool isPlay: modelData === "play"
-									width:  Math.round((isPlay ? 20 : 16) * localScale)
-									height: Math.round(16 * localScale)
-									anchors.verticalCenter: parent.verticalCenter
-									Text {
+									required property int index
+									readonly property int amp: root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] !== undefined ? root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] : 0
+									width: cavaStrip.bw
+									height: cavaStrip.height
+									Rectangle {
 										anchors.centerIn: parent
-										text: parent.isPlay ? (MediaService.isPlaying ? "󰏤" : "󰐊")
-										                    : (parent.modelData === "prev" ? "󰒫" : "󰒬")
-										color: ctrlMa.containsMouse ? Theme.active : Theme.text
-										font.pixelSize: Math.round((parent.isPlay ? 15 : 13) * localScale)
-									}
-									MouseArea {
-										id: ctrlMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-										onClicked: {
-											if (parent.modelData === "play") MediaService.toggle()
-											else if (parent.modelData === "prev") MediaService.prev()
-											else MediaService.next()
-										}
+										width: cavaStrip.bw
+										height: Math.max(2, (amp / 100.0) * cavaStrip.height)
+										radius: width / 2
+										color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28 + (amp / 100.0) * 0.72)
 									}
 								}
 							}
 						}
+					}
 
-						// cava — spans the island corner to corner
-						Item {
-							id: cavaStrip
-							width: parent.width
-							height: Math.round(14 * localScale)
-							visible: PrefsService.enableVisualiser
-							readonly property int n: 44
-							readonly property real bw: Math.round(2 * localScale)
-							Row {
-								anchors.fill: parent
-								spacing: Math.max(1, (cavaStrip.width - cavaStrip.n * cavaStrip.bw) / (cavaStrip.n - 1))
-								Repeater {
-									model: cavaStrip.n
-									delegate: Item {
-										required property int index
-										readonly property int amp: root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] !== undefined ? root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] : 0
-										width: cavaStrip.bw
-										height: cavaStrip.height
-										Rectangle {
-											anchors.centerIn: parent
-											width: cavaStrip.bw
-											height: Math.max(2, (amp / 100.0) * cavaStrip.height)
-											radius: width / 2
-											color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28 + (amp / 100.0) * 0.72)
-										}
+					// controls — only while hovered
+					Row {
+						visible: root.showMedia
+						opacity: root.showMedia ? 1 : 0
+						Behavior on opacity { NumberAnimation { duration: Anim.transition } }
+						anchors.horizontalCenter: parent.horizontalCenter
+						spacing: Math.round(18 * localScale)
+						Repeater {
+							model: ["prev", "play", "next"]
+							delegate: Item {
+								required property string modelData
+								readonly property bool isPlay: modelData === "play"
+								width:  Math.round((isPlay ? 20 : 16) * localScale)
+								height: Math.round(16 * localScale)
+								anchors.verticalCenter: parent.verticalCenter
+								Text {
+									anchors.centerIn: parent
+									text: parent.isPlay ? (MediaService.isPlaying ? "󰏤" : "󰐊")
+									                    : (parent.modelData === "prev" ? "󰒫" : "󰒬")
+									color: ctrlMa.containsMouse ? Theme.active : Theme.text
+									font.pixelSize: Math.round((parent.isPlay ? 15 : 13) * localScale)
+								}
+								MouseArea {
+									id: ctrlMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+									onClicked: {
+										if (parent.modelData === "play") MediaService.toggle()
+										else if (parent.modelData === "prev") MediaService.prev()
+										else MediaService.next()
 									}
 								}
 							}
