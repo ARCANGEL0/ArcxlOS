@@ -41,7 +41,7 @@ echo "root:live" | chpasswd
 if [ -f /usr/share/blackarch/config/bash/bashrc ]; then
   cp /usr/share/blackarch/config/bash/bashrc /etc/skel/.bashrc
   cp /usr/share/blackarch/config/bash/bash_profile /etc/skel/.bash_profile
-  cp /usr/share/blackarch/config/zsh/zshrc /etc/skel/.zshrc
+  [ -f /usr/share/blackarch/config/zsh/zshrc ] && cp /usr/share/blackarch/config/zsh/zshrc /etc/skel/.zshrc || true
   if [ -d /usr/share/blackarch/config/vim/vim ]; then
     cp -r /usr/share/blackarch/config/vim/vim /etc/skel/.vim || true
   fi

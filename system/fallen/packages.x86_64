@@ -31,6 +31,7 @@ bind
 binwalk
 blackarch-config-awesome
 blackarch-config-bash
+blackarch-config-zsh
 blackarch-config-fluxbox
 blackarch-config-gtk
 blackarch-config-i3
@@ -649,6 +650,4 @@ zaproxy
 chafa
 
 ### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
-libwpe
-wpebackend-fdo
 wpewebkit
