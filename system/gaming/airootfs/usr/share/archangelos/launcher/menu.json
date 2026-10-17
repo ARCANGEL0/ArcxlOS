@@ -391,11 +391,6 @@
      "terminal": false
     },
     {
-     "name": "0 A.D.",
-     "exec": "0-a.d.",
-     "terminal": true
-    },
-    {
      "name": "SuperTuxKart",
      "exec": "supertuxkart",
      "terminal": true
