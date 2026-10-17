@@ -10,7 +10,7 @@ accent, hairline edges — with a red-team / cyber-samurai read (reticle hub,
 monospace labels, arsenal glyphs). Only the wheel is drawn: no backdrop, the
 desktop stays visible around it. Click off the wheel (or Esc) to close.
 
-Default keybind: SUPER + SHIFT + TAB (Hyprland; SUPER + TAB is the app launcher)
+Default keybind: SUPER + SPACE (Hyprland; SUPER + TAB is the app launcher)
 """
 
 import sys
