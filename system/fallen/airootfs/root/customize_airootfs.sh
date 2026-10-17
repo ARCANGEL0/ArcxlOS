@@ -294,6 +294,11 @@ if [ -f /usr/bin/archangelos-wheel ]; then
 fi
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
+# AX slim: the AUR step installs through the live /etc/pacman.conf, which (unlike the
+# build's own pacman.conf) has no NoExtract — skip docs/help/translations for it too, then
+# restore the file so installed systems keep normal pacman behaviour.
+cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
+sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
 AUR_PKGS="anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
@@ -303,6 +308,15 @@ if [ -d /home/liveuser ]; then
   done
   rm -rf /home/liveuser/.cache/yay/* 2>/dev/null || true
 fi
+mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
+# AX slim: drop the toolchain caches the AUR source builds leave behind (cargo, rustup,
+# go, npm, NuGet, cabal, gradle, pip) — otherwise they ship inside the ISO.
+for h in /home/liveuser /root; do
+  rm -rf "$h"/.cache/* "$h"/.cargo "$h"/.rustup "$h"/go "$h"/.npm "$h"/.nuget \
+         "$h"/.cabal "$h"/.ghcup "$h"/.stack "$h"/.gradle "$h"/.m2 "$h"/.dotnet \
+         "$h"/.local/share/NuGet "$h"/.local/share/pnpm "$h"/.bun 2>/dev/null || true
+done
+rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
 
 
 
@@ -365,4 +379,8 @@ rm -rf /var/lib/pacman/sync/* 2>/dev/null || true
 rm -rf /root/.cache/* 2>/dev/null || true
 find /var/log -type f -exec truncate -s 0 {} + 2>/dev/null || true
 
+# AX slim: log what the image weighs before it is compressed, so a size regression in CI
+# shows exactly which directory grew.
+echo "== ArchangelOS rootfs size report =="
+du -xh --max-depth=3 / 2>/dev/null | sort -h | tail -40 || true
 sync
