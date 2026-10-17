@@ -1,21 +1,26 @@
 name: Build and Release ISOs
 
 # Cut a release by pushing a tag:  git tag v2.4 && git push origin v2.4
-# ISOs are attached to the GitHub release as:
-#   archangelos-home.iso
-#   archangelos-game-edition.iso
-#   archangelos-fallen.iso
-#   archangelos-netinstall.iso
 #
-# The workflow can also be dispatched by hand to build a single edition without
-# creating a release.
+# Every edition is built on its own runner and uploaded straight to SourceForge
+# (GitHub release assets must be under 2 GiB, and home/gaming/fallen are 5-11 GB):
+#   https://sourceforge.net/projects/<SF_PROJECT>/files/<version>/
+# The GitHub release then lists the download links and SHA256 sums; NetInstall fits
+# under the limit, so it is attached to the release as well.
 #
-# Disk: a hosted runner has only ~13 GB free on / out of the box, but ships
-# ~30 GB of preinstalled SDKs. The build job reclaims that with
-# jlumbroso/free-disk-space (dotnet/Android/Haskell/tool-cache), which brings /
-# up to ~40-50 GB free — enough for the uncompressed chroot + squashfs + ISO of
-# every edition. If a future edition grows past that, point `runs-on` at a
-# self-hosted runner with a larger volume.
+# One-time setup (repo Settings -> Secrets and variables -> Actions):
+#   secret   SF_SSH_KEY   private key whose public half is in SourceForge ->
+#                         Account Settings -> SSH Settings
+#   variable SF_USER      your SourceForge username
+#   variable SF_PROJECT   the SourceForge project's unix name (the URL slug)
+#
+# Hand-dispatch builds one edition (or all) for testing; they only reach SourceForge
+# when `publish` is ticked.
+#
+# Disk: a hosted runner has ~13 GB free on / out of the box; reclaiming the
+# preinstalled SDKs brings it to ~45 GB. The build keeps the peak below that by
+# dropping the pacman download cache once packages are installed, and by mkarchiso -r
+# removing the unpacked rootfs before the ISO is written.
 
 on:
   push:
@@ -34,6 +39,11 @@ on:
           - gaming
           - fallen
           - netinstall
+      publish:
+        description: Upload the ISO(s) to SourceForge
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -44,7 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       editions: ${{ steps.set.outputs.editions }}
+      version: ${{ steps.set.outputs.version }}
+      publish: ${{ steps.set.outputs.publish }}
     steps:
+      - uses: actions/checkout@v4
       - id: set
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.edition }}" != "all" ]; then
@@ -52,24 +65,29 @@ jobs:
           else
             echo 'editions=["home","gaming","fallen","netinstall"]' >> "$GITHUB_OUTPUT"
           fi
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+            echo "publish=${{ inputs.publish && 'true' || 'false' }}" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
     name: Build ${{ matrix.edition }}
     needs: plan
-    # No `container:` here on purpose. A hosted runner has ONE disk: / is 72 GB
-    # with only ~13 GB free out of the box, and /mnt is NOT a separate volume on
-    # the current image — it lives on that same /dev/root. So there is no big
-    # scratch disk to grab; the only lever is reclaiming the ~30 GB of
-    # preinstalled SDKs/tool-cache, which jlumbroso/free-disk-space takes to
-    # ~44 GB free. We then run archiso in an Arch container we launch by hand and
-    # build onto that freed root via AX_BUILD_DIR=/mnt/axbuild (same disk).
-    # 44 GB clears home/gaming/netinstall comfortably; Fallen (~42 GB peak) is
-    # right at the ceiling — see its guard below.
     runs-on: ubuntu-latest
+    timeout-minutes: 355
     strategy:
       fail-fast: false
       matrix:
         edition: ${{ fromJSON(needs.plan.outputs.editions) }}
+    env:
+      EDITION: ${{ matrix.edition }}
+      VERSION: ${{ needs.plan.outputs.version }}
+      PUBLISH: ${{ needs.plan.outputs.publish }}
+      SF_USER: ${{ vars.SF_USER }}
+      SF_PROJECT: ${{ vars.SF_PROJECT }}
     steps:
       - name: Free disk space (reclaim preinstalled SDKs + tool cache)
         uses: jlumbroso/free-disk-space@v1.3.1
@@ -83,11 +101,6 @@ jobs:
           swap-storage: true
 
       - name: Reclaim the extra runner cruft jlumbroso misses
-        # Fallen's pacstrap needs ~37 GB to install but pacman counts the ~7 GB
-        # download cache on the same filesystem, so ~46 GB free still comes up
-        # ~3 GB short. These dirs (Swift, PowerShell, gcloud, Azure CLI, extra
-        # JDKs/GraalVM, bundled node/boost) are another ~6-8 GB the runner ships
-        # and we never use — clearing them puts Fallen comfortably over the line.
         run: |
           sudo rm -rf \
             /usr/share/swift \
@@ -98,7 +111,6 @@ jobs:
             /usr/local/share/chromium /usr/local/lib/node_modules \
             /usr/share/miniconda /opt/pipx \
             /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
-          # Extra JVMs (keep whatever the default-java symlink points at).
           sudo bash -c 'ls -d /usr/lib/jvm/* 2>/dev/null | grep -v "$(readlink -f /usr/lib/jvm/default 2>/dev/null)" | xargs -r rm -rf' || true
 
       - name: Show available disk space
@@ -111,64 +123,113 @@ jobs:
           sudo mkdir -p /mnt/axbuild
           docker run --rm --privileged \
             -v "$PWD":/work -v /mnt/axbuild:/mnt/axbuild -w /work \
-            -e AX_BUILD_DIR=/mnt/axbuild \
+            -e AX_BUILD_DIR=/mnt/axbuild -e EDITION \
             archlinux:latest bash -c '
               set -euo pipefail
               pacman -Syu --noconfirm --needed \
                 archiso git grub syslinux libisoburn squashfs-tools \
                 mtools dosfstools e2fsprogs erofs-utils
               pacman -Scc --noconfirm || true
-              ./build.sh --${{ matrix.edition }}
+              # Once mkarchiso has installed the packages, the ~9 GB of downloads in the
+              # cache are dead weight for the rest of the build: drop them.
+              ( stamp="/mnt/axbuild/${EDITION}/work/base._make_packages"
+                while [ ! -e "$stamp" ]; do sleep 30; done
+                rm -rf /var/cache/pacman/pkg/*
+                echo "[ci] package cache dropped after install" ) &
+              ./build.sh --"${EDITION}"
             '
 
-      - name: Rename ISO to release asset name
+      - name: Name and checksum the ISO
         run: |
-          case "${{ matrix.edition }}" in
-            home)      asset="archangelos-home.iso" ;;
-            gaming)    asset="archangelos-game-edition.iso" ;;
-            fallen)    asset="archangelos-fallen.iso" ;;
-            netinstall) asset="archangelos-netinstall.iso" ;;
+          case "$EDITION" in
+            home)       base="archangelos-home" ;;
+            gaming)     base="archangelos-game-edition" ;;
+            fallen)     base="archangelos-fallen" ;;
+            netinstall) base="archangelos-netinstall" ;;
           esac
-          iso="$(sudo find /mnt/axbuild/${{ matrix.edition }}/out -maxdepth 1 -name '*.iso' | head -n 1)"
+          asset="${base}-${VERSION}.iso"
+          iso="$(sudo find /mnt/axbuild/$EDITION/out -maxdepth 1 -name '*.iso' | head -n 1)"
           test -n "${iso}"
           sudo mv "${iso}" "${asset}"
           sudo chown "$(id -u):$(id -g)" "${asset}"
+          sha256sum "${asset}" > "${asset}.sha256"
           ls -lh "${asset}"
           echo "ASSET=${asset}" >> "$GITHUB_ENV"
+          echo "$(stat -c %s "${asset}")" > "${asset}.size"
 
-      - name: Checksum
-        run: sha256sum "${{ env.ASSET }}" > "${{ env.ASSET }}.sha256"
+      - name: Upload to SourceForge
+        if: env.PUBLISH == 'true'
+        env:
+          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+        run: |
+          test -n "$SF_SSH_KEY" && test -n "$SF_USER" && test -n "$SF_PROJECT" || {
+            echo "::error::SF_SSH_KEY secret and SF_USER / SF_PROJECT variables must be set to publish"; exit 1; }
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SF_SSH_KEY" > ~/.ssh/sf && chmod 600 ~/.ssh/sf
+          ssh-keyscan -H frs.sourceforge.net >> ~/.ssh/known_hosts 2>/dev/null
+          dest="/home/frs/project/${SF_PROJECT}/${VERSION}"
+          ssh_cmd="ssh -i $HOME/.ssh/sf -o IdentitiesOnly=yes"
+          # make the version folder (an existing one is fine)
+          printf -- '-mkdir %s\n' "$dest" | sftp -i ~/.ssh/sf -o IdentitiesOnly=yes -b - "${SF_USER}@frs.sourceforge.net"
+          for attempt in 1 2 3 4; do
+            rsync -av --partial --progress -e "$ssh_cmd" \
+              "${ASSET}" "${ASSET}.sha256" "${SF_USER}@frs.sourceforge.net:${dest}/" && break
+            echo "upload failed (attempt $attempt), retrying"; sleep $((attempt * 30))
+          done
+          rm -f ~/.ssh/sf
 
-      - name: Upload ISO
+      - name: Keep the checksum (and NetInstall) for the release
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.edition }}-iso
+          name: ${{ matrix.edition }}-release
           path: |
-            ${{ env.ASSET }}
             ${{ env.ASSET }}.sha256
+            ${{ env.ASSET }}.size
+            ${{ matrix.edition == 'netinstall' && env.ASSET || '' }}
           retention-days: 7
           compression-level: 0
 
   release:
-    name: Attach ISOs to release
+    name: Publish GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [plan, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      SF_PROJECT: ${{ vars.SF_PROJECT }}
     steps:
       - uses: actions/download-artifact@v4
         with:
-          path: isos
+          path: rel
           merge-multiple: true
 
-      - name: List collected assets
-        run: ls -lh isos
+      - name: Write release notes
+        run: |
+          ls -lh rel
+          {
+            echo "## Downloads"
+            echo
+            echo "| Edition | ISO | Size | SHA256 |"
+            echo "|---|---|---|---|"
+            for f in rel/*.sha256; do
+              iso="$(basename "${f%.sha256}")"
+              sum="$(cut -d' ' -f1 "$f")"
+              size="$(numfmt --to=iec --suffix=B "$(cat "rel/${iso}.size")")"
+              url="https://sourceforge.net/projects/${SF_PROJECT}/files/${VERSION}/${iso}/download"
+              echo "| ${iso%-${VERSION}.iso} | [${iso}](${url}) | ${size} | \`${sum}\` |"
+            done
+            echo
+            echo "All ISOs are hosted on [SourceForge](https://sourceforge.net/projects/${SF_PROJECT}/files/${VERSION}/); NetInstall is also attached below."
+          } > notes.md
+          cat notes.md
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: notes.md
           files: |
-            isos/*.iso
-            isos/*.sha256
+            rel/*.iso
+            rel/*.sha256
           generate_release_notes: true
