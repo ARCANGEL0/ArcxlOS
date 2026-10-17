@@ -327,6 +327,7 @@ tinc
 tinyproxy
 tor
 tor-router
+torctl
 torsocks
 tplmap
 traceroute
