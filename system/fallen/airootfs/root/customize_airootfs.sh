@@ -261,6 +261,9 @@ Relogin=false
 [General]
 GreeterEnvironment=QT_QUICK_CONTROLS_STYLE=Basic
 SDDMEOF
+mkdir -p /var/lib/sddm
+printf '[Last]\nSession=/usr/share/wayland-sessions/hyprland.desktop\nUser=liveuser\n' > /var/lib/sddm/state.conf
+chown -R sddm:sddm /var/lib/sddm 2>/dev/null || true
 
 if [ -d /usr/share/wayland-sessions ] && [ -f /usr/share/wayland-sessions/hyprland.desktop ]; then
   sed -i 's|^Name=.*|Name=ArchangelOS Fallen (Hyprland)|' /usr/share/wayland-sessions/hyprland.desktop
