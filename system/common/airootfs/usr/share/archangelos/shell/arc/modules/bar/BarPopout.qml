@@ -51,8 +51,10 @@ PopupWindow {
     anchor.margins.left: -2           // sit flush against the bar edge
 
     visible: pop.shown || body.opacity > 0.01   // stay mapped through the fade-out
-    implicitHeight: pop.bodyHeight + Config.popFillet * 2
+    implicitHeight: pop.bodyHeight + Config.popFillet * 2 + pop.topPad
     property real botPad: Config.popFillet   // set by reportPopBox when the screen edge crowds the body
+    // ArchangelOS: extra room above the body, so a pane near the top clears the top-left notch
+    property real topPad: 0
     color: "transparent"
 
     onShownChanged: {
