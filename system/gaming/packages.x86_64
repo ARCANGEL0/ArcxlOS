@@ -415,6 +415,4 @@ wget
 chafa
 
 ### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
-libwpe
-wpebackend-fdo
 wpewebkit
