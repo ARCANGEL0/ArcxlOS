@@ -369,6 +369,4 @@ ttf-nerd-fonts-symbols-mono
 xcb-util-cursor
 
 ### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
-libwpe
-wpebackend-fdo
 wpewebkit
