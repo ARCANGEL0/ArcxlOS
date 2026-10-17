@@ -289,7 +289,7 @@ PanelWindow {
             if (Popups.miniPlayerOpen) return Math.round(Theme.notchHeight * root.localScale) + miniPlayerView.height + Math.round(16 * root.localScale);
             if (ShellState.screenRecord && !ScreenRecService.recording && ScreenRecService.optionsExpanded) return Math.round(Theme.notchHeight * root.localScale) + screenRecOptionsPopupView.height + Math.round(16 * root.localScale);
             // ArchangelOS: taller island while a track plays (clock + media controls)
-            if (MediaService.activePlayer !== null) return Math.round((Theme.notchHeight + 46) * root.localScale);
+            if (MediaService.activePlayer !== null) return Math.round((Theme.notchHeight + 56) * root.localScale);
             return Math.round(Theme.notchHeight * root.localScale);
         }
         rightNotchWidth: {
@@ -366,7 +366,8 @@ PanelWindow {
         Item {
             id: centerNotchHead
             width: parent.width
-            height: Math.round(Theme.notchHeight * root.localScale)
+            // ArchangelOS: grow to the full island when the media player is up, so the clock isn't clipped
+            height: (MediaService.activePlayer !== null && !SurfaceState.isTopExpanded && !Popups.miniPlayerOpen) ? parent.height : Math.round(Theme.notchHeight * root.localScale)
             anchors.top: parent.top
             
             CenterContent {

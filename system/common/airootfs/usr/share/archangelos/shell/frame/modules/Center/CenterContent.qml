@@ -323,13 +323,16 @@ Item {
 				// ── Clock + media (the island's resting face) ──────────────────
 				Column {
 					visible: modelData === "clock"
-					anchors.centerIn: parent
-					spacing: root.mediaUp ? Math.round(1 * localScale) : 0
+					anchors.horizontalCenter: parent.horizontalCenter
+					anchors.verticalCenter: root.mediaUp ? undefined : parent.verticalCenter
+					anchors.top: root.mediaUp ? parent.top : undefined
+					anchors.topMargin: root.mediaUp ? Math.round(11 * localScale) : 0
+					spacing: root.mediaUp ? Math.round(2 * localScale) : 0
 
 					Item {
 						anchors.horizontalCenter: parent.horizontalCenter
 						width:  clk.implicitWidth
-						height: Math.round((root.mediaUp ? 15 : 22) * localScale)
+						height: Math.round((root.mediaUp ? 19 : 22) * localScale)
 						Clock {
 							id: clk
 							localScale: root.localScale
@@ -339,18 +342,19 @@ Item {
 						}
 					}
 
-					// media: fading title/artist, then prev / play-pause / next + cava
+					// media: fading title/artist, controls, and a cava strip spanning the island
 					Column {
 						visible: root.mediaUp
 						opacity: root.mediaUp ? 1 : 0
 						Behavior on opacity { NumberAnimation { duration: Anim.transition } }
 						anchors.horizontalCenter: parent.horizontalCenter
-						spacing: Math.round(1 * localScale)
+						width: Math.round((Theme.cNotchMinWidth - Theme.notchPadding * 2) * localScale)
+						spacing: Math.round(2 * localScale)
 
+						// fading title / artist — full island width
 						Item {
 							id: nowText
-							anchors.horizontalCenter: parent.horizontalCenter
-							width:  Math.round(210 * localScale)
+							width: parent.width
 							height: Math.round(13 * localScale)
 							property bool showArtist: false
 							Timer { interval: 3400; running: root.mediaUp; repeat: true; onTriggered: nowText.showArtist = !nowText.showArtist }
@@ -372,17 +376,17 @@ Item {
 							}
 						}
 
+						// controls — centred
 						Row {
 							anchors.horizontalCenter: parent.horizontalCenter
-							spacing: Math.round(6 * localScale)
-
+							spacing: Math.round(16 * localScale)
 							Repeater {
 								model: ["prev", "play", "next"]
 								delegate: Item {
 									required property string modelData
 									readonly property bool isPlay: modelData === "play"
-									width:  Math.round((isPlay ? 22 : 18) * localScale)
-									height: Math.round(18 * localScale)
+									width:  Math.round((isPlay ? 20 : 16) * localScale)
+									height: Math.round(16 * localScale)
 									anchors.verticalCenter: parent.verticalCenter
 									Text {
 										anchors.centerIn: parent
@@ -401,26 +405,32 @@ Item {
 									}
 								}
 							}
+						}
 
-							// compact cava strip
+						// cava — spans the island corner to corner
+						Item {
+							id: cavaStrip
+							width: parent.width
+							height: Math.round(14 * localScale)
+							visible: PrefsService.enableVisualiser
+							readonly property int n: 44
+							readonly property real bw: Math.round(2 * localScale)
 							Row {
-								anchors.verticalCenter: parent.verticalCenter
-								spacing: Math.round(2 * localScale)
-								visible: PrefsService.enableVisualiser
+								anchors.fill: parent
+								spacing: Math.max(1, (cavaStrip.width - cavaStrip.n * cavaStrip.bw) / (cavaStrip.n - 1))
 								Repeater {
-									model: 16
+									model: cavaStrip.n
 									delegate: Item {
 										required property int index
-										readonly property int amp: root._bars[index] !== undefined ? root._bars[index] : 0
-										width: Math.round(2 * localScale)
-										height: Math.round(16 * localScale)
-										anchors.verticalCenter: parent.verticalCenter
+										readonly property int amp: root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] !== undefined ? root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] : 0
+										width: cavaStrip.bw
+										height: cavaStrip.height
 										Rectangle {
 											anchors.centerIn: parent
-											width: Math.round(2 * localScale)
-											height: Math.max(2, (amp / 100.0) * Math.round(15 * localScale))
+											width: cavaStrip.bw
+											height: Math.max(2, (amp / 100.0) * cavaStrip.height)
 											radius: width / 2
-											color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.3 + (amp / 100.0) * 0.7)
+											color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28 + (amp / 100.0) * 0.72)
 										}
 									}
 								}
