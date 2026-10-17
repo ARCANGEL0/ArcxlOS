@@ -143,6 +143,14 @@ jobs:
             echo "::error::SF_SSH_KEY secret and SF_USER / SF_PROJECT variables must be set to publish"; exit 1; }
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SF_SSH_KEY" > ~/.ssh/sf && chmod 600 ~/.ssh/sf
+          if ssh-keygen -y -f ~/.ssh/sf >/dev/null 2>/tmp/keyerr; then
+            echo "SSH key parsed OK. Public fingerprint (must match SourceForge > Account > SSH Settings):"
+            ssh-keygen -lf ~/.ssh/sf
+          else
+            echo "::error::SF_SSH_KEY is not a valid private key. Paste the WHOLE key file, including the"
+            echo "::error::-----BEGIN...----- and -----END...----- lines and all line breaks."
+            cat /tmp/keyerr; exit 1
+          fi
           ssh-keyscan -H frs.sourceforge.net >> ~/.ssh/known_hosts 2>/dev/null
           dest="/home/frs/project/${SF_PROJECT}/${VERSION}"
           ssh_cmd="ssh -i $HOME/.ssh/sf -o IdentitiesOnly=yes"
