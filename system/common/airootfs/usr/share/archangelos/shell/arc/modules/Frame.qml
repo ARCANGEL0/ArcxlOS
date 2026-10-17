@@ -75,8 +75,10 @@ PanelWindow {
             property real popK: 34    // popout bulge smoothing
             // Open popout body in screen px. Only the SIZE animates — a snapping position keeps
             // a switch to a neighbouring widget from flying the bulge across the bar.
-            property real bw: PopoutState.box.z
-            property real bh: PopoutState.box.w
+            // ArchangelOS: the dock's own panes ("bar") are drawn by the main shell surface instead
+            readonly property bool dockPane: PopoutState.owner === "bar"
+            property real bw: dockPane ? 0 : PopoutState.box.z
+            property real bh: dockPane ? 0 : PopoutState.box.w
             // Duration, not `enabled`: disabling a Behavior doesn't stop an animation in flight.
             Behavior on bw { NumberAnimation { duration: PopoutState.animated ? Motion.spatialDur : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Motion.spatialCurve } }
             Behavior on bh { NumberAnimation { duration: PopoutState.animated ? Motion.spatialDur : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Motion.spatialCurve } }
@@ -152,7 +154,7 @@ PanelWindow {
             }
 
             // Declared after the borders, so a plate overlaps the one it flows out of.
-            Plate { box: PopoutState.box;  anchor: PopoutState.anchor;  eased: PopoutState.animated }
+            Plate { box: PopoutState.owner === "bar" ? Qt.vector4d(0, 0, 0, 0) : PopoutState.box;  anchor: PopoutState.anchor;  eased: PopoutState.animated }
             Plate { box: PopoutState.box2; anchor: PopoutState.anchor2 }
             // Slot 3 reports live geometry every frame; easing here would lag the panel.
             Plate { box: PopoutState.box3; anchor: PopoutState.anchor3; eased: false }

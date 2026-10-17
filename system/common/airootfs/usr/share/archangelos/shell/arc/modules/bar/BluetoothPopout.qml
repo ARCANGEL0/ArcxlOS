@@ -17,7 +17,7 @@ BarPopout {
     ColumnLayout {
         id: btCol
         anchors { top: parent.top; left: parent.left; right: parent.right
-                  topMargin: 14 + Config.popFillet * 2 - pop.botPad; leftMargin: 16; rightMargin: 16 }
+                  topMargin: 14 + Config.popFillet * 2 - pop.botPad + pop.topPad; leftMargin: 16; rightMargin: 16 }
         spacing: 8
 
         Text { text: "Bluetooth"; color: Config.fg; font.family: Config.textFont; font.pixelSize: 15; font.bold: true }

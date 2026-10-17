@@ -39,7 +39,7 @@ BarPopout {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 14
-        anchors.topMargin: 14 + Config.popFillet * 2 - pop.botPad
+        anchors.topMargin: 14 + Config.popFillet * 2 - pop.botPad + pop.topPad
         anchors.bottomMargin: 14 + pop.botPad
         spacing: 9
 

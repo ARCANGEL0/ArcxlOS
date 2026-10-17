@@ -29,7 +29,7 @@ BarPopout {
     ColumnLayout {
         id: powerCol
         anchors { top: parent.top; left: parent.left; right: parent.right
-                  topMargin: 12 + Config.popFillet * 2 - pop.botPad; leftMargin: 10; rightMargin: 10 }
+                  topMargin: 12 + Config.popFillet * 2 - pop.botPad + pop.topPad; leftMargin: 10; rightMargin: 10 }
         spacing: 2
 
         Repeater {
