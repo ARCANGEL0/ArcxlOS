@@ -17,28 +17,18 @@
    "icon": "🌐",
    "items": [
     {
-     "name": "Firefox",
-     "exec": "firefox",
-     "terminal": false
-    },
-    {
      "name": "LibreWolf",
      "exec": "librewolf",
      "terminal": false
     },
     {
-     "name": "Chromium",
-     "exec": "chromium",
+     "name": "Tor Browser",
+     "exec": "torbrowser-launcher",
      "terminal": false
     },
     {
      "name": "Thunderbird",
      "exec": "thunderbird",
-     "terminal": false
-    },
-    {
-     "name": "Tor Browser",
-     "exec": "torbrowser-launcher",
      "terminal": false
     },
     {
@@ -114,6 +104,26 @@
     {
      "name": "aria2",
      "exec": "aria2",
+     "terminal": true
+    },
+    {
+     "name": "HexChat",
+     "exec": "hexchat",
+     "terminal": false
+    },
+    {
+     "name": "Konversation",
+     "exec": "konversation",
+     "terminal": false
+    },
+    {
+     "name": "WeeChat",
+     "exec": "weechat",
+     "terminal": true
+    },
+    {
+     "name": "Irssi",
+     "exec": "irssi",
      "terminal": true
     }
    ],
