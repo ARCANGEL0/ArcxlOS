@@ -630,7 +630,6 @@ unicorn
 python-pipx
 
 ### RedOps tools (official repos, verified)
-aws-cli
 azure-cli
 binutils
 compiler-rt
