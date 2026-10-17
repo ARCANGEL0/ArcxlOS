@@ -154,11 +154,15 @@ ax_build() {
       done || true
   done
   rm -rf "${work_dir}"
-  mkdir -p "${work_dir}" "${out_dir}"
+  # Don't pre-create work_dir: mkarchiso cancels -r when the directory already exists.
+  mkdir -p "${out_dir}"
 
   ax_log "Building ISO via mkarchiso..."
+  # -r: drop the unpacked rootfs once it is compressed, before the ISO is written, so the
+  # rootfs, the squashfs and the ISO never sit on disk all at once (the gaming build ran
+  # out of space at exactly that point).
   ARCHANGELOS_VERSION="${AX_VERSION}" \
-    mkarchiso -v -w "${work_dir}" -o "${out_dir}" "${profile_dir}"
+    mkarchiso -v -r -w "${work_dir}" -o "${out_dir}" "${profile_dir}"
 
   echo "========================================================"
   echo "    SUCCESS! ArchangelOS ${edition} ISO build complete."
