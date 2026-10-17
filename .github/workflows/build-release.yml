@@ -162,14 +162,14 @@ jobs:
           done
           rm -f ~/.ssh/sf
 
-      - name: Keep the checksum (and NetInstall) for the release
+      - name: Keep the checksum for the release notes
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.edition }}-release
           path: |
             ${{ env.ASSET }}.sha256
             ${{ env.ASSET }}.size
-            ${{ matrix.edition == 'netinstall' && env.ASSET || '' }}
           retention-days: 7
           compression-level: 0
 
@@ -205,7 +205,7 @@ jobs:
               echo "| ${iso%-${VERSION}.iso} | [${iso}](${url}) | ${size} | \`${sum}\` |"
             done
             echo
-            echo "All ISOs are hosted on [SourceForge](https://sourceforge.net/projects/${SF_PROJECT}/files/${VERSION}/); NetInstall is also attached below."
+            echo "All ISOs are hosted on [SourceForge](https://sourceforge.net/projects/${SF_PROJECT}/files/${VERSION}/). Verify each download against its SHA256 above."
           } > notes.md
           cat notes.md
 
@@ -214,6 +214,5 @@ jobs:
         with:
           body_path: notes.md
           files: |
-            rel/*.iso
             rel/*.sha256
           generate_release_notes: true
