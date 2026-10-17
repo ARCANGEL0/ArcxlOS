@@ -206,12 +206,23 @@ PanelWindow {
                 }
             }
 
-            // network rates, stacked
-            ColumnLayout {
+            // Network — wifi/eth status + rates; hover opens the network pane
+            Item {
+                id: monNetWidget
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 2
-                spacing: 1
-                Repeater {
+                implicitWidth: netCol.implicitWidth
+                implicitHeight: netCol.implicitHeight
+                ColumnLayout {
+                    id: netCol
+                    anchors.fill: parent
+                    spacing: 1
+                    MatIcon {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: !Net.netUp ? "signal_wifi_off"
+                              : (Net.activeWifi !== null ? Net.netIcon(Net.wifiSignal) : "lan")
+                        font.pixelSize: 15; color: Net.netUp ? Config.dim : Config.tertiary
+                    }
+                    Repeater {
                     model: [["south", Sys.down, Config.accent], ["north", Sys.up, Config.tertiary]]
                     ColumnLayout {
                         id: rate
@@ -227,6 +238,12 @@ PanelWindow {
                             font.pixelSize: 8
                         }
                     }
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onEntered: bar.showPopout("netinfo"); onExited: bar.hidePopout()
+                    onClicked: bar.showPopout("netinfo")
                 }
             }
         }
@@ -703,6 +720,7 @@ PanelWindow {
     // Each anchors to its widget and shows while bar.popout names it (modules/bar/BarPopout.qml).
     // ArchangelOS: the monitor panes
     SysPopout        { bar: bar; widget: sysWidget }
+    NetInfoPopout    { bar: bar; widget: monNetWidget }
     WeatherPopout    { bar: bar; widget: weatherWidget }
     VolumePopout     { bar: bar; widget: volWidget }
     RecordingPopout  { bar: bar; widget: recWidget }

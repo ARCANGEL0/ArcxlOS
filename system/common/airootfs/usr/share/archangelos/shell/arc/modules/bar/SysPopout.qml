@@ -14,7 +14,7 @@ BarPopout {
     id: pop
     name: "sys"
     implicitWidth: 280
-    bodyHeight: 388
+    bodyHeight: 388 + ((Sys.hasGpu || Sys.hasBattery) ? 74 : 0)
     reportOnHover: true
 
     onOpened: { Sys.active = true; psTimer.start(); psProc.running = true }
@@ -86,16 +86,21 @@ BarPopout {
 
         Text { text: "SYSTEM"; color: Config.accent; font.family: Config.textFont; font.pixelSize: 11; font.bold: true; Layout.bottomMargin: 2 }
 
-        RowLayout {
+        // CPU / RAM / GPU / Disk / Battery — GPU and Battery appear only when present
+        Flow {
             Layout.fillWidth: true
-            Gauge { Layout.fillWidth: true; label: "CPU"; value: Sys.cpu; tint: Config.accent
+            spacing: 4
+            Gauge { width: (parent.width - 8) / 3; label: "CPU"; value: Sys.cpu; tint: Config.accent
                     sub: Sys.cores > 0 ? (Sys.load.toFixed(1) + "/" + Sys.cores) : (Sys.temp + "°") }
-            Gauge { Layout.fillWidth: true; label: "RAM"; value: Sys.mem; tint: Config.tertiary
+            Gauge { width: (parent.width - 8) / 3; label: "RAM"; value: Sys.mem; tint: Config.tertiary
                     sub: Sys.memUsedGb.toFixed(1) + "/" + Math.round(Sys.memTotalGb) + "G" }
-            Gauge { Layout.fillWidth: true; label: "GPU"; value: Sys.gpu; tint: Config.accent
-                    sub: Sys.hasGpu ? (Sys.gpuTemp + "°") : "n/a"; visible: Sys.hasGpu }
-            Gauge { Layout.fillWidth: true; label: "DISK"; value: Sys.disk; tint: Config.tertiary
-                    sub: Math.round(Sys.diskUsedGb) + "/" + Math.round(Sys.diskTotalGb) + "G"; visible: !Sys.hasGpu }
+            Gauge { width: (parent.width - 8) / 3; label: "GPU"; value: Sys.gpu; tint: Config.accent
+                    sub: Sys.gpuTemp + "°"; visible: Sys.hasGpu }
+            Gauge { width: (parent.width - 8) / 3; label: "DISK"; value: Sys.disk; tint: Config.tertiary
+                    sub: Math.round(Sys.diskUsedGb) + "/" + Math.round(Sys.diskTotalGb) + "G" }
+            Gauge { width: (parent.width - 8) / 3; label: "BATT"; value: Sys.batteryPct / 100
+                    tint: Sys.batteryPct <= 20 ? Config.tertiary : Config.accent
+                    sub: Sys.batteryCharging ? "chg" : (Sys.batteryPct + "%"); visible: Sys.hasBattery }
         }
 
         // --- live history chart (CPU filled, RAM line) ---
