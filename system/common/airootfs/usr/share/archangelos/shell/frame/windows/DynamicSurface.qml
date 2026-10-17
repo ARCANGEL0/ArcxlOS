@@ -103,7 +103,7 @@ PanelWindow {
         Region { x: Math.round(root.width / 2 - (160 * root.localScale) / 2); y: 0; width: Math.round(160 * root.localScale); height: 1 }
         
         // Side Notches
-        Region { x: 0; y: root.height / 2 - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.le + surfaceShape.lcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
+        Region { x: 0; y: (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnCenterY : root.height / 2) - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.le + surfaceShape.lcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
         Region { x: root.width - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)); y: root.height / 2 - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale) }
         
         // Bottom Notches
@@ -249,12 +249,22 @@ PanelWindow {
             if (SurfaceState.activeContent === "clipboard") return clipboardPopupView.popupWidth + Math.round(Theme.cornerRadius * root.localScale);
             return Math.round(Theme.popupMaxWidth * root.localScale);
         }
+        // ArchangelOS: arcshell's dock panes grow out of this same surface, so the dock and
+        // the pane are one shape — no seam where two surfaces used to meet.
+        readonly property vector4d dockPane: NSS.PopoutState.owner === "bar" ? NSS.PopoutState.box : Qt.vector4d(0, 0, 0, 0)
+        readonly property bool dockPaneOpen: !SurfaceState.isLeftCenterExpanded && dockPane.z > 1
+        // the last pane's centre is held so a closing pane sinks back where it came from
+        property real paneCY: root.height / 2
+        onDockPaneChanged: if (dockPane.z > 1) paneCY = dockPane.y + dockPane.w / 2
+        lcnCenterY: SurfaceState.isLeftCenterExpanded ? root.height / 2 : paneCY
         lcnDepth: { 
+            if (dockPaneOpen) return dockPane.x + dockPane.z - le;
             if (!SurfaceState.isLeftCenterExpanded) return 0.001; 
             if (SurfaceState.activeContent === "archMenu") return archMenuPopupView.popupWidth + Math.round(Theme.cornerRadius * root.localScale); 
             return Math.round(Theme.popupMaxWidth * root.localScale); 
         } 
         lcnHeight: { 
+            if (dockPaneOpen) return dockPane.w;
             if (!SurfaceState.isLeftCenterExpanded) return 0.001; 
             if (SurfaceState.activeContent === "archMenu") return archMenuPopupView.popupHeight + Math.round(Theme.cornerRadius * root.localScale * 2); 
             return Math.round(Theme.popupMaxHeight * root.localScale); 

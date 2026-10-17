@@ -39,7 +39,7 @@ BarPopout {
     ColumnLayout {
         id: menuCol
         anchors { top: parent.top; left: parent.left; right: parent.right
-                  topMargin: 12 + Config.popFillet * 2 - pop.botPad; leftMargin: 8; rightMargin: 8 }
+                  topMargin: 12 + Config.popFillet * 2 - pop.botPad + pop.topPad; leftMargin: 8; rightMargin: 8 }
         spacing: 2
         // implicitHeight doesn't notify reliably; a refill would otherwise leave the bulge collapsed.
         onImplicitHeightChanged: pop.report(false)

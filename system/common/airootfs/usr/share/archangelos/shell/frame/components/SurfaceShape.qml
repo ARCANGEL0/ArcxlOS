@@ -48,6 +48,8 @@ Shape {
     // --- SIDE/BOTTOM NOTCHES (0px base, grow when opened) ---
     property real lcnDepth: SurfaceState.isLeftCenterExpanded ? Math.round(Theme.popupMaxWidth * localScale) : 0.001
     property real lcnHeight: SurfaceState.isLeftCenterExpanded ? Math.round(Theme.popupMaxHeight * localScale) : 0.001
+    // ArchangelOS: the left-centre notch can sit anywhere along the bar (the dock panes grow from it)
+    property real lcnCenterY: height / 2
 
     property real rcnDepth: SurfaceState.isRightCenterExpanded ? Math.round(Theme.popupMaxWidth * localScale) : 0.001
     property real rcnHeight: SurfaceState.isRightCenterExpanded ? Math.round(Theme.popupMaxHeight * localScale) : 0.001
@@ -118,6 +120,7 @@ Shape {
     Behavior on rightNotchWidth { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
     
     Behavior on lcnDepth { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
+    Behavior on lcnCenterY { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic } }
     Behavior on lcnHeight { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
     Behavior on rcnDepth { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
     Behavior on rcnHeight { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
@@ -147,14 +150,14 @@ Shape {
         // --- INNER BOUNDARY (Counter-Clockwise) ---
         
         // LEFT-CENTER NOTCH
-        PathLine { x: le; y: (h/2) - (lcnHeight/2) - lcnFr }
-        PathArc { x: le + lcnFr; y: (h/2) - (lcnHeight/2); radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
-        PathLine { x: le + lcnDepth - lcnR; y: (h/2) - (lcnHeight/2) }
-        PathArc { x: le + lcnDepth; y: (h/2) - (lcnHeight/2) + lcnR; radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
-        PathLine { x: le + lcnDepth; y: (h/2) + (lcnHeight/2) - lcnR }
-        PathArc { x: le + lcnDepth - lcnR; y: (h/2) + (lcnHeight/2); radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
-        PathLine { x: le + lcnFr; y: (h/2) + (lcnHeight/2) }
-        PathArc { x: le; y: (h/2) + (lcnHeight/2) + lcnFr; radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
+        PathLine { x: le; y: lcnCenterY - (lcnHeight/2) - lcnFr }
+        PathArc { x: le + lcnFr; y: lcnCenterY - (lcnHeight/2); radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
+        PathLine { x: le + lcnDepth - lcnR; y: lcnCenterY - (lcnHeight/2) }
+        PathArc { x: le + lcnDepth; y: lcnCenterY - (lcnHeight/2) + lcnR; radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
+        PathLine { x: le + lcnDepth; y: lcnCenterY + (lcnHeight/2) - lcnR }
+        PathArc { x: le + lcnDepth - lcnR; y: lcnCenterY + (lcnHeight/2); radiusX: lcnR; radiusY: lcnR; direction: PathArc.Clockwise }
+        PathLine { x: le + lcnFr; y: lcnCenterY + (lcnHeight/2) }
+        PathArc { x: le; y: lcnCenterY + (lcnHeight/2) + lcnFr; radiusX: lcnFr; radiusY: lcnFr; direction: PathArc.Counterclockwise }
 
         // Left edge going down to corner
         PathLine { x: le; y: h-t-r }
