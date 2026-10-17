@@ -42,6 +42,7 @@ QtObject {
     readonly property bool batteryOpen: SurfaceState.activeContent === "battery"
     readonly property bool notificationsOpen: SurfaceState.activeContent === "notifications"
     readonly property bool archMenuOpen: SurfaceState.activeContent === "archMenu"
+    readonly property bool powerOpen:    SurfaceState.activeContent === "power"
     readonly property bool dashboardOpen: SurfaceState.activeContent === "dashboard"
     onDashboardOpenChanged: {
         if (!dashboardOpen && activeExpandedButton) {
@@ -77,6 +78,7 @@ QtObject {
     property bool wallpaperPinned:     false
     property bool quickPinned:         false
     property bool clipboardPinned:     false
+    property bool powerPinned:          false
 
     // ── Dashboard — per-page state ───────────────────────────────────────────
     property int    dashboardPageWidth: 900
@@ -167,5 +169,6 @@ QtObject {
         wallpaperPinned     = false
         quickPinned         = false
         clipboardPinned     = false
+        powerPinned         = false
     }
 }

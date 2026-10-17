@@ -298,6 +298,7 @@ PanelWindow {
             }
             if (SurfaceState.activeContent === "network") return Math.round(Theme.networkPopupWidth * root.localScale) + Math.round(Theme.cornerRadius * root.localScale);
             if (SurfaceState.activeContent === "notifications") return notifsPopupView.popupWidth + Math.round(Theme.cornerRadius * root.localScale);
+            if (SurfaceState.activeContent === "power") return Math.round(248 * root.localScale);
             return Math.round(Theme.popupMaxWidth * root.localScale);
         }
         rightNotchHeight: {
@@ -308,6 +309,7 @@ PanelWindow {
             }
             if (SurfaceState.activeContent === "network") return Math.round(648 * root.localScale);
             if (SurfaceState.activeContent === "notifications") return notifsPopupView.targetHeight;
+            if (SurfaceState.activeContent === "power") return Math.round(300 * root.localScale);
             return Math.round(Theme.popupMaxHeight * root.localScale);
         }
         
@@ -455,6 +457,23 @@ PanelWindow {
 
             
             Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
+        }
+
+        // ArchangelOS: the session/power menu, out of the top-right.
+        Item {
+            id: powerPopupView
+            anchors.fill: parent
+            opacity: SurfaceState.activeContent === "power" ? 1 : 0
+            visible: opacity > 0
+            layer.enabled: opacity > 0 && opacity < 1
+            layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - powerPopupView.opacity; brightness: -0.5 * (1 - powerPopupView.opacity) }
+            Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
+            MouseArea { anchors.fill: parent; onClicked: Popups.powerPinned = true }
+            PowerMenu {
+                localScale: root.localScale
+                anchors.centerIn: parent
+                width: parent.width - Math.round(28 * root.localScale)
+            }
         }
 
         NotificationsPopup {

@@ -55,6 +55,7 @@ Item {
         else if (SurfaceState.activeContent === "audio") Popups.audioPinned = true;
         else if (SurfaceState.activeContent === "quick") Popups.quickPinned = true;
         else if (SurfaceState.activeContent === "notifications") Popups.notificationsPinned = true;
+        else if (SurfaceState.activeContent === "power") Popups.powerPinned = true;
     }
 
     onIsInputActiveChanged: {
@@ -125,6 +126,7 @@ Item {
                 if (SurfaceState.activeContent === "wallpaper" && Popups.wallpaperPinned) return;
                 if (SurfaceState.activeContent === "quick" && Popups.quickPinned) return;
                 if (SurfaceState.activeContent === "clipboard" && Popups.clipboardPinned) return;
+                if (SurfaceState.activeContent === "power" && Popups.powerPinned) return;
                 SurfaceState.close();
             }
         }
