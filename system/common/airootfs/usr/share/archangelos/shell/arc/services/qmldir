@@ -27,3 +27,4 @@ singleton Clip Clip.qml
 singleton Idle Idle.qml
 singleton Session Session.qml
 singleton Power Power.qml
+singleton Weather Weather.qml
