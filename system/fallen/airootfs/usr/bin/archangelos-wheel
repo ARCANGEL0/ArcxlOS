@@ -585,7 +585,7 @@ class WheelView(QWidget):
         span = 360.0 / n
         gap = min(2.6, span * 0.10)
         glyph_font = QFont(self.mono, int(13 * scale))
-        label_r = (inner + outer) / 2.0
+        label_r = inner + (outer - inner) * 0.56
 
         for i, category in enumerate(self.categories):
             if skip is not None and i == skip:
@@ -707,7 +707,7 @@ class WheelView(QWidget):
         p.setPen(QPen(ACCENT, 1.8))
         p.drawPath(seg)
         mid = math.radians(index * span - 90)
-        label_r = (inner + outer) / 2.0
+        label_r = inner + (outer - inner) * 0.56
         lx = cx + label_r * math.cos(mid)
         ly = cy + label_r * math.sin(mid)
         p.setFont(QFont(self.mono, int(13 * scale)))
