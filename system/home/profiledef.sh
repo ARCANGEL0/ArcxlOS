@@ -11,7 +11,7 @@ arch="x86_64"
 pacman_conf="pacman.conf"
 
 airootfs_image_type="squashfs"
-airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '22' '-b' '1M' '-processors' '4')
+airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M' '-processors' '4')
 
 file_permissions=(
   ["/etc/shadow"]="0:0:0400"
