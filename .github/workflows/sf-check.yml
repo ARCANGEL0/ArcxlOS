@@ -1,0 +1,35 @@
+name: SourceForge key check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      SF_USER: ${{ secrets.SF_USER || vars.SF_USER }}
+      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
+    steps:
+      - name: Check SourceForge SSH access
+        env:
+          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+        run: |
+          echo "SF_USER set:    $([ -n "$SF_USER" ] && echo yes || echo NO)"
+          echo "SF_PROJECT set: $([ -n "$SF_PROJECT" ] && echo yes || echo NO)"
+          echo "SF_SSH_KEY set: $([ -n "$SF_SSH_KEY" ] && echo yes || echo NO)"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SF_SSH_KEY" > ~/.ssh/sf && chmod 600 ~/.ssh/sf
+          if ssh-keygen -y -f ~/.ssh/sf >/dev/null 2>/tmp/e; then
+            echo "SSH key parses OK. Public fingerprint (compare to SourceForge > Account > SSH Settings):"
+            ssh-keygen -lf ~/.ssh/sf
+          else
+            echo "::error::SF_SSH_KEY is NOT a valid private key — paste the whole key file, headers and newlines included."
+            cat /tmp/e; exit 1
+          fi
+          ssh-keyscan -H frs.sourceforge.net >> ~/.ssh/known_hosts 2>/dev/null
+          echo "--- attempting SSH auth to frs.sourceforge.net as '$SF_USER' ---"
+          set +e
+          echo "pwd" | sftp -i ~/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes -v \
+            "${SF_USER}@frs.sourceforge.net" 2>&1 \
+            | grep -iE "Authenticated to|Permission denied|Offering public key|Server accepts key|Connected to|sftp>|Remote working" | head -30
+          echo "--- end ---"
