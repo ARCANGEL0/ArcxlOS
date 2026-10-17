@@ -1,0 +1,19 @@
+#!/bin/sh
+# anonsurf — familiar front-end over BlackArch's torctl: route all system traffic
+# (and DNS) through Tor. AnonSurf itself is a Parrot/Kali tool never packaged for
+# Arch; torctl is the BlackArch equivalent and does the same job.
+run() { if [ "$(id -u)" -eq 0 ]; then torctl "$@"; else sudo torctl "$@"; fi; }
+case "${1:-}" in
+  start|stop|restart|status)  run "$1" ;;
+  change|changeid|newid|switch|myip|ip|version|autostart) 
+      case "$1" in change|changeid|newid) set -- switch ;; ip) set -- myip ;; esac
+      run "$1" ;;
+  ""|help|-h|--help)
+      echo "anonsurf — whole-system Tor routing (via torctl)"
+      echo "  anonsurf start     route all traffic through Tor"
+      echo "  anonsurf stop      restore normal networking"
+      echo "  anonsurf status    show current state"
+      echo "  anonsurf change    new Tor circuit / identity"
+      echo "  anonsurf myip      show current exit IP" ;;
+  *)  run "$@" ;;
+esac
