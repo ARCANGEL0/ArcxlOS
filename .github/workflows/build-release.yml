@@ -65,8 +65,8 @@ jobs:
       EDITION: ${{ matrix.edition }}
       VERSION: ${{ needs.plan.outputs.version }}
       PUBLISH: ${{ needs.plan.outputs.publish }}
-      SF_USER: ${{ vars.SF_USER }}
-      SF_PROJECT: ${{ vars.SF_PROJECT }}
+      SF_USER: ${{ secrets.SF_USER || vars.SF_USER }}
+      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
     steps:
       - name: Free disk space (reclaim preinstalled SDKs + tool cache)
         uses: jlumbroso/free-disk-space@v1.3.1
@@ -174,7 +174,7 @@ jobs:
       contents: write
     env:
       VERSION: ${{ needs.plan.outputs.version }}
-      SF_PROJECT: ${{ vars.SF_PROJECT }}
+      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
     steps:
       - uses: actions/download-artifact@v4
         with:
