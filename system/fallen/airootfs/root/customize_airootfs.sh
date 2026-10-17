@@ -80,6 +80,9 @@ ln -sf /usr/share/applications/archangelos-gui-installer.desktop /etc/skel/Deskt
 ln -sf /usr/share/applications/archangelos-gui-installer.desktop /home/liveuser/Desktop/archangelos-gui-installer.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/org.wireshark.Wireshark.desktop /home/liveuser/Desktop/wireshark.desktop 2>/dev/null || true
 ln -sf /usr/share/applications/zenmap.desktop /home/liveuser/Desktop/zenmap.desktop 2>/dev/null || true
+for d in librewolf torbrowser; do
+  ln -sf /usr/share/applications/$d.desktop /home/liveuser/Desktop/$d.desktop 2>/dev/null || true
+done
 chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/null || true
 
 cp -r /etc/skel/. /root/.
@@ -245,8 +248,15 @@ for target in /home/liveuser/.config/mimeapps.list /root/.config/mimeapps.list /
   grep -q '^\[Default Applications\]' "$target" 2>/dev/null || printf '[Default Applications]\n' >> "$target"
   grep -q '^inode/directory=' "$target" 2>/dev/null || \
     sed -i '/^\[Default Applications\]/a inode/directory=org.kde.dolphin.desktop' "$target"
+  for h in x-scheme-handler/http x-scheme-handler/https text/html x-scheme-handler/about x-scheme-handler/unknown; do
+    grep -q "^${h}=" "$target" 2>/dev/null || \
+      sed -i "/^\[Default Applications\]/a ${h}=librewolf.desktop" "$target"
+  done
 done
 chown liveuser:users /home/liveuser/.config/mimeapps.list 2>/dev/null || true
+if [ -x /usr/bin/librewolf ]; then
+  su - liveuser -c 'xdg-settings set default-web-browser librewolf.desktop' 2>/dev/null || true
+fi
 
 mkdir -p /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/10-archangelos.conf << 'SDDMEOF'
@@ -284,7 +294,7 @@ fi
 
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
-AUR_PKGS="anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
+AUR_PKGS="hexchat anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
