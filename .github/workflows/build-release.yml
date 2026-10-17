@@ -11,8 +11,8 @@ name: Build and Release ISOs
 # One-time setup (repo Settings -> Secrets and variables -> Actions):
 #   secret   SF_SSH_KEY   private key whose public half is in SourceForge ->
 #                         Account Settings -> SSH Settings
-#   variable SF_USER      your SourceForge username
-#   variable SF_PROJECT   the SourceForge project's unix name (the URL slug)
+#   SF_USER      your SourceForge username (secret OR variable)
+#   SF_PROJECT   the SourceForge project's unix name / URL slug (secret OR variable)
 #
 # Hand-dispatch builds one edition (or all) for testing; they only reach SourceForge
 # when `publish` is ticked.
@@ -86,8 +86,8 @@ jobs:
       EDITION: ${{ matrix.edition }}
       VERSION: ${{ needs.plan.outputs.version }}
       PUBLISH: ${{ needs.plan.outputs.publish }}
-      SF_USER: ${{ vars.SF_USER }}
-      SF_PROJECT: ${{ vars.SF_PROJECT }}
+      SF_USER: ${{ secrets.SF_USER || vars.SF_USER }}
+      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
     steps:
       - name: Free disk space (reclaim preinstalled SDKs + tool cache)
         uses: jlumbroso/free-disk-space@v1.3.1
@@ -198,7 +198,7 @@ jobs:
       contents: write
     env:
       VERSION: ${{ needs.plan.outputs.version }}
-      SF_PROJECT: ${{ vars.SF_PROJECT }}
+      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
     steps:
       - uses: actions/download-artifact@v4
         with:
