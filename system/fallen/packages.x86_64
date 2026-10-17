@@ -6,7 +6,6 @@ alsa-utils
 amass
 amd-ucode
 androguard
-aquatone
 arch-install-scripts
 archlinux-keyring
 argon2
@@ -49,6 +48,7 @@ bluez-utils
 bridge-utils
 brltty
 broadcom-wl-dkms
+linux-headers
 btrfs-progs
 bulk-extractor
 bully
@@ -107,7 +107,6 @@ evil-winrm
 evilginx
 exiv2
 expac
-eyewitness
 f2fs-tools
 fcrackzip
 feh
@@ -282,7 +281,6 @@ scalpel
 scanmem
 scapy
 scrapy
-scrot
 sed
 shellcheck
 shellter

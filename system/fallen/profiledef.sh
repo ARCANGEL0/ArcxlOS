@@ -39,5 +39,6 @@ file_permissions=(
   ["/usr/bin/archangelos-redops-tools"]="0:0:0755"
   ["/usr/bin/archangelos-install-tool"]="0:0:0755"
   ["/usr/bin/archangelos-install-arsenal"]="0:0:0755"
+  ["/usr/bin/onionchat"]="0:0:0755"
   ["/usr/bin/archangelos-fastfetch-setup"]="0:0:0755"
 )
