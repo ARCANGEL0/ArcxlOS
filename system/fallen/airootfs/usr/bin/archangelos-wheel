@@ -665,8 +665,11 @@ class WheelView(QWidget):
         self._draw_wheel(p, wc, scale, alpha, skip=lay["index"])
 
         reveal = _clamp01((self.anim - 0.28) / 0.55)
-        btn = _lerp_pt(lay["btn_from"], lay["btn_to"], e)
-        cat = self.categories[lay["index"]]
+        dx, dy = lay["d"]
+        pop = e * 30.0                       # how far the wedge slides out of the ring
+        outer_s = self.outer * scale
+        # traces leave from the outer edge of the popped wedge
+        btn = QPointF(wc.x() + dx * (outer_s + pop), wc.y() + dy * (outer_s + pop))
 
         # traces first, so the nodes sit on top
         for j, c in enumerate(lay["chips"]):
@@ -680,31 +683,39 @@ class WheelView(QWidget):
                 continue
             self._draw_chip(p, c, ca, j == self.app_sel)
 
-        # the popped category button, bright, on top
-        self._draw_button(p, btn, cat, _clamp01(self.anim / 0.5))
+        # the selected spoke itself, kept in its wheel-wedge shape, slid out and lit
+        self._draw_popped_segment(p, wc, scale, lay["index"], dx, dy, pop)
 
-    def _draw_button(self, p, c, cat, a):
-        glyph = CATEGORY_GLYPH.get(cat, DEFAULT_GLYPH)
-        label = cat.upper()
-        p.setFont(QFont(self.mono, 9, QFont.Weight.Bold))
-        fm = QFontMetrics(p.font())
-        tw = fm.horizontalAdvance(label)
-        w = tw + 54
-        h = 32
-        rect = QRectF(c.x() - w / 2, c.y() - h / 2, w, h)
-        grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
-        grad.setColorAt(0.0, self._a(QColor(150, 46, 52), a))
-        grad.setColorAt(1.0, self._a(QColor(96, 30, 34), a))
+    def _draw_popped_segment(self, p, wc, scale, index, dx, dy, pop):
+        """Draw the selected category as its own wheel wedge, slid out by `pop`
+        along the click direction and lit — same shape it had in the ring."""
+        cx, cy = wc.x(), wc.y()
+        outer = self.outer * scale
+        inner = self.inner * scale
+        n = max(len(self.categories), 1)
+        span = 360.0 / n
+        gap = min(2.6, span * 0.10)
+        c0 = index * span - span / 2 + gap / 2
+        c1 = index * span + span / 2 - gap / 2
+        seg = self._segment_path(cx, cy, outer, inner, c0, c1)
+        p.save()
+        p.translate(dx * pop, dy * pop)
+        grad = QRadialGradient(cx, cy, outer)
+        grad.setColorAt(inner / outer, QColor(96, 32, 36))
+        grad.setColorAt(1.0, QColor(150, 46, 52))
         p.setBrush(QBrush(grad))
-        p.setPen(QPen(self._a(ACCENT, a), 1.6))
-        p.drawRoundedRect(rect, 9, 9)
-        p.setFont(QFont(self.mono, 12))
-        p.setPen(self._a(TEXT, a))
-        p.drawText(QRectF(rect.left() + 8, rect.top(), 22, h),
-                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter, glyph)
-        p.setFont(QFont(self.mono, 9, QFont.Weight.Bold))
-        p.drawText(QRectF(rect.left() + 30, rect.top(), w - 36, h),
-                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, label)
+        p.setPen(QPen(ACCENT, 1.8))
+        p.drawPath(seg)
+        mid = math.radians(index * span - 90)
+        label_r = (inner + outer) / 2.0
+        lx = cx + label_r * math.cos(mid)
+        ly = cy + label_r * math.sin(mid)
+        p.setFont(QFont(self.mono, int(13 * scale)))
+        p.setPen(TEXT)
+        p.drawText(QRectF(lx - 18, ly - 13, 36, 26),
+                   Qt.AlignmentFlag.AlignCenter,
+                   CATEGORY_GLYPH.get(self.categories[index], DEFAULT_GLYPH))
+        p.restore()
 
     def _draw_chip(self, p, c, a, selected):
         rect = c["rect"]
