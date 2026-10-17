@@ -18,18 +18,16 @@ import os
 import re
 import json
 import math
+import time
 import subprocess
 
 from PyQt6.QtCore import Qt, QRectF, QPointF, QTimer, QSize, QByteArray
 from PyQt6.QtGui import (
     QPixmap, QImage, QFont, QFontDatabase, QColor, QPainter, QPen, QBrush,
     QGuiApplication, QKeySequence, QShortcut, QPainterPath, QRadialGradient,
-    QCursor
+    QLinearGradient, QFontMetrics, QCursor
 )
-from PyQt6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QFrame
-)
+from PyQt6.QtWidgets import QApplication, QWidget
 
 try:
     from PyQt6.QtSvg import QSvgRenderer
@@ -318,12 +316,30 @@ def launch_tool(exec_cmd):
         pass
 
 
+def _lerp(a, b, t):
+    return a + (b - a) * t
+
+
+def _lerp_pt(a, b, t):
+    return QPointF(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t)
+
+
+def _ease_out(t):
+    return 1.0 - (1.0 - t) ** 3
+
+
+def _clamp01(t):
+    return 0.0 if t < 0 else (1.0 if t > 1 else t)
+
+
 class WheelView(QWidget):
-    """Radial donut of security-tool categories, cyber-samurai HUD."""
+    """Radial donut of security-tool categories; clicking one expands it into an
+    arsenal of app nodes wired to the category by PCB-style traces."""
 
     def __init__(self, categories, mono, parent=None):
         super().__init__(parent)
         self.categories = sorted(categories.keys())
+        self.catalog = categories
         self.counts = {c: len(categories[c]) for c in self.categories}
         self.parent_window = parent
         self.mono = mono
@@ -336,11 +352,30 @@ class WheelView(QWidget):
         self.center = None            # QPointF in widget coords; set on open
         self._emblem = None
         self._emblem_px = 0
+        # --- expansion state ---
+        self.expanding = False        # True while a category is (or is becoming) open
+        self.anim = 0.0               # 0 = wheel, 1 = fully expanded
+        self.sel = 0                  # expanded category index
+        self.app_sel = 0             # highlighted app node
+        self.layout = None            # geometry of the expanded arsenal
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
-        self._timer.start(40)
+        self._timer.start(16)
+        self._last = None
 
     def _tick(self):
+        now = time.monotonic()
+        dt = 0.016 if self._last is None else min(0.05, now - self._last)
+        self._last = now
+        target = 1.0 if self.expanding else 0.0
+        if self.anim != target:
+            step = dt / 0.42            # ~0.42 s to open/close
+            if self.anim < target:
+                self.anim = min(target, self.anim + step)
+            else:
+                self.anim = max(target, self.anim - step)
+            if self.anim == 0.0 and not self.expanding:
+                self.layout = None
         self.phase += 0.04
         self.update()
 
@@ -369,7 +404,10 @@ class WheelView(QWidget):
         idx = int((angle + span / 2) % 360 / span)
         return idx if 0 <= idx < n else -1
 
+    # --- wheel-mode navigation ---------------------------------------------
     def move_selection(self, step):
+        if self.expanding:
+            return
         n = len(self.categories)
         if n:
             self.hover_index = (self.hover_index + step) % n
@@ -380,139 +418,393 @@ class WheelView(QWidget):
             return self.categories[self.hover_index]
         return None
 
+    # --- expansion ---------------------------------------------------------
+    def open_category(self, index):
+        self.sel = index
+        self.hover_index = index
+        self.app_sel = 0
+        self.layout = self._compute_layout(index)
+        self.expanding = True
+        self.update()
+
+    def collapse(self):
+        self.expanding = False
+        self.update()
+
+    def move_app(self, step):
+        if not self.expanding or not self.layout:
+            return
+        n = len(self.layout["chips"])
+        if n:
+            self.app_sel = max(0, min(n - 1, self.app_sel + step))
+            self.update()
+
+    def activate(self):
+        """Launch the highlighted app (expanded) or open the category (wheel)."""
+        if self.expanding and self.layout:
+            chips = self.layout["chips"]
+            if 0 <= self.app_sel < len(chips):
+                self._launch(chips[self.app_sel]["exec"])
+        else:
+            self.open_category(self.hover_index)
+
+    def _launch(self, exec_cmd):
+        if exec_cmd:
+            launch_tool(exec_cmd)
+            if self.parent_window is not None:
+                self.parent_window.close()
+
+    def _compute_layout(self, index):
+        O = QPointF(self.center) if self.center is not None \
+            else QPointF(self.width() / 2, self.height() / 2)
+        R, r = self.outer, self.inner
+        n = len(self.categories)
+        span = 360.0 / n
+        mid = math.radians(index * span - 90)
+        dx, dy = math.cos(mid), math.sin(mid)
+        label_r = (R + r) / 2.0
+        back, pop = 54, 30
+
+        btn_from = QPointF(O.x() + dx * label_r, O.y() + dy * label_r)
+        wheel_to = QPointF(O.x() - dx * back, O.y() - dy * back)
+        btn_to = QPointF(wheel_to.x() + dx * (R + pop), wheel_to.y() + dy * (R + pop))
+
+        apps = self.catalog[self.categories[index]]
+        CW, CH, GAP = 198, 34, 9
+        N = len(apps)
+        col_h = N * CH + (N - 1) * GAP
+        apps_c = QPointF(wheel_to.x() + dx * (R + 190), wheel_to.y() + dy * (R + 190))
+        chips = []
+        for j, (name, exe, icon) in enumerate(apps):
+            cyj = apps_c.y() - col_h / 2 + CH / 2 + j * (CH + GAP)
+            chips.append({"rect": QRectF(apps_c.x() - CW / 2, cyj - CH / 2, CW, CH),
+                          "name": name, "exec": exe})
+
+        # fit the whole composition on screen
+        xs = [wheel_to.x() - R, wheel_to.x() + R, btn_to.x() - 60, btn_to.x() + 60]
+        ys = [wheel_to.y() - R, wheel_to.y() + R, btn_to.y() - 30, btn_to.y() + 30]
+        for c in chips:
+            xs += [c["rect"].left(), c["rect"].right()]
+            ys += [c["rect"].top(), c["rect"].bottom()]
+        m = 26
+        W, H = self.width(), self.height()
+        tx = ty = 0.0
+        if min(xs) < m:
+            tx = m - min(xs)
+        if max(xs) + tx > W - m:
+            tx -= (max(xs) + tx) - (W - m)
+        if min(ys) < m:
+            ty = m - min(ys)
+        if max(ys) + ty > H - m:
+            ty -= (max(ys) + ty) - (H - m)
+
+        wheel_to = QPointF(wheel_to.x() + tx, wheel_to.y() + ty)
+        btn_to = QPointF(btn_to.x() + tx, btn_to.y() + ty)
+        for c in chips:
+            c["rect"] = c["rect"].translated(tx, ty)
+            cen = c["rect"].center()
+            if cen.x() >= btn_to.x():
+                c["node"] = QPointF(c["rect"].left(), cen.y())
+            else:
+                c["node"] = QPointF(c["rect"].right(), cen.y())
+        return {"index": index, "d": (dx, dy), "btn_from": btn_from,
+                "btn_to": btn_to, "wheel_to": wheel_to, "chips": chips}
+
+    # --- input -------------------------------------------------------------
     def enterEvent(self, event):
         if self.parent_window is not None:
             self.parent_window.on_pointer_enter(event.position())
         super().enterEvent(event)
 
     def mouseMoveEvent(self, event):
+        if self.expanding and self.layout and self.anim > 0.5:
+            for j, c in enumerate(self.layout["chips"]):
+                if c["rect"].contains(event.position()):
+                    if self.app_sel != j:
+                        self.app_sel = j
+                        self.update()
+                    break
+            return
         idx = self.slice_at(event.position())
         if idx >= 0 and idx != self.hover_index:
             self.hover_index = idx
             self.update()
 
-    def on_wheel(self, pos):
-        cx, cy, outer, _ = self._metrics()
-        return math.hypot(pos.x() - cx, pos.y() - cy) <= outer * 1.08
-
     def mousePressEvent(self, event):
-        idx = self.slice_at(event.position())
         if self.parent_window is None:
             return
+        pos = event.position()
+        if self.expanding and self.layout:
+            if self.anim > 0.5:
+                for c in self.layout["chips"]:
+                    if c["rect"].contains(pos):
+                        self._launch(c["exec"])
+                        return
+            self.collapse()
+            return
+        idx = self.slice_at(pos)
         if idx >= 0:
-            self.hover_index = idx
-            self.parent_window.open_category(self.categories[idx])
-        elif not self.on_wheel(event.position()):
-            self.parent_window.close()
+            self.open_category(idx)
+        else:
+            cx, cy, outer, _ = self._metrics()
+            if math.hypot(pos.x() - cx, pos.y() - cy) > outer * 1.08:
+                self.parent_window.close()
 
+    # --- painting ----------------------------------------------------------
     def _segment_path(self, cx, cy, outer, inner, a0, a1):
         path = QPainterPath()
-        outer_rect = QRectF(cx - outer, cy - outer, outer * 2, outer * 2)
-        inner_rect = QRectF(cx - inner, cy - inner, inner * 2, inner * 2)
-        # Qt angles: 0 at 3 o'clock, CCW positive. Our a0/a1 measured from top, CW.
+        orect = QRectF(cx - outer, cy - outer, outer * 2, outer * 2)
+        irect = QRectF(cx - inner, cy - inner, inner * 2, inner * 2)
         qa0 = 90 - a0
         span = -(a1 - a0)
-        path.arcMoveTo(outer_rect, qa0)
-        path.arcTo(outer_rect, qa0, span)
-        path.arcTo(inner_rect, qa0 + span, -span)
+        path.arcMoveTo(orect, qa0)
+        path.arcTo(orect, qa0, span)
+        path.arcTo(irect, qa0 + span, -span)
         path.closeSubpath()
         return path
 
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         cx, cy, outer, inner = self._metrics()
+
+        if self.layout and self.anim > 0.001:
+            self._paint_expanded(p, outer, inner)
+        else:
+            wc = QPointF(cx, cy)
+            self._draw_wheel(p, wc, 1.0, 1.0, skip=None)
+            self._draw_caption(p, wc, outer, self.current_category())
+        p.end()
+
+    def _draw_wheel(self, p, wc, scale, alpha, skip):
+        cx, cy = wc.x(), wc.y()
+        outer = self.outer * scale
+        inner = self.inner * scale
         n = max(len(self.categories), 1)
         span = 360.0 / n
         gap = min(2.6, span * 0.10)
-
-        fam = self.mono
-        glyph_font = QFont(fam, 13)
+        glyph_font = QFont(self.mono, int(13 * scale))
         label_r = (inner + outer) / 2.0
 
         for i, category in enumerate(self.categories):
+            if skip is not None and i == skip:
+                continue
             c0 = i * span - span / 2 + gap / 2
             c1 = i * span + span / 2 - gap / 2
-            hovered = (i == self.hover_index)
+            hovered = (skip is None and i == self.hover_index)
             seg = self._segment_path(cx, cy, outer, inner, c0, c1)
-
             if hovered:
                 grad = QRadialGradient(cx, cy, outer)
-                grad.setColorAt(inner / outer, QColor(70, 26, 29))
-                grad.setColorAt(1.0, QColor(120, 38, 43))
+                grad.setColorAt(inner / outer, self._a(QColor(74, 27, 30), alpha))
+                grad.setColorAt(1.0, self._a(QColor(126, 40, 45), alpha))
                 p.setBrush(QBrush(grad))
-                p.setPen(QPen(ACCENT, 1.4))
+                p.setPen(QPen(self._a(ACCENT, alpha), 1.4))
             else:
-                base = QColor(SURFACE_HI)
-                base.setAlpha(232)
-                p.setBrush(QBrush(base))
-                p.setPen(QPen(OUTLINE, 1.0))
+                grad = QRadialGradient(cx, cy, outer)
+                grad.setColorAt(inner / outer, self._a(QColor(22, 22, 22), alpha))
+                grad.setColorAt(1.0, self._a(QColor(32, 32, 31), alpha))
+                p.setBrush(QBrush(grad))
+                p.setPen(QPen(self._a(OUTLINE, alpha), 1.0))
             p.drawPath(seg)
+            # thin accent tick on the outer edge of the hovered spoke
+            if hovered:
+                mid = math.radians(i * span - 90)
+                p.setPen(QPen(self._a(ACCENT, alpha), 2.0))
+                p.drawArc(QRectF(cx - outer + 1, cy - outer + 1,
+                                 (outer - 1) * 2, (outer - 1) * 2),
+                          int((90 - c1) * 16), int((c1 - c0) * 16))
 
-            # icon-only spokes keep the wheel small; the name shows below on hover
             mid = math.radians(i * span - 90)
             lx = cx + label_r * math.cos(mid)
             ly = cy + label_r * math.sin(mid)
             p.setFont(glyph_font)
-            p.setPen(TEXT if hovered else STEEL)
+            p.setPen(self._a(TEXT if hovered else STEEL, alpha))
             p.drawText(QRectF(lx - 18, ly - 13, 36, 26),
                        Qt.AlignmentFlag.AlignCenter,
                        CATEGORY_GLYPH.get(category, DEFAULT_GLYPH))
 
-        self._draw_hub(p, cx, cy, inner, fam)
+        self._draw_hub(p, cx, cy, inner, alpha)
 
-        # selected category name + count, just under the wheel
-        cat = self.current_category()
-        if cat:
-            name = cat.upper()
-            p.setFont(QFont(fam, 9, QFont.Weight.Bold))
-            p.setPen(TEXT)
-            p.drawText(QRectF(cx - 150, cy + outer + 8, 300, 16),
-                       Qt.AlignmentFlag.AlignCenter, name)
-            p.setFont(QFont(fam, 7))
-            p.setPen(ACCENT)
-            p.drawText(QRectF(cx - 150, cy + outer + 24, 300, 14),
-                       Qt.AlignmentFlag.AlignCenter,
-                       f"{self.counts[cat]:02d} tools")
-        p.end()
-
-    def _draw_hub(self, p, cx, cy, inner, fam):
-        # Transparent centre: only the reticle and the archangel sword are drawn,
-        # so the desktop shows through the hole.
+    def _draw_hub(self, p, cx, cy, inner, alpha):
         hub = inner * 0.82
         p.setBrush(Qt.BrushStyle.NoBrush)
-        ring = QPen(ACCENT_DIM, 1.0)
+        ring = QPen(self._a(ACCENT_DIM, alpha), 1.0)
         ring.setStyle(Qt.PenStyle.DashLine)
         p.setPen(ring)
         p.drawEllipse(QPointF(cx, cy), hub * 1.02, hub * 1.02)
-        p.setPen(QPen(ACCENT, 1.2))
+        p.setPen(QPen(self._a(ACCENT, alpha), 1.2))
         for a in (0, 90, 180, 270):
-            r = math.radians(a + self.phase * 18)
-            x0 = cx + hub * 0.92 * math.cos(r)
-            y0 = cy + hub * 0.92 * math.sin(r)
-            x1 = cx + hub * 1.10 * math.cos(r)
-            y1 = cy + hub * 1.10 * math.sin(r)
-            p.drawLine(QPointF(x0, y0), QPointF(x1, y1))
-        self._draw_sword(p, cx, cy, hub)
+            rr = math.radians(a + self.phase * 18)
+            p.drawLine(QPointF(cx + hub * 0.92 * math.cos(rr), cy + hub * 0.92 * math.sin(rr)),
+                       QPointF(cx + hub * 1.10 * math.cos(rr), cy + hub * 1.10 * math.sin(rr)))
+        self._draw_sword(p, cx, cy, inner, alpha)
+
+    def _draw_caption(self, p, wc, outer, cat):
+        if not cat:
+            return
+        cx, cy = wc.x(), wc.y()
+        p.setFont(QFont(self.mono, 9, QFont.Weight.Bold))
+        p.setPen(TEXT)
+        p.drawText(QRectF(cx - 160, cy + outer + 8, 320, 16),
+                   Qt.AlignmentFlag.AlignCenter, cat.upper())
+        p.setFont(QFont(self.mono, 7))
+        p.setPen(ACCENT)
+        p.drawText(QRectF(cx - 160, cy + outer + 24, 320, 14),
+                   Qt.AlignmentFlag.AlignCenter, f"{self.counts[cat]:02d} tools")
+
+    # --- expanded view -----------------------------------------------------
+    def _paint_expanded(self, p, outer, inner):
+        lay = self.layout
+        e = _ease_out(self.anim)
+        O = QPointF(self.center)
+        wc = _lerp_pt(O, lay["wheel_to"], e)
+        scale = _lerp(1.0, 0.90, e)
+        alpha = _lerp(1.0, 0.42, e)
+        # the retreated wheel, dimmed, selected spoke removed
+        self._draw_wheel(p, wc, scale, alpha, skip=lay["index"])
+
+        reveal = _clamp01((self.anim - 0.28) / 0.55)
+        btn = _lerp_pt(lay["btn_from"], lay["btn_to"], e)
+        cat = self.categories[lay["index"]]
+
+        # traces first, so the nodes sit on top
+        for j, c in enumerate(lay["chips"]):
+            ca = _clamp01((self.anim - (0.40 + j * 0.05)) / 0.25)
+            self._draw_trace(p, btn, c["node"], min(reveal, 0.4 + ca * 0.6))
+
+        # app nodes
+        for j, c in enumerate(lay["chips"]):
+            ca = _clamp01((self.anim - (0.42 + j * 0.05)) / 0.22)
+            if ca <= 0:
+                continue
+            self._draw_chip(p, c, ca, j == self.app_sel)
+
+        # the popped category button, bright, on top
+        self._draw_button(p, btn, cat, _clamp01(self.anim / 0.5))
+
+    def _draw_button(self, p, c, cat, a):
+        glyph = CATEGORY_GLYPH.get(cat, DEFAULT_GLYPH)
+        label = cat.upper()
+        p.setFont(QFont(self.mono, 9, QFont.Weight.Bold))
+        fm = QFontMetrics(p.font())
+        tw = fm.horizontalAdvance(label)
+        w = tw + 54
+        h = 32
+        rect = QRectF(c.x() - w / 2, c.y() - h / 2, w, h)
+        grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+        grad.setColorAt(0.0, self._a(QColor(150, 46, 52), a))
+        grad.setColorAt(1.0, self._a(QColor(96, 30, 34), a))
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(self._a(ACCENT, a), 1.6))
+        p.drawRoundedRect(rect, 9, 9)
+        p.setFont(QFont(self.mono, 12))
+        p.setPen(self._a(TEXT, a))
+        p.drawText(QRectF(rect.left() + 8, rect.top(), 22, h),
+                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter, glyph)
+        p.setFont(QFont(self.mono, 9, QFont.Weight.Bold))
+        p.drawText(QRectF(rect.left() + 30, rect.top(), w - 36, h),
+                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, label)
+
+    def _draw_chip(self, p, c, a, selected):
+        rect = c["rect"]
+        grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+        if selected:
+            grad.setColorAt(0.0, self._a(QColor(58, 24, 27), a))
+            grad.setColorAt(1.0, self._a(QColor(40, 18, 20), a))
+            pen = QPen(self._a(ACCENT, a), 1.5)
+        else:
+            grad.setColorAt(0.0, self._a(QColor(26, 26, 25), a))
+            grad.setColorAt(1.0, self._a(QColor(17, 17, 17), a))
+            pen = QPen(self._a(OUTLINE, a), 1.0)
+        p.setBrush(QBrush(grad))
+        p.setPen(pen)
+        p.drawRoundedRect(rect, 8, 8)
+        # a small node square where the trace lands
+        node = c["node"]
+        p.setBrush(QBrush(self._a(ACCENT, a)))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawRect(QRectF(node.x() - 3, node.y() - 3, 6, 6))
+        # name
+        p.setPen(self._a(TEXT if selected else STEEL, a))
+        p.setFont(QFont(self.mono, 10))
+        left = rect.left() + 16 if node.x() <= rect.center().x() else rect.left() + 12
+        p.drawText(QRectF(left, rect.top(), rect.width() - 24, rect.height()),
+                   Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                   "▸ " + c["name"])
+
+    def _draw_trace(self, p, a, b, frac):
+        if frac <= 0:
+            return
+        # orthogonal PCB route with a 45° chamfer at the elbow
+        corner = QPointF(b.x(), a.y())
+        ch = min(9.0, abs(b.x() - a.x()) / 2 or 9.0, abs(b.y() - a.y()) / 2 or 9.0)
+        sx = 1 if corner.x() >= a.x() else -1
+        sy = 1 if b.y() >= corner.y() else -1
+        p1 = QPointF(corner.x() - sx * ch, corner.y())
+        p2 = QPointF(corner.x(), corner.y() + sy * ch)
+        poly = [a, p1, p2, b]
+        total = sum(math.hypot(poly[i + 1].x() - poly[i].x(),
+                               poly[i + 1].y() - poly[i].y()) for i in range(len(poly) - 1))
+        want = total * frac
+        path = QPainterPath(poly[0])
+        acc = 0.0
+        for i in range(len(poly) - 1):
+            seg = math.hypot(poly[i + 1].x() - poly[i].x(), poly[i + 1].y() - poly[i].y())
+            if acc + seg <= want or seg == 0:
+                path.lineTo(poly[i + 1])
+                acc += seg
+            else:
+                t = (want - acc) / seg
+                path.lineTo(QPointF(poly[i].x() + (poly[i + 1].x() - poly[i].x()) * t,
+                                    poly[i].y() + (poly[i + 1].y() - poly[i].y()) * t))
+                break
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(QColor(196, 74, 82), 1.8))
+        p.drawPath(path)
+        # vias at both ends
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(ACCENT))
+        p.drawEllipse(a, 2.4, 2.4)
+        if frac >= 0.999:
+            p.drawEllipse(b, 2.4, 2.4)
+
+    # --- sword emblem ------------------------------------------------------
+    def _draw_sword(self, p, cx, cy, inner, alpha):
+        if QSvgRenderer is None:
+            return
+        size = int(inner)             # logical px
+        if self._emblem is None or self._emblem_px != size:
+            self._emblem = self._build_emblem(size)
+            self._emblem_px = size
+        pm = self._emblem
+        logical = pm.width() / pm.devicePixelRatio()
+        if alpha < 0.999:
+            p.save()
+            p.setOpacity(alpha)
+            p.drawPixmap(QRectF(cx - logical / 2, cy - logical / 2, logical, logical), pm,
+                         QRectF(0, 0, pm.width(), pm.height()))
+            p.restore()
+        else:
+            p.drawPixmap(QRectF(cx - logical / 2, cy - logical / 2, logical, logical), pm,
+                         QRectF(0, 0, pm.width(), pm.height()))
 
     def _build_emblem(self, size):
-        """Render the sword art into a size x size square, over a soft crimson glow.
-
-        The art is 359 x 587 (tall); it is cropped to its own bounds and squashed to a
-        square so it sits compactly in the hub. The glow (the art's own alpha, blurred and
-        tinted) keeps the near-black blade readable on dark wallpapers; it is kept faint and
-        padded so it fades out inside the reticle ring."""
+        """Render the sword art into a size x size square, supersampled, over a
+        faint crimson glow. The art is 359 x 587 (tall); it is cropped to its own
+        bounds and squashed to a square so it sits compactly in the hub."""
+        SS = 3                        # supersample for a crisp downscale
         user_art = os.path.exists(SWORD_SVG)
         r = QSvgRenderer(SWORD_SVG) if user_art else None
         if r is None or not r.isValid() or r.viewBoxF().width() <= 0:
-            # missing or unreadable art: fall back to the built-in emblem
             r = QSvgRenderer(QByteArray(EMBLEM_SVG.encode("utf-8")))
             user_art = False
         vb = r.viewBoxF()
         bx, by, bw, bh = SWORD_BOX if user_art else (vb.x(), vb.y(), vb.width(), vb.height())
 
-        pad = max(4, size // 6)
-        full = size + 2 * pad
+        px = size * SS
+        pad = max(4, px // 6)
+        full = px + 2 * pad
         fmt = QImage.Format.Format_ARGB32_Premultiplied
         art = QImage(full, full, fmt)
         art.fill(Qt.GlobalColor.transparent)
@@ -520,9 +812,9 @@ class WheelView(QWidget):
         q.setRenderHint(QPainter.RenderHint.Antialiasing)
         q.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         q.translate(pad, pad)
-        q.scale(size / bw, size / bh)       # non-uniform: the flattening
+        q.scale(px / bw, px / bh)
         q.translate(-bx, -by)
-        r.render(q, vb)                     # the whole canvas, 1:1 in SVG units
+        r.render(q, vb)
         q.end()
 
         small = max(6, full // 6)
@@ -538,35 +830,34 @@ class WheelView(QWidget):
         out = QImage(full, full, fmt)
         out.fill(Qt.GlobalColor.transparent)
         o = QPainter(out)
-        o.setOpacity(0.55)                  # a faint glow
+        o.setOpacity(0.5)
         o.drawImage(0, 0, glow)
         o.setOpacity(1.0)
         o.drawImage(0, 0, art)
         o.end()
-        return QPixmap.fromImage(out)
 
-    def _draw_sword(self, p, cx, cy, hub):
-        """The archangel sword, small and squared, inside the reticle ring."""
-        if QSvgRenderer is None:
-            return
-        size = int(self.inner)            # ~78 px: the art's corners stay inside the ring
-        if self._emblem is None or self._emblem_px != size:
-            self._emblem = self._build_emblem(size)
-            self._emblem_px = size
-        p.drawPixmap(int(cx - self._emblem.width() / 2),
-                     int(cy - self._emblem.height() / 2), self._emblem)
+        pm = QPixmap.fromImage(out)
+        pm.setDevicePixelRatio(SS)     # drawn at 1/SS logical px → crisp
+        return pm
+
+    @staticmethod
+    def _a(color, alpha):
+        if alpha >= 0.999:
+            return color
+        c = QColor(color)
+        c.setAlpha(int(c.alpha() * alpha))
+        return c
 
 
 class WheelWindow(QWidget):
-    """Fullscreen radial wheel launcher overlay."""
+    """Fullscreen overlay hosting the radial wheel."""
 
     def __init__(self, screen, gpos):
         super().__init__()
-        self.gpos = gpos                      # global cursor position when opened
+        self.gpos = gpos
         self.screen_origin = screen.geometry().topLeft()
         self.mono = mono_family()
         self.catalog = build_tool_catalog()
-        self.current_category = None
         self.setWindowTitle("ArchangelOS Fallen - CyberSuite Radial Wheel")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint |
                             Qt.WindowType.WindowStaysOnTopHint |
@@ -574,80 +865,29 @@ class WheelWindow(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setGeometry(screen.geometry())
-
-        self.setStyleSheet(f"""
-            QWidget {{ color: {TEXT.name()}; font-family: "{self.mono}"; }}
-            QFrame#panel {{
-                background-color: rgb(10,10,10);
-                border: 1px solid {OUTLINE.name()};
-                border-radius: 16px;
-            }}
-            QLabel#title {{ font-size: 15px; font-weight: bold; color: {ACCENT.name()};
-                            letter-spacing: 1px; }}
-            QLineEdit {{
-                background-color: {SURFACE.name()};
-                border: 1px solid {OUTLINE.name()};
-                border-radius: 9px;
-                padding: 9px 12px;
-                font-size: 13px;
-                color: {TEXT.name()};
-                selection-background-color: {ACCENT.name()};
-            }}
-            QLineEdit:focus {{ border-color: {ACCENT.name()}; }}
-            QListWidget {{
-                background-color: transparent; border: none;
-                font-size: 13px; outline: none;
-            }}
-            QListWidget::item {{ padding: 7px 10px; border-radius: 7px; color: {STEEL.name()}; }}
-            QListWidget::item:selected {{ background-color: rgba(194,74,82,46);
-                                          color: {TEXT.name()}; }}
-            QListWidget::item:hover {{ background-color: {SURFACE_HI.name()}; }}
-        """)
+        self.setStyleSheet(f'QWidget {{ color: {TEXT.name()}; font-family: "{self.mono}"; }}')
 
         self.wheel_view = WheelView(self.catalog, self.mono, parent=self)
 
-        self.panel = QFrame(self)
-        self.panel.setObjectName("panel")
-        self.panel.setVisible(False)
-        pl = QVBoxLayout(self.panel)
-        pl.setContentsMargins(18, 16, 18, 16)
-        pl.setSpacing(10)
-        self.panel_title = QLabel("")
-        self.panel_title.setObjectName("title")
-        self.search = QLineEdit()
-        self.search.setPlaceholderText("› search tools")
-        self.search.textChanged.connect(self.filter_tools)
-        self.search.returnPressed.connect(self.on_enter)
-        self.tool_list = QListWidget()
-        self.tool_list.itemActivated.connect(self.on_tool_selected)
-        self.tool_list.itemDoubleClicked.connect(self.on_tool_selected)
-        self.hint = QLabel("▸ open   ↑↓ move   esc back")
-        self.hint.setStyleSheet(f"color:{SUBTEXT.name()}; font-size:10px;")
-        pl.addWidget(self.panel_title)
-        pl.addWidget(self.search)
-        pl.addWidget(self.tool_list, 1)
-        pl.addWidget(self.hint)
-
         QShortcut(QKeySequence("Esc"), self, activated=self.on_escape)
-        QShortcut(QKeySequence("Return"), self, activated=self.on_enter)
-        QShortcut(QKeySequence("Enter"), self, activated=self.on_enter)
-        QShortcut(QKeySequence("Left"), self, activated=lambda: self._nav(-1))
-        QShortcut(QKeySequence("Right"), self, activated=lambda: self._nav(1))
-        QShortcut(QKeySequence("Up"), self, activated=lambda: self._nav_list(-1))
-        QShortcut(QKeySequence("Down"), self, activated=lambda: self._nav_list(1))
+        QShortcut(QKeySequence("Return"), self, activated=self.wheel_view.activate)
+        QShortcut(QKeySequence("Enter"), self, activated=self.wheel_view.activate)
+        QShortcut(QKeySequence("Left"), self, activated=lambda: self.wheel_view.move_selection(-1))
+        QShortcut(QKeySequence("Right"), self, activated=lambda: self.wheel_view.move_selection(1))
+        QShortcut(QKeySequence("Up"), self, activated=lambda: self.wheel_view.move_app(-1))
+        QShortcut(QKeySequence("Down"), self, activated=lambda: self.wheel_view.move_app(1))
 
         self.origin = None
         self._entered = False
-        self.wheel_view.raise_()
 
-    # --- placement: the wheel opens centred on the cursor --------------------
+    # --- placement ---------------------------------------------------------
     def _compute_origin(self, local=None):
         if local is None:
             local = QPointF(self.gpos.x() - self.screen_origin.x(),
                             self.gpos.y() - self.screen_origin.y())
         x, y = float(local.x()), float(local.y())
         r = self.wheel_view.outer
-        padx, padtop, padbot = r + 24, r + 24, r + 64   # room for the name below
+        padx, padtop, padbot = r + 24, r + 24, r + 64
         x = max(padx, min(self.width() - padx, x))
         y = max(padtop, min(self.height() - padbot, y))
         return QPointF(x, y)
@@ -656,17 +896,6 @@ class WheelWindow(QWidget):
         if self.origin is None:
             self.origin = self._compute_origin()
         self.wheel_view.set_center(self.origin)
-        self._place_panel()
-
-    def _place_panel(self):
-        if self.origin is None:
-            return
-        pw, ph = 380, 440
-        x = int(self.origin.x() - pw / 2)
-        y = int(self.origin.y() - ph / 2)
-        x = max(16, min(self.width() - pw - 16, x))
-        y = max(16, min(self.height() - ph - 16, y))
-        self.panel.setGeometry(x, y, pw, ph)
 
     def showEvent(self, event):
         self.origin = self._compute_origin()
@@ -674,9 +903,6 @@ class WheelWindow(QWidget):
         super().showEvent(event)
 
     def on_pointer_enter(self, pos):
-        """The first pointer-enter carries the cursor in window coordinates — exact, whatever
-        offset the compositor gave the window (bar, gaps); hyprctl's position is only the
-        first guess drawn before this arrives."""
         if self._entered:
             return
         self._entered = True
@@ -689,104 +915,20 @@ class WheelWindow(QWidget):
         self.wheel_view.setGeometry(0, 0, self.width(), self.height())
         self._apply_origin()
 
-    # --- interaction -------------------------------------------------------
-    def _nav(self, step):
-        if not self.panel.isVisible():
-            self.wheel_view.move_selection(step)
-
-    def _nav_list(self, step):
-        if self.panel.isVisible():
-            row = self.tool_list.currentRow()
-            self.tool_list.setCurrentRow(max(0, min(self.tool_list.count() - 1, row + step)))
-
-    def keyPressEvent(self, event):
-        # Type on the wheel → jump into the highlighted category and search.
-        if not self.panel.isVisible():
-            t = event.text()
-            if t and t.isprintable() and (t.isalnum() or t == "/"):
-                cat = self.wheel_view.current_category()
-                if cat:
-                    self.open_category(cat)
-                    if t != "/":
-                        self.search.setText(t)
-                return
-        super().keyPressEvent(event)
-
-    def open_category(self, category):
-        self.current_category = category
-        glyph = CATEGORY_GLYPH.get(category, DEFAULT_GLYPH)
-        self.panel_title.setText(
-            f"{glyph}  {category.upper()}   — {len(self.catalog.get(category, []))} tools")
-        self.search.clear()
-        self.filter_tools("")
-        # the panel replaces the wheel instead of sitting on top of it
-        self.wheel_view.setVisible(False)
-        self.panel.setVisible(True)
-        self.panel.raise_()
-        self.search.setFocus()
-        if self.tool_list.count():
-            self.tool_list.setCurrentRow(0)
-        self.update()
-
-    def show_wheel(self):
-        # Hand keyboard focus back to the window: a hidden search box that keeps it would
-        # swallow Left/Right (line edits claim them), and the wheel could no longer rotate.
-        self.search.clearFocus()
-        self.tool_list.clearFocus()
-        self.setFocus()
-        self.panel.setVisible(False)
-        self.wheel_view.setVisible(True)
-        self.wheel_view.raise_()
-        self.update()
-
-    def filter_tools(self, text):
-        self.tool_list.clear()
-        query = (text or "").lower()
-        for name, exec_cmd, icon in self.catalog.get(self.current_category, []):
-            if query and query not in name.lower():
-                continue
-            item = QListWidgetItem(f"▸  {name}")
-            item.setData(Qt.ItemDataRole.UserRole, exec_cmd)
-            self.tool_list.addItem(item)
-        if self.tool_list.count():
-            self.tool_list.setCurrentRow(0)
-
-    def on_tool_selected(self, item):
-        exec_cmd = item.data(Qt.ItemDataRole.UserRole)
-        if exec_cmd:
-            launch_tool(exec_cmd)
-            self.close()
-
-    def on_enter(self):
-        if self.panel.isVisible():
-            item = self.tool_list.currentItem()
-            if item is not None:
-                self.on_tool_selected(item)
-        else:
-            cat = self.wheel_view.current_category()
-            if cat:
-                self.open_category(cat)
-
     def on_escape(self):
-        if self.panel.isVisible():
-            self.show_wheel()
+        if self.wheel_view.expanding:
+            self.wheel_view.collapse()
         else:
             self.close()
-
-    def mousePressEvent(self, event):
-        if self.panel.isVisible() and not self.panel.geometry().contains(event.position().toPoint()):
-            self.show_wheel()
 
 
 def main():
     app = QApplication(sys.argv)
-    # Wayland app_id, matched by the Hyprland rule in archangelos.lua
     QGuiApplication.setDesktopFileName("archangelos-wheel")
     gpos = cursor_position(sys.argv)
     screen = QGuiApplication.screenAt(gpos.toPoint()) or QGuiApplication.primaryScreen()
     window = WheelWindow(screen, gpos)
     window.show()
-    window.show_wheel()
     sys.exit(app.exec())
 
 
