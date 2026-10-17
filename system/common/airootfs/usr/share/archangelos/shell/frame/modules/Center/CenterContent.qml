@@ -47,14 +47,17 @@ Item {
 	// the top-right panel), so the island is that much wider.
 	// ArchangelOS: when a track plays, the island carries the media controls under a small clock
 	readonly property bool mediaUp: MediaService.activePlayer !== null
+	// the island stays a small clock; it only expands to the player while hovered
+	property bool notchHovered: false
+	readonly property bool showMedia: mediaUp && notchHovered
 	width:  Math.round(Theme.cNotchMinWidth * localScale)
 	implicitWidth: width
-	height: Math.round((mediaUp ? 66 : 30) * localScale)
+	height: Math.round((showMedia ? 66 : 30) * localScale)
 
 	// feed the notch visualiser whenever media is on the island
 	Binding {
 		target: CavaService; property: "notchMusicVisible"
-		value: root.mediaUp && PrefsService.enableVisualiser
+		value: root.showMedia && PrefsService.enableVisualiser
 	}
 
 	// ── Required notch width for the current carousel item ────────────────────
@@ -324,28 +327,28 @@ Item {
 				Column {
 					visible: modelData === "clock"
 					anchors.horizontalCenter: parent.horizontalCenter
-					anchors.verticalCenter: root.mediaUp ? undefined : parent.verticalCenter
-					anchors.top: root.mediaUp ? parent.top : undefined
-					anchors.topMargin: root.mediaUp ? Math.round(11 * localScale) : 0
-					spacing: root.mediaUp ? Math.round(2 * localScale) : 0
+					anchors.verticalCenter: root.showMedia ? undefined : parent.verticalCenter
+					anchors.top: root.showMedia ? parent.top : undefined
+					anchors.topMargin: root.showMedia ? Math.round(11 * localScale) : 0
+					spacing: root.showMedia ? Math.round(2 * localScale) : 0
 
 					Item {
 						anchors.horizontalCenter: parent.horizontalCenter
 						width:  clk.implicitWidth
-						height: Math.round((root.mediaUp ? 19 : 22) * localScale)
+						height: Math.round((root.showMedia ? 19 : 22) * localScale)
 						Clock {
 							id: clk
 							localScale: root.localScale
 							anchors.centerIn: parent
-							scale: root.mediaUp ? 0.74 : 1.0
+							scale: root.showMedia ? 0.74 : 1.0
 							Behavior on scale { NumberAnimation { duration: Anim.mediumFast; easing.type: Anim.outCubic } }
 						}
 					}
 
 					// media: fading title/artist, controls, and a cava strip spanning the island
 					Column {
-						visible: root.mediaUp
-						opacity: root.mediaUp ? 1 : 0
+						visible: root.showMedia
+						opacity: root.showMedia ? 1 : 0
 						Behavior on opacity { NumberAnimation { duration: Anim.transition } }
 						anchors.horizontalCenter: parent.horizontalCenter
 						width: Math.round((Theme.cNotchMinWidth - Theme.notchPadding * 2) * localScale)
@@ -357,7 +360,7 @@ Item {
 							width: parent.width
 							height: Math.round(13 * localScale)
 							property bool showArtist: false
-							Timer { interval: 3400; running: root.mediaUp; repeat: true; onTriggered: nowText.showArtist = !nowText.showArtist }
+							Timer { interval: 3400; running: root.showMedia; repeat: true; onTriggered: nowText.showArtist = !nowText.showArtist }
 							Text {
 								anchors.fill: parent
 								text: MediaService.title || "Unknown track"
