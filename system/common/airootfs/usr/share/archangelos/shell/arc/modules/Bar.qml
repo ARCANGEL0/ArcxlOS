@@ -151,17 +151,60 @@ PanelWindow {
         anchors.bottomMargin: 16
         spacing: 10
 
-        // --- Monitors (ArchangelOS): live system readings, sampled while the bar is up ---
+        // --- Monitors (ArchangelOS): live readings; each cluster opens a dock pane ---
         ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 12
             Component.onCompleted: Sys.active = true
 
-            BarMeter { icon: "speed";           value: Sys.cpu;  valueText: Math.round(Sys.cpu * 100);  tint: Config.severity(Sys.cpu, Config.series[0], 0.75, 0.85) }
-            BarMeter { icon: "memory";          value: Sys.mem;  valueText: Math.round(Sys.mem * 100);  tint: Config.severity(Sys.mem, Config.series[1], 0.8, 0.9) }
-            BarMeter { icon: "developer_board"; value: Sys.gpu;  valueText: Math.round(Sys.gpu * 100);  tint: Config.severity(Sys.gpu, Config.series[2], 0.8, 0.9); visible: Sys.hasGpu }
-            BarMeter { icon: "storage";         value: Sys.disk; valueText: Math.round(Sys.disk * 100); tint: Config.severity(Sys.disk, Config.series[3], 0.8, 0.9) }
-            BarMeter { icon: "thermostat";      value: Math.min(1, Sys.temp / 100); valueText: Sys.temp + "°"; tint: Config.severity(Sys.temp / 100, Config.series[4], 0.7, 0.8) }
+            // CPU / RAM / GPU / Storage / Battery — hover opens the system pane
+            Item {
+                id: sysWidget
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: sysCol.implicitWidth
+                implicitHeight: sysCol.implicitHeight
+                ColumnLayout {
+                    id: sysCol
+                    anchors.fill: parent
+                    spacing: 12
+                    BarMeter { icon: "speed";           value: Sys.cpu;  valueText: Math.round(Sys.cpu * 100);  tint: Config.severity(Sys.cpu, Config.series[0], 0.75, 0.85) }
+                    BarMeter { icon: "memory";          value: Sys.mem;  valueText: Math.round(Sys.mem * 100);  tint: Config.severity(Sys.mem, Config.series[1], 0.8, 0.9) }
+                    BarMeter { icon: "developer_board"; value: Sys.gpu;  valueText: Math.round(Sys.gpu * 100);  tint: Config.severity(Sys.gpu, Config.series[2], 0.8, 0.9); visible: Sys.hasGpu }
+                    BarMeter { icon: "storage";         value: Sys.disk; valueText: Math.round(Sys.disk * 100); tint: Config.severity(Sys.disk, Config.series[3], 0.8, 0.9) }
+                    BarMeter { icon: Sys.batteryCharging ? "battery_charging_full" : "battery_full"
+                               value: Sys.batteryPct / 100; valueText: Sys.batteryPct
+                               tint: Sys.batteryPct <= 20 ? Config.tertiary : Config.accent; visible: Sys.hasBattery }
+                }
+                MouseArea {
+                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onEntered: bar.showPopout("sys"); onExited: bar.hidePopout()
+                    onClicked: bar.showPopout("sys")
+                }
+            }
+
+            // Weather — hover opens the weather pane
+            Item {
+                id: weatherWidget
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: wxCol.implicitWidth
+                implicitHeight: wxCol.implicitHeight
+                ColumnLayout {
+                    id: wxCol
+                    anchors.fill: parent
+                    spacing: 0
+                    MatIcon { Layout.alignment: Qt.AlignHCenter; text: Weather.icon; font.pixelSize: 18; color: Config.dim }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: Weather.ok ? Weather.tempC + "°" : "--"
+                        color: Config.fg; font.family: Config.textFont; font.pixelSize: 11; font.bold: true
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onEntered: bar.showPopout("weather"); onExited: bar.hidePopout()
+                    onClicked: bar.showPopout("weather")
+                }
+            }
 
             // network rates, stacked
             ColumnLayout {
@@ -658,6 +701,9 @@ PanelWindow {
 
     // --- Popouts ---
     // Each anchors to its widget and shows while bar.popout names it (modules/bar/BarPopout.qml).
+    // ArchangelOS: the monitor panes
+    SysPopout        { bar: bar; widget: sysWidget }
+    WeatherPopout    { bar: bar; widget: weatherWidget }
     VolumePopout     { bar: bar; widget: volWidget }
     RecordingPopout  { bar: bar; widget: recWidget }
     BrightnessPopout { bar: bar; widget: briWidget }

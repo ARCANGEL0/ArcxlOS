@@ -28,6 +28,14 @@ Singleton {
     property real down: 0
     property real up: 0
     property string uptime: ""
+    // ArchangelOS: battery + short history for the dock's expandable panes
+    property int  batteryPct: 0
+    property bool batteryCharging: false
+    property bool hasBattery: false
+    property var  cpuHist: []
+    property var  memHist: []
+    property var  gpuHist: []
+    function _hist(a, v) { var n = a.slice(-59); n.push(v); return n; }
     property var _prev: null
     property var _prevNet: null
     property int _tick: 0
@@ -118,6 +126,29 @@ Singleton {
             if (!isNaN(up)) {
                 const d = Math.floor(up / 86400), h = Math.floor((up % 86400) / 3600), m = Math.floor((up % 3600) / 60);
                 root.uptime = (d > 0 ? d + "d " : "") + h + "h " + m + "m";
+            }
+
+            root.cpuHist = root._hist(root.cpuHist, root.cpu);
+            root.memHist = root._hist(root.memHist, root.mem);
+            root.gpuHist = root._hist(root.gpuHist, root.gpu);
+            if (root._tick % 5 === 1) batteryProc.running = true;
+        }
+    }
+
+    // Battery (laptops): first /sys/class/power_supply/BAT* with a capacity.
+    Process {
+        id: batteryProc
+        command: ["sh", "-c", "for b in /sys/class/power_supply/BAT*; do [ -e \"$b/capacity\" ] && { echo \"$(cat $b/capacity) $(cat $b/status 2>/dev/null)\"; break; }; done"]
+        stdout: StdioCollector {
+            id: battOut
+            onStreamFinished: {
+                const t = battOut.text.trim();
+                if (t) {
+                    const f = t.split(/\s+/);
+                    root.batteryPct = Number(f[0]) || 0;
+                    root.batteryCharging = (f[1] === "Charging" || f[1] === "Full");
+                    root.hasBattery = true;
+                }
             }
         }
     }
