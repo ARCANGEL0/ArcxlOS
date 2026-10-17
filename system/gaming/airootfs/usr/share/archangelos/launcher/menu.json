@@ -513,11 +513,6 @@
      "terminal": true
     },
     {
-     "name": "GPU Screen Recorder",
-     "exec": "gpu-screen-recorder",
-     "terminal": true
-    },
-    {
      "name": "DXVK",
      "exec": "dxvk",
      "terminal": true
@@ -552,11 +547,6 @@
     {
      "name": "Streamlabs",
      "exec": "streamlabs",
-     "terminal": true
-    },
-    {
-     "name": "GPU Screen Recorder",
-     "exec": "gpu-screen-recorder",
      "terminal": true
     },
     {

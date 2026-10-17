@@ -294,7 +294,7 @@ fi
 
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
-AUR_PKGS="hexchat anki mpvpaper geogebra google-cloud-cli gpu-screen-recorder gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
+AUR_PKGS="anki mpvpaper geogebra google-cloud-cli gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor tauon-music-box vagrant warpinator wps-office zotero-bin"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
