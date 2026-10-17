@@ -107,11 +107,6 @@
      "terminal": true
     },
     {
-     "name": "HexChat",
-     "exec": "hexchat",
-     "terminal": false
-    },
-    {
      "name": "Konversation",
      "exec": "konversation",
      "terminal": false
@@ -291,11 +286,6 @@
      "name": "Celluloid",
      "exec": "celluloid",
      "terminal": false
-    },
-    {
-     "name": "GPU Screen Recorder",
-     "exec": "gpu-screen-recorder",
-     "terminal": true
     }
    ],
    "subcats": []
@@ -1064,16 +1054,6 @@
       {
        "name": "Webanalyze",
        "exec": "webanalyze",
-       "terminal": true
-      },
-      {
-       "name": "Aquatone",
-       "exec": "aquatone",
-       "terminal": true
-      },
-      {
-       "name": "EyeWitness",
-       "exec": "eyewitness",
        "terminal": true
       },
       {
@@ -2134,16 +2114,6 @@
       {
        "name": "httpx",
        "exec": "httpx",
-       "terminal": true
-      },
-      {
-       "name": "Aquatone",
-       "exec": "aquatone",
-       "terminal": true
-      },
-      {
-       "name": "EyeWitness",
-       "exec": "eyewitness",
        "terminal": true
       },
       {

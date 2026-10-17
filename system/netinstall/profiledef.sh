@@ -10,6 +10,7 @@ bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito' 'uefi-x64.systemd-boot.e
 arch="x86_64"
 pacman_conf="pacman.conf"
 file_permissions=(
+  ["/usr/bin/onionchat"]="0:0:0755"
   ["/usr/bin/archangelos-fastfetch-setup"]="0:0:0755"
   ["/usr/bin/archangelos-wallpaper-setup"]="0:0:0755"
   ["/usr/bin/archangelos-lock"]="0:0:0755"
