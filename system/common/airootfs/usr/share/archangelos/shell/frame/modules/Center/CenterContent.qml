@@ -20,6 +20,7 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Services.Mpris
 import "../../"
 import "../Right/"
 
@@ -46,14 +47,10 @@ Item {
 	// ArchangelOS: the clock rides at the island's head, beside the carousel (moved here from
 	// the top-right panel), so the island is that much wider.
 	// ArchangelOS: when a track plays, the island carries the media controls under a small clock
-	// only while audio actually plays; pausing from the island keeps it up until the pointer leaves
-	readonly property bool mediaUp: MediaService.isPlaying || _pauseHold
-	property bool _pauseHold: false
-	Connections {
-		target: MediaService
-		function onIsPlayingChanged() { root._pauseHold = !MediaService.isPlaying && root.notchHovered && MediaService.activePlayer !== null }
-	}
-	onNotchHoveredChanged: if (!notchHovered) _pauseHold = false
+	// only while a track is loaded (playing or paused); stopped / no player = plain clock
+	readonly property bool mediaUp: MediaService.activePlayer !== null
+		&& (MediaService.activePlayer.playbackState === MprisPlaybackState.Playing
+		 || MediaService.activePlayer.playbackState === MprisPlaybackState.Paused)
 	// with a track the island keeps its idle size (clock over cava); hover expands it to the player
 	property bool notchHovered: false
 	readonly property bool showMedia: mediaUp && notchHovered
