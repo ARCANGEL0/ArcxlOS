@@ -157,9 +157,9 @@ jobs:
 
           root=""
           for r in \
-            "/home/frs/project/${SF_PROJECT}" \
+            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT:0:2}/${SF_PROJECT}" \
             "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT}" \
-            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT:0:2}/${SF_PROJECT}"; do
+            "/home/frs/project/${SF_PROJECT}"; do
             if rsync --list-only -e "$SSH" "${SF_USER}@frs.sourceforge.net:${r}/" >/dev/null 2>&1; then
               root="$r"; break
             fi
