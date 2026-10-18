@@ -7,29 +7,82 @@ jobs:
   check:
     runs-on: ubuntu-latest
     env:
-      SF_USER: ${{ secrets.SF_USER || vars.SF_USER }}
-      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
+      SF_USER: ${{ vars.SF_USER || secrets.SF_USER }}
+      SF_PROJECT: ${{ vars.SF_PROJECT || secrets.SF_PROJECT }}
     steps:
-      - name: Check SourceForge SSH access
+      - name: Probe SourceForge auth and FRS layout
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
         run: |
-          echo "SF_USER set:    $([ -n "$SF_USER" ] && echo yes || echo NO)"
-          echo "SF_PROJECT set: $([ -n "$SF_PROJECT" ] && echo yes || echo NO)"
-          echo "SF_SSH_KEY set: $([ -n "$SF_SSH_KEY" ] && echo yes || echo NO)"
+          echo "SF_USER    = '$SF_USER'"
+          echo "SF_PROJECT = '$SF_PROJECT'"
+          test -n "$SF_SSH_KEY" && test -n "$SF_USER" && test -n "$SF_PROJECT" || {
+            echo "::error::SF_SSH_KEY (secret) and SF_USER / SF_PROJECT (variables) must all be set"; exit 1; }
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SF_SSH_KEY" > ~/.ssh/sf && chmod 600 ~/.ssh/sf
           if ssh-keygen -y -f ~/.ssh/sf >/dev/null 2>/tmp/e; then
-            echo "SSH key parses OK. Public fingerprint (compare to SourceForge > Account > SSH Settings):"
+            echo "key parses OK; public fingerprint (compare to SourceForge > Account > SSH Settings):"
             ssh-keygen -lf ~/.ssh/sf
           else
             echo "::error::SF_SSH_KEY is NOT a valid private key — paste the whole key file, headers and newlines included."
             cat /tmp/e; exit 1
           fi
           ssh-keyscan -H frs.sourceforge.net >> ~/.ssh/known_hosts 2>/dev/null
-          echo "--- attempting SSH auth to frs.sourceforge.net as '$SF_USER' ---"
-          set +e
-          echo "pwd" | sftp -i ~/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes -v \
-            "${SF_USER}@frs.sourceforge.net" 2>&1 \
-            | grep -iE "Authenticated to|Permission denied|Offering public key|Server accepts key|Connected to|sftp>|Remote working" | head -30
-          echo "--- end ---"
+          SSH="ssh -i $HOME/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes"
+          SFTP="sftp -i $HOME/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes -b -"
+
+          echo "== what /home/frs looks like over rsync =="
+          rsync --list-only -e "$SSH" "${SF_USER}@frs.sourceforge.net:/home/frs/" || true
+
+          echo "== account info via direct ssh (may be refused on the FRS host) =="
+          ssh $SSH "${SF_USER}@frs.sourceforge.net" 'id' 2>&1 | head -3 || true
+
+          echo "== candidate project directories =="
+          root=""
+          for r in \
+            "/home/frs/project/${SF_PROJECT}" \
+            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT}" \
+            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT:0:2}/${SF_PROJECT}"; do
+            if rsync --list-only -e "$SSH" "${SF_USER}@frs.sourceforge.net:${r}/" >/dev/null 2>&1; then
+              echo "EXISTS: $r"
+              root="$r"
+            else
+              echo "missing: $r"
+            fi
+          done
+          if [ -z "$root" ] && rsync --list-only -e "$SSH" \
+              "${SF_USER}@frs.sourceforge.net:/home/frs/project/" >/dev/null 2>&1; then
+            echo "project dir absent — creating /home/frs/project/${SF_PROJECT}"
+            printf -- '-mkdir /home/frs/project/%s\n' "$SF_PROJECT" \
+              | $SFTP "${SF_USER}@frs.sourceforge.net" >/dev/null 2>&1 || true
+            if rsync --list-only -e "$SSH" \
+                 "${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/" >/dev/null 2>&1; then
+              echo "CREATED: /home/frs/project/${SF_PROJECT}"
+              root="/home/frs/project/${SF_PROJECT}"
+            fi
+          fi
+
+          echo "== write test with both login forms =="
+          echo "axci write-probe $(date -u +%FT%TZ)" > /tmp/sf-probe
+          login=""
+          for l in "${SF_USER},${SF_PROJECT}" "${SF_USER}"; do
+            if printf -- 'cd %s\nput /tmp/sf-probe .axci-probe\nls -l .axci-probe\nrm .axci-probe\n' "$root" \
+                 | $SFTP "${l}@frs.sourceforge.net" >/dev/null 2>&1; then
+              echo "WRITABLE as ${l}@ -> ${root}"
+              login="$l"
+              break
+            else
+              echo "NOT writable as ${l}@"
+            fi
+          done
+
+          echo "================ DIAGNOSIS ================"
+          echo "project dir: ${root:-NONE FOUND}"
+          echo "login form:  ${login:-NONE WORKED}"
+          if [ -z "$root" ] || [ -z "$login" ]; then
+            echo "::error::No writable project directory was found for '${SF_PROJECT}'."
+            echo "::error::Check that SF_PROJECT is the project's unix name (the slug in its"
+            echo "::error::sourceforge.net URL) and that '${SF_USER}' is an admin of it."
+            exit 1
+          fi
+          rsync --list-only -e "$SSH" "${login}@frs.sourceforge.net:${root}/" || true
