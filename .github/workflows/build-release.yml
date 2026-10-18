@@ -65,8 +65,8 @@ jobs:
       EDITION: ${{ matrix.edition }}
       VERSION: ${{ needs.plan.outputs.version }}
       PUBLISH: ${{ needs.plan.outputs.publish }}
-      SF_USER: ${{ secrets.SF_USER || vars.SF_USER }}
-      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
+      SF_USER: ${{ vars.SF_USER || secrets.SF_USER }}
+      SF_PROJECT: ${{ vars.SF_PROJECT || secrets.SF_PROJECT }}
     steps:
       - name: Free disk space (reclaim preinstalled SDKs + tool cache)
         uses: jlumbroso/free-disk-space@v1.3.1
@@ -152,15 +152,54 @@ jobs:
             cat /tmp/keyerr; exit 1
           fi
           ssh-keyscan -H frs.sourceforge.net >> ~/.ssh/known_hosts 2>/dev/null
-          dest="/home/frs/project/${SF_PROJECT}/${VERSION}"
-          ssh_cmd="ssh -i $HOME/.ssh/sf -o IdentitiesOnly=yes"
-          printf -- '-mkdir %s\n' "$dest" | sftp -i ~/.ssh/sf -o IdentitiesOnly=yes -b - "${SF_USER}@frs.sourceforge.net"
+          SSH="ssh -i $HOME/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes"
+          SFTP="sftp -i $HOME/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes -b -"
+
+          root=""
+          for r in \
+            "/home/frs/project/${SF_PROJECT}" \
+            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT}" \
+            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT:0:2}/${SF_PROJECT}"; do
+            if rsync --list-only -e "$SSH" "${SF_USER}@frs.sourceforge.net:${r}/" >/dev/null 2>&1; then
+              root="$r"; break
+            fi
+          done
+          if [ -z "$root" ]; then
+            echo "::error::No directory for project '${SF_PROJECT}' found on frs.sourceforge.net"
+            echo "::error::(probed /home/frs/project/${SF_PROJECT} and /home/frs/p/... variants)."
+            echo "::error::Check that SF_PROJECT is the project's unix name and that ${SF_USER} administers"
+            echo "::error::it. Run the 'SourceForge key check' workflow for a full diagnosis."
+            exit 1
+          fi
+          echo "project dir: $root"
+          login="${SF_USER},${SF_PROJECT}"
+          printf -- 'cd /home/frs\n' | $SFTP "${login}@frs.sourceforge.net" >/dev/null 2>&1 || login="$SF_USER"
+
+          dest="${root}/${VERSION}"
+          if ! printf -- 'cd %s\n' "$dest" | $SFTP "${login}@frs.sourceforge.net" >/dev/null 2>&1; then
+            printf -- '-mkdir %s\n' "$dest" | $SFTP "${login}@frs.sourceforge.net" >/dev/null 2>&1 || true
+            if ! printf -- 'cd %s\n' "$dest" | $SFTP "${login}@frs.sourceforge.net" >/dev/null 2>&1; then
+              echo "::error::could not create or enter ${dest} on SourceForge"; exit 1
+            fi
+          fi
+          echo "version dir: $dest"
+
+          ok=0
           for attempt in 1 2 3 4; do
-            rsync -av --partial --progress -e "$ssh_cmd" \
-              "${ASSET}" "${ASSET}.sha256" "${SF_USER}@frs.sourceforge.net:${dest}/" && break
-            echo "upload failed (attempt $attempt), retrying"; sleep $((attempt * 30))
+            if rsync -av --partial --progress -e "$SSH" \
+                 "${ASSET}" "${ASSET}.sha256" "${login}@frs.sourceforge.net:${dest}/"; then
+              ok=1; break
+            fi
+            echo "::warning::upload attempt ${attempt}/4 failed"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 30))
           done
           rm -f ~/.ssh/sf
+          if [ "$ok" != 1 ]; then
+            echo "::error::all 4 upload attempts failed — ${ASSET} did NOT reach SourceForge"
+            exit 1
+          fi
+          echo "UPLOAD OK: ${ASSET} -> ${login}@frs.sourceforge.net:${dest}/"
+          echo "URL: https://sourceforge.net/projects/${SF_PROJECT}/files/${VERSION}/${ASSET}/"
 
       - name: Keep the checksum for the release notes
         continue-on-error: true
@@ -182,7 +221,7 @@ jobs:
       contents: write
     env:
       VERSION: ${{ needs.plan.outputs.version }}
-      SF_PROJECT: ${{ secrets.SF_PROJECT || vars.SF_PROJECT }}
+      SF_PROJECT: ${{ vars.SF_PROJECT || secrets.SF_PROJECT }}
     steps:
       - uses: actions/download-artifact@v4
         with:
