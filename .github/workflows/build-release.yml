@@ -181,14 +181,16 @@ jobs:
           SSH="ssh -i $HOME/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes"
           SFTP="sftp -i $HOME/.ssh/sf -o IdentitiesOnly=yes -o BatchMode=yes -b -"
 
-          # Newer SourceForge projects are not always under /home/frs/project/<slug>:
-          # probe the known layouts and take the first one that exists. A blind
-          # mkdir into a wrong path is what made the first release silently fail.
+          # Modern SourceForge projects live under /home/frs/p/<x>/<xy>/<slug>
+          # (confirmed writable for arcxlos by the 'SourceForge key check' run);
+          # older ones sit under /home/frs/project/<slug>. Probe in that order
+          # and take the first that exists — a blind mkdir into the legacy path
+          # is what made the first release fail.
           root=""
           for r in \
-            "/home/frs/project/${SF_PROJECT}" \
+            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT:0:2}/${SF_PROJECT}" \
             "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT}" \
-            "/home/frs/p/${SF_PROJECT:0:1}/${SF_PROJECT:0:2}/${SF_PROJECT}"; do
+            "/home/frs/project/${SF_PROJECT}"; do
             if rsync --list-only -e "$SSH" "${SF_USER}@frs.sourceforge.net:${r}/" >/dev/null 2>&1; then
               root="$r"; break
             fi
