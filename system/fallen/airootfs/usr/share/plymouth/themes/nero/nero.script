@@ -1,0 +1,1039 @@
+Window.SetBackgroundTopColor(0.0392, 0.0392, 0.0353);
+Window.SetBackgroundBottomColor(0.0392, 0.0392, 0.0353);
+
+status = "normal";
+t = 0;
+lastm = 0;
+lastlm = 0;
+wasdip = 0;
+W = Window.GetWidth();
+H = Window.GetHeight();
+sy = H / 1080;
+gscale = H / 270.0;
+hor = H * 0.78;
+esc = H * 0.56 / 813;
+ew = Math.Int(824 * esc);
+eh = Math.Int(813 * esc);
+cy = H * 0.58;
+ex = W / 2 - ew / 2;
+ey = cy - eh / 2;
+lw = Math.Int(146.4 * H / 270.0);
+lh = Math.Int(78 * H / 270.0);
+lx = W / 2 - lw / 2;
+ly = (H - lh) / 2 - H * 0.34;
+revh = Math.Int(56 * ew / 613.0);
+rev2h = Math.Int(48 * (lw + 8) / 594.0);
+
+zp[0] = 0;
+zp[1] = 0.158114;
+zp[2] = 0.223607;
+zp[3] = 0.273861;
+zp[4] = 0.316228;
+zp[5] = 0.353553;
+zp[6] = 0.387298;
+zp[7] = 0.41833;
+zp[8] = 0.447214;
+zp[9] = 0.474342;
+zp[10] = 0.5;
+zp[11] = 0.524404;
+zp[12] = 0.547723;
+zp[13] = 0.570088;
+zp[14] = 0.591608;
+zp[15] = 0.612372;
+zp[16] = 0.632456;
+zp[17] = 0.65192;
+zp[18] = 0.67082;
+zp[19] = 0.689202;
+zp[20] = 0.707107;
+zp[21] = 0.724569;
+zp[22] = 0.74162;
+zp[23] = 0.758288;
+zp[24] = 0.774597;
+zp[25] = 0.790569;
+zp[26] = 0.806226;
+zp[27] = 0.821584;
+zp[28] = 0.83666;
+zp[29] = 0.851469;
+zp[30] = 0.866025;
+zp[31] = 0.880341;
+zp[32] = 0.894427;
+zp[33] = 0.908295;
+zp[34] = 0.921954;
+zp[35] = 0.935414;
+zp[36] = 0.948683;
+zp[37] = 0.961769;
+zp[38] = 0.974679;
+zp[39] = 0.987421;
+zp[40] = 1;
+stx[0] = 0.607192;
+sty[0] = 0.689731;
+stp[0] = 8.913837;
+stx[1] = 0.699573;
+sty[1] = 0.399673;
+stp[1] = 7.422672;
+stx[2] = 0.853803;
+sty[2] = 0.877747;
+stp[2] = 5.482614;
+stx[3] = 0.373622;
+sty[3] = 0.86387;
+stp[3] = 1.33663;
+stx[4] = 0.329731;
+sty[4] = 0.190348;
+stp[4] = 5.823831;
+stx[5] = 0.540527;
+sty[5] = 0.246675;
+stp[5] = 7.327812;
+stx[6] = 0.713525;
+sty[6] = 0.239088;
+stp[6] = 7.117211;
+stx[7] = 0.692;
+sty[7] = 0.189546;
+stp[7] = 0.723179;
+stx[8] = 0.156712;
+sty[8] = 0.135679;
+stp[8] = 5.491389;
+stx[9] = 0.319945;
+sty[9] = 0.388577;
+stp[9] = 5.902586;
+stx[10] = 0.098957;
+sty[10] = 0.941609;
+stp[10] = 8.877551;
+stx[11] = 0.561932;
+sty[11] = 0.513989;
+stp[11] = 0.193799;
+stx[12] = 0.73589;
+sty[12] = 0.969603;
+stp[12] = 3.487182;
+stx[13] = 0.913954;
+sty[13] = 0.715163;
+stp[13] = 5.453683;
+stx[14] = 0.737613;
+sty[14] = 0.27368;
+stp[14] = 6.131072;
+stx[15] = 0.053296;
+sty[15] = 0.080698;
+stp[15] = 1.630368;
+stx[16] = 0.289561;
+sty[16] = 0.321855;
+stp[16] = 1.992253;
+stx[17] = 0.885668;
+sty[17] = 0.849761;
+stp[17] = 8.031845;
+stx[18] = 0.649416;
+sty[18] = 0.932398;
+stp[18] = 5.134488;
+stx[19] = 0.619212;
+sty[19] = 0.621202;
+stp[19] = 6.199316;
+stx[20] = 0.496831;
+sty[20] = 0.133698;
+stp[20] = 2.282815;
+stx[21] = 0.536149;
+sty[21] = 0.593019;
+stp[21] = 5.761152;
+stx[22] = 0.209133;
+sty[22] = 0.241542;
+stp[22] = 6.065947;
+stx[23] = 0.243204;
+sty[23] = 0.799328;
+stp[23] = 2.488034;
+stx[24] = 0.138566;
+sty[24] = 0.19863;
+stp[24] = 5.274628;
+stx[25] = 0.096974;
+sty[25] = 0.707524;
+stp[25] = 6.544281;
+stx[26] = 0.807453;
+sty[26] = 0.651757;
+stp[26] = 5.577705;
+stx[27] = 0.282635;
+sty[27] = 0.207238;
+stp[27] = 5.696954;
+stx[28] = 0.989428;
+sty[28] = 0.415014;
+stp[28] = 0.861316;
+stx[29] = 0.23628;
+sty[29] = 0.277595;
+stp[29] = 5.565623;
+stx[30] = 0.720061;
+sty[30] = 0.444836;
+stp[30] = 0.728687;
+stx[31] = 0.805325;
+sty[31] = 0.27259;
+stp[31] = 0.934166;
+stx[32] = 0.691348;
+sty[32] = 0.297487;
+stp[32] = 1.031003;
+stx[33] = 0.300153;
+sty[33] = 0.128659;
+stp[33] = 4.264118;
+stx[34] = 0.044105;
+sty[34] = 0.813984;
+stp[34] = 5.406295;
+stx[35] = 0.466192;
+sty[35] = 0.686217;
+stp[35] = 5.90945;
+stx[36] = 0.592816;
+sty[36] = 0.544041;
+stp[36] = 2.995648;
+stx[37] = 0.961252;
+sty[37] = 0.040571;
+stp[37] = 0.697699;
+stx[38] = 0.811413;
+sty[38] = 0.741933;
+stp[38] = 2.59686;
+stx[39] = 0.22082;
+sty[39] = 0.209679;
+stp[39] = 2.574592;
+dipf[360] = 1;
+dipf[361] = 1;
+dipf[362] = 1;
+dipf[363] = 1;
+dipf[364] = 1;
+dipf[365] = 1;
+dipf[366] = 1;
+dipf[367] = 1;
+dipf[368] = 1;
+dipf[369] = 1;
+dipf[370] = 1;
+dipf[371] = 1;
+dipf[372] = 1;
+dipf[373] = 1;
+dipf[374] = 1;
+dipf[375] = 1;
+dipf[376] = 1;
+dipf[377] = 1;
+dipf[378] = 1;
+dipf[379] = 1;
+dipf[380] = 1;
+dipf[381] = 1;
+dipf[382] = 1;
+dipf[383] = 1;
+dipf[384] = 1;
+dipf[385] = 1;
+dipf[386] = 1;
+dipf[387] = 1;
+dipf[388] = 1;
+dipf[389] = 1;
+dipf[390] = 1;
+dipf[391] = 1;
+dipf[392] = 1;
+dipf[393] = 1;
+dipf[394] = 1;
+dipf[395] = 1;
+dipf[396] = 1;
+dipf[397] = 1;
+dipf[398] = 1;
+dipf[399] = 1;
+dipf[400] = 1;
+dipf[401] = 1;
+dipf[402] = 1;
+dipf[403] = 1;
+dipf[404] = 1;
+dipf[405] = 1;
+dipf[406] = 1;
+dipf[407] = 1;
+dipf[408] = 1;
+dipf[409] = 1;
+dipf[410] = 1;
+dipf[411] = 1;
+dipf[412] = 1;
+dipf[413] = 1;
+dipf[414] = 1;
+dipf[415] = 1;
+dipf[416] = 1;
+dipf[417] = 1;
+dipf[418] = 1;
+dipf[419] = 1;
+dipf[780] = 1;
+dipf[781] = 1;
+dipf[782] = 1;
+dipf[783] = 1;
+dipf[784] = 1;
+dipf[785] = 1;
+dipf[786] = 1;
+dipf[787] = 1;
+dipf[788] = 1;
+dipf[789] = 1;
+dipf[790] = 1;
+dipf[791] = 1;
+dipf[792] = 1;
+dipf[793] = 1;
+dipf[794] = 1;
+dipf[795] = 1;
+dipf[796] = 1;
+dipf[797] = 1;
+dipf[798] = 1;
+dipf[799] = 1;
+dipf[800] = 1;
+dipf[801] = 1;
+dipf[802] = 1;
+dipf[803] = 1;
+dipf[804] = 1;
+dipf[805] = 1;
+dipf[806] = 1;
+dipf[807] = 1;
+dipf[808] = 1;
+dipf[809] = 1;
+dipf[810] = 1;
+dipf[811] = 1;
+dipf[812] = 1;
+dipf[813] = 1;
+dipf[814] = 1;
+dipf[815] = 1;
+dipf[816] = 1;
+dipf[817] = 1;
+dipf[818] = 1;
+dipf[819] = 1;
+dipf[820] = 1;
+dipf[821] = 1;
+dipf[822] = 1;
+dipf[823] = 1;
+dipf[824] = 1;
+dipf[825] = 1;
+dipf[826] = 1;
+dipf[827] = 1;
+dipf[828] = 1;
+dipf[829] = 1;
+dipf[830] = 1;
+dipf[831] = 1;
+dipf[832] = 1;
+dipf[833] = 1;
+dipf[834] = 1;
+dipf[835] = 1;
+dipf[836] = 1;
+dipf[837] = 1;
+dipf[838] = 1;
+dipf[839] = 1;
+g0[930] = -6.707978;
+g0[931] = -5.572777;
+g0[932] = -3.302374;
+g0[933] = -2.167173;
+g0[934] = 0.10323;
+g0[935] = 1.238432;
+g0[936] = 3.508834;
+g0[937] = 4.644036;
+g0[938] = 6.914439;
+g0[939] = 8.04964;
+g0[940] = 10.320043;
+g0[941] = 11.455244;
+g0[942] = 13.725647;
+g0[943] = 14.860849;
+g0[944] = 17.131251;
+g0[945] = 18.266453;
+g0[946] = 20.536856;
+g0[947] = 21.672057;
+g0[948] = 23.94246;
+g0[949] = 25.077661;
+g0[950] = -24.651936;
+g0[951] = -23.516734;
+g0[952] = -21.246332;
+g0[953] = -20.11113;
+g0[954] = -17.840727;
+g0[955] = -16.705526;
+g0[956] = -14.435123;
+g0[957] = -13.299922;
+g0[958] = -11.029519;
+g0[959] = -9.894317;
+g1[930] = 10.612317;
+g1[931] = 5.752349;
+g1[932] = -3.967587;
+g1[933] = -8.827556;
+g1[934] = -18.547492;
+g1[935] = -23.40746;
+g1[936] = 18.872604;
+g1[937] = 14.012635;
+g1[938] = 4.292699;
+g1[939] = -0.567269;
+g1[940] = -10.287206;
+g1[941] = -15.147174;
+g1[942] = -24.86711;
+g1[943] = 22.272922;
+g1[944] = 12.552985;
+g1[945] = 7.693017;
+g1[946] = -2.026919;
+g1[947] = -6.886887;
+g1[948] = -16.606824;
+g1[949] = -21.466792;
+g1[950] = 20.813272;
+g1[951] = 15.953304;
+g1[952] = 6.233367;
+g1[953] = 1.373399;
+g1[954] = -8.346537;
+g1[955] = -13.206506;
+g1[956] = -22.926442;
+g1[957] = 24.21359;
+g1[958] = 14.493654;
+g1[959] = 9.633685;
+g2[930] = -24.513397;
+g2[931] = 24.95051;
+g2[932] = 19.878323;
+g2[933] = 17.34223;
+g2[934] = 12.270044;
+g2[935] = 9.73395;
+g2[936] = 4.661764;
+g2[937] = 2.125671;
+g2[938] = -2.946515;
+g2[939] = -5.482609;
+g2[940] = -10.554795;
+g2[941] = -13.090888;
+g2[942] = -18.163074;
+g2[943] = -20.699168;
+g2[944] = -25.771354;
+g2[945] = 23.692553;
+g2[946] = 18.620366;
+g2[947] = 16.084273;
+g2[948] = 11.012087;
+g2[949] = 8.475994;
+g2[950] = 3.403807;
+g2[951] = 0.867714;
+g2[952] = -4.204472;
+g2[953] = -6.740565;
+g2[954] = -11.812752;
+g2[955] = -14.348845;
+g2[956] = -19.421031;
+g2[957] = -21.957124;
+g2[958] = 24.970689;
+g2[959] = 22.434596;
+g3[930] = 1.607373;
+g3[931] = 23.116122;
+g3[932] = 14.13362;
+g3[933] = -16.357631;
+g3[934] = -25.340134;
+g3[935] = -3.831385;
+g3[936] = -12.813887;
+g3[937] = 8.694862;
+g3[938] = -0.287641;
+g3[939] = 21.221108;
+g3[940] = 12.238606;
+g3[941] = -18.252645;
+g3[942] = 24.764852;
+g3[943] = -5.726399;
+g3[944] = -14.708901;
+g3[945] = 6.799848;
+g3[946] = -2.182654;
+g3[947] = 19.326094;
+g3[948] = 10.343592;
+g3[949] = -20.147659;
+g3[950] = 22.869839;
+g3[951] = -7.621413;
+g3[952] = -16.603915;
+g3[953] = 4.904834;
+g3[954] = -4.077668;
+g3[955] = 17.43108;
+g3[956] = 8.448578;
+g3[957] = -22.042673;
+g3[958] = 20.974825;
+g3[959] = -9.516426;
+g4[930] = 21.368888;
+g4[931] = -24.465761;
+g4[932] = -12.135058;
+g4[933] = -5.969707;
+g4[934] = 6.360995;
+g4[935] = 12.526346;
+g4[936] = 24.857048;
+g4[937] = -20.977601;
+g4[938] = -8.646898;
+g4[939] = -2.481547;
+g4[940] = 9.849155;
+g4[941] = 16.014506;
+g4[942] = -23.654792;
+g4[943] = -17.48944;
+g4[944] = -5.158738;
+g4[945] = 1.006613;
+g4[946] = 13.337315;
+g4[947] = 19.502666;
+g4[948] = -20.166631;
+g4[949] = -14.00128;
+g4[950] = -1.670578;
+g4[951] = 4.494773;
+g4[952] = 16.825475;
+g4[953] = 22.990827;
+g4[954] = -16.678471;
+g4[955] = -10.51312;
+g4[956] = 1.817582;
+g4[957] = 7.982933;
+g4[958] = 20.313636;
+g4[959] = -25.521013;
+g5[930] = 20.767555;
+g5[931] = -6.141118;
+g5[932] = -7.958464;
+g5[933] = 17.132863;
+g5[934] = 15.315518;
+g5[935] = -11.593155;
+g5[936] = -13.410501;
+g5[937] = 11.680826;
+g5[938] = 9.86348;
+g5[939] = -17.045192;
+g5[940] = -18.862538;
+g5[941] = 6.228789;
+g5[942] = 4.411443;
+g5[943] = -22.497229;
+g5[944] = -24.314575;
+g5[945] = 0.776752;
+g5[946] = -1.040594;
+g5[947] = 24.050733;
+g5[948] = 22.233388;
+g5[949] = -4.675285;
+g5[950] = -6.492631;
+g5[951] = 18.598696;
+g5[952] = 16.781351;
+g5[953] = -10.127322;
+g5[954] = -11.944668;
+g5[955] = 13.146659;
+g5[956] = 11.329314;
+g5[957] = -15.579359;
+g5[958] = -17.396705;
+g5[959] = 7.694622;
+g6[930] = -17.814335;
+g6[931] = 23.510605;
+g6[932] = 2.160486;
+g6[933] = -8.514574;
+g6[934] = 22.135306;
+g6[935] = 11.460246;
+g6[936] = -9.889873;
+g6[937] = -20.564933;
+g6[938] = 10.084947;
+g6[939] = -0.590113;
+g6[940] = -21.940232;
+g6[941] = 19.384708;
+g6[942] = -1.965412;
+g6[943] = -12.640472;
+g6[944] = 18.009409;
+g6[945] = 7.334349;
+g6[946] = -14.015771;
+g6[947] = -24.690831;
+g6[948] = 5.959049;
+g6[949] = -4.71601;
+g6[950] = 25.93387;
+g6[951] = 15.25881;
+g6[952] = -6.09131;
+g6[953] = -16.766369;
+g6[954] = 13.883511;
+g6[955] = 3.208451;
+g6[956] = -18.141669;
+g6[957] = 23.183272;
+g6[958] = 1.833152;
+g6[959] = -8.841908;
+g7[930] = -17.458976;
+g7[931] = -1.43774;
+g7[932] = -21.395269;
+g7[933] = -5.374033;
+g7[934] = -25.331561;
+g7[935] = -9.310325;
+g7[936] = 22.732146;
+g7[937] = -13.246618;
+g7[938] = 18.795854;
+g7[939] = -17.18291;
+g7[940] = 14.859562;
+g7[941] = -21.119203;
+g7[942] = 10.923269;
+g7[943] = -25.055495;
+g7[944] = 6.986977;
+g7[945] = 23.008213;
+g7[946] = 3.050684;
+g7[947] = 19.07192;
+g7[948] = -0.885608;
+g7[949] = 15.135628;
+g7[950] = -4.821901;
+g7[951] = 11.199335;
+g7[952] = -8.758193;
+g7[953] = 7.263043;
+g7[954] = -12.694486;
+g7[955] = 3.32675;
+g7[956] = -16.630778;
+g7[957] = -0.609542;
+g7[958] = -20.56707;
+g7[959] = -4.545835;
+g8[930] = -14.086622;
+g8[931] = 1.517664;
+g8[932] = -19.273764;
+g8[933] = -3.669478;
+g8[934] = -24.460906;
+g8[935] = -8.85662;
+g8[936] = 22.351952;
+g8[937] = -14.043762;
+g8[938] = 17.16481;
+g8[939] = -19.230905;
+g8[940] = 11.977667;
+g8[941] = -24.418047;
+g8[942] = 6.790525;
+g8[943] = 22.394811;
+g8[944] = 1.603383;
+g8[945] = 17.207669;
+g8[946] = -3.583759;
+g8[947] = 12.020527;
+g8[948] = -8.770901;
+g8[949] = 6.833385;
+g8[950] = -13.958043;
+g8[951] = 1.646243;
+g8[952] = -19.145186;
+g8[953] = -3.5409;
+g8[954] = -24.332328;
+g8[955] = -8.728042;
+g8[956] = 22.48053;
+g8[957] = -13.915184;
+g8[958] = 17.293388;
+g8[959] = -19.102326;
+g9[930] = 5.982092;
+g9[931] = -9.948799;
+g9[932] = 10.18942;
+g9[933] = -5.741471;
+g9[934] = 14.396747;
+g9[935] = -1.534144;
+g9[936] = 18.604074;
+g9[937] = 2.673183;
+g9[938] = 22.811402;
+g9[939] = 6.880511;
+g9[940] = -24.981271;
+g9[941] = 11.087838;
+g9[942] = -20.773944;
+g9[943] = 15.295165;
+g9[944] = -16.566616;
+g9[945] = 19.502493;
+g9[946] = -12.359289;
+g9[947] = 23.70982;
+g9[948] = -8.151962;
+g9[949] = -24.082853;
+g9[950] = -3.944634;
+g9[951] = -19.875525;
+g9[952] = 0.262693;
+g9[953] = -15.668198;
+g9[954] = 4.47002;
+g9[955] = -11.460871;
+g9[956] = 8.677348;
+g9[957] = -7.253543;
+g9[958] = 12.884675;
+g9[959] = -3.046216;
+dkf[930] = 0.221985;
+dkf[931] = 0.221985;
+dkf[932] = 0.230717;
+dkf[933] = 0.239449;
+dkf[934] = 0.239449;
+dkf[935] = 0.248182;
+dkf[936] = 0.256914;
+dkf[937] = 0.256914;
+dkf[938] = 0.265646;
+dkf[939] = 0.274379;
+dkf[940] = 0.274379;
+dkf[941] = 0.283111;
+dkf[942] = 0.291843;
+dkf[943] = 0.291843;
+dkf[944] = 0.300576;
+dkf[945] = 0.309308;
+dkf[946] = 0.309308;
+dkf[947] = 0.31804;
+dkf[948] = 0.326773;
+dkf[949] = 0.326773;
+dkf[950] = 0.335505;
+dkf[951] = 0.344237;
+dkf[952] = 0.344237;
+dkf[953] = 0.35297;
+dkf[954] = 0.361702;
+dkf[955] = 0.361702;
+dkf[956] = 0.370434;
+dkf[957] = 0.379167;
+dkf[958] = 0.379167;
+
+bg.image = Image("bg.png").Scale(W, H);
+bg.sprite = Sprite(bg.image);
+bg.sprite.SetPosition(0, 0, -100);
+
+for (i = 0; i < 40; i++) {
+  stars[i].sprite = Sprite(Image("star.png").Scale(Math.Int(6 * sy), Math.Int(6 * sy)));
+  stars[i].sprite.SetX(stx[i] * W);
+  stars[i].sprite.SetY(sty[i] * hor * 0.9);
+  stars[i].sprite.SetZ(-6);
+  stars[i].sprite.SetOpacity(0.5);
+}
+
+glow.image = Image("glow_emblem.png").Scale(Math.Int(H * 0.88), Math.Int(H * 0.88));
+glow.sprite = Sprite(glow.image);
+glow.sprite.SetX(W / 2 - glow.image.GetWidth() / 2);
+glow.sprite.SetY(cy - glow.image.GetHeight() / 2);
+glow.sprite.SetZ(-7);
+glow.sprite.SetOpacity(0.12);
+
+dawn.image = Image("dawn.png").Scale(W, Math.Int(H * 0.12));
+dawn.sprite = Sprite(dawn.image);
+dawn.sprite.SetPosition(0, hor - Math.Int(H * 0.10), -5);
+dawn.sprite.SetOpacity(0.42);
+
+fan.image = Image("gridfan.png").Scale(W, Math.Int(H - hor));
+fan.sprite = Sprite(fan.image);
+fan.sprite.SetPosition(W / 2 - fan.image.GetWidth() / 2, hor, -4);
+
+for (i = 0; i < 11; i++) {
+  hlines[i].sprite = Sprite(Image("gridline_h.png").Scale(W, Math.Int(4 * sy)));
+  hlines[i].sprite.SetZ(-3);
+  hlines[i].sprite.SetOpacity(0.16);
+  hlines[i].frac = i / 11.0;
+}
+
+body.image = Image("emblem.png").Scale(ew, eh);
+body.sprite = Sprite(body.image);
+body.sprite.SetPosition(ex, ey, 20);
+body.sprite.SetOpacity(0.9);
+
+for (i = 0; i < 271; i++) {
+  slices[i].image = Image("neon_slice_" + i + ".png").Scale(ew, Math.Int((i + 1) * 3 * esc) - Math.Int(i * 3 * esc));
+  slices[i].sprite = Sprite(slices[i].image);
+  slices[i].sprite.SetX(ex);
+  slices[i].sprite.SetY(ey + Math.Int(i * 3 * esc));
+  slices[i].sprite.SetZ(21);
+  slices[i].sprite.SetOpacity(0);
+}
+
+neon.image = Image("neon_full.png").Scale(ew, eh);
+neon.sprite = Sprite(neon.image);
+neon.sprite.SetX(ex);
+neon.sprite.SetY(ey);
+neon.sprite.SetZ(21);
+neon.sprite.SetOpacity(0);
+
+rev.image = Image("reveal.png").Scale(ew, revh);
+rev.sprite = Sprite(rev.image);
+rev.sprite.SetX(ex);
+rev.sprite.SetZ(22);
+rev.sprite.SetOpacity(0);
+
+for (i = 0; i < 245; i++) {
+  lslices[i].image = Image("logo_slice_" + i + ".png").Scale(lw, Math.Int((i + 1) * lh / 245.0) - Math.Int(i * lh / 245.0));
+  lslices[i].sprite = Sprite(lslices[i].image);
+  lslices[i].sprite.SetX(lx);
+  lslices[i].sprite.SetY(ly + Math.Int(i * lh / 245.0));
+  lslices[i].sprite.SetZ(30);
+  lslices[i].sprite.SetOpacity(0);
+}
+
+lgo.image = Image("logo.png").Scale(lw, lh);
+lgo.sprite = Sprite(lgo.image);
+lgo.sprite.SetX(lx);
+lgo.sprite.SetY(ly);
+lgo.sprite.SetZ(30);
+lgo.sprite.SetOpacity(0);
+
+bloom.image = Image("logo_glow.png").Scale(lw, lh);
+bloom.sprite = Sprite(bloom.image);
+bloom.sprite.SetX(lx);
+bloom.sprite.SetY(ly);
+bloom.sprite.SetZ(31);
+bloom.sprite.SetOpacity(0);
+
+for (i = 0; i < 10; i++) {
+  bands[i].image = Image("band_" + i + ".png").Scale(W, Math.Int((i + 1) * H / 10) - Math.Int(i * H / 10));
+  bands[i].sprite = Sprite(bands[i].image);
+  bands[i].sprite.SetX(0);
+  bands[i].sprite.SetY(Math.Int(i * H / 10));
+  bands[i].sprite.SetZ(50 + i);
+  bands[i].sprite.SetOpacity(0);
+}
+
+curtain.image = Image("bg.png").Scale(W, H);
+curtain.sprite = Sprite(curtain.image);
+curtain.sprite.SetPosition(0, 0, 49);
+curtain.sprite.SetOpacity(0);
+
+scene.image = Image("scene.png").Scale(W, H);
+ghost.a = Sprite(scene.image);
+ghost.b = Sprite(scene.image);
+ghost.a.SetPosition(0, 0, 60);
+ghost.b.SetPosition(0, 0, 61);
+ghost.a.SetOpacity(0);
+ghost.b.SetOpacity(0);
+
+dark.image = Image("dark.png").Scale(W, H);
+dark.sprite = Sprite(dark.image);
+dark.sprite.SetPosition(0, 0, 999);
+dark.sprite.SetOpacity(0);
+
+fun place_emblem (ncy)
+  {
+    ny = ncy - eh / 2;
+    body.sprite.SetY(ny);
+    neon.sprite.SetY(ny);
+    for (i = 0; i < 271; i++)
+      slices[i].sprite.SetY(ny + Math.Int(i * 3 * esc));
+    glow.sprite.SetY(ncy - glow.image.GetHeight() / 2);
+  }
+
+fun hide_slices ()
+  {
+    for (i = 0; i < 271; i++)
+      slices[i].sprite.SetOpacity(0);
+  }
+
+fun hide_logo_slices ()
+  {
+    for (i = 0; i < 245; i++)
+      lslices[i].sprite.SetOpacity(0);
+  }
+
+fun reset_glitch ()
+  {
+    for (i = 0; i < 10; i++)
+      bands[i].sprite.SetOpacity(0);
+    curtain.sprite.SetOpacity(0);
+    ghost.a.SetOpacity(0);
+    ghost.b.SetOpacity(0);
+    dark.sprite.SetOpacity(0);
+  }
+
+fun refresh_callback ()
+  {
+    if (status != "normal")
+      return;
+    t++;
+    if (t >= 960)
+      t = 0;
+    if (t == 0)
+      {
+        lastm = 0;
+        lastlm = 0;
+        hide_slices();
+        hide_logo_slices();
+        reset_glitch();
+      }
+    if (t == 300)
+      {
+        hide_slices();
+        lastm = 0;
+      }
+    if (t == 372)
+      {
+        hide_logo_slices();
+        lastlm = 0;
+      }
+    prog = t / 960.0;
+    for (i = 0; i < 40; i++)
+      stars[i].sprite.SetOpacity((0.25 + 0.55 * Math.Abs(Math.Sin(t * 0.04 + stp[i]))) * 0.5);
+    for (i = 0; i < 11; i++) {
+      z = hlines[i].frac + t * 0.0013833;
+      z = z - Math.Int(z);
+      hlines[i].sprite.SetY(hor + z * z * zp[Math.Int(z * 40)] * (H - hor));
+      hlines[i].sprite.SetOpacity(0.16 * Math.Min(1, z * 7));
+    }
+    dawn.sprite.SetOpacity((0.10 + 0.14 * prog) / 0.24);
+    bobv = Math.Clamp((t - 402) / 120.0, 0, 1);
+    ncy = H * 0.58 + H * 0.006 * Math.Sin(t * 0.02) * bobv;
+    place_emblem(ncy);
+    kl = Math.Min(t / 300, 1);
+    glow.sprite.SetOpacity((0.03 + 0.04 * kl + 0.02 * prog) / 0.25);
+    dip = 1;
+    if (dipf[t])
+      dip = 0.72;
+    if (t < 300)
+      {
+        k = t / 300.0;
+        m = Math.Int(k * 271);
+        if (m > lastm)
+          {
+            for (i = 271 - m; i < 271 - lastm; i++)
+              slices[i].sprite.SetOpacity(dip);
+            lastm = m;
+          }
+        if (dip < 1 || wasdip == 1)
+          {
+            for (i = 271 - m; i < 271; i++)
+              slices[i].sprite.SetOpacity(dip);
+          }
+        if (dip < 1)
+          wasdip = 1;
+        else
+          wasdip = 0;
+        fy = ey + eh * (1 - k);
+        if (k > 0 && k < 1)
+          {
+            rev.sprite.SetOpacity(0.8 * dip);
+            rev.sprite.SetY(fy - revh / 2);
+          }
+        else
+          rev.sprite.SetOpacity(0);
+        rev2.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(0);
+        lgo.sprite.SetOpacity(0);
+        bloom.sprite.SetOpacity(0);
+        hum.sprite.SetOpacity(0);
+        reset_glitch();
+      }
+    else if (t < 372)
+      {
+        neon.sprite.SetOpacity(dip);
+        lk = (t - 300) / 72.0;
+        e = 1 - (1 - lk) * (1 - lk) * (1 - lk);
+        lm = Math.Int(lk * 245);
+        if (lm > lastlm)
+          {
+            for (i = 245 - lm; i < 245 - lastlm; i++)
+              lslices[i].sprite.SetOpacity(dip);
+            lastlm = lm;
+          }
+        if (dip < 1 || wasdip == 1)
+          {
+            for (i = 245 - lm; i < 245; i++)
+              lslices[i].sprite.SetOpacity(dip);
+          }
+        if (dip < 1)
+          wasdip = 1;
+        else
+          wasdip = 0;
+        lgo.sprite.SetOpacity(0);
+        fy = ly + lh * (1 - e);
+        if (lk < 1)
+          {
+            rev2.sprite.SetOpacity(0.85 * dip);
+            rev2.sprite.SetY(fy - rev2h / 2);
+          }
+        else
+          rev2.sprite.SetOpacity(0);
+        rev.sprite.SetOpacity(0);
+        bloom.sprite.SetOpacity(0);
+        hum.sprite.SetOpacity(0);
+        reset_glitch();
+      }
+    else if (t < 402)
+      {
+        rev.sprite.SetOpacity(0);
+        rev2.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(dip);
+        lgo.sprite.SetOpacity(dip);
+        bp = (t - 372) / 30.0;
+        bloom.sprite.SetOpacity((1 - bp) * 0.45);
+        hum.sprite.SetOpacity(0);
+        reset_glitch();
+      }
+    else if (t < 930)
+      {
+        rev.sprite.SetOpacity(0);
+        rev2.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(dip);
+        lgo.sprite.SetOpacity(dip);
+        bloom.sprite.SetOpacity(0);
+        hum.sprite.SetOpacity(0.10 + 0.10 * Math.Sin(t * 0.028333));
+        reset_glitch();
+      }
+    else
+      {
+        g = (t - 930) / 30.0;
+        rev.sprite.SetOpacity(0);
+        rev2.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(0);
+        lgo.sprite.SetOpacity(0);
+        bloom.sprite.SetOpacity(0);
+        hum.sprite.SetOpacity(0);
+        bands[0].sprite.SetX(g0[t] * g * gscale);
+        bands[0].sprite.SetOpacity(1);
+        bands[1].sprite.SetX(g1[t] * g * gscale);
+        bands[1].sprite.SetOpacity(1);
+        bands[2].sprite.SetX(g2[t] * g * gscale);
+        bands[2].sprite.SetOpacity(1);
+        bands[3].sprite.SetX(g3[t] * g * gscale);
+        bands[3].sprite.SetOpacity(1);
+        bands[4].sprite.SetX(g4[t] * g * gscale);
+        bands[4].sprite.SetOpacity(1);
+        bands[5].sprite.SetX(g5[t] * g * gscale);
+        bands[5].sprite.SetOpacity(1);
+        bands[6].sprite.SetX(g6[t] * g * gscale);
+        bands[6].sprite.SetOpacity(1);
+        bands[7].sprite.SetX(g7[t] * g * gscale);
+        bands[7].sprite.SetOpacity(1);
+        bands[8].sprite.SetX(g8[t] * g * gscale);
+        bands[8].sprite.SetOpacity(1);
+        bands[9].sprite.SetX(g9[t] * g * gscale);
+        bands[9].sprite.SetOpacity(1);
+        ghost.a.SetOpacity(0.30 * g);
+        ghost.b.SetOpacity(0.22 * g);
+        ghost.a.SetX(-3 * g * gscale);
+        ghost.b.SetX(3 * g * gscale);
+        if (dkf[t])
+          dark.sprite.SetOpacity(dkf[t] * g);
+        else
+          dark.sprite.SetOpacity(0);
+      }
+  }
+
+fun quit_callback ()
+  {
+    hide_slices();
+    hide_logo_slices();
+    lastm = 0;
+    lastlm = 0;
+    rev.sprite.SetOpacity(0);
+    rev2.sprite.SetOpacity(0);
+    neon.sprite.SetOpacity(1);
+    lgo.sprite.SetOpacity(1);
+    bloom.sprite.SetOpacity(0);
+    hum.sprite.SetOpacity(0);
+    reset_glitch();
+  }
+
+fun dialog_setup ()
+  {
+    global.dialog.box.image = Image("entrybox.png");
+    global.dialog.box.sprite = Sprite(global.dialog.box.image);
+    global.dialog.box.x = W / 2 - global.dialog.box.image.GetWidth() / 2;
+    global.dialog.box.y = H * 0.86;
+    global.dialog.box.sprite.SetPosition(global.dialog.box.x, global.dialog.box.y, 10000);
+    global.dialog.bullet_image = Image("bullet.png");
+    global.dialog.bullets = 0;
+  }
+
+fun dialog_opacity (opacity)
+  {
+    global.dialog.box.sprite.SetOpacity(opacity);
+    for (index = 0; global.dialog.bullet[index]; index++)
+      global.dialog.bullet[index].sprite.SetOpacity(opacity);
+    if (opacity == 0)
+      global.dialog.bullets = 0;
+  }
+
+fun display_normal_callback ()
+  {
+    global.status = "normal";
+    if (global.dialog)
+      dialog_opacity(0);
+  }
+
+fun display_password_callback (prompt, bullets)
+  {
+    global.status = "password";
+    if (!global.dialog)
+      dialog_setup();
+    else
+      dialog_opacity(1);
+    for (index = 0; global.dialog.bullet[index] || index < bullets; index++)
+      {
+        if (!global.dialog.bullet[index])
+          {
+            global.dialog.bullet[index].sprite = Sprite(global.dialog.bullet_image);
+            global.dialog.bullet[index].sprite.SetPosition(global.dialog.box.x + 12 + index * (global.dialog.bullet_image.GetWidth() + 4), global.dialog.box.y + global.dialog.box.image.GetHeight() / 2 - global.dialog.bullet_image.GetHeight() / 2, 10001);
+          }
+        if (index < bullets)
+          global.dialog.bullet[index].sprite.SetOpacity(1);
+        else
+          global.dialog.bullet[index].sprite.SetOpacity(0);
+      }
+  }
+
+message.sprite = Sprite();
+message.sprite.SetPosition(10, 10, 10000);
+
+fun display_message_callback (text)
+  {
+    message.sprite.SetImage(Image.Text(text, 0.93, 0.92, 0.89));
+    message.sprite.SetOpacity(1);
+  }
+
+fun hide_message_callback ()
+  {
+    message.sprite.SetOpacity(0);
+  }
+
+Plymouth.SetRefreshFunction(refresh_callback);
+Plymouth.SetQuitFunction(quit_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayMessageFunction(display_message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);
+Plymouth.SetRefreshRate(60);
+
