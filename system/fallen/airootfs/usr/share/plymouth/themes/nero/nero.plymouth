@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Nero
+Description=ArchangelOS boot animation - vigil of the fallen
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nero
+ScriptFile=/usr/share/plymouth/themes/nero/nero.script
