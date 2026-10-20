@@ -36,19 +36,30 @@ except Exception:  # pragma: no cover
 
 # --- Palette (matches the desktop shell: src/PrefsService overrides) ----------
 BG          = QColor(8, 8, 8)            # #080808 matte near-black
-SURFACE     = QColor(16, 16, 16)         # #101010
-SURFACE_HI  = QColor(26, 26, 25)         # #1a1a19
-OUTLINE     = QColor(46, 45, 43)         # #2e2d2b hairline
-ACCENT      = QColor(194, 74, 82)        # #C24A52 crimson
-ACCENT_DIM  = QColor(194, 74, 82, 70)
+SURFACE     = QColor(10, 10, 9)
+SURFACE_HI  = QColor(16, 16, 15)
+OUTLINE     = QColor(38, 37, 35)         # hairline
+ACCENT      = QColor(240, 16, 16)        # neon red
+ACCENT_DIM  = QColor(240, 16, 16, 70)
+NEON_HI     = QColor(255, 60, 70)
 TEXT        = QColor(236, 234, 228)      # #ECEAE4
 SUBTEXT     = QColor(138, 136, 132)      # #8a8884
 STEEL       = QColor(185, 182, 174)      # #B9B6AE
 BLADE       = QColor(120, 128, 140)      # cold steel for the katana stroke
 
-SWORD_SVG = "/usr/share/archangelos/wheel/sword.svg"   # the archangel sword, centre of the wheel
-# where the art sits inside that file's 590 x 590 canvas: x, y, width, height
-SWORD_BOX = (114, 0, 359, 587)
+def _find_asset(name):
+    """Installed location first, then the repo layout (script in usr/bin,
+    assets in usr/share) so the launcher works unpacked too."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for d in ("/usr/share/archangelos/wheel", os.path.join(here, "..", "share", "archangelos", "wheel")):
+        p = os.path.join(d, name)
+        if os.path.exists(p):
+            return p
+    return ""
+
+SWORD_SVG = _find_asset("sword.svg")             # the archangel sword, centre of the wheel
+SWORD_BOX = (0, 0, 797, 744)                     # art bounds inside the 824 x 813 canvas
+NEON_PNG = _find_asset("sword_neon.png")
 
 
 def _emblem_svg():
@@ -332,6 +343,15 @@ def _clamp01(t):
     return 0.0 if t < 0 else (1.0 if t > 1 else t)
 
 
+def _rand_seq(seed):
+    state = seed & 0x7fffffff
+    def r():
+        nonlocal state
+        state = (1103515245 * state + 12345) & 0x7fffffff
+        return state / 0x7fffffff
+    return r
+
+
 class WheelView(QWidget):
     """Radial donut of security-tool categories; clicking one expands it into an
     arsenal of app nodes wired to the category by PCB-style traces."""
@@ -347,8 +367,8 @@ class WheelView(QWidget):
         self.setMouseTracking(True)
         self.phase = 0.0
         # Mini wheel, fixed pixel size, drawn around a cursor-anchored centre.
-        self.outer = 136
-        self.inner = 78
+        self.outer = 150
+        self.inner = 88
         self.center = None            # QPointF in widget coords; set on open
         self._emblem = None
         self._emblem_px = 0
@@ -358,6 +378,7 @@ class WheelView(QWidget):
         self.sel = 0                  # expanded category index
         self.app_sel = 0             # highlighted app node
         self.layout = None            # geometry of the expanded arsenal
+        self.page_num = {}
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
         self._timer.start(16)
@@ -444,9 +465,23 @@ class WheelView(QWidget):
         if self.expanding and self.layout:
             chips = self.layout["chips"]
             if 0 <= self.app_sel < len(chips):
-                self._launch(chips[self.app_sel]["exec"])
+                if chips[self.app_sel]["exec"] is None:
+                    self.cycle_page()
+                else:
+                    self._launch(chips[self.app_sel]["exec"])
         else:
             self.open_category(self.hover_index)
+
+    def cycle_page(self):
+        if not self.expanding or not self.layout:
+            return
+        if self.layout.get("pages", 1) <= 1:
+            return
+        idx = self.layout["index"]
+        self.page_num[idx] = (self.page_num.get(idx, 0) + 1) % self.layout["pages"]
+        self.layout = self._compute_layout(idx)
+        self.app_sel = 0
+        self.update()
 
     def _launch(self, exec_cmd):
         if exec_cmd:
@@ -463,52 +498,116 @@ class WheelView(QWidget):
         mid = math.radians(index * span - 90)
         dx, dy = math.cos(mid), math.sin(mid)
         label_r = (R + r) / 2.0
-        back, pop = 54, 30
+        back, pop = 54, 40
 
         btn_from = QPointF(O.x() + dx * label_r, O.y() + dy * label_r)
         wheel_to = QPointF(O.x() - dx * back, O.y() - dy * back)
-        btn_to = QPointF(wheel_to.x() + dx * (R + pop), wheel_to.y() + dy * (R + pop))
+        btn_to = QPointF(wheel_to.x() + dx * (pop + back + R),
+                         wheel_to.y() + dy * (pop + back + R))
 
         apps = self.catalog[self.categories[index]]
         CW, CH, GAP = 198, 34, 9
+        W, H = self.width(), self.height()
+        max_span_d = min(W, H) - 460
+        ax, ay = abs(dx), abs(dy)
+        support = CW * ax + CH * ay
+        if ax > 1e-6 and ay > 1e-6:
+            row_floor = min(CW / ax, CH / ay) + GAP
+            lane_floor = min(CW / ay, CH / ax) + GAP
+        else:
+            row_floor = (CW if ax > ay else CH) + GAP
+            lane_floor = (CH if ax > ay else CW) + GAP
+        avail_p = (W if ay >= ax else H) - 140
+        lane_foot = CW if ay >= ax else CH
+        rows_cap = max(1, int((max_span_d - support) // row_floor) + 1)
+        lanes_cap = max(1, int((avail_p - lane_foot) // lane_floor) + 1)
+        per_page = rows_cap * lanes_cap
+        pages = max(1, -(-len(apps) // (per_page - 1))) if len(apps) > per_page else 1
+        page = self.page_num.get(index, 0) % pages
+        if len(apps) > per_page:
+            start = page * (per_page - 1)
+            apps = apps[start:start + per_page - 1]
+            if start + per_page - 1 < len(self.catalog[self.categories[index]]):
+                apps = apps + [("+%d more" % (len(self.catalog[self.categories[index]]) - start - (per_page - 1)), None, None)]
         N = len(apps)
-        col_h = N * CH + (N - 1) * GAP
-        apps_c = QPointF(wheel_to.x() + dx * (R + 190), wheel_to.y() + dy * (R + 190))
+        rand = _rand_seq(index * 131 + 7 + page * 977)
+        rows, lanes = N, 1
+        for r in range(3, N + 1):
+            l = -(-N // r)
+            if (r - 1) * row_floor + support <= max_span_d and \
+               (l - 1) * lane_floor + lane_foot <= avail_p:
+                rows, lanes = r, l
+                break
+        else:
+            rows = max(1, int(max_span_d // row_floor))
+            lanes = -(-N // rows)
+        pitch_d = max(row_floor, CH + GAP + 26)
+        if (rows - 1) * pitch_d + support > max_span_d:
+            pitch_d = max(row_floor, (max_span_d - support) / max(1, rows - 1))
+        pitch_p = max(lane_floor, CW + GAP + 34)
+        if (lanes - 1) * pitch_p + lane_foot > avail_p:
+            pitch_p = max(lane_floor, (avail_p - lane_foot) / max(1, lanes - 1))
         chips = []
         for j, (name, exe, icon) in enumerate(apps):
-            cyj = apps_c.y() - col_h / 2 + CH / 2 + j * (CH + GAP)
-            chips.append({"rect": QRectF(apps_c.x() - CW / 2, cyj - CH / 2, CW, CH),
+            lane, k = divmod(j, rows)
+            side = 1 if k % 2 == 0 else -1
+            ddist = 231.0 + k * pitch_d + rand() * 8
+            poff = (lane - (lanes - 1) / 2.0) * pitch_p
+            cxj = O.x() + dx * ddist + (-dy) * poff
+            cyj = O.y() + dy * ddist + dx * poff
+            chips.append({"rect": QRectF(cxj - CW / 2, cyj - CH / 2, CW, CH),
                           "name": name, "exec": exe})
 
-        # fit the whole composition on screen
-        xs = [wheel_to.x() - R, wheel_to.x() + R, btn_to.x() - 60, btn_to.x() + 60]
-        ys = [wheel_to.y() - R, wheel_to.y() + R, btn_to.y() - 30, btn_to.y() + 30]
-        for c in chips:
-            xs += [c["rect"].left(), c["rect"].right()]
-            ys += [c["rect"].top(), c["rect"].bottom()]
-        m = 26
-        W, H = self.width(), self.height()
-        tx = ty = 0.0
-        if min(xs) < m:
-            tx = m - min(xs)
-        if max(xs) + tx > W - m:
-            tx -= (max(xs) + tx) - (W - m)
-        if min(ys) < m:
-            ty = m - min(ys)
-        if max(ys) + ty > H - m:
-            ty -= (max(ys) + ty) - (H - m)
+        def _fit_shift():
+            xs = [wheel_to.x() - R, wheel_to.x() + R, btn_to.x() - 60, btn_to.x() + 60]
+            ys = [wheel_to.y() - R, wheel_to.y() + R, btn_to.y() - 30, btn_to.y() + 30]
+            for c in chips:
+                xs += [c["rect"].left(), c["rect"].right()]
+                ys += [c["rect"].top(), c["rect"].bottom()]
+            m = 26
+            W, H = self.width(), self.height()
+            tx = ty = 0.0
+            if min(xs) < m:
+                tx = m - min(xs)
+            if max(xs) + tx > W - m:
+                tx -= (max(xs) + tx) - (W - m)
+            if min(ys) < m:
+                ty = m - min(ys)
+            if max(ys) + ty > H - m:
+                ty -= (max(ys) + ty) - (H - m)
+            return tx, ty
 
+        tx, ty = _fit_shift()
         wheel_to = QPointF(wheel_to.x() + tx, wheel_to.y() + ty)
         btn_to = QPointF(btn_to.x() + tx, btn_to.y() + ty)
         for c in chips:
             c["rect"] = c["rect"].translated(tx, ty)
+
+        W_d = wheel_to.x() * dx + wheel_to.y() * dy
+        tip_d = 94.0 + R * 0.9 + 30.0
+        near = min(min(px_ * dx + py_ * dy for px_, py_ in (
+            (c["rect"].left(), c["rect"].top()), (c["rect"].right(), c["rect"].top()),
+            (c["rect"].left(), c["rect"].bottom()), (c["rect"].right(), c["rect"].bottom())))
+            for c in chips) - W_d
+        push = tip_d - near
+        if push > 0:
+            for c in chips:
+                c["rect"] = c["rect"].translated(dx * push, dy * push)
+        tx, ty = _fit_shift()
+        wheel_to = QPointF(wheel_to.x() + tx, wheel_to.y() + ty)
+        btn_to = QPointF(btn_to.x() + tx, btn_to.y() + ty)
+        for c in chips:
+            c["rect"] = c["rect"].translated(tx, ty)
+
+        for c in chips:
             cen = c["rect"].center()
             if cen.x() >= btn_to.x():
                 c["node"] = QPointF(c["rect"].left(), cen.y())
             else:
                 c["node"] = QPointF(c["rect"].right(), cen.y())
         return {"index": index, "d": (dx, dy), "btn_from": btn_from,
-                "btn_to": btn_to, "wheel_to": wheel_to, "chips": chips}
+                "btn_to": btn_to, "wheel_to": wheel_to, "chips": chips,
+                "page": page, "pages": pages}
 
     # --- input -------------------------------------------------------------
     def enterEvent(self, event):
@@ -538,7 +637,10 @@ class WheelView(QWidget):
             if self.anim > 0.5:
                 for c in self.layout["chips"]:
                     if c["rect"].contains(pos):
-                        self._launch(c["exec"])
+                        if c["exec"] is None:
+                            self.cycle_page()
+                        else:
+                            self._launch(c["exec"])
                         return
             self.collapse()
             return
@@ -596,21 +698,23 @@ class WheelView(QWidget):
             seg = self._segment_path(cx, cy, outer, inner, c0, c1)
             if hovered:
                 grad = QRadialGradient(cx, cy, outer)
-                grad.setColorAt(inner / outer, self._a(QColor(74, 27, 30), alpha))
-                grad.setColorAt(1.0, self._a(QColor(126, 40, 45), alpha))
+                grad.setColorAt(inner / outer, self._a(QColor(30, 5, 7), alpha))
+                grad.setColorAt(1.0, self._a(QColor(48, 8, 11), alpha))
                 p.setBrush(QBrush(grad))
-                p.setPen(QPen(self._a(ACCENT, alpha), 1.4))
+                p.setPen(QPen(self._a(QColor(240, 16, 16, 85), alpha), 4.6))
+                p.drawPath(seg)
+                p.setPen(QPen(self._a(NEON_HI, alpha), 1.6))
             else:
                 grad = QRadialGradient(cx, cy, outer)
-                grad.setColorAt(inner / outer, self._a(QColor(22, 22, 22), alpha))
-                grad.setColorAt(1.0, self._a(QColor(32, 32, 31), alpha))
+                grad.setColorAt(inner / outer, self._a(QColor(11, 11, 10), alpha))
+                grad.setColorAt(1.0, self._a(QColor(17, 17, 16), alpha))
                 p.setBrush(QBrush(grad))
                 p.setPen(QPen(self._a(OUTLINE, alpha), 1.0))
             p.drawPath(seg)
             # thin accent tick on the outer edge of the hovered spoke
             if hovered:
                 mid = math.radians(i * span - 90)
-                p.setPen(QPen(self._a(ACCENT, alpha), 2.0))
+                p.setPen(QPen(self._a(NEON_HI, alpha), 2.2))
                 p.drawArc(QRectF(cx - outer + 1, cy - outer + 1,
                                  (outer - 1) * 2, (outer - 1) * 2),
                           int((90 - c1) * 16), int((c1 - c0) * 16))
@@ -627,17 +731,6 @@ class WheelView(QWidget):
         self._draw_hub(p, cx, cy, inner, alpha)
 
     def _draw_hub(self, p, cx, cy, inner, alpha):
-        hub = inner * 0.82
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        ring = QPen(self._a(ACCENT_DIM, alpha), 1.0)
-        ring.setStyle(Qt.PenStyle.DashLine)
-        p.setPen(ring)
-        p.drawEllipse(QPointF(cx, cy), hub * 1.02, hub * 1.02)
-        p.setPen(QPen(self._a(ACCENT, alpha), 1.2))
-        for a in (0, 90, 180, 270):
-            rr = math.radians(a + self.phase * 18)
-            p.drawLine(QPointF(cx + hub * 0.92 * math.cos(rr), cy + hub * 0.92 * math.sin(rr)),
-                       QPointF(cx + hub * 1.10 * math.cos(rr), cy + hub * 1.10 * math.sin(rr)))
         self._draw_sword(p, cx, cy, inner, alpha)
 
     def _draw_caption(self, p, wc, outer, cat):
@@ -666,7 +759,8 @@ class WheelView(QWidget):
 
         reveal = _clamp01((self.anim - 0.28) / 0.55)
         dx, dy = lay["d"]
-        pop = e * 30.0                       # how far the wedge slides out of the ring
+        pop = e * 94.0                       # wedge slides out of the retreating ring
+                                             # (back 54 + pop 40) so it detaches upward
         outer_s = self.outer * scale
         # traces leave from the outer edge of the popped wedge
         btn = QPointF(wc.x() + dx * (outer_s + pop), wc.y() + dy * (outer_s + pop))
@@ -701,10 +795,12 @@ class WheelView(QWidget):
         p.save()
         p.translate(dx * pop, dy * pop)
         grad = QRadialGradient(cx, cy, outer)
-        grad.setColorAt(inner / outer, QColor(96, 32, 36))
-        grad.setColorAt(1.0, QColor(150, 46, 52))
+        grad.setColorAt(inner / outer, QColor(40, 6, 9))
+        grad.setColorAt(1.0, QColor(64, 9, 13))
         p.setBrush(QBrush(grad))
-        p.setPen(QPen(ACCENT, 1.8))
+        p.setPen(QPen(QColor(240, 16, 16, 100), 5.0))
+        p.drawPath(seg)
+        p.setPen(QPen(NEON_HI, 1.8))
         p.drawPath(seg)
         mid = math.radians(index * span - 90)
         label_r = inner + (outer - inner) * 0.56
@@ -721,21 +817,26 @@ class WheelView(QWidget):
         rect = c["rect"]
         grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
         if selected:
-            grad.setColorAt(0.0, self._a(QColor(58, 24, 27), a))
-            grad.setColorAt(1.0, self._a(QColor(40, 18, 20), a))
-            pen = QPen(self._a(ACCENT, a), 1.5)
+            grad.setColorAt(0.0, self._a(QColor(36, 5, 8), a))
+            grad.setColorAt(1.0, self._a(QColor(24, 3, 5), a))
+            p.setBrush(QBrush(grad))
+            p.setPen(QPen(self._a(QColor(240, 16, 16, 90), a), 4.2))
+            p.drawRect(rect)
+            p.setPen(QPen(self._a(NEON_HI, a), 1.5))
         else:
-            grad.setColorAt(0.0, self._a(QColor(26, 26, 25), a))
-            grad.setColorAt(1.0, self._a(QColor(17, 17, 17), a))
-            pen = QPen(self._a(OUTLINE, a), 1.0)
-        p.setBrush(QBrush(grad))
-        p.setPen(pen)
-        p.drawRoundedRect(rect, 8, 8)
+            grad.setColorAt(0.0, self._a(QColor(13, 13, 12), a))
+            grad.setColorAt(1.0, self._a(QColor(9, 9, 8), a))
+            p.setBrush(QBrush(grad))
+            p.setPen(QPen(self._a(OUTLINE, a), 1.0))
+        p.drawRect(rect)
         # a small node square where the trace lands
         node = c["node"]
         p.setBrush(QBrush(self._a(ACCENT, a)))
+        p.setPen(QPen(self._a(NEON_HI, a), 1.0))
+        p.drawRect(QRectF(node.x() - 3.5, node.y() - 3.5, 7, 7))
         p.setPen(Qt.PenStyle.NoPen)
-        p.drawRect(QRectF(node.x() - 3, node.y() - 3, 6, 6))
+        p.setBrush(QBrush(self._a(QColor(10, 10, 9), a)))
+        p.drawRect(QRectF(node.x() - 1.2, node.y() - 1.2, 2.4, 2.4))
         # name
         p.setPen(self._a(TEXT if selected else STEEL, a))
         p.setFont(QFont(self.mono, 10))
@@ -771,20 +872,25 @@ class WheelView(QWidget):
                                     poly[i].y() + (poly[i + 1].y() - poly[i].y()) * t))
                 break
         p.setBrush(Qt.BrushStyle.NoBrush)
-        p.setPen(QPen(QColor(196, 74, 82), 1.8))
+        p.setPen(QPen(QColor(240, 16, 16, 110), 4.4))
         p.drawPath(path)
-        # vias at both ends
+        p.setPen(QPen(QColor(255, 60, 70), 1.5))
+        p.drawPath(path)
+        ends = [a] if frac < 0.999 else [a, b]
+        p.setPen(QPen(QColor(255, 60, 70), 1.4))
+        p.setBrush(QBrush(QColor(240, 16, 16)))
+        for pt in ends:
+            p.drawEllipse(pt, 3.4, 3.4)
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QBrush(ACCENT))
-        p.drawEllipse(a, 2.4, 2.4)
-        if frac >= 0.999:
-            p.drawEllipse(b, 2.4, 2.4)
+        p.setBrush(QBrush(QColor(10, 10, 9)))
+        for pt in ends:
+            p.drawEllipse(pt, 1.4, 1.4)
 
     # --- sword emblem ------------------------------------------------------
     def _draw_sword(self, p, cx, cy, inner, alpha):
         if QSvgRenderer is None:
             return
-        size = int(inner)             # logical px
+        size = int(inner * 1.5)       # logical px
         if self._emblem is None or self._emblem_px != size:
             self._emblem = self._build_emblem(size)
             self._emblem_px = size
@@ -801,10 +907,26 @@ class WheelView(QWidget):
                          QRectF(0, 0, pm.width(), pm.height()))
 
     def _build_emblem(self, size):
-        """Render the sword art into a size x size square, supersampled, over a
-        faint crimson glow. The art is 359 x 587 (tall); it is cropped to its own
-        bounds and squashed to a square so it sits compactly in the hub."""
+        """Render the hub emblem: the neon sword PNG when present, else the SVG
+        art cropped to its bounds and squashed to a square, supersampled, over a
+        faint crimson glow."""
         SS = 3                        # supersample for a crisp downscale
+        neon = QImage(NEON_PNG) if os.path.exists(NEON_PNG) else QImage()
+        if not neon.isNull():
+            px = size * SS
+            pad = max(4, px // 24)
+            full = px + 2 * pad
+            out = QImage(full, full, QImage.Format.Format_ARGB32_Premultiplied)
+            out.fill(Qt.GlobalColor.transparent)
+            o = QPainter(out)
+            o.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            k = px / max(neon.width(), neon.height())
+            dw, dh = neon.width() * k, neon.height() * k
+            o.drawImage(QRectF(pad + (px - dw) / 2, pad + (px - dh) / 2, dw, dh), neon)
+            o.end()
+            pm = QPixmap.fromImage(out)
+            pm.setDevicePixelRatio(SS)
+            return pm
         user_art = os.path.exists(SWORD_SVG)
         r = QSvgRenderer(SWORD_SVG) if user_art else None
         if r is None or not r.isValid() or r.viewBoxF().width() <= 0:
