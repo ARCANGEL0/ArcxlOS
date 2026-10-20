@@ -419,7 +419,7 @@ cat << 'EOF' > /mnt/etc/mkinitcpio.conf
 MODULES=(amdgpu radeon nouveau i915)
 BINARIES=()
 FILES=()
-HOOKS=(base udev autodetect modconf kms block filesystems keyboard fsck)
+HOOKS=(base udev plymouth autodetect modconf kms block filesystems keyboard fsck)
 COMPRESSION="zstd"
 EOF
 
