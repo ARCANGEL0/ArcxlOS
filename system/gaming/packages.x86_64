@@ -317,7 +317,6 @@ bluedevil
 btop
 calibre
 cantor
-cmus
 cpu-x
 curl
 darktable
@@ -326,7 +325,6 @@ discord
 dolphin-emu
 dosbox
 easyeffects
-elisa
 ffmpeg
 filelight
 firewalld
@@ -373,9 +371,7 @@ make
 marble
 mediainfo-gui
 mgba-qt
-mpd
 musescore
-ncmpcpp
 nextcloud-client
 ninja
 nvtop
@@ -386,12 +382,12 @@ parley
 pipewire-jack
 pkgconf
 plasma-systemmonitor
+plymouth
 powertop
 ppsspp
 print-manager
 protontricks
 python
-quodlibet
 rclone
 remmina
 retroarch
@@ -400,7 +396,6 @@ scummvm
 shotcut
 skanlite
 stellarium
-strawberry
 syncthing
 telegram-desktop
 timeshift
@@ -417,3 +412,4 @@ chafa
 
 ### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
 wpewebkit
+yt-dlp

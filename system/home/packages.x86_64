@@ -287,11 +287,9 @@ bash
 bluedevil
 btop
 cantor
-cmus
 curl
 discord
 easyeffects
-elisa
 ffmpeg
 filelight
 firewalld
@@ -337,6 +335,7 @@ perl
 pipewire-jack
 pkgconf
 plasma-systemmonitor
+plymouth
 print-manager
 python
 remmina
@@ -371,3 +370,4 @@ xcb-util-cursor
 
 ### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
 wpewebkit
+yt-dlp

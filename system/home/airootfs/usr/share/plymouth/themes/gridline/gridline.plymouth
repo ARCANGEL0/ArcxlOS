@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Gridline
+Description=ArchangelOS boot animation - red neon horizon
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/gridline
+ScriptFile=/usr/share/plymouth/themes/gridline/gridline.script
