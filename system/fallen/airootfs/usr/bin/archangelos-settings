@@ -1,0 +1,2367 @@
+#!/usr/bin/env python3
+import os, re, sys, math, time, json, pwd, grp, shutil, threading, subprocess
+
+from PyQt6.QtCore import Qt, QTimer, QPointF, QRectF
+from PyQt6.QtGui import (QColor, QPainter, QPen, QBrush, QFont, QFontDatabase,
+                         QFontMetrics, QPainterPath, QLinearGradient)
+from PyQt6.QtWidgets import QApplication, QWidget, QLineEdit
+
+BG          = QColor(8, 8, 8)
+SURFACE     = QColor(12, 12, 11)
+SURFACE_HI  = QColor(17, 17, 16)
+OUTLINE     = QColor(38, 37, 35)
+ACCENT      = QColor(240, 16, 16)
+ACCENT_DIM  = QColor(240, 16, 16, 80)
+NEON_HI     = QColor(255, 60, 70)
+TEXT        = QColor(236, 234, 228)
+SUBTEXT     = QColor(138, 136, 132)
+FAINT       = QColor(84, 82, 79)
+ZEBRA       = QColor(13, 13, 12)
+
+
+def mono_family():
+    for fam in ("JetFramesMono Nerd Font", "JetFramesMonoNL Nerd Font",
+                "JetFrames Mono", "DepartureMono", "Noto Sans Mono"):
+        if fam in QFontDatabase.families():
+            return fam
+    return "monospace"
+
+
+def display_family():
+    for fam in ("Orbitron", "Rajdhani", "Chakra Petch", "DejaVu Sans"):
+        if fam in QFontDatabase.families():
+            return fam
+    return "sans-serif"
+
+
+def hostname():
+    try:
+        return open("/etc/hostname", encoding="utf-8").read().strip() or "archangel"
+    except Exception:
+        return "archangel"
+
+
+def edition_slug():
+    env = os.environ.get("ARCHANGEL_EDITION")
+    if env:
+        return env
+    vid = aid = ""
+    try:
+        for line in open("/etc/os-release", encoding="utf-8", errors="ignore"):
+            if line.startswith("VARIANT_ID="):
+                vid = line.strip()[11:].strip('"')
+            elif line.startswith("ID="):
+                aid = line.strip()[3:].strip('"')
+    except Exception:
+        pass
+    return vid or aid or "arch"
+
+
+def edition_name():
+    try:
+        for line in open("/etc/os-release", encoding="utf-8", errors="ignore"):
+            if line.startswith("NAME="):
+                return line.strip()[5:].strip('"')
+    except Exception:
+        pass
+    return "ArchangelOS"
+
+
+def run(cmd, timeout=1.5):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return r.stdout
+    except Exception:
+        return ""
+
+
+CACHE = {}
+
+
+def cached(key, ttl, fn):
+    now = time.time()
+    hit = CACHE.get(key)
+    if hit and now - hit[0] < ttl:
+        return hit[1]
+    try:
+        val = fn()
+    except Exception:
+        val = []
+    CACHE[key] = (now, val)
+    return val
+
+
+def fmt_rate(b):
+    for unit in ("B/s", "KB/s", "MB/s", "GB/s"):
+        if b < 1024 or unit == "GB/s":
+            return ("%d %s" % (b, unit)) if unit == "B/s" else ("%.1f %s" % (b, unit))
+        b /= 1024.0
+    return "0 B/s"
+
+
+def fmt_size(b):
+    if b is None:
+        return "—"
+    for unit in ("B", "KiB", "MiB", "GiB", "TiB"):
+        if b < 1024 or unit == "TiB":
+            return ("%d %s" % (b, unit)) if unit == "B" else ("%.1f %s" % (b, unit))
+        b /= 1024.0
+    return "0 B"
+
+
+def read_cpu_temp():
+    want = ("coretemp", "k10temp", "zenpower", "cpu_thermal", "acpitz")
+    base = "/sys/class/hwmon"
+    try:
+        for d in sorted(os.listdir(base)):
+            n = open(os.path.join(base, d, "name"), encoding="utf-8",
+                     errors="ignore").read().strip().lower()
+            if n not in want:
+                continue
+            for fn in sorted(os.listdir(os.path.join(base, d))):
+                if fn.startswith("temp") and fn.endswith("_input"):
+                    v = open(os.path.join(base, d, fn)).read().strip()
+                    return int(v) / 1000.0
+    except Exception:
+        pass
+    return None
+
+
+def read_gpu():
+    temp = busy = None
+    base = "/sys/class/hwmon"
+    try:
+        for d in sorted(os.listdir(base)):
+            n = open(os.path.join(base, d, "name"), encoding="utf-8",
+                     errors="ignore").read().strip().lower()
+            if n not in ("amdgpu", "nouveau", "nvidia"):
+                continue
+            for fn in sorted(os.listdir(os.path.join(base, d))):
+                if fn.startswith("temp") and fn.endswith("_input") and temp is None:
+                    temp = int(open(os.path.join(base, d, fn)).read().strip()) / 1000.0
+            bp = os.path.join(base, d, "device", "gpu_busy_percent")
+            if os.path.isfile(bp) and busy is None:
+                busy = float(open(bp).read().strip())
+    except Exception:
+        pass
+    if temp is None:
+        try:
+            out = subprocess.run(["nvidia-smi", "--query-gpu=temperature.gpu,utilization.gpu",
+                                  "--format=csv,noheader,nounits"], capture_output=True,
+                                 text=True, timeout=0.5).stdout
+            t, u = out.strip().split(", ")
+            temp, busy = float(t), float(u)
+        except Exception:
+            pass
+    return temp, busy
+
+
+def read_mem():
+    tot = used = None
+    try:
+        for line in open("/proc/meminfo", encoding="utf-8"):
+            k, v = line.split(":", 1)
+            if k == "MemTotal":
+                tot = int(v.strip().split()[0])
+            elif k == "MemAvailable":
+                used = tot - int(v.strip().split()[0])
+    except Exception:
+        pass
+    if not tot:
+        return 0.0, 0, 0
+    return used / tot * 100.0, used * 1024, tot * 1024
+
+
+def read_net_totals():
+    rx = tx = 0
+    try:
+        for line in open("/proc/net/dev", encoding="utf-8").readlines()[2:]:
+            if ":" not in line:
+                continue
+            dev, rest = line.split(":", 1)
+            if dev.strip() == "lo":
+                continue
+            f = rest.split()
+            rx += int(f[0]); tx += int(f[8])
+    except Exception:
+        pass
+    return rx, tx
+
+
+def diskstats():
+    r = w = 0
+    try:
+        for line in open("/proc/diskstats", encoding="utf-8"):
+            f = line.split()
+            if not re.match(r'^(sd[a-z]+|vd[a-z]+|nvme\d+n\d+|mmcblk\d+)$', f[2]):
+                continue
+            r += int(f[5]); w += int(f[9])
+    except Exception:
+        pass
+    return r, w
+
+
+def read_uptime():
+    try:
+        s = float(open("/proc/uptime").read().split()[0])
+        return "%dh %02dm" % (s // 3600, (s % 3600) // 60)
+    except Exception:
+        return "—"
+
+
+def cpu_idle_sample():
+    try:
+        line = open("/proc/stat").readline().split()[1:]
+        vals = list(map(int, line))
+        idle = vals[3] + (vals[4] if len(vals) > 4 else 0)
+        return idle, sum(vals)
+    except Exception:
+        return 0, 0
+
+
+def compositor_name():
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        out = run(["hyprctl", "version"], 0.5)
+        m = re.search(r"v(\d+\.\d+\.\d+)", out)
+        return "Hyprland v" + m.group(1) if m else "Hyprland"
+    desk = os.environ.get("XDG_CURRENT_DESKTOP", "")
+    return desk or "—"
+
+
+def pkg_counts():
+    try:
+        e = len(run(["pacman", "-Qe"], 20).splitlines())
+        m = len(run(["pacman", "-Qm"], 20).splitlines())
+        t = len(run(["pacman", "-Q"], 30).splitlines())
+        return e, m, t
+    except Exception:
+        return None, None, None
+
+
+def unit_state(unit):
+    try:
+        out = subprocess.run(["systemctl", "is-enabled", unit], capture_output=True,
+                             text=True, timeout=1.0).stdout.strip()
+        return out if out else "static"
+    except Exception:
+        return "?"
+
+
+def _proc_running(name):
+    try:
+        return subprocess.run(["pgrep", "-x", name], capture_output=True,
+                              timeout=0.5).returncode == 0
+    except Exception:
+        return False
+
+
+def hypr_opt(key):
+    out = run(["hyprctl", "getoption", key], 0.8)
+    for line in out.splitlines():
+        if line.startswith(("int:", "float:", "str:")):
+            return line.split(":", 1)[1].strip() or "—"
+    return "—"
+
+
+def bootloader_detect():
+    if os.path.isdir("/boot/loader/entries"):
+        return "systemd-boot"
+    if os.path.isdir("/boot/grub"):
+        return "grub"
+    return "unknown"
+
+
+def timedate_fields():
+    d = {}
+    for line in run(["timedatectl", "show"], 1.0).splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            d[k] = v
+    return d
+
+
+def user_list():
+    out = []
+    try:
+        gm = {}
+        for g in grp.getgrall():
+            for u in g.gr_mem:
+                gm.setdefault(u, []).append(g.gr_name)
+        for u in pwd.getpwall():
+            if u.pw_uid == 0 or u.pw_uid >= 1000:
+                out.append((u.pw_name, u.pw_uid, u.pw_shell,
+                            [g for g in gm.get(u.pw_name, []) if g != u.pw_name],
+                            os.path.isfile(os.path.join(u.pw_dir, ".face"))))
+    except Exception:
+        pass
+    return out
+
+
+def wifi_active():
+    out = run(["nmcli", "-t", "-f", "NAME,TYPE,DEVICE", "connection", "show",
+               "--active"], 1.2)
+    for line in out.splitlines():
+        f = line.split(":")
+        if len(f) >= 3 and "wireless" in f[1]:
+            return f[0], f[2]
+    return None, None
+
+
+def wifi_scan():
+    rows = []
+    out = run(["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device",
+               "wifi", "list"], 2.5)
+    for line in out.splitlines():
+        f = line.split(":", 3)
+        if len(f) < 4 or not f[1]:
+            continue
+        rows.append((f[0] == "*", f[1], int(f[2] or 0), f[3] or "open"))
+    rows.sort(key=lambda r: -r[2])
+    return rows[:12]
+
+
+def rfkill_state(kind):
+    out = run(["rfkill", "list", kind], 0.8)
+    if not out:
+        return "absent"
+    return "blocked" if "Soft blocked: yes" in out else "unblocked"
+
+
+def wired_devs():
+    out = []
+    base = "/sys/class/net"
+    try:
+        for dev in sorted(os.listdir(base)):
+            if dev == "lo":
+                continue
+            p = os.path.join(base, dev)
+            try:
+                st = open(os.path.join(p, "operstate"), encoding="utf-8").read().strip()
+            except Exception:
+                st = "?"
+            sp = "?"
+            try:
+                sp = open(os.path.join(p, "speed"), encoding="utf-8").read().strip()
+            except Exception:
+                pass
+            ip = "—"
+            ia = run(["ip", "-4", "-o", "addr", "show", "dev", dev], 0.6)
+            m = re.search(r"inet (\S+)", ia)
+            if m:
+                ip = m.group(1)
+            out.append((dev, st, sp, ip))
+    except Exception:
+        pass
+    return out
+
+
+def vpn_dns():
+    vpns = []
+    out = run(["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"], 1.2)
+    for line in out.splitlines():
+        f = line.split(":")
+        if len(f) >= 2 and ("vpn" in f[1] or "wireguard" in f[1]):
+            vpns.append(f[0])
+    dns = []
+    try:
+        for line in open("/etc/resolv.conf", encoding="utf-8", errors="ignore"):
+            if line.strip().startswith(("nameserver",)):
+                dns.append(line.split()[1])
+    except Exception:
+        pass
+    proxy = {k: v for k, v in os.environ.items()
+             if "proxy" in k.lower() and v}
+    return vpns, dns[:3], proxy
+
+
+def tor_status():
+    st = run(["systemctl", "is-active", "tor"], 0.8).strip() or "missing"
+    ports = []
+    for line in run(["ss", "-tln"], 0.8).splitlines():
+        f = line.split()
+        if len(f) >= 4 and re.search(r':(9050|9051|9040|9053)$', f[3]):
+            ports.append(f[3].rsplit(":", 1)[-1])
+    nft = run(["nft", "list", "ruleset"], 1.2)
+    redirect = nft.count("9040") if nft else 0
+    return st, sorted(set(ports)), redirect
+
+
+def bt_summary():
+    out = run(["bluetoothctl", "show"], 1.0)
+    d = {}
+    for line in out.splitlines():
+        if ":" in line:
+            k, v = line.split(":", 1)
+            d[k.strip()] = v.strip()
+    paired = run(["bluetoothctl", "devices", "Paired"], 1.0).splitlines()
+    conn = run(["bluetoothctl", "devices", "Connected"], 1.0).splitlines()
+    return d, len(paired), len(conn), [l.split(" ", 2)[-1] for l in conn]
+
+
+def listeners():
+    rows = []
+    for line in run(["ss", "-tulnp"], 1.2).splitlines()[1:]:
+        f = line.split()
+        if len(f) < 5:
+            continue
+        proc = "—"
+        m = re.search(r'\(\("([^"]+)"', line)
+        if m:
+            proc = m.group(1)
+        rows.append((f[0], f[4], proc))
+    return rows[:14]
+
+
+def established_count():
+    return max(0, len(run(["ss", "-tn", "state", "established"], 0.8).splitlines()) - 1)
+
+
+def fw_rules():
+    nft = run(["nft", "list", "ruleset"], 1.2)
+    if nft:
+        n = len([l for l in nft.splitlines()
+                 if l.startswith(("\t\t", "    ")) and l.strip() not in ("}", "{")])
+        return "nftables", n, nft.count("9040")
+    ipt = run(["iptables-save"], 1.2)
+    if ipt:
+        return "iptables", len([l for l in ipt.splitlines()
+                                if l.startswith(("-A",))]), ipt.count("9040")
+    return "—", 0, 0
+
+
+def vm_info():
+    vms = []
+    out = run(["virsh", "list", "--all"], 1.2)
+    for line in out.splitlines()[2:]:
+        f = line.split()
+        if len(f) >= 3 and not line.startswith("-"):
+            state = " ".join(f[1:-1])
+            vms.append((f[0], state, f[-1]))
+    nets = len([l for l in run(["virsh", "net-list"], 1.0).splitlines()[2:]
+                if l.strip() and not l.startswith("-")])
+    return vms, nets
+
+
+def fonts_list():
+    fams = set()
+    for line in run(["fc-list", ":", "family"], 3.0).splitlines():
+        for fam in line.split(","):
+            fam = fam.strip()
+            if fam:
+                fams.add(fam)
+    return sorted(fams)
+
+
+def disk_mounts():
+    out = []
+    seen = set()
+    ok_types = ("ext4", "ext3", "ext2", "btrfs", "xfs", "f2fs", "zfs",
+                "ntfs3", "vfat", "exfat")
+    try:
+        for line in open("/proc/mounts", encoding="utf-8"):
+            f = line.split()
+            if len(f) < 3 or f[2] not in ok_types or not f[0].startswith("/dev/"):
+                continue
+            mp = f[1]
+            if mp in seen:
+                continue
+            seen.add(mp)
+            try:
+                st = os.statvfs(mp)
+                tot = st.f_blocks * st.f_frsize
+                fre = st.f_bavail * st.f_frsize
+                if tot:
+                    out.append((mp, 1.0 - fre / tot, tot - fre, tot))
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return sorted(out, key=lambda r: -r[1])
+
+
+def pacman_sizes():
+    base = "/var/lib/pacman/local"
+    ent = []
+    try:
+        for d in os.listdir(base):
+            try:
+                txt = open(os.path.join(base, d, "desc"), encoding="utf-8",
+                           errors="ignore").read()
+            except Exception:
+                continue
+            nm = re.search(r"%NAME%\n(.+)", txt)
+            sz = re.search(r"%SIZE%\n(\d+)", txt)
+            if nm and sz:
+                ent.append((nm.group(1), int(sz.group(1))))
+        cal = dict(ent).get("bash", 0)
+        mult = 1 if cal > 5_000_000 else 1024
+        ent = [(n, s * mult) for n, s in ent]
+    except Exception:
+        pass
+    ent.sort(key=lambda e: -e[1])
+    return ent
+
+
+def home_hogs():
+    home = os.path.expanduser("~")
+    rows = []
+    for line in run(["du", "-xb", "-d", "1", home], 5.0).splitlines():
+        f = line.split("\t", 1)
+        if len(f) == 2 and f[0].isdigit():
+            p = f[1].replace(home, "~")
+            if p != "~" and int(f[0]) > 64 * 1024 * 1024:
+                rows.append((p.split("/")[-1] or p, int(f[0])))
+    rows.sort(key=lambda r: -r[1])
+    return rows[:8]
+
+
+def cache_sizes():
+    home = os.path.expanduser("~")
+    def du(p):
+        out = run(["du", "-sxb", p], 3.0).split("\t")
+        return int(out[0]) if out and out[0].isdigit() else None
+    trash = du(os.path.join(home, ".local/share/Trash/files"))
+    cache = du(os.path.join(home, ".cache"))
+    return cache, trash
+
+
+def steam_libs():
+    paths = set()
+    vdf = os.path.expanduser("~/.steam/steam/steamapps/libraryfolders.vdf")
+    try:
+        for m in re.finditer(r'"path"\s+"([^"]+)"', open(vdf, encoding="utf-8",
+                                                         errors="ignore").read()):
+            p = m.group(1).replace("\\\\", "/")
+            if os.path.isdir(os.path.join(p, "steamapps", "common")):
+                paths.add(p)
+    except Exception:
+        pass
+    return sorted(paths)
+
+
+def lib_du(path):
+    out = run(["du", "-sxb", os.path.join(path, "steamapps", "common")], 6.0)
+    f = out.split("\t")
+    return int(f[0]) if f and f[0].isdigit() else None
+
+
+def gamepads():
+    pads = []
+    try:
+        txt = open("/proc/bus/input/devices", encoding="utf-8", errors="ignore").read()
+        for blk in txt.split("\n\n"):
+            if re.search(r'Handlers=.*js\d+', blk):
+                m = re.search(r'Name="([^"]+)"', blk)
+                if m:
+                    pads.append(m.group(1))
+    except Exception:
+        pass
+    return pads[:8]
+
+
+def autostart_lists():
+    home = os.path.expanduser("~")
+    user = []
+    system = []
+    for base, bucket in ((os.path.join(home, ".config/autostart"), user),
+                         ("/etc/xdg/autostart", system)):
+        try:
+            for f in sorted(os.listdir(base)):
+                if f.endswith(".desktop"):
+                    bucket.append(f[:-8])
+        except Exception:
+            pass
+    units = len([l for l in run(["systemctl", "--user", "list-unit-files",
+                                 "--state=enabled", "--no-legend"], 1.5).splitlines()
+                 if l.strip()])
+    return user, system, units
+
+
+def theme_dirs():
+    base = os.path.expanduser("~/.config/hypr/themes")
+    try:
+        return sorted(d for d in os.listdir(base)
+                      if os.path.isdir(os.path.join(base, d)))
+    except Exception:
+        return []
+
+
+def plymouth_theme():
+    theme = "—"
+    try:
+        for line in open("/etc/plymouth/plymouthd.conf", encoding="utf-8",
+                         errors="ignore"):
+            if line.startswith("Theme="):
+                theme = line.strip()[6:]
+    except Exception:
+        pass
+    lst = []
+    try:
+        lst = sorted(os.listdir("/usr/share/plymouth/themes"))
+    except Exception:
+        pass
+    return theme, lst
+
+
+def grub_fields():
+    to = cmd = None
+    try:
+        for line in open("/etc/default/grub", encoding="utf-8", errors="ignore"):
+            if line.startswith("GRUB_TIMEOUT="):
+                to = line.strip().split("=", 1)[1].strip('"')
+            elif line.startswith("GRUB_CMDLINE_LINUX_DEFAULT="):
+                cmd = line.strip().split("=", 1)[1].strip('"')
+    except Exception:
+        pass
+    return to, cmd
+
+
+def gtk_settings():
+    def g(schema, key):
+        out = run(["gsettings", "get", schema, key], 0.6).strip().strip("'")
+        return out or "—"
+    return (("GTK", g("org.gnome.desktop.interface", "gtk-theme")),
+            ("ICON", g("org.gnome.desktop.interface", "icon-theme")),
+            ("CURSOR", g("org.gnome.desktop.interface", "cursor-theme")),
+            ("SCHEME", g("org.gnome.desktop.interface", "color-scheme")))
+
+
+def shell_procs():
+    out = []
+    for name in ("ags", "quickshell", "waybar", "eww", "hyprpanel"):
+        cfg = os.path.isdir(os.path.join(os.path.expanduser("~"), ".config", name))
+        state = "running" if _proc_running(name) else ("configured" if cfg else "not found")
+        out.append((name, state))
+    return out
+
+
+def battery_info():
+    cap = st = ac = None
+    base = "/sys/class/power_supply"
+    try:
+        for d in sorted(os.listdir(base)):
+            kind = open(os.path.join(base, d, "type")).read().strip()
+            if kind == "Battery" and cap is None:
+                cap = int(open(os.path.join(base, d, "capacity")).read().strip())
+                st = open(os.path.join(base, d, "status")).read().strip()
+            elif kind == "AC" and ac is None:
+                ac = open(os.path.join(base, d, "online")).read().strip() == "1"
+    except Exception:
+        pass
+    return cap, st, ac
+
+
+def brightness_info():
+    base = "/sys/class/backlight"
+    try:
+        for d in sorted(os.listdir(base)):
+            cur = int(open(os.path.join(base, d, "brightness")).read().strip())
+            mx = int(open(os.path.join(base, d, "max_brightness")).read().strip())
+            if mx:
+                return d, cur / mx
+    except Exception:
+        pass
+    return None, None
+
+
+def power_profile():
+    out = run(["powerprofilesctl", "get"], 0.8).strip()
+    return out or "—"
+
+
+def notify_state():
+    daemons = [d for d in ("mako", "dunst", "swaync", "fnott") if _proc_running(d)]
+    dnd = "do-not-disturb" in run(["makoctl", "mode"], 0.6)
+    hist = len([l for l in run(["makoctl", "history"], 0.6).splitlines()
+                if "Notification" in l or re.match(r"^\d", l)])
+    return daemons, dnd, hist
+
+
+def hypr_binds():
+    out = run(["hyprctl", "binds", "-j"], 1.2)
+    try:
+        data = json.loads(out)
+        rows = []
+        for b in data:
+            mods = []
+            for bit, nm in ((64, "SUPER"), (8, "ALT"), (4, "CTRL"), (1, "SHIFT")):
+                if b.get("modmask", 0) & bit:
+                    mods.append(nm)
+            arg = b.get("arg", "")
+            disp = b.get("dispatcher", "")
+            rows.append(("+".join(mods) or "—", str(b.get("key", "?")),
+                         (disp + (": " + arg if arg else ""))[:36]))
+        return rows
+    except Exception:
+        return []
+
+
+def last_logins():
+    rows = []
+    for line in run(["last", "-n", "6", "-w"], 1.0).splitlines():
+        f = line.split()
+        if len(f) >= 8 and "begins" not in line and f[0] != "reboot":
+            rows.append((f[0], f[2][:14], " ".join(f[3:6])))
+    return rows[:5]
+
+
+def sddm_theme():
+    for base in ("/etc/sddm.conf.d", "/etc/sddm.conf"):
+        paths = [base] if os.path.isfile(base) else (
+            [os.path.join(base, f) for f in sorted(os.listdir(base))]
+            if os.path.isdir(base) else [])
+        for p in paths:
+            try:
+                for line in open(p, encoding="utf-8", errors="ignore"):
+                    if line.strip().startswith("Current="):
+                        return line.split("=", 1)[1].strip()
+            except Exception:
+                pass
+    return "—"
+
+
+def redteam_tools():
+    tools = ("nmap", "masscan", "hashcat", "hydra", "sqlmap", "bettercap",
+             "aircrack-ng", "wireshark", "tcpdump", "proxychains", "pixiewps",
+             "wifite", "responder", "msfconsole")
+    return [(t, shutil.which(t) is not None) for t in tools]
+
+
+def mac_info():
+    out = []
+    base = "/sys/class/net"
+    try:
+        for dev in sorted(os.listdir(base)):
+            if dev == "lo":
+                continue
+            try:
+                mac = open(os.path.join(base, dev, "address"),
+                           encoding="utf-8").read().strip()
+            except Exception:
+                mac = "—"
+            perm = "permaddr" in run(["ip", "-d", "link", "show", "dev", dev], 0.6)
+            out.append((dev, mac, perm))
+    except Exception:
+        pass
+    return out
+
+
+def mic_cam_use():
+    cam = len([f for f in os.listdir("/dev") if f.startswith("video")]) \
+        if os.path.isdir("/dev") else 0
+    mic = len([l for l in run(["pactl", "list", "source-outputs"], 1.0).splitlines()
+               if l.strip().startswith("Source Output #")])
+    return cam, mic
+
+
+
+from collections import deque
+import traceback
+
+SIDE_W = 330
+
+
+def _clamp(v, lo, hi):
+    return max(lo, min(hi, v))
+
+
+class Card:
+    """A bespoke dashboard card: header label, big value, sub line, optional mini-graph."""
+    def __init__(self, x, y, w, h, label, value, sub="", chart=None, accent=ACCENT):
+        self.rect = QRectF(x, y, w, h)
+        self.label = label
+        self.value = value
+        self.sub = sub
+        self.chart = chart  # list of (x_rel, y_rel) normalized 0..1 or list of values
+        self.accent = accent
+
+    def paint(self, p):
+        r = self.rect
+        # surface
+        grad = QLinearGradient(r.topLeft(), r.bottomLeft())
+        grad.setColorAt(0, QColor(16, 16, 15)); grad.setColorAt(1, QColor(10, 10, 9))
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(OUTLINE, 1.0))
+        p.drawRoundedRect(r, 6, 6)
+        # left accent rail
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(self.accent))
+        p.drawRoundedRect(QRectF(r.left(), r.top(), 3, r.height()), 1.5, 1.5)
+        # header
+        p.setFont(QFont(mono_family(), 7, QFont.Weight.Bold))
+        p.setPen(QPen(FAINT, 1.0))
+        p.drawText(QPointF(r.left() + 16, r.top() + 16), self.label.upper())
+        # value
+        p.setFont(QFont(display_family(), 24, QFont.Weight.Light))
+        p.setPen(QPen(TEXT, 1.0))
+        p.drawText(QPointF(r.left() + 16, r.top() + 44), self.value)
+        # sub
+        p.setFont(QFont(mono_family(), 7))
+        p.setPen(QPen(SUBTEXT, 1.0))
+        p.drawText(QPointF(r.left() + 16, r.top() + 60), self.sub[:44])
+        # mini chart
+        if self.chart:
+            pts = list(self.chart)
+            if not pts:
+                pass
+            else:
+                if isinstance(pts[0], tuple):
+                    path = QPainterPath(QPointF(r.right() - 120 + pts[0][0],
+                                                r.bottom() - 24 - pts[0][1]))
+                    for pt in pts[1:]:
+                        path.lineTo(QPointF(r.right() - 120 + pt[0],
+                                            r.bottom() - 24 - pt[1]))
+                else:
+                    mx = max(max(pts), 1.0)
+                    n = len(pts)
+                    path = QPainterPath(QPointF(r.right() - 120,
+                                                r.bottom() - 24 - pts[0] / mx * 18))
+                    for i, v in enumerate(pts[1:], 1):
+                        path.lineTo(QPointF(r.right() - 120 + i * 120 / max(1, n - 1),
+                                            r.bottom() - 24 - v / mx * 18))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(self.accent, 1.4))
+            p.drawPath(path)
+
+
+class Dossier(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.mono = mono_family()
+        self.display = display_family()
+        self.page = "overview"
+        self.page_title = "System Information"
+        self.rows = []
+        self.prev_idle, self.prev_total = cpu_idle_sample()
+        self.prev_rx, self.prev_tx = read_net_totals()
+        self.prev_r, self.prev_w = diskstats()
+        self.cpu_pct = 0.0
+        self.net_down = self.net_up = 0.0
+        self.pkgs = (None, None, None)
+        self.search = ""
+        self.scroll = 0
+        self.page_h = 0
+        self.hist = {"net": deque(maxlen=90), "cpu": deque(maxlen=90),
+                     "io": deque(maxlen=90)}
+        self.chip_rect = QRectF()
+        self.on_chip = None
+        self.hit_rows = []   # (QRectF, handler-string) filled by _draw_row each paint
+        self.toggled = {}    # row-index -> on/off state for switch rows
+        self.fade = 1.0
+        self.fade_dir = 0
+        self.fade_timer = QTimer(self, timeout=self._fade_tick)
+        self.fade_timer.setInterval(16)
+        QTimer(self, interval=1000, timeout=self._tick).start()
+        QTimer.singleShot(700, self._load_pkgs)
+
+    def mono_family(self):
+        return self.mono
+
+    def display_family(self):
+        return self.display
+
+    def _load_pkgs(self):
+        try:
+            self.pkgs = pkg_counts()
+        except Exception:
+            traceback.print_exc()
+        self.update()
+
+    def _tick(self):
+        try:
+            idle, total = cpu_idle_sample()
+            dt = total - self.prev_total
+            if dt > 0:
+                self.cpu_pct = (1.0 - (idle - self.prev_idle) / dt) * 100.0
+            self.prev_idle, self.prev_total = idle, total
+            rx, tx = read_net_totals()
+            d = max(0, rx - self.prev_rx) + max(0, tx - self.prev_tx)
+            self.net_down = d
+            self.prev_rx, self.prev_tx = rx, tx
+            r, w = diskstats()
+            dio = (max(0, r - self.prev_r) + max(0, w - self.prev_w)) * 512
+            self.prev_r, self.prev_w = r, w
+            self.hist["net"].append(d)
+            self.hist["cpu"].append(self.cpu_pct)
+            self.hist["io"].append(dio)
+        except Exception:
+            traceback.print_exc()
+        self.update()
+
+    def _safe_rows(self, fn):
+        try:
+            return fn()
+        except Exception:
+            traceback.print_exc()
+            return [("fail", "this page failed to load — details in the log")]
+
+    def set_page(self, key, title):
+        self.page = key
+        self.page_title = title
+        self.scroll = 0
+        fn = PAGE_FN.get(key)
+        self.rows = self._safe_rows(fn) if fn else []
+        self.fade = 0.0
+        self.fade_dir = 1
+        self.fade_timer.start()
+        self.update()
+        if key in ASYNC_FN:
+            QTimer.singleShot(80, lambda: self._load_async(key))
+
+    def _load_async(self, key):
+        if self.page != key:
+            return
+        self.rows = self._safe_rows(ASYNC_FN[key])
+        self.update()
+
+    def _fade_tick(self):
+        step = 0.14 * self.fade_dir
+        self.fade = _clamp(self.fade + step, 0.0, 1.0)
+        if self.fade in (0.0, 1.0):
+            self.fade_timer.stop()
+        self.update()
+
+    def _paint_overview(self, p, W, H):
+        x0 = 64
+        limit = W - 70
+        p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+        p.setPen(QPen(ACCENT, 1.0))
+        p.drawText(QPointF(x0, 58), "† · SYSTEM DOSSIER")
+        name = hostname()
+        f_name = QFont(self.display, 42, QFont.Weight.Light)
+        f_name.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2.0)
+        p.setFont(f_name)
+        p.setPen(QPen(TEXT, 1.0))
+        p.drawText(QPointF(x0 - 2, 124), name)
+        p.setFont(QFont(self.mono, 9))
+        p.setPen(QPen(SUBTEXT, 1.0))
+        p.drawText(QPointF(x0, 152), "a live system — sworn to the watch")
+
+        p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+        p.setPen(QPen(FAINT, 1.0))
+        p.drawText(QPointF(x0, 192), "LIVE TELEMETRY")
+        p.setPen(QPen(OUTLINE, 1.0))
+        p.drawLine(QPointF(x0, 202), QPointF(limit, 202))
+
+        ct = read_cpu_temp()
+        gt, gb = read_gpu()
+        mem_pct, mu, mt = read_mem()
+        cards = [
+            ("CORE", "%.0f°C" % ct if ct is not None else "—", "CPU %.0f%%" % self.cpu_pct,
+             list(self.hist["cpu"])[-40:], ACCENT),
+            ("GPU", "%.0f°C" % gt if gt is not None else "—",
+             "GPU %.0f%%" % gb if gb is not None else "GPU —", None, QColor(160, 100, 255)),
+            ("MEMORY", "%.0f%%" % mem_pct, "%s / %s" % (fmt_size(mu), fmt_size(mt)) if mt else "—",
+             None, QColor(40, 200, 160)),
+            ("NETWORK", fmt_rate(self.net_down), "peak %s" % fmt_rate(max(self.hist["net"] or [0])),
+             list(self.hist["net"])[-40:], QColor(60, 180, 255)),
+        ]
+        cx = x0
+        cw = min(250, (limit - x0) / 4.0)
+        for lab, big, sub, hist, ac in cards:
+            Card(cx, 232, cw, 110, lab, big, sub, hist, ac).paint(p)
+            if cx > x0:
+                p.setPen(QPen(QColor(26, 26, 25), 1.0))
+                p.drawLine(QPointF(cx - 14, 224), QPointF(cx - 14, 356))
+            cx += cw
+
+        p.setPen(QPen(OUTLINE, 1.0))
+        p.drawLine(QPointF(x0, 394), QPointF(limit, 394))
+
+        screens = QApplication.screens()
+        res = "%dx%d" % (screens[0].size().width(), screens[0].size().height()) \
+            if screens else "—"
+        rows = [("RESOLUTION", res), ("COMPOSITOR", compositor_name()),
+                ("UPTIME", read_uptime()), ("EDITION", edition_name()),
+                ("KERNEL", os.uname().release), ("BOOT", bootloader_detect())]
+        ry = 414
+        for i, (k, v) in enumerate(rows):
+            y = ry + i * 32
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y), k.upper())
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(x0 + 180, y), str(v))
+            p.setPen(QPen(QColor(24, 24, 23), 1.0))
+            p.drawLine(QPointF(x0, y + 14), QPointF(min(x0 + 560, limit), y + 14))
+
+        gx = limit - 320
+        mounts = disk_mounts()
+        if mounts:
+            mp, fr, us, to = mounts[0]
+            cx, cy, rad = gx + 44, 418, 42
+            rect = QRectF(cx - rad, cy - rad, rad * 2, rad * 2)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(QColor(30, 29, 27), 7, Qt.PenStyle.SolidLine,
+                          Qt.PenCapStyle.RoundCap))
+            p.drawArc(rect, 90 * 16, -320 * 16)
+            p.setPen(QPen(ACCENT, 7, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawArc(rect, 90 * 16, -int(320 * _clamp(fr, 0, 1) * 16))
+            p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            p.drawText(QPointF(gx + 96, 396), "ROOT " + mp)
+            p.setFont(QFont(self.display, 24, QFont.Weight.Light))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(gx + 94, 426), "%d%%" % (fr * 100))
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            p.drawText(QPointF(gx + 96, 446), "%s / %s" % (fmt_size(us), fmt_size(to)))
+        p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+        p.setPen(QPen(SUBTEXT, 1.0))
+        p.drawText(QPointF(gx, 480), "ARCHIVES")
+        if self.pkgs[0] is not None:
+            e, m, t = self.pkgs
+            p.setFont(QFont(self.display, 20, QFont.Weight.Light))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(gx, 500), "%d EXPLICIT" % e)
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            p.drawText(QPointF(gx + 120, 502), "· %d AUR · %d TOTAL" % (m, t))
+        else:
+            p.setFont(QFont(self.display, 20, QFont.Weight.Light))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(gx, 500), "—")
+
+    def _paint_page(self, p, W, H):
+        x0 = 64
+        limit = W - 70
+        p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+        p.setPen(QPen(ACCENT, 1.0))
+        p.drawText(QPointF(x0, 58), "† · %s" % self.page_title.upper())
+        f_title = QFont(self.display, 38, QFont.Weight.Light)
+        p.setFont(f_title)
+        p.setPen(QPen(TEXT, 1.0))
+        p.drawText(QPointF(x0 - 2, 120), self.page_title)
+        p.setFont(QFont(self.mono, 8))
+        p.setPen(QPen(SUBTEXT, 1.0))
+        p.drawText(QPointF(x0, 150),
+                   "phase 1 dossier — read only, controls arrive with the build")
+
+        top = 182
+        view = H - top - 60
+        p.save()
+        p.setClipRect(QRectF(0, top, W, view))
+        self.hit_rows = []
+        y = top + 6 - self.scroll
+        idx = 0
+        for r in self.rows:
+            y += self._draw_row(p, r, x0, y, W, limit, idx)
+            idx += 1
+        p.restore()
+        self.page_h = (y + self.scroll) - (top + 6)
+        if self.page_h > view:
+            track = QRectF(W - 12, top, 3, view)
+            p.fillRect(track, QColor(20, 20, 19))
+            th = max(40, view * view / self.page_h)
+            ty = track.top() + (view - th) * (self.scroll / (self.page_h - view))
+            p.fillRect(QRectF(track.left(), ty, 3, th), ACCENT)
+
+    def _draw_row(self, p, r, x0, y, W, limit, idx):
+        kind = r[0]
+        if kind == "kv":
+            _, k, v = r
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 18), str(k).upper()[:24])
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(TEXT, 1.0))
+            vs = str(v)
+            p.drawText(QPointF(x0 + 220, y + 18), vs[:80] + ("…" if len(vs) > 80 else ""))
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 29), QPointF(limit, y + 29))
+            return 34
+        if kind == "meter":
+            _, k, lvl, v = r[0], r[1], r[2], r[3] if len(r) > 3 else ""
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 18), str(k).upper()[:24])
+            for i in range(5):
+                seg = QRectF(x0 + 220 + i * 26, y + 11, 20, 8)
+                if i < lvl:
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(QBrush(ACCENT))
+                    p.drawRoundedRect(seg, 2, 2)
+                else:
+                    p.setPen(QPen(QColor(34, 33, 31), 1.0))
+                    p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.drawRoundedRect(seg, 2, 2)
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(TEXT, 1.0))
+            vs = str(v)
+            p.drawText(QPointF(x0 + 220 + 5 * 26 + 14, y + 18),
+                       vs[:40] + ("…" if len(vs) > 40 else ""))
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 29), QPointF(limit, y + 29))
+            return 34
+        if kind == "bar":
+            _, k, frac, v = r
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 18), str(k).upper()[:24])
+            track = QRectF(x0 + 220, y + 11, limit - x0 - 220 - 96, 7)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(QColor(22, 22, 21)))
+            p.drawRoundedRect(track, 2, 2)
+            p.setBrush(QBrush(NEON_HI if frac > 0.9 else ACCENT))
+            p.drawRoundedRect(QRectF(track.left(), track.top(),
+                                     max(3, track.width() * _clamp(frac, 0, 1)), 7),
+                              2, 2)
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(limit - 84, y + 18), str(v))
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 34), QPointF(limit, y + 34))
+            return 40
+        if kind == "spark":
+            _, k, bufkey, _v = r
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 18), str(k).upper()[:24])
+            live = {"cpu": "%.0f%%" % self.cpu_pct,
+                    "net": fmt_rate(self.net_down),
+                    "io": fmt_rate(self.hist["io"][-1] if self.hist["io"] else 0)
+                    }.get(bufkey, "")
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(limit - 84, y + 18), live)
+            data = list(self.hist.get(bufkey, []))[-60:]
+            area = QRectF(x0 + 220, y + 6, limit - x0 - 220 - 100, 34)
+            if len(data) >= 2:
+                mx = max(max(data), 1.0)
+                pts = [(area.left() + area.width() * i / (len(data) - 1),
+                        area.bottom() - min(1.0, v / mx) * area.height())
+                       for i, v in enumerate(data)]
+                fill = QPainterPath(QPointF(area.left(), area.bottom()))
+                for pt in pts:
+                    fill.lineTo(QPointF(*pt))
+                fill.lineTo(QPointF(pts[-1][0], area.bottom()))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QBrush(QColor(240, 16, 16, 26)))
+                p.drawPath(fill)
+                line = QPainterPath(QPointF(*pts[0]))
+                for pt in pts[1:]:
+                    line.lineTo(QPointF(*pt))
+                p.setPen(QPen(NEON_HI, 1.2))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.drawPath(line)
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 52), QPointF(limit, y + 52))
+            return 64
+        if kind in ("gauge", "gauge2"):
+            items = [r[1]] if kind == "gauge" else [r[1], r[2]]
+            span = (limit - x0) / len(items)
+            for idx, it in enumerate(items):
+                if it is None:
+                    continue
+                k, frac, big, sub = it
+                ox = x0 + idx * span
+                cx, cy, rad = ox + 46, y + 44, 36
+                rect = QRectF(cx - rad, cy - rad, rad * 2, rad * 2)
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColor(30, 29, 27), 7, Qt.PenStyle.SolidLine,
+                              Qt.PenCapStyle.RoundCap))
+                p.drawArc(rect, 225 * 16, -270 * 16)
+                sweep = int(270 * _clamp(frac, 0.0, 1.0) * 16)
+                pen = QPen(ACCENT, 7, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+                if frac <= 0:
+                    pen = QPen(QColor(70, 8, 10), 7, Qt.PenStyle.SolidLine,
+                               Qt.PenCapStyle.RoundCap)
+                    sweep = 270 * 16
+                p.setPen(pen)
+                if sweep:
+                    p.drawArc(rect, 225 * 16, -sweep)
+                p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+                p.setPen(QPen(ACCENT, 1.0))
+                p.drawText(QPointF(ox + 100, y + 20), str(k).upper()[:24])
+                p.setFont(QFont(self.display, 22, QFont.Weight.Light))
+                p.setPen(QPen(TEXT, 1.0))
+                p.drawText(QPointF(ox + 98, y + 50), str(big))
+                p.setFont(QFont(self.mono, 7))
+                p.setPen(QPen(SUBTEXT, 1.0))
+                p.drawText(QPointF(ox + 100, y + 74), str(sub)[:34])
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 98), QPointF(limit, y + 98))
+            return 108
+        if kind == "table":
+            _, headers, rows = r
+            tw = limit - x0
+            p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            col0 = tw * 0.34
+            cwidths = [col0] + [(tw - col0) / max(1, len(headers) - 1)] * (len(headers) - 1)
+            cx = x0
+            for i, hd in enumerate(headers):
+                p.drawText(QPointF(cx + 8, y + 14), hd.upper())
+                cx += cwidths[i]
+            p.setPen(QPen(QColor(34, 33, 31), 1.0))
+            p.drawLine(QPointF(x0, y + 22), QPointF(limit, y + 22))
+            for j, row in enumerate(rows[:14]):
+                ry2 = y + 38 + j * 22
+                p.setFont(QFont(self.mono, 7))
+                cx = x0
+                for i, cell in enumerate(row):
+                    p.setPen(QPen(TEXT if i == 0 else SUBTEXT, 1.0))
+                    p.drawText(QPointF(cx + 8, ry2), str(cell)[:38])
+                    cx += cwidths[i]
+                p.setPen(QPen(QColor(24, 24, 23), 1.0))
+                p.drawLine(QPointF(x0, ry2 + 6), QPointF(limit, ry2 + 6))
+            return 30 + 22 * min(14, len(r[2])) + 10
+        if kind == "spec":
+            _, fam, sample = r
+            p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 18), str(fam).upper()[:28])
+            p.setFont(QFont(fam, 13))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(x0 + 220, y + 20), sample)
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 40), QPointF(limit, y + 40))
+            return 52
+        if kind == "clock":
+            now = time.localtime()
+            t = time.strftime("%H:%M:%S", now)
+            p.setFont(QFont(self.display, 36, QFont.Weight.Light))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(x0, y + 44), t)
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            p.drawText(QPointF(x0 + 2, y + 68),
+                       time.strftime("%A · %d %B %Y", now))
+            off = -(time.timezone // 3600)
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0 + 2, y + 84), "UTC%+d" % off)
+            return 96
+        if kind == "note":
+            _, txt, warn = r
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(NEON_HI if warn else FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 14), "» " + str(txt)[:80])
+            return 26
+        if kind == "card":
+            _, title, items, style = r
+            ch = 30 + 26 * len(items)
+            Card(x0, y, limit - x0, ch, title, items[0][1] if items else "",
+                 items[0][2] if items else "", None, ACCENT).paint(p)
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            oy = y + 30
+            for lab, val in items[1:]:
+                p.drawText(QPointF(x0 + 16, oy), str(lab).upper()[:26])
+                p.setPen(QPen(TEXT, 1.0))
+                p.drawText(QPointF(x0 + 120, oy), str(val)[:70])
+                p.setPen(QPen(SUBTEXT, 1.0))
+                oy += 24
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + ch - 2), QPointF(limit, y + ch - 2))
+            return ch
+        if kind == "cardlist":
+            _, title, items = r
+            ch = 34 + 34 * len(items)
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            p.drawText(QPointF(x0, y + 16), title.upper())
+            for i, (lab, val) in enumerate(items):
+                ry = y + 30 + i * 34
+                p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+                p.setPen(QPen(FAINT, 1.0))
+                p.drawText(QPointF(x0 + 16, ry + 18), str(lab).upper()[:26])
+                p.setFont(QFont(self.mono, 7))
+                p.setPen(QPen(TEXT, 1.0))
+                p.drawText(QPointF(x0 + 120, ry + 18), str(val)[:70])
+                p.setPen(QPen(QColor(24, 24, 23), 1.0))
+                p.drawLine(QPointF(x0, ry + 28), QPointF(limit, ry + 28))
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + ch - 6), QPointF(limit, y + ch - 6))
+            return ch
+        if kind == "donut":
+            _, label, frac, big, sub = r
+            cx, cy, rad = x0 + 44, y + 48, 40
+            rect = QRectF(cx - rad, cy - rad, rad * 2, rad * 2)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(QColor(30, 29, 27), 7, Qt.PenStyle.SolidLine,
+                          Qt.PenCapStyle.RoundCap))
+            p.drawArc(rect, 90 * 16, -320 * 16)
+            p.setPen(QPen(ACCENT, 7, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawArc(rect, 90 * 16, -int(320 * _clamp(frac, 0, 1) * 16))
+            p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            p.drawText(QPointF(cx + 6, y + 14), label.upper())
+            p.setFont(QFont(self.display, 24, QFont.Weight.Light))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(cx - 20, cy + 8), big)
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            p.drawText(QPointF(cx - rad + 4, cy + rad + 14), sub[:44])
+            return 108
+        if kind == "grid":
+            _, label, cells = r  # cells: list of (title, value, accent)
+            cols = 3
+            cw = (limit - x0) / cols
+            rows_ = max(1, (len(cells) + cols - 1) // cols)
+            ch = 36 + (rows_ - 1) * 96 + 82
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            p.drawText(QPointF(x0, y + 16), label.upper())
+            oy = y + 36
+            for i, (ctitle, cval, cacc) in enumerate(cells):
+                bx = x0 + (i % cols) * cw
+                by = oy + (i // cols) * 96
+                rect = QRectF(bx, by, cw - 16, 82)
+                grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+                grad.setColorAt(0, QColor(16, 16, 15)); grad.setColorAt(1, QColor(10, 10, 9))
+                p.setBrush(QBrush(grad))
+                p.setPen(QPen(cacc, 1.0))
+                p.drawRoundedRect(rect, 6, 6)
+                p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+                p.setPen(QPen(FAINT, 1.0))
+                p.drawText(QPointF(bx + 12, by + 16), ctitle.upper())
+                p.setFont(QFont(self.display, 19, QFont.Weight.Light))
+                p.setPen(QPen(TEXT, 1.0))
+                p.drawText(QPointF(bx + 12, by + 40), str(cval))
+            return ch
+        if kind == "switch":
+            _, title, state_text, ac = r[0], r[1], r[2], r[3]
+            desc = r[4] if len(r) > 4 else ""
+            p.setFont(QFont(self.mono, 8, QFont.Weight.Bold))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(x0, y + 18), title.upper())
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(x0 + 240, y + 18), state_text.upper())
+            # toggle pill — honors self.toggled[idx]
+            tr = QRectF(limit - 100, y + 4, 74, 26)
+            on = self.toggled.get(idx, state_text.lower() in ("on", "active", "yes", "enabled"))
+            p.setBrush(QBrush(ac if on else QColor(30, 29, 27)))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawRoundedRect(tr, 13, 13)
+            knob = QRectF(tr.right() - 20 if on else tr.left() + 2, tr.top() + 2, 20, 22)
+            p.setBrush(QBrush(TEXT))
+            p.drawRoundedRect(knob, 10, 10)
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            p.drawText(QPointF(x0, y + 36), desc[:80])
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 58), QPointF(limit, y + 58))
+            self.hit_rows.append((QRectF(x0, y, limit - x0, 64), ("switch", idx)))
+            return 64
+        if kind == "usercard":
+            _, name, uid, groups, has_face = r
+            rect = QRectF(x0, y, 310, 96)
+            grad = QLinearGradient(rect.topLeft(), rect.bottomLeft())
+            grad.setColorAt(0, QColor(16, 16, 15)); grad.setColorAt(1, QColor(10, 10, 9))
+            p.setBrush(QBrush(grad))
+            p.setPen(QPen(OUTLINE, 1.0))
+            p.drawRoundedRect(rect, 8, 8)
+            # avatar
+            ar = QRectF(x0 + 18, y + 18, 60, 60)
+            p.setBrush(QBrush(QColor(30, 29, 27)))
+            p.setPen(QPen(OUTLINE, 1.0))
+            p.drawEllipse(ar)
+            if has_face:
+                ap = os.path.expanduser("~/.face")
+                if os.path.isfile(ap):
+                    pix = QPixmap(ap)
+                    if not pix.isNull():
+                        p.setClipRect(ar.adjusted(2, 2, -2, -2))
+                        p.drawPixmap(ar.adjusted(2, 2, -2, -2), pix)
+                        p.setClipping(False)
+            p.setFont(QFont(self.display, 15, QFont.Weight.Bold))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(x0 + 90, y + 32), name)
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(SUBTEXT, 1.0))
+            p.drawText(QPointF(x0 + 90, y + 54), "uid %d · %s" % (uid, groups[:40]))
+            p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            p.drawText(QPointF(x0 + 210, y + 40), "PFP · PASSWORD · ADMIN")
+            p.setPen(QPen(QColor(26, 26, 25), 1.0))
+            p.drawLine(QPointF(x0, y + 96), QPointF(limit, y + 96))
+            self.hit_rows.append((QRectF(x0, y, 310, 96), ("user", name)))
+            return 96
+        if kind == "bindcard":
+            _, mods, key, action, cat = r
+            rect = QRectF(x0, y, limit - x0, 30)
+            p.setBrush(QBrush(QColor(18, 18, 17)))
+            p.setPen(QPen(QColor(30, 29, 27), 1.0))
+            p.drawRoundedRect(rect, 5, 5)
+            p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+            p.setPen(QPen(ACCENT, 1.0))
+            p.drawText(QPointF(x0 + 12, y + 18), (mods + "+" + key).upper()[:26])
+            p.setFont(QFont(self.mono, 7))
+            p.setPen(QPen(TEXT, 1.0))
+            p.drawText(QPointF(x0 + 150, y + 18), str(action)[:44])
+            p.setFont(QFont(self.mono, 6))
+            p.setPen(QPen(FAINT, 1.0))
+            p.drawText(QPointF(limit - 140, y + 18), cat.upper())
+            self.hit_rows.append((QRectF(x0, y, limit - x0, 32), ("bind", mods, key, action)))
+            return 32
+        return 34
+
+    def wheelEvent(self, event):
+        d = event.angleDelta().y() / 120.0 * 44
+        view = self.height() - 182 - 60
+        self.scroll = _clamp(self.scroll - d, 0, max(0, self.page_h - view))
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        p.fillRect(self.rect(), BG)
+        try:
+            if self.page == "overview":
+                self._paint_overview(p, W, H)
+            else:
+                self._paint_page(p, W, H)
+        except Exception:
+            traceback.print_exc()
+            p.setFont(QFont(self.mono, 8))
+            p.setPen(QPen(NEON_HI, 1.0))
+            p.drawText(40, 200, "render failed — details in the log")
+        try:
+            self._paint_chip(p, W)
+        except Exception:
+            traceback.print_exc()
+        if self.fade < 1.0:
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QBrush(QColor(8, 8, 8, int(220 * self.fade))))
+            p.drawRect(self.rect())
+        p.end()
+
+    def _paint_chip(self, p, W):
+        chip = QRectF(W - 326, 12, 92, 26)
+        grad = QLinearGradient(chip.topLeft(), chip.bottomLeft())
+        grad.setColorAt(0, QColor(16, 16, 15)); grad.setColorAt(1, QColor(10, 10, 9))
+        p.setBrush(QBrush(grad))
+        p.setPen(QPen(OUTLINE, 1.0))
+        p.drawRoundedRect(chip, 4, 4)
+        p.setFont(QFont(self.mono, 7, QFont.Weight.Bold))
+        p.setPen(QPen(TEXT, 1.0))
+        p.drawText(chip.bottomLeft() + QPointF(18, -8), "UPDATES")
+        self.chip_rect = chip
+
+    def mousePressEvent(self, event):
+        pos = event.position()
+        if self.chip_rect.contains(pos) and self.on_chip:
+            self.on_chip()
+            return
+        for rect, handler in self.hit_rows:
+            if rect.contains(pos):
+                kind = handler[0]
+                if kind == "switch":
+                    idx = handler[1]
+                    self.toggled[idx] = not self.toggled.get(idx, False)
+                    self.update()
+                    break
+                if kind == "user":
+                    self._open_user_flow(handler[1])
+                    break
+                if kind == "bind":
+                    self._open_bind_flow(handler[1], handler[2], handler[3])
+                    break
+
+    def _open_user_flow(self, name):
+        print("user flow:", name)
+
+    def _open_bind_flow(self, mods, key, action):
+        print("bind flow:", mods, key, action)
+
+    def _barcode(self, p, rect, seed=0):
+        rng = 0x9E3779B9 + seed
+        x = rect.left()
+        while x < rect.right():
+            rng = (rng * 1103515245 + 12345) & 0x7FFFFFFF
+            h = 6 + (rng % 5)
+            p.setPen(QPen(ACCENT, 1.2))
+            p.drawLine(QPointF(x, rect.bottom() - h), QPointF(x, rect.bottom()))
+            x += 2 + (rng % 4)
+
+
+# ── bespoke page builders ──────────────────────────────────────────
+
+
+def overview_rows():
+    return []  # custom painter
+
+
+def updates_page():
+    out = run(["checkupdates"], 8.0) or ""
+    lines = [tuple(l.split()[:2]) for l in out.splitlines() if l.strip()]
+    return [("cardlist", "UPDATES",
+             [("pending", str(len(lines))), ("mirror", "checkupdates")] + lines[:6])]
+
+
+def boot_page():
+    theme, lst = plymouth_theme()
+    to, cmd = grub_fields()
+    return [("switch", "PLYMOUTH THEME", theme if theme != "—" else "off",
+             ACCENT if theme != "—" else QColor(30, 29, 27),
+             "write /etc/plymouth/plymouthd.conf + regen initramfs"),
+            ("meter", "THEMES INSTALLED", 5 if lst else 1, str(len(lst)) + " themes"),
+            ("kv", "BOOTLOADER", bootloader_detect()),
+            ("kv", "GRUB TIMEOUT", to if to else "—"),
+            ("kv", "KERNEL ARGS", (cmd[:46] + "…") if cmd and len(cmd) > 46 else (cmd or "—"))]
+
+
+def datetime_page():
+    d = timedate_fields()
+    rows = [("clock",)]
+    rows.append(("switch", "NTP", "enabled" if d.get("NTP", "no") == "yes" else "disabled",
+                 ACCENT if d.get("NTP") == "yes" else QColor(30, 29, 27),
+                 "timedatectl set-ntp — phase 2"))
+    rows.append(("kv", "TIMEZONE", d.get("Timezone", "—")))
+    rows.append(("kv", "RTC LOCALTIME", d.get("LocalRTC", "—")))
+    sync = d.get("NTPSynchronized", "no")
+    rows.append(("meter", "SYNC", 5 if sync == "yes" else 1, sync))
+    return rows
+
+
+def notify_page():
+    daemons, dnd, hist = notify_state()
+    return [("switch", "DO NOT DISTURB", "on" if dnd else "off",
+             NEON_HI if dnd else QColor(30, 29, 27),
+             "per-app rules + history viewer — phase 2"),
+            ("meter", "DAEMON", 5 if daemons else 1, ", ".join(daemons) if daemons else "none"),
+            ("kv", "HISTORY", str(hist))]
+
+
+def keybinds_page():
+    binds = cached("binds", 30, hypr_binds)
+    rows = []
+    cats = {"exec": [], "workspace": [], "window": [], "float": [], "misc": []}
+    for mods, key, action in binds:
+        a = action.lower()
+        if "exec" in a or "spawn" in a:
+            cats["exec"].append((mods, key, action))
+        elif "workspace" in a:
+            cats["workspace"].append((mods, key, action))
+        elif any(w in a for w in ("focus", "move", "resize", "center", "toggle")):
+            cats["window"].append((mods, key, action))
+        elif any(w in a for w in ("float", "pseudo", "tile")):
+            cats["float"].append((mods, key, action))
+        else:
+            cats["misc"].append((mods, key, action))
+    for cat_name in ("exec", "workspace", "window", "float", "misc"):
+        items = cats[cat_name]
+        if not items:
+            continue
+        rows.append(("grid", cat_name.upper(),
+                     [("bind", "%s+%s" % (m, k), QColor(60, 180, 255))
+                      for m, k, a in items[:6]]))
+    rows.append(("note", "edit / delete / create binds — phase 2", True))
+    return rows
+
+
+def users_page():
+    rows = []
+    for name, uid, shell, groups, face in user_list()[:8]:
+        rows.append(("usercard", name, uid, ", ".join(groups[:4]) if groups else "—", face))
+    rows.append(("note", "pfp · password · create user — phase 3", True))
+    return rows
+
+
+def virt_page():
+    vms, nets = cached("vms", 30, vm_info)
+    st = run(["systemctl", "is-active", "libvirtd"], 0.8).strip() or "missing"
+    rows = [("switch", "LIBVIRTD", st.upper(),
+             ACCENT if st == "active" else QColor(30, 29, 27),
+             "start/stop libvirtd — phase 3"),
+            ("meter", "NETWORKS", 5 if nets else 1, str(nets) + " defined"),
+            ("kv", "QEMU", ", ".join([b for b in ("qemu-system-x86_64", "qemu-system-aarch64")
+                                      if shutil.which(b)]) or "—")]
+    if vms:
+        rows.append(("grid", "VIRTUAL MACHINES",
+                     [(vm[0], vm[1], NEON_HI if vm[1].lower() == "running" else QColor(160, 100, 255))
+                      for vm in vms[:9]]))
+    else:
+        rows.append(("note", "no VMs found — create one in virt-manager", False))
+    return rows
+
+
+def wifi_page():
+    ssid, dev = wifi_active()
+    rows = []
+    if ssid:
+        rows.append(("switch", "LINK", ssid + " · " + dev, ACCENT,
+                     "connected via " + dev))
+    else:
+        rows.append(("switch", "LINK", "disconnected", QColor(30, 29, 27),
+                     "no active wireless connection"))
+    rows.append(("switch", "WIFI", rfkill_state("wifi").upper(),
+                 ACCENT if rfkill_state("wifi") == "unblocked" else QColor(30, 29, 27),
+                 "airplane / rfkill — phase 2"))
+    scan = wifi_scan()
+    if scan:
+        rows.append(("grid", "NETWORKS",
+                     [(("%s %s" % ("●" if inuse else "", s)), "%d%%" % sig,
+                       NEON_HI if inuse else ACCENT) for inuse, s, sig, sec in scan[:9]]))
+    rows.append(("note", "connect · forget — phase 2", True))
+    return rows
+
+
+def wired_page():
+    rows = [("spark", "THROUGHPUT", "net", fmt_rate(0))]
+    for dev, st, sp, ip in wired_devs()[:4]:
+        rows.append(("cardlist", dev.upper(),
+                     [("state", st), ("speed", sp + " Mb/s"), ("ip", ip)]))
+    return rows
+
+
+def vpn_page():
+    vpns, dns, proxy = vpn_dns()
+    rows = [("switch", "TUNNELS", ", ".join(vpns[:2]) if vpns else "none",
+             ACCENT if vpns else QColor(30, 29, 27),
+             "active VPN connections")]
+    rows.append(("kv", "DNS", " · ".join(dns) if dns else "—"))
+    if proxy:
+        for k in list(proxy)[:2]:
+            rows.append(("kv", "PROXY", str(proxy[k])[:60]))
+    return rows
+
+
+def onion_page():
+    st, ports, redirect = tor_status()
+    return [("switch", "TOR SERVICE", st.upper(),
+             NEON_HI if st == "active" else QColor(30, 29, 27),
+             "systemd tor unit"),
+            ("switch", "ONION ROUTE", "machine-wide" if redirect else "off",
+             ACCENT if redirect else QColor(30, 29, 27),
+             "nftables transparent redirect — phase 2"),
+            ("meter", "TOR PORTS", 5 if ports else 1,
+             " · ".join(p for p in ("9050", "9051", "9040", "9053") if p in ports) or "—"),
+            ("switch", "BRIDGES", obfs := "enabled" if shutil.which("obfs4proxy") else "disabled",
+             ACCENT if shutil.which("obfs4proxy") else QColor(30, 29, 27),
+             "obfs4proxy bridge support"),
+            ("note", "full-tor kill-switch — phase 2. loud confirm before arming.", True)]
+
+
+def displays_page():
+    rows = []
+    for s in QApplication.screens():
+        g = s.geometry()
+        rows.append(("cardlist", s.name(),
+                     [("mode", "%dx%d" % (g.width(), g.height())),
+                      ("refresh", "%.0f Hz" % s.refreshRate())]))
+    name, frac = brightness_info()
+    if frac is not None:
+        rows.append(("bar", "BRIGHTNESS " + (name or ""), frac, "%d%%" % (frac * 100)))
+    return rows or [("kv", "SCREEN", "—")]
+
+
+def bluetooth_page():
+    d, npaired, nconn, conn_names = bt_summary()
+    rows = [("switch", "ADAPTER", d.get("Name", "no adapter").upper(),
+             ACCENT if d.get("Powered") == "yes" else QColor(30, 29, 27),
+             "bluetooth adapter state"),
+            ("meter", "PAIRED", 5 if npaired else 1, str(npaired) + " devices"),
+            ("meter", "CONNECTED", 5 if nconn else 1, str(nconn) + " active")]
+    for n in conn_names[:4]:
+        rows.append(("cardlist", "DEVICE", [("connected", n[:40])]))
+    rows.append(("note", "pair · trust · scan — phase 2", True))
+    return rows
+
+
+def input_page():
+    return [("switch", "KB LAYOUT", hypr_opt("input:kb_layout"), ACCENT, "hyprland input"),
+            ("switch", "POINTER SPEED", hypr_opt("input:pointer_speed"), ACCENT, "mouse speed"),
+            ("switch", "TOUCHPAD", hypr_opt("input:touchpad:natural_scroll"), ACCENT, "natural scroll"),
+            ("kv", "REPEAT DELAY", hypr_opt("input:repeat_delay")),
+            ("kv", "REPEAT RATE", hypr_opt("input:repeat_rate")),
+            ("kv", "DEVICES", str(len(run(["libinput", "list-devices"], 1.5).split("Device:")) - 1))]
+
+
+def audio_page():
+    info = run(["pactl", "info"], 1.0)
+    sink = re.search(r"Default Sink: (.+)", info)
+    src = re.search(r"Default Source: (.+)", info)
+    rows = [("switch", "DEFAULT SINK", sink.group(1).strip() if sink else "—",
+             ACCENT if sink else QColor(30, 29, 27), "pactl default sink"),
+            ("switch", "DEFAULT SOURCE", src.group(1).strip() if src else "—",
+             ACCENT if src else QColor(30, 29, 27), "pactl default source")]
+    vol = run(["pactl", "get-sink-volume", "@DEFAULT_SINK@"], 0.8)
+    m = re.search(r"(\d+)%", vol)
+    if m:
+        rows.append(("bar", "VOLUME", int(m.group(1)) / 100.0, m.group(1) + "%"))
+    mute = run(["pactl", "get-sink-mute", "@DEFAULT_SINK@"], 0.6)
+    rows.append(("switch", "MUTE", "on" if "yes" in mute else "off",
+                 NEON_HI if "yes" in mute else ACCENT, "sink mute state"))
+    out = run(["pactl", "list", "short", "sinks"], 1.0)
+    rows.append(("kv", "SINKS", str(len(out.splitlines()))))
+    return rows
+
+
+def power_page():
+    cap, st, ac = battery_info()
+    rows = []
+    if cap is not None:
+        rows.append(("donut", "BATTERY", cap / 100.0, "%d%%" % cap, st or "—"))
+    rows.append(("switch", "AC", "connected" if ac else ("offline" if ac is False else "—"),
+                 ACCENT if ac else QColor(30, 29, 27), "power supply"))
+    prof = power_profile()
+    rows.append(("switch", "PROFILE", prof.upper(),
+                 NEON_HI if prof == "performance" else ACCENT,
+                 "powerprofilesctl — phase 2"))
+    name, frac = brightness_info()
+    if frac is not None:
+        rows.append(("bar", "BRIGHTNESS", frac, "%d%%" % (frac * 100)))
+    try:
+        gov = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
+                   encoding="utf-8").read().strip()
+        rows.append(("kv", "CPU GOVERNOR", gov))
+    except Exception:
+        pass
+    return rows
+
+
+def themes_page():
+    rows = [("grid", "HYPR THEMES",
+             [(t, "~/.config/hypr/themes/" + t, ACCENT) for t in theme_dirs()[:9]])]
+    for name, state in shell_procs():
+        rows.append(("switch", name.upper(), state.upper(),
+                     ACCENT if state == "running" else QColor(30, 29, 27),
+                     "arcshell component"))
+    for k, v in gtk_settings():
+        rows.append(("kv", k, v[:44]))
+    rows.append(("note", "hypr + arcshell theme switcher — phase 2", False))
+    return rows
+
+
+def wallpaper_page():
+    out = run(["hyprctl", "hyprpaper", "listactive"], 0.8)
+    m = re.search(r"(/\S+)", out)
+    cur = m.group(1) if m else "—"
+    rows = [("switch", "CURRENT", cur[-44:] if len(cur) > 44 else cur,
+             ACCENT if cur != "—" else QColor(30, 29, 27), "hyprpaper/swww active")]
+    wp = os.path.expanduser("~/Pictures/Wallpapers")
+    n = 0
+    try:
+        for root, _, files in os.walk(wp):
+            n += len(files)
+            if n > 999:
+                break
+    except Exception:
+        pass
+    rows.append(("meter", "GALLERY", 5 if n else 1, "%d files" % n if n else "empty"))
+    rows.append(("note", "gallery grid + slideshow — phase 2", False))
+    return rows
+
+
+def fonts_page():
+    fams = cached("fonts", 600, fonts_list)
+    rows = [("meter", "FAMILIES", 0, str(len(fams)) if fams else "—",
+             "installed font families")]
+    picked = [f for f in ("JetFramesMono Nerd Font", "JetFrames Mono",
+                          "Orbitron", "Rajdhani", "Chakra Petch",
+                          "DepartureMono", "Noto Sans Mono") if f in fams]
+    for f in (picked[:2] + fams[:6])[:8]:
+        rows.append(("spec", f, "† AaBbGg 0123 {socket}"))
+    return rows
+
+
+def compositor_page():
+    rows = [("switch", "ANIMATIONS", hypr_opt("animations:enabled").upper(),
+             ACCENT, "hyprland animations"),
+            ("switch", "BLUR", hypr_opt("decoration:blur:enabled").upper(),
+             ACCENT, "window blur"),
+            ("switch", "VRR", hypr_opt("decoration:monitor:vrr").upper(),
+             ACCENT, "variable refresh rate"),
+            ("kv", "ROUNDING", hypr_opt("decoration:rounding")),
+            ("kv", "BORDER SIZE", hypr_opt("decoration:border_size")),
+            ("kv", "ACTIVE BORDER", hypr_opt("decoration:col.active_border")[:44]),
+            ("note", "window style editor writes cyberarch user_config.lua — phase 2", True)]
+    return rows
+
+
+def disks_page():
+    mounts = disk_mounts()[:3]
+    rows = []
+    if mounts:
+        mp, fr, us, to = mounts[0]
+        rows.append(("donut", "ROOT " + mp, fr, "%d%%" % (fr * 100),
+                     "%s / %s" % (fmt_size(us), fmt_size(to))))
+        if len(mounts) > 1:
+            mp, fr, us, to = mounts[1]
+            rows.append(("donut", mp, fr, "%d%%" % (fr * 100),
+                         "%s / %s" % (fmt_size(us), fmt_size(to))))
+    rows.append(("spark", "DISK IO", "io", fmt_rate(0)))
+    try:
+        out = run(["lsblk", "-o", "NAME,SIZE,TYPE", "-l", "-n"], 1.5)
+        for l in out.splitlines()[:4]:
+            f = l.split()
+            if len(f) >= 3 and f[2] == "disk":
+                rows.append(("kv", f[0].upper(), f[1]))
+    except Exception:
+        pass
+    return rows or [("kv", "STORAGE", "—")]
+
+
+def apps_page():
+    ent = cached("pkgsizes", 600, pacman_sizes)
+    if not ent:
+        return [("note", "reading package database…", False)]
+    total = sum(s for _, s in ent)
+    rows = [("meter", "PACKAGES", 0, str(len(ent)), "installed · " + fmt_size(total)),
+            ("grid", "LARGEST",
+             [(n.upper()[:20], fmt_size(s), NEON_HI if s > ent[0][1] * 0.3 else ACCENT)
+              for n, s in ent[:9]])]
+    return rows
+
+
+def apps_home():
+    hogs = cached("hogs", 300, home_hogs)
+    rows = []
+    if hogs:
+        rows.append(("grid", "HOME CONSUMERS",
+                     [(n.upper()[:18], fmt_size(s), ACCENT) for n, s in hogs[:9]]))
+    else:
+        rows.append(("note", "measuring home folders…", False))
+    return rows
+
+
+def caches_page():
+    cache, trash = cached("caches", 300, cache_sizes)
+    rows = []
+    if cache is not None:
+        rows.append(("bar", "~/.CACHE", min(1.0, cache / (8 * 1024 ** 3)), fmt_size(cache)))
+    if trash is not None:
+        rows.append(("bar", "TRASH", min(1.0, trash / (2 * 1024 ** 3)), fmt_size(trash)))
+    pkg_out = run(["du", "-sh", "/var/cache/pacman/pkg"], 2.0)
+    rows.append(("kv", "PKG CACHE", pkg_out.split()[0] if pkg_out.strip() else "—"))
+    orph = run(["pacman", "-Qdtq"], 5)
+    rows.append(("kv", "ORPHANS", str(len(orph.splitlines())) if orph.strip() else "0"))
+    rows.append(("note", "clean actions — phase 3", False))
+    return rows
+
+
+def autostart_page():
+    user, system, units = autostart_lists()
+    rows = [("meter", "USER UNITS", 5 if units else 1, str(units) + " enabled")]
+    if user:
+        rows.append(("grid", "XDG AUTOSTART", [(u, "enabled", ACCENT) for u in user[:9]]))
+    if system:
+        rows.append(("grid", "SYSTEM AUTOSTART", [(u, "enabled", ACCENT) for u in system[:9]]))
+    rows.append(("note", "per-entry enable/disable — phase 2", False))
+    return rows
+
+
+def default_apps_page():
+    def q(mime):
+        return run(["xdg-mime", "query", "default", mime], 0.8).strip() or "—"
+    browser = run(["xdg-settings", "get", "default-web-browser"], 0.8).strip() or "—"
+    return [("switch", "BROWSER", browser, ACCENT, "xdg-settings default-web-browser"),
+            ("switch", "FILES", q("inode/directory"), ACCENT, "mime inode/directory"),
+            ("switch", "TEXT", q("text/plain"), ACCENT, "mime text/plain"),
+            ("switch", "IMAGES", q("image/png"), ACCENT, "mime image/png"),
+            ("switch", "VIDEO", q("video/mp4"), ACCENT, "mime video/mp4"),
+            ("switch", "MUSIC", q("audio/mpeg"), ACCENT, "mime audio/mpeg")]
+
+
+def firewall_page():
+    backend, n, tor = fw_rules()
+    rows = [("switch", "BACKEND", backend.upper() if backend != "—" else "none",
+             ACCENT if backend != "—" else QColor(30, 29, 27), "nftables / iptables"),
+            ("kv", "RULES", str(n)),
+            ("switch", "ONION REDIRECT", "active" if tor else "off",
+             ACCENT if tor else QColor(30, 29, 27),
+             "%d rules touch 9040" % tor if tor else "no transparent tor rules")]
+    return rows
+
+
+def lock_page():
+    rows = [("switch", "SDDM", unit_state("sddm").upper(),
+             ACCENT, "display manager"),
+            ("kv", "SDDM THEME", sddm_theme()),
+            ("switch", "HYPRLock", "installed" if shutil.which("hyprlock") else "missing",
+             ACCENT if shutil.which("hyprlock") else QColor(30, 29, 27), "screen locker")]
+    idle = os.path.expanduser("~/.config/hypr/hypridle.conf")
+    n = 0
+    try:
+        n = sum(1 for l in open(idle, encoding="utf-8", errors="ignore")
+                if l.strip().startswith("timeout"))
+    except Exception:
+        pass
+    rows.append(("kv", "IDLE TIMERS", str(n) if n else "—"))
+    ll = last_logins()
+    if ll:
+        rows.append(("grid", "LAST LOGINS",
+                     [(u, "%s · %s" % (frm, when[:10]), ACCENT) for u, frm, when in ll[:6]]))
+    return rows
+
+
+def services_page():
+    out = run(["systemctl", "list-units", "--type=service", "--state=running",
+               "--no-legend"], 1.5)
+    units = [tuple(l.split()[:2]) for l in out.splitlines() if l.strip()]
+    failed = run(["systemctl", "--failed", "--no-legend"], 1.5).splitlines()
+    rows = [("meter", "RUNNING", 5 if units else 1, str(len(units)) + " active services")]
+    if failed:
+        rows.append(("switch", "FAILED", ", ".join(f.split()[0] for f in failed[:3]),
+                     NEON_HI, "systemd units in failure state"))
+    rows.append(("grid", "UNITS",
+                 [(u, d[:24], ACCENT) for u, d in units[:12]]))
+    return rows
+
+
+def ports_page():
+    lst = cached("listeners", 5, listeners)
+    est = established_count()
+    rows = [("meter", "LISTENING", 5 if lst else 1,
+             str(len(lst)) + " sockets · %d established" % est)]
+    if lst:
+        rows.append(("grid", "PORTS",
+                     [(p, "%s · %s" % (a[:22], proc[:18]), ACCENT) for p, a, proc in lst[:9]]))
+    return rows
+
+
+def gperf_page():
+    rows = [("switch", "GAMEMODE", "present" if shutil.which("gamemoded") else "missing",
+             ACCENT if shutil.which("gamemoded") else QColor(30, 29, 27), "gamemode daemon"),
+            ("switch", "PROFILE", power_profile().upper(),
+             NEON_HI if power_profile() == "performance" else ACCENT,
+             "powerprofilesctl")]
+    rows.append(("spark", "CPU", "cpu", "%.0f%%" % 0))
+    rows.append(("spark", "NET", "net", fmt_rate(0)))
+    try:
+        gov = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
+                   encoding="utf-8").read().strip()
+        rows.append(("kv", "CPU GOVERNOR", gov))
+    except Exception:
+        pass
+    return rows
+
+
+def goverlay_page():
+    has = shutil.which("mangohud") is not None
+    conf = os.path.expanduser("~/.config/MangoHud/MangoHud.conf")
+    n = 0
+    try:
+        n = sum(1 for l in open(conf, encoding="utf-8", errors="ignore") if l.strip())
+    except Exception:
+        pass
+    return [("switch", "MANGOHUD", "installed" if has else "missing",
+             ACCENT if has else QColor(30, 29, 27), "overlay"),
+            ("kv", "CONFIG DIRECTIVES", str(n) if n else "defaults"),
+            ("note", "overlay editor — phase 2", False)]
+
+
+def grunners_page():
+    rows = []
+    for b in ("steam", "lutris", "bottles", "heroic"):
+        w = shutil.which(b)
+        rows.append(("switch", b.upper(), "installed" if w else "not found",
+                     ACCENT if w else QColor(30, 29, 27), "game runner"))
+    wv = run(["wine", "--version"], 1.0).splitlines()
+    rows.append(("kv", "WINE", wv[0] if wv else "—"))
+    ctd = os.path.expanduser("~/.steam/steam/compatibilitytools.d")
+    try:
+        n = len(os.listdir(ctd))
+    except Exception:
+        n = 0
+    rows.append(("kv", "PROTON-GE", "%d builds" % n if n else "—"))
+    return rows
+
+
+def gpads_page():
+    pads = gamepads()
+    rows = [("meter", "PADS", 0, str(len(pads)) + " joystick devices")]
+    for p in pads[:6]:
+        rows.append(("switch", "DEVICE", p[:40], ACCENT, "gamepad detected"))
+    rows.append(("note", "calibration links — phase 2", False))
+    return rows
+
+
+def glib_page():
+    libs = cached("steaml", 600, steam_libs)
+    if not libs:
+        return [("note", "steam libraries not found", False)]
+    sizes = CACHE.get("steamdu", (0, {}))[1]
+    rows = [("meter", "LIBRARIES", 0, str(len(libs)), "steam libraries")]
+    for p in libs[:9]:
+        s = sizes.get(p)
+        rows.append(("cardlist", p.replace(os.path.expanduser("~"), "~")[-34:],
+                     [("size", fmt_size(s) if s else "—")]))
+    return rows
+
+
+def glib_measure():
+    libs = steam_libs()
+    sizes = {}
+    tot = 0
+    for p in libs:
+        s = lib_du(p)
+        if s:
+            sizes[p] = s
+            tot += s
+    CACHE["steamdu"] = (time.time(), sizes)
+    CACHE["steamtot"] = (time.time(), tot)
+    return glib_page()
+
+
+def watch_page():
+    lst = cached("listeners", 5, listeners)
+    cam, mic = mic_cam_use()
+    rows = [("switch", "MICROPHONE", "%d apps" % mic if mic else "silent",
+             NEON_HI if mic else QColor(30, 29, 27), "pactl source outputs"),
+            ("switch", "CAMERA", "%d nodes" % cam if cam else "none",
+             ACCENT if cam else QColor(30, 29, 27), "/dev/video*"),
+            ("kv", "ESTABLISHED", str(established_count())),
+            ("grid", "LISTENERS",
+             [(p, "%s · %s" % (a[:22], proc[:18]), ACCENT) for p, a, proc in lst[:9]])]
+    return rows
+
+
+def tools_page():
+    tools = redteam_tools()
+    have = [t for t, ok in tools if ok]
+    rows = [("meter", "ARSENAL", 0, "%d/%d tools" % (len(have), len(tools)),
+             "redteam tooling on this system")]
+    for t, ok in tools[:9]:
+        rows.append(("switch", t.upper(), "ready" if ok else "absent",
+                     ACCENT if ok else QColor(30, 29, 27), "shutil.which(%s)" % t))
+    return rows
+
+
+def spoof_page():
+    rows = []
+    for dev, mac, perm in mac_info()[:5]:
+        rows.append(("switch", dev.upper(), mac + (" · SPOOFED" if perm else ""),
+                     ACCENT, "mac address"))
+    try:
+        mid = open("/etc/machine-id", encoding="utf-8").read().strip()
+        rows.append(("kv", "MACHINE-ID", mid[:16] + "…"))
+    except Exception:
+        pass
+    rows.append(("note", "spoof actions + log hygiene — phase 3", False))
+    return rows
+
+
+def maintenance_page():
+    pkg_out = run(["du", "-sh", "/var/cache/pacman/pkg"], 2.0)
+    orph = run(["pacman", "-Qdtq"], 5)
+    j = run(["journalctl", "--disk-usage"], 2.0)
+    m = re.search(r"take up (.+)", j)
+    rows = [("switch", "PKG CACHE", pkg_out.split()[0] if pkg_out else "—", ACCENT),
+            ("switch", "ORPHANS", str(len(orph.splitlines())) if orph.strip() else "0", ACCENT),
+            ("switch", "JOURNAL", m.group(1) if m else (j[:30] if j else "—"), ACCENT)]
+    rows.append(("note", "clean actions — phase 3", False))
+    return rows
+
+
+def diagnostics_page():
+    out = run(["systemctl", "--failed", "--no-legend"], 1.5).splitlines()
+    rows = [("meter", "FAILED UNITS", 0, str(len(out)), "systemd failures")]
+    for l in out[:6]:
+        rows.append(("switch", "FAILED", l.split()[0][:34], NEON_HI, "failed unit"))
+    err = run(["journalctl", "-p", "3", "-n", "5", "--no-pager", "-o", "short"], 2.0)
+    for l in [x for x in err.splitlines() if x.strip()][-4:]:
+        rows.append(("note", l[5:76], True))
+    return rows
+
+
+def logs_page():
+    out = run(["journalctl", "-n", "8", "--no-pager", "-o", "short"], 2.0)
+    lines = [l for l in out.splitlines() if l.strip()]
+    rows = [("meter", "ENTRIES", 0, str(len(lines)), "journal tail")]
+    for l in lines[-6:]:
+        rows.append(("note", l[5:80], " E " in l[:20]))
+    return rows or [("note", "journal unavailable", False)]
+
+
+NAV_BASE = [
+    ("SYSTEM", [
+        ("System Information", "overview"),
+        ("Updates", "updates"),
+        ("Boot & Splash", "boot"),
+        ("Date & Time", "datetime"),
+        ("Notifications", "notify"),
+        ("Keybinds", "keybinds"),
+        ("Users", "users"),
+        ("Virtualization", "virt"),
+    ]),
+    ("INTERNET", [
+        ("Wi-Fi", "wifi"),
+        ("Wired", "wired"),
+        ("VPN & DNS", "vpn"),
+        ("Onion Layer", "onion"),
+    ]),
+    ("DEVICES", [
+        ("Displays", "displays"),
+        ("Bluetooth", "bluetooth"),
+        ("Input", "input"),
+        ("Audio", "audio"),
+        ("Power & Brightness", "power"),
+    ]),
+    ("DESKTOP", [
+        ("Shell & Themes", "themes"),
+        ("Wallpaper", "wallpaper"),
+        ("Fonts", "fonts"),
+        ("Compositor", "compositor"),
+    ]),
+    ("STORAGE & APPS", [
+        ("Disks", "disks"),
+        ("Apps", "apps"),
+        ("Home & Caches", "caches"),
+        ("Autostart", "autostart"),
+        ("Default Apps", "default_apps"),
+    ]),
+    ("SECURITY", [
+        ("Firewall", "firewall"),
+        ("Lock & Login", "lock"),
+        ("Services", "services"),
+        ("Ports & Sessions", "ports"),
+    ]),
+]
+
+NAV_GAMING = ("GAMING", [
+    ("Performance", "gperf"),
+    ("Overlays", "goverlay"),
+    ("Runners", "grunners"),
+    ("Controllers", "gpads"),
+    ("Library", "glib"),
+])
+
+NAV_SHADOW = ("SHADOW", [
+    ("Watch", "watch"),
+    ("Tool Rack", "tools"),
+    ("Spoof & Trace", "spoof"),
+])
+
+NAV_CARE = ("CARE", [
+    ("Maintenance", "maintenance"),
+    ("Diagnostics", "diagnostics"),
+    ("Logs", "logs"),
+])
+
+
+def build_nav():
+    nav = list(NAV_BASE)
+    ed = edition_slug()
+    if ed == "gaming" or shutil.which("steam") or shutil.which("lutris"):
+        nav.append(NAV_GAMING)
+    if ed == "fallen" or shutil.which("tor"):
+        nav.append(NAV_SHADOW)
+    nav.append(NAV_CARE)
+    return nav
+
+
+PAGE_FN = {
+    "overview": overview_rows, "updates": updates_page, "boot": boot_page,
+    "datetime": datetime_page, "notify": notify_page, "keybinds": keybinds_page,
+    "users": users_page, "virt": virt_page, "wifi": wifi_page,
+    "wired": wired_page, "vpn": vpn_page, "onion": onion_page,
+    "displays": displays_page, "bluetooth": bluetooth_page, "input": input_page,
+    "audio": audio_page, "power": power_page, "themes": themes_page,
+    "wallpaper": wallpaper_page, "fonts": fonts_page,
+    "compositor": compositor_page, "disks": disks_page, "apps": apps_page,
+    "caches": caches_page, "autostart": autostart_page,
+    "default_apps": default_apps_page, "firewall": firewall_page,
+    "lock": lock_page, "services": services_page, "ports": ports_page,
+    "gperf": gperf_page, "goverlay": goverlay_page, "grunners": grunners_page,
+    "gpads": gpads_page, "glib": glib_page, "watch": watch_page,
+    "tools": tools_page, "spoof": spoof_page, "maintenance": maintenance_page,
+    "diagnostics": diagnostics_page, "logs": logs_page,
+}
+
+ASYNC_FN = {
+    "updates": updates_page, "apps": apps_home, "glib": glib_measure,
+}
+
+
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Archangel Settings")
+        self.mono = mono_family()
+        self.display = display_family()
+        self.NAV = build_nav()
+        self.active = "overview"
+        self.hover_key = None
+        self.dossier = Dossier(self)
+        self.dossier.on_chip = lambda: self.select("updates", "Updates")
+        self.search = QLineEdit(self.dossier)
+        self.search.setPlaceholderText("search settings…")
+        self.search.setFixedWidth(190)
+        self.search.textChanged.connect(self._on_search)
+        self.search.returnPressed.connect(self._on_search_go)
+        self.search.setStyleSheet(
+            "QLineEdit { background: #0d0d0c; color: #ECEAE4; border: 1px solid #262523;"
+            " padding: 6px 10px; font: 9pt;} QLineEdit:focus { border-color: #f01010; }")
+        self.nav_rects = []
+        self.nav_items = []
+        self.nav_scroll = 0
+        self.nav_h = 0
+        self.setMouseTracking(True)
+        self.resize(1500, 940)
+        self.setMinimumSize(1180, 780)
+        self._place()
+
+    def _place(self):
+        self.dossier.setGeometry(SIDE_W, 0, self.width() - SIDE_W, self.height())
+        self.search.move(self.dossier.width() - 226, 14)
+
+    def _on_search(self, text):
+        self.dossier.search = text.strip().lower()
+        self.nav_scroll = 0
+        self.dossier.update()
+        self.update()
+
+    def _on_search_go(self):
+        t = self.dossier.search
+        for _, items in self.NAV:
+            for label, key in items:
+                if t in label.lower():
+                    self.select(key, label)
+                    return
+
+    def select(self, key, label):
+        self.active = key
+        self.dossier.set_page(key, label)
+        for cy, k in self.nav_items:
+            if k == key:
+                win = self.height() - 210
+                if cy - self.nav_scroll < 130 or cy - self.nav_scroll > win:
+                    self.nav_scroll = _clamp(cy - 160, 0,
+                                             max(0, self.nav_h - (self.height() - 200)))
+                break
+        self.dossier.update()
+        self.update()
+
+    def resizeEvent(self, event):
+        self._place()
+
+    def wheelEvent(self, event):
+        if event.position().x() < SIDE_W:
+            d = event.angleDelta().y() / 120.0 * 48
+            self.nav_scroll = _clamp(self.nav_scroll - d, 0,
+                                     max(0, self.nav_h - (self.height() - 200)))
+            self.update()
+        else:
+            event.ignore()
+
+    def mouseMoveEvent(self, event):
+        pos = event.position()
+        hk = None
+        for rect, key, _ in self.nav_rects:
+            if rect.contains(pos):
+                hk = key
+                break
+        if hk != self.hover_key:
+            self.hover_key = hk
+            self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        p.fillRect(self.rect(), BG)
+
+        # left sidebar — full-height frosted surface with subtle gradient
+        side = QRectF(0, 0, SIDE_W, H)
+        grad = QLinearGradient(side.topLeft(), side.topRight())
+        grad.setColorAt(0, QColor(8, 8, 8, 230))
+        grad.setColorAt(1, QColor(12, 12, 11, 230))
+        p.setBrush(QBrush(grad))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawRoundedRect(side, 0, 0)
+        p.setPen(QPen(QColor(40, 39, 37, 160), 1.0))
+        p.drawLine(QPointF(SIDE_W, 0), QPointF(SIDE_W, H))
+
+        y = 28
+        f_logo = QFont(self.display, 17, QFont.Weight.Bold)
+        f_logo.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1.8)
+        p.setFont(f_logo)
+        p.setPen(QPen(TEXT, 1.0))
+        p.drawText(QPointF(30, y + 16), "ARCHANGEL")
+        p.setPen(QPen(ACCENT, 1.0))
+        p.setFont(f_logo)
+        p.drawText(QPointF(212, y + 16), "†")
+        p.setFont(QFont(self.mono, 7))
+        p.setPen(QPen(FAINT, 1.0))
+        p.drawText(QPointF(30, y + 36), "// settings · control center")
+        p.setPen(QPen(ACCENT, 1.0))
+        p.drawLine(QPointF(30, y + 56), QPointF(56, y + 56))
+
+        content_y = y + 82
+        self.nav_rects = []
+        self.nav_items = []
+        vis = self.dossier.search
+        nav_bottom = H - 108
+        for group, items in self.NAV:
+            if vis and not any(vis in lab.lower() for lab, _ in items):
+                continue
+            gy = content_y - self.nav_scroll
+            if -24 < gy < nav_bottom:
+                p.setFont(QFont(self.mono, 6, QFont.Weight.Bold))
+                p.setPen(QPen(QColor(110, 108, 104, 150), 1.0))
+                p.drawText(QPointF(30, gy + 10), group)
+                p.setPen(QPen(QColor(30, 29, 27), 1.0))
+                p.drawLine(QPointF(30, gy + 18), QPointF(SIDE_W - 30, gy + 18))
+            content_y += 34
+            for label, key in items:
+                if vis and vis not in label.lower():
+                    continue
+                iy = content_y - self.nav_scroll
+                self.nav_items.append((content_y, key))
+                if -34 < iy < nav_bottom:
+                    sel = key == self.active
+                    hov = key == self.hover_key and not sel
+                    pill = QRectF(22, iy + 2, SIDE_W - 44, 28)
+                    if sel:
+                        g2 = QLinearGradient(pill.topLeft(), pill.bottomLeft())
+                        g2.setColorAt(0, QColor(240, 16, 16, 95))
+                        g2.setColorAt(1, QColor(240, 16, 16, 35))
+                        p.setBrush(QBrush(g2))
+                        p.setPen(Qt.PenStyle.NoPen)
+                        p.drawRoundedRect(pill, 9, 9)
+                    elif hov:
+                        p.setBrush(QBrush(QColor(22, 22, 21, 170)))
+                        p.setPen(Qt.PenStyle.NoPen)
+                        p.drawRoundedRect(pill, 9, 9)
+                    p.setFont(QFont(self.mono, 9, QFont.Weight.Bold))
+                    p.setPen(QPen(TEXT if sel else (QColor(190, 188, 183) if hov
+                                                    else QColor(150, 148, 144)), 1.0))
+                    p.drawText(QPointF(36, iy + 22), label)
+                    self.nav_rects.append((QRectF(22, iy + 2, SIDE_W - 44, 28), key, label))
+                content_y += 30
+            content_y += 10
+        self.nav_h = content_y + 10
+
+        # bottom strip — edition + kernel
+        p.setPen(QPen(QColor(34, 33, 31), 1.0))
+        p.drawLine(QPointF(30, H - 104), QPointF(SIDE_W - 30, H - 104))
+        fm = QFontMetrics(p.font())
+        p.setFont(QFont(self.mono, 7))
+        p.setPen(QPen(QColor(110, 108, 104), 1.0))
+        p.drawText(QPointF(30, H - 84), edition_name().upper())
+        w = fm.horizontalAdvance(edition_name().upper() + "  ")
+        p.setPen(QPen(ACCENT, 1.0))
+        p.drawText(QPointF(30 + w, H - 84), "KERNEL " + os.uname().release)
+
+        p.save()
+        p.translate(16, H - 44)
+        p.rotate(-90)
+        p.setFont(QFont(self.mono, 6))
+        p.setPen(QPen(QColor(60, 59, 57, 95), 1.0))
+        p.drawText(0, 0, "ARCHANGEL SETTINGS · PHASE 1 · READ-ONLY")
+        p.restore()
+
+    def mousePressEvent(self, event):
+        pos = event.position()
+        for rect, key, label in self.nav_rects:
+            if rect.contains(pos):
+                self.select(key, label)
+                return
+
+
+def main():
+    sys.excepthook = lambda t, v, tb: traceback.print_exception(t, v, tb)
+    app = QApplication(sys.argv)
+    app.setApplicationName("Archangel Settings")
+    win = MainWindow()
+    win.show()
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
