@@ -388,8 +388,6 @@ zip
 zmap
 zssh
 zzuf
-
-### Hyprland & Wayland desktop (ArcShell shell)
 hyprland
 quickshell
 hyprpaper
@@ -414,7 +412,6 @@ fish
 xsel
 wmctrl
 rio
-code
 ttf-jetbrains-mono
 ttf-nerd-fonts-symbols
 ttf-dejavu
@@ -432,13 +429,9 @@ pipewire
 pipewire-pulse
 pipewire-alsa
 wireplumber
-
-### display manager (SDDM + ArchangelOS QML theme deps)
 sddm
 qt6-svg
 qt6-5compat
-
-### developer & GUI tooling
 ghidra
 jdk-openjdk
 zenmap
@@ -446,8 +439,6 @@ gparted
 virt-manager
 remmina
 file-roller
-
-### AI red team & cloud attack tooling (best-effort installs handled post-build)
 python-pwntools
 dalfox
 nuclei
@@ -455,9 +446,6 @@ nuclei-templates
 faradaysec
 scoutsuite
 cloudsploit
-
-
-### ArchangelOS applications (menu apps)
 alsa-firmware
 android-tools
 apparmor
@@ -563,8 +551,6 @@ vlc
 wireguard-tools
 yazi
 zsh
-
-### RedOps tools (official repos)
 afl++
 airspy
 bandit
@@ -598,11 +584,7 @@ sslsplit
 syft
 trivy
 unicorn
-
-### RedOps toolchains (build AUR/pip/go/npm/cargo/github tools)
 python-pipx
-
-### RedOps tools (official repos, verified)
 binutils
 compiler-rt
 kubectl
@@ -620,10 +602,6 @@ sigrok-cli
 smbclient
 valkey
 zaproxy
-
-### arcfetch banner deps
 chafa
-
-### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
 wpewebkit
 yt-dlp
