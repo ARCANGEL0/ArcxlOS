@@ -144,11 +144,6 @@
      "terminal": false
     },
     {
-     "name": "KOrganizer",
-     "exec": "korganizer",
-     "terminal": false
-    },
-    {
      "name": "Zotero",
      "exec": "zotero",
      "terminal": false
@@ -191,11 +186,6 @@
      "terminal": false
     },
     {
-     "name": "digiKam",
-     "exec": "digikam",
-     "terminal": false
-    },
-    {
      "name": "Gwenview",
      "exec": "gwenview",
      "terminal": false
@@ -209,11 +199,6 @@
      "name": "ImageMagick",
      "exec": "imagemagick",
      "terminal": true
-    },
-    {
-     "name": "RawTherapee",
-     "exec": "rawtherapee",
-     "terminal": false
     },
     {
      "name": "Blender",
@@ -248,16 +233,6 @@
      "terminal": false
     },
     {
-     "name": "Kdenlive",
-     "exec": "kdenlive",
-     "terminal": false
-    },
-    {
-     "name": "Shotcut",
-     "exec": "shotcut",
-     "terminal": false
-    },
-    {
      "name": "Audacity",
      "exec": "audacity",
      "terminal": false
@@ -281,11 +256,6 @@
      "name": "FFmpeg",
      "exec": "ffmpeg",
      "terminal": true
-    },
-    {
-     "name": "Celluloid",
-     "exec": "celluloid",
-     "terminal": false
     }
    ],
    "subcats": []
@@ -295,49 +265,9 @@
    "icon": "🎵",
    "items": [
     {
-     "name": "Strawberry",
-     "exec": "strawberry",
-     "terminal": false
-    },
-    {
-     "name": "Elisa",
-     "exec": "elisa",
-     "terminal": false
-    },
-    {
-     "name": "Tauon Music Box",
-     "exec": "tauon-music-box",
+     "name": "Cliamp",
+     "exec": "cliamp",
      "terminal": true
-    },
-    {
-     "name": "Quod Libet",
-     "exec": "quodlibet",
-     "terminal": false
-    },
-    {
-     "name": "cmus",
-     "exec": "cmus",
-     "terminal": true
-    },
-    {
-     "name": "ncmpcpp",
-     "exec": "ncmpcpp",
-     "terminal": true
-    },
-    {
-     "name": "MPD",
-     "exec": "mpd",
-     "terminal": true
-    },
-    {
-     "name": "EasyEffects",
-     "exec": "easyeffects",
-     "terminal": false
-    },
-    {
-     "name": "MuseScore",
-     "exec": "musescore",
-     "terminal": false
     }
    ],
    "subcats": []
@@ -347,43 +277,8 @@
    "icon": "📚",
    "items": [
     {
-     "name": "Stellarium",
-     "exec": "stellarium",
-     "terminal": false
-    },
-    {
-     "name": "KStars",
-     "exec": "kstars",
-     "terminal": false
-    },
-    {
-     "name": "Marble",
-     "exec": "marble",
-     "terminal": false
-    },
-    {
      "name": "GeoGebra",
      "exec": "geogebra",
-     "terminal": false
-    },
-    {
-     "name": "KGeography",
-     "exec": "kgeography",
-     "terminal": true
-    },
-    {
-     "name": "KDE Edu",
-     "exec": "kde-edu",
-     "terminal": true
-    },
-    {
-     "name": "Anki",
-     "exec": "anki",
-     "terminal": false
-    },
-    {
-     "name": "GCompris",
-     "exec": "gcompris-qt",
      "terminal": false
     }
    ],
@@ -705,23 +600,8 @@
      "terminal": false
     },
     {
-     "name": "KBackup",
-     "exec": "kbackup",
-     "terminal": false
-    },
-    {
      "name": "Restic",
      "exec": "restic",
-     "terminal": true
-    },
-    {
-     "name": "Borg",
-     "exec": "borg",
-     "terminal": true
-    },
-    {
-     "name": "Rclone",
-     "exec": "rclone",
      "terminal": true
     },
     {
@@ -1699,11 +1579,6 @@
       {
        "name": "AWS CLI",
        "exec": "aws",
-       "terminal": true
-      },
-      {
-       "name": "Azure CLI",
-       "exec": "azure",
        "terminal": true
       },
       {
@@ -3017,11 +2892,6 @@
        "terminal": true
       },
       {
-       "name": "Azure CLI",
-       "exec": "azure",
-       "terminal": true
-      },
-      {
        "name": "gcloud CLI",
        "exec": "gcloud",
        "terminal": true
@@ -3064,11 +2934,6 @@
       {
        "name": "Docker",
        "exec": "docker",
-       "terminal": true
-      },
-      {
-       "name": "Podman",
-       "exec": "podman",
        "terminal": true
       },
       {
@@ -4829,11 +4694,6 @@
     {
      "name": "Docker",
      "exec": "docker",
-     "terminal": true
-    },
-    {
-     "name": "Podman",
-     "exec": "podman",
      "terminal": true
     },
     {
