@@ -234,38 +234,8 @@
    "icon": "🎵",
    "items": [
     {
-     "name": "Strawberry",
-     "exec": "strawberry",
-     "terminal": false
-    },
-    {
-     "name": "Elisa",
-     "exec": "elisa",
-     "terminal": false
-    },
-    {
-     "name": "Tauon Music Box",
-     "exec": "tauon-music-box",
-     "terminal": true
-    },
-    {
-     "name": "Quod Libet",
-     "exec": "quodlibet",
-     "terminal": false
-    },
-    {
-     "name": "cmus",
-     "exec": "cmus",
-     "terminal": true
-    },
-    {
-     "name": "ncmpcpp",
-     "exec": "ncmpcpp",
-     "terminal": true
-    },
-    {
-     "name": "MPD",
-     "exec": "mpd",
+     "name": "Cliamp",
+     "exec": "cliamp",
      "terminal": true
     },
     {
