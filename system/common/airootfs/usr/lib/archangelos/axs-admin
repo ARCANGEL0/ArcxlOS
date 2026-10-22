@@ -1,0 +1,143 @@
+#!/bin/bash
+# axs-admin — the root half of ArchangelOS Settings. Each verb does one checked thing; Settings
+# runs it through pkexec, so the person is asked for their password (kept for a few minutes).
+#
+#   user-add NAME FULLNAME ADMIN      password on stdin
+#   user-passwd NAME                  password on stdin
+#   user-delete NAME KEEPHOME
+#   user-admin NAME 0|1
+#   user-fullname NAME FULLNAME
+#   user-avatar NAME FILE             picture for the login screen (AccountsService)
+#   pkg-remove PKG...
+#   pkg-clean-cache | pkg-orphans | journal-vacuum
+#   locale-set LANG [FORMATS]
+#   mac-random 0|1
+set -u
+SELF=/usr/lib/archangelos/axs-admin
+
+die() { echo "$*" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || exec pkexec "$SELF" "$@"
+
+# Who asked: pkexec sets PKEXEC_UID.
+caller="$(getent passwd "${PKEXEC_UID:-0}" | cut -d: -f1)"
+
+user_ok()  { [[ "$1" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "That isn't a valid user name."; }
+human()    { local u; u="$(getent passwd "$1")" || die "No such user: $1"
+             local uid; uid="$(echo "$u" | cut -d: -f3)"
+             [ "$uid" -ge 1000 ] && [ "$uid" -lt 60000 ] || die "$1 is a system account."; }
+full_ok()  { [[ "$1" != *[:,=$'\n']* ]] && [ "${#1}" -le 64 ] || die "Names can't contain : , or =."; }
+read_pw()  { IFS= read -r pw || true; [ "${#pw}" -ge 1 ] || die "The password is empty."; }
+admins()   { getent group wheel | cut -d: -f4 | tr ',' '\n' | grep -c .; }
+
+verb="${1:-}"; shift || true
+case "$verb" in
+    user-add)
+        [ $# -eq 3 ] || die "usage: user-add NAME FULLNAME ADMIN"
+        user_ok "$1"; full_ok "$2"
+        getent passwd "$1" >/dev/null && die "There is already a user called $1."
+        read_pw
+        groups="audio,video,input,storage,network"
+        [ "$3" = 1 ] && groups="$groups,wheel"
+        # Only groups that exist; useradd refuses the whole call otherwise.
+        groups="$(echo "$groups" | tr ',' '\n' | while read -r g; do getent group "$g" >/dev/null && echo "$g"; done | paste -sd,)"
+        useradd -m -c "$2" -G "$groups" -s "$(getent passwd "$caller" | cut -d: -f7 | grep . || echo /bin/bash)" "$1" \
+            || die "Couldn't create $1."
+        printf '%s:%s\n' "$1" "$pw" | chpasswd || { userdel -r "$1" 2>/dev/null; die "Couldn't set the password."; }
+        echo ok ;;
+    user-passwd)
+        [ $# -eq 1 ] || die "usage: user-passwd NAME"
+        user_ok "$1"; human "$1"; read_pw
+        printf '%s:%s\n' "$1" "$pw" | chpasswd || die "Couldn't change the password."
+        echo ok ;;
+    user-delete)
+        [ $# -eq 2 ] || die "usage: user-delete NAME KEEPHOME"
+        user_ok "$1"; human "$1"
+        [ "$1" = "$caller" ] && die "You can't remove the account you're signed in with."
+        loginctl list-users --no-legend 2>/dev/null | awk '{print $2}' | grep -qx "$1" && die "$1 is signed in right now."
+        if getent group wheel | cut -d: -f4 | tr ',' '\n' | grep -qx "$1" && [ "$(admins)" -le 1 ]; then
+            die "$1 is the only administrator."
+        fi
+        if [ "$2" = 1 ]; then userdel "$1"; else userdel -r "$1" 2>/dev/null || userdel "$1"; fi || die "Couldn't remove $1."
+        rm -f "/var/lib/AccountsService/icons/$1" "/var/lib/AccountsService/users/$1"
+        echo ok ;;
+    user-admin)
+        [ $# -eq 2 ] || die "usage: user-admin NAME 0|1"
+        user_ok "$1"; human "$1"
+        if [ "$2" = 1 ]; then gpasswd -a "$1" wheel >/dev/null || die "Couldn't make $1 an administrator."
+        else
+            [ "$1" = "$caller" ] && die "You can't remove your own administrator rights here."
+            [ "$(admins)" -le 1 ] && die "There has to be at least one administrator."
+            gpasswd -d "$1" wheel >/dev/null || die "Couldn't change $1."
+        fi
+        echo ok ;;
+    user-fullname)
+        [ $# -eq 2 ] || die "usage: user-fullname NAME FULLNAME"
+        user_ok "$1"; human "$1"; full_ok "$2"
+        usermod -c "$2" "$1" || die "Couldn't rename $1."
+        echo ok ;;
+    user-avatar)
+        [ $# -eq 2 ] || die "usage: user-avatar NAME FILE"
+        user_ok "$1"; human "$1"
+        [ -f "$2" ] && [ "$(stat -c %s "$2")" -le 10485760 ] || die "Pick an image under 10 MB."
+        file -b --mime-type "$2" | grep -q '^image/' || die "That file isn't an image."
+        install -d -m 755 /var/lib/AccountsService/icons /var/lib/AccountsService/users
+        install -m 644 "$2" "/var/lib/AccountsService/icons/$1"
+        f="/var/lib/AccountsService/users/$1"
+        [ -f "$f" ] || printf '[User]\n' > "$f"
+        if grep -q '^Icon=' "$f"; then sed -i "s|^Icon=.*|Icon=/var/lib/AccountsService/icons/$1|" "$f"
+        else echo "Icon=/var/lib/AccountsService/icons/$1" >> "$f"; fi
+        echo ok ;;
+    pkg-remove)
+        [ $# -ge 1 ] || die "usage: pkg-remove PKG..."
+        for p in "$@"; do
+            [[ "$p" =~ ^[a-z0-9@._+-]+$ ]] || die "Bad package name: $p"
+            case "$p" in
+                base|linux|linux-lts|linux-zen|linux-firmware|systemd|pacman|glibc|bash|sudo|hyprland|quickshell|networkmanager|archangelos-*)
+                    die "$p is part of ArchangelOS itself and can't be removed here." ;;
+            esac
+        done
+        pacman -Rns --noconfirm "$@" 2>&1 | tail -n 20
+        exit "${PIPESTATUS[0]}" ;;
+    pkg-clean-cache)
+        if command -v paccache >/dev/null; then paccache -rk1 && paccache -ruk0
+        else yes | pacman -Sc >/dev/null; fi
+        echo ok ;;
+    pkg-orphans)
+        o="$(pacman -Qdtq 2>/dev/null)"
+        [ -z "$o" ] && { echo none; exit 0; }
+        # shellcheck disable=SC2086
+        pacman -Rns --noconfirm $o 2>&1 | tail -n 5
+        exit "${PIPESTATUS[0]}" ;;
+    journal-vacuum)
+        journalctl --vacuum-size=64M >/dev/null 2>&1 && echo ok ;;
+    locale-set)
+        [ $# -ge 1 ] || die "usage: locale-set LANG [FORMATS]"
+        main="$1"; fmt="${2:-$1}"
+        for l in "$main" "$fmt"; do
+            [[ "$l" =~ ^[A-Za-z_]+(\.UTF-8)?(@[a-z]+)?$ ]] || die "Bad locale: $l"
+            grep -q "^$l UTF-8" /usr/share/i18n/SUPPORTED || die "$l isn't a supported locale."
+            # Uncomment (or add) it in locale.gen.
+            if grep -q "^#\s*$l UTF-8" /etc/locale.gen; then sed -i "s|^#\s*\($l UTF-8\)|\1|" /etc/locale.gen
+            elif ! grep -q "^$l UTF-8" /etc/locale.gen; then echo "$l UTF-8" >> /etc/locale.gen; fi
+        done
+        locale-gen >/dev/null || die "locale-gen failed."
+        if [ "$fmt" = "$main" ]; then localectl set-locale "LANG=$main"
+        else
+            localectl set-locale "LANG=$main" "LC_TIME=$fmt" "LC_NUMERIC=$fmt" "LC_MONETARY=$fmt" \
+                "LC_MEASUREMENT=$fmt" "LC_PAPER=$fmt"
+        fi || die "Couldn't set the locale."
+        echo ok ;;
+    mac-random)
+        f=/etc/NetworkManager/conf.d/90-archangelos-mac.conf
+        if [ "${1:-}" = 1 ]; then
+            install -d /etc/NetworkManager/conf.d
+            printf '%s\n' "# Written by ArchangelOS Settings > OnionLayer." \
+                "[device]" "wifi.scan-rand-mac-address=yes" "" \
+                "[connection]" "wifi.cloned-mac-address=random" "ethernet.cloned-mac-address=random" > "$f"
+        else
+            rm -f "$f"
+        fi
+        systemctl reload NetworkManager 2>/dev/null || nmcli general reload 2>/dev/null
+        echo ok ;;
+    *) die "unknown: $verb" ;;
+esac

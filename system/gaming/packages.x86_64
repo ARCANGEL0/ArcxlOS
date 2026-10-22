@@ -413,3 +413,5 @@ chafa
 ### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
 wpewebkit
 yt-dlp
+nftables
+pacman-contrib

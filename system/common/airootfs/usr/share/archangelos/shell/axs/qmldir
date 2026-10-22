@@ -1,3 +1,5 @@
 singleton Ax Ax.qml
 SettingsWindow SettingsWindow.qml
 singleton Registry Registry.qml
+singleton Store Store.qml
+singleton Idle Idle.qml
