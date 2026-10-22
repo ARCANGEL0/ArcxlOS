@@ -98,6 +98,17 @@ system/*/airootfs/usr/bin/archangelos-wallpaper
 system/*/airootfs/usr/bin/archangelos-wallpaper-setup
 system/*/airootfs/usr/bin/archangelos-welcome
 system/*/airootfs/usr/bin/cyberspace
+system/*/airootfs/usr/bin/archangelos-settings
+system/*/airootfs/usr/lib/archangelos/
+system/*/airootfs/usr/lib/systemd/system/archangelos-onionlayer.service
+system/*/airootfs/usr/share/polkit-1/
+system/*/airootfs/etc/polkit-1/
+!system/common/airootfs/usr/bin/archangelos-lock
+!system/common/airootfs/usr/bin/archangelos-settings
+!system/common/airootfs/usr/lib/archangelos/
+!system/common/airootfs/usr/lib/systemd/system/archangelos-onionlayer.service
+!system/common/airootfs/usr/share/polkit-1/
+!system/common/airootfs/etc/polkit-1/
 system/*/airootfs/usr/share/applications/cyberspace.desktop
 system/*/airootfs/usr/share/archangelos/arcfetch.jsonc
 system/*/airootfs/usr/share/archangelos/fastfetch.jsonc

@@ -1,0 +1,22 @@
+[Unit]
+Description=OnionLayer — route all traffic through Tor
+Documentation=man:tor(1)
+After=network-online.target nss-lookup.target
+Wants=network-online.target
+# The system Tor uses the same ports.
+Conflicts=tor.service
+
+[Service]
+Type=simple
+ExecStartPre=/usr/lib/archangelos/onionlayer _prepare
+ExecStart=/usr/bin/tor -f /run/archangelos-onionlayer/torrc
+ExecStartPost=/usr/lib/archangelos/onionlayer _started
+ExecStopPost=/usr/lib/archangelos/onionlayer _stopped
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=15
+LimitNOFILE=32768
+
+[Install]
+WantedBy=multi-user.target
