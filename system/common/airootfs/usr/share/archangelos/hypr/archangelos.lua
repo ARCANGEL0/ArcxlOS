@@ -11,11 +11,33 @@ hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true
 -- Rio terminal always opens as a small, floating, centered window.
 hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1000 640" })
 
+-- Which desktop shell runs: ArcShell, or a theme from ~/.config/hypr/themes picked in
+-- Settings > Desktop & Shell (archangelos-shell). Only one is loaded, so they never overlap.
+local themes_dir = (os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")) .. "/hypr/themes"
+local active_theme = nil
+do
+    local f = io.open(themes_dir .. "/.active", "r")
+    local name = f and f:read("*l") or nil
+    if f then f:close() end
+    if name and name ~= "" then
+        local t = io.open(themes_dir .. "/" .. name .. "/theme.lua", "r")
+        if t then t:close(); active_theme = name end
+    end
+end
+if active_theme then
+    local ok, err = pcall(dofile, themes_dir .. "/" .. active_theme .. "/theme.lua")
+    if not ok then print("archangelos: theme " .. active_theme .. " failed: " .. tostring(err)) end
+end
+-- Way back to ArcShell from any theme, even one that brings no keybinds of its own.
+hl.bind("SUPER + CTRL + ALT + A", hl.dsp.exec_cmd("bash -c 'archangelos-shell use archangelos --now'"), { description = "Back to ArcShell" })
+
 -- Startup: launch the desktop shell, set the ArchangelOS wallpaper, apply the default cursor/icon theme,
 -- and ensure the idle-lock daemon runs.
 hl.on("hyprland.start", function()
     -- the ArchangelOS desktop shell (bar, dock, island, panes)
-    hl.exec_cmd("bash -c 'pgrep -f \"[q]s -p /usr/share/archangelos/shell\" >/dev/null || exec qs -p /usr/share/archangelos/shell'")
+    if not active_theme then
+        hl.exec_cmd("bash -c 'pgrep -f \"[q]s -p /usr/share/archangelos/shell\" >/dev/null || exec qs -p /usr/share/archangelos/shell'")
+    end
     hl.exec_cmd("/usr/bin/archangelos-wallpaper boot")
     -- default cursor: Future-dark (compositor cursor + toolkit hints)
     hl.exec_cmd("hyprctl setcursor Future-dark-cursors 24")
