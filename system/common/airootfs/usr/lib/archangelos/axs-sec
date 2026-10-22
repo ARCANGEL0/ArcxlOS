@@ -1,0 +1,201 @@
+#!/bin/bash
+# axs-sec — the root half of Settings > Privacy & Security. Settings runs it through pkexec
+# (your password, remembered for a few minutes). Every verb checks its input; nothing here takes
+# a free-form command.
+#
+#   ports                         ss -tulpn with owners
+#   ssh-set port N | passwords 0|1 | rootlogin 0|1
+#   ssh-log                       recent sshd logins and failures
+#   camera 0|1                    unload / reload the webcam driver (and keep it that way)
+#   usbguard-on | usbguard-off    allow what's plugged in now, then block anything new
+#   luks-info DEV                 cryptsetup luksDump
+#   luks-addkey DEV               stdin: existing passphrase, new passphrase (two lines)
+#   luks-removekey DEV            stdin: the passphrase to remove
+#   luks-header DEV FILE          back up the LUKS header to FILE (owned by you)
+#   luks-format DEV CIPHER KEYBITS HASH PBKDF FS LABEL   stdin: passphrase  (removable drives only)
+#   pw-hash METHOD ROUNDS         how new passwords are hashed (/etc/login.defs)
+#   sysctl-set KEY=VAL...         kernel hardening, from a fixed list
+#   apparmor-boot 0|1             turn AppArmor on at boot (kernel command line)
+#   aa-status | aa-mode PROFILE enforce|complain
+#   root-lock 0|1                 lock or unlock the root account's password
+#   lynis | rkhunter              run an audit, print its findings
+set -u
+SELF=/usr/lib/archangelos/axs-sec
+die() { echo "$*" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || exec pkexec "$SELF" "$@"
+caller="$(getent passwd "${PKEXEC_UID:-0}" | cut -d: -f1)"
+
+blockdev_ok() { [[ "$1" =~ ^/dev/[a-zA-Z0-9/_-]+$ ]] && [ -b "$1" ] || die "Not a block device: $1"; }
+luks_ok() { blockdev_ok "$1"; cryptsetup isLuks "$1" || die "$1 isn't a LUKS volume."; }
+read2() { IFS= read -r a || true; IFS= read -r b || true; }
+
+SYSCTL_FILE=/etc/sysctl.d/90-archangelos-hardening.conf
+SYSCTL_KEYS="kernel.kptr_restrict kernel.dmesg_restrict kernel.yama.ptrace_scope kernel.unprivileged_bpf_disabled net.core.bpf_jit_harden kernel.kexec_load_disabled kernel.sysrq dev.tty.ldisc_autoload vm.unprivileged_userfaultfd net.ipv4.conf.all.rp_filter net.ipv4.conf.all.accept_redirects net.ipv6.conf.all.accept_redirects net.ipv4.conf.all.send_redirects net.ipv4.tcp_syncookies net.ipv4.icmp_echo_ignore_all net.ipv4.conf.all.log_martians kernel.perf_event_paranoid fs.protected_fifos fs.protected_regular"
+
+verb="${1:-}"; shift || true
+case "$verb" in
+    ports) ss -tulpnH 2>/dev/null ;;
+
+    ssh-set)
+        f=/etc/ssh/sshd_config.d/50-archangelos.conf
+        install -d /etc/ssh/sshd_config.d; touch "$f"
+        setkey() { if grep -q "^$1 " "$f"; then sed -i "s|^$1 .*|$1 $2|" "$f"; else echo "$1 $2" >> "$f"; fi; }
+        case "${1:-}" in
+            port) [[ "${2:-}" =~ ^[0-9]{1,5}$ ]] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ] || die "Bad port."; setkey Port "$2" ;;
+            passwords) [[ "${2:-}" =~ ^[01]$ ]] || die "0 or 1"; setkey PasswordAuthentication "$([ "$2" = 1 ] && echo yes || echo no)"
+                       setkey KbdInteractiveAuthentication "$([ "$2" = 1 ] && echo yes || echo no)" ;;
+            rootlogin) [[ "${2:-}" =~ ^[01]$ ]] || die "0 or 1"; setkey PermitRootLogin "$([ "$2" = 1 ] && echo prohibit-password || echo no)" ;;
+            *) die "usage: ssh-set port N | passwords 0|1 | rootlogin 0|1" ;;
+        esac
+        # Ensure the main config reads the drop-in directory, then check before restarting.
+        grep -q '^Include /etc/ssh/sshd_config.d/\*.conf' /etc/ssh/sshd_config 2>/dev/null \
+            || sed -i '1i Include /etc/ssh/sshd_config.d/*.conf' /etc/ssh/sshd_config
+        sshd -t 2>&1 || die "sshd rejected the change."
+        systemctl is-active -q sshd && systemctl restart sshd
+        echo ok ;;
+    ssh-log)
+        journalctl -u sshd -n 400 --no-pager -o short-iso 2>/dev/null \
+            | grep -E 'Accepted|Failed password|Invalid user|authentication failure' | tail -n 40 ;;
+
+    camera)
+        f=/etc/modprobe.d/90-archangelos-camera.conf
+        if [ "${1:-}" = 0 ]; then
+            echo "blacklist uvcvideo" > "$f"
+            modprobe -r uvcvideo 2>/dev/null || die "The camera is in use — close the app using it first."
+        else
+            rm -f "$f"; modprobe uvcvideo 2>/dev/null || true
+        fi
+        echo ok ;;
+
+    usbguard-on)
+        command -v usbguard >/dev/null || die "USBGuard isn't installed."
+        install -d -m 700 /etc/usbguard
+        # Everything plugged in right now stays allowed; anything new is blocked until allowed.
+        usbguard generate-policy > /etc/usbguard/rules.conf.new && mv -f /etc/usbguard/rules.conf.new /etc/usbguard/rules.conf
+        chmod 600 /etc/usbguard/rules.conf
+        c=/etc/usbguard/usbguard-daemon.conf
+        if grep -q '^IPCAllowedGroups=' "$c"; then sed -i 's/^IPCAllowedGroups=.*/IPCAllowedGroups=wheel/' "$c"; else echo "IPCAllowedGroups=wheel" >> "$c"; fi
+        systemctl enable --now usbguard >/dev/null 2>&1 || die "USBGuard didn't start."
+        echo ok ;;
+    usbguard-off) systemctl disable --now usbguard >/dev/null 2>&1; echo ok ;;
+
+    luks-info) luks_ok "${1:-}"; cryptsetup luksDump "$1" ;;
+    luks-addkey)
+        luks_ok "${1:-}"; read2
+        [ -n "$a" ] && [ -n "$b" ] || die "Both passphrases are needed."
+        printf '%s' "$a" > /run/axs-k1; printf '%s' "$b" > /run/axs-k2; chmod 600 /run/axs-k1 /run/axs-k2
+        cryptsetup luksAddKey --key-file /run/axs-k1 "$1" /run/axs-k2; rc=$?
+        shred -u /run/axs-k1 /run/axs-k2 2>/dev/null || rm -f /run/axs-k1 /run/axs-k2
+        [ $rc -eq 0 ] || die "That passphrase doesn't unlock $1."
+        echo ok ;;
+    luks-removekey)
+        luks_ok "${1:-}"; IFS= read -r a || true
+        n="$(cryptsetup luksDump "$1" | grep -cE '^\s+[0-9]+: luks2')"
+        [ "${n:-0}" -le 1 ] && die "That's the only passphrase left; removing it would lock the volume forever."
+        printf '%s' "$a" | cryptsetup luksRemoveKey "$1" - || die "No key slot matches that passphrase."
+        echo ok ;;
+    luks-header)
+        luks_ok "${1:-}"; out="${2:-}"
+        [[ "$out" =~ ^/[^\;\&\|]+$ ]] && [ ! -e "$out" ] || die "Pick a new file to save to."
+        cryptsetup luksHeaderBackup "$1" --header-backup-file "$out" || die "Backup failed."
+        chown "$caller:" "$out"; chmod 600 "$out"; echo ok ;;
+    luks-format)
+        dev="${1:-}"; cipher="${2:-}"; bits="${3:-}"; hash="${4:-}"; pbkdf="${5:-}"; fs="${6:-}"; label="${7:-}"
+        blockdev_ok "$dev"
+        base="/sys/class/block/$(basename "$(readlink -f "$dev")")"
+        disk="$base"; [ -e "$base/partition" ] && disk="$(dirname "$(readlink -f "$base")")"
+        [ "$(cat "$disk/removable" 2>/dev/null)" = 1 ] || [ "$(lsblk -dno HOTPLUG "/dev/$(basename "$disk")" 2>/dev/null | tr -d ' ')" = 1 ] \
+            || die "Only removable drives can be encrypted from here."
+        lsblk -no MOUNTPOINTS "$dev" | grep -q . && die "Unmount the drive first."
+        [[ "$cipher" =~ ^(aes|serpent|twofish)-xts-plain64$ ]] || die "Unknown cipher."
+        [[ "$bits" =~ ^(256|512)$ ]] || die "Key size is 256 or 512."
+        [[ "$hash" =~ ^(sha256|sha512|sha3-256|sha3-512|blake2b-512)$ ]] || die "Unknown hash."
+        [[ "$pbkdf" =~ ^(argon2id|argon2i|pbkdf2)$ ]] || die "Unknown key derivation."
+        [[ "$fs" =~ ^(exfat|ext4|btrfs)$ ]] || die "Unknown filesystem."
+        [[ "$label" =~ ^[A-Za-z0-9_.-]{0,16}$ ]] || die "Labels are up to 16 letters, digits, . _ -"
+        IFS= read -r pw || true; [ "${#pw}" -ge 8 ] || die "Use at least 8 characters."
+        printf '%s' "$pw" | cryptsetup luksFormat --batch-mode --type luks2 --cipher "$cipher" --key-size "$bits" \
+            --hash "$hash" --pbkdf "$pbkdf" --label "${label:-encrypted}" --key-file - "$dev" || die "Formatting failed."
+        m="axs-new-$$"
+        printf '%s' "$pw" | cryptsetup open --key-file - "$dev" "$m" || die "Couldn't open the new volume."
+        case "$fs" in
+            exfat) mkfs.exfat -n "${label:-ENCRYPTED}" "/dev/mapper/$m" >/dev/null ;;
+            ext4)  mkfs.ext4 -q -L "${label:-encrypted}" "/dev/mapper/$m" ;;
+            btrfs) mkfs.btrfs -q -L "${label:-encrypted}" "/dev/mapper/$m" ;;
+        esac; rc=$?
+        cryptsetup close "$m"
+        [ $rc -eq 0 ] || die "Creating the filesystem failed."
+        echo ok ;;
+
+    pw-hash)
+        m="${1:-}"; r="${2:-}"
+        [[ "$m" =~ ^(YESCRYPT|SHA512|SHA256)$ ]] || die "Method is YESCRYPT, SHA512 or SHA256."
+        [[ "$r" =~ ^[0-9]{1,9}$ ]] || die "Bad rounds."
+        f=/etc/login.defs
+        set_def() { if grep -qE "^#?\s*$1\s" "$f"; then sed -i -E "s|^#?\s*$1\s.*|$1 $2|" "$f"; else echo "$1 $2" >> "$f"; fi; }
+        set_def ENCRYPT_METHOD "$m"
+        if [ "$m" = YESCRYPT ]; then [ "$r" -ge 1 ] && [ "$r" -le 11 ] || die "yescrypt cost is 1–11."; set_def YESCRYPT_COST_FACTOR "$r"
+        else [ "$r" -ge 1000 ] && [ "$r" -le 999999999 ] || die "Rounds are 1000 or more."; set_def SHA_CRYPT_MIN_ROUNDS "$r"; set_def SHA_CRYPT_MAX_ROUNDS "$r"; fi
+        echo ok ;;
+
+    sysctl-set)
+        touch "$SYSCTL_FILE"
+        for kv in "$@"; do
+            k="${kv%%=*}"; v="${kv#*=}"
+            [[ " $SYSCTL_KEYS " == *" $k "* ]] || die "Not a setting this page manages: $k"
+            [[ "$v" =~ ^-?[0-9]$|^default$ ]] || die "Bad value for $k"
+            sed -i "\|^$k\s*=|d" "$SYSCTL_FILE"
+            [ "$v" = default ] || echo "$k = $v" >> "$SYSCTL_FILE"
+        done
+        sed -i '1{/^#/!i # Written by ArchangelOS Settings > Hardening.
+}' "$SYSCTL_FILE"
+        sysctl -q --system >/dev/null 2>&1
+        echo ok ;;
+
+    apparmor-boot)
+        on="${1:-}"; [[ "$on" =~ ^[01]$ ]] || die "0 or 1"
+        param='lsm=landlock,lockdown,yama,integrity,apparmor,bpf'
+        done_=0
+        if [ -f /etc/default/grub ]; then
+            sed -i -E 's/ ?lsm=[^ "]*//' /etc/default/grub
+            [ "$on" = 1 ] && sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\")/\1$param /" /etc/default/grub
+            grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 && done_=1
+        fi
+        for e in /boot/loader/entries/*.conf /efi/loader/entries/*.conf; do
+            [ -f "$e" ] || continue
+            sed -i -E 's/ ?lsm=[^ ]*//' "$e"
+            [ "$on" = 1 ] && sed -i -E "s/^(options .*)$/\1 $param/" "$e"
+            done_=1
+        done
+        [ $done_ = 1 ] || die "Couldn't find a GRUB or systemd-boot configuration to change."
+        if [ "$on" = 1 ]; then systemctl enable apparmor >/dev/null 2>&1; else systemctl disable apparmor >/dev/null 2>&1; fi
+        echo ok ;;
+    aa-status) aa-status --json 2>/dev/null || die "AppArmor isn't running." ;;
+    aa-mode)
+        p="${1:-}"; m="${2:-}"
+        [[ "$p" =~ ^[A-Za-z0-9_./@+-]+$ ]] || die "Bad profile."
+        f="/etc/apparmor.d/$(echo "$p" | sed 's|^/||; s|/|.|g')"
+        [ -f "$f" ] || f="$(grep -lE "^\s*(profile\s+)?\"?$p\"?\s" /etc/apparmor.d/* 2>/dev/null | head -n1)"
+        [ -n "$f" ] && [ -f "$f" ] || die "No profile file for $p."
+        case "$m" in enforce) aa-enforce "$f" >/dev/null ;; complain) aa-complain "$f" >/dev/null ;; *) die "enforce or complain" ;; esac \
+            || die "Couldn't change $p."
+        echo ok ;;
+
+    root-lock)
+        case "${1:-}" in 1) passwd -l root >/dev/null ;; 0) passwd -u root >/dev/null 2>&1 || die "Root has no password to unlock; set one with sudo passwd root." ;; *) die "0 or 1" ;; esac
+        echo ok ;;
+
+    lynis)
+        command -v lynis >/dev/null || die "Lynis isn't installed."
+        lynis audit system --quick --no-colors --quiet >/dev/null 2>&1
+        r=/var/log/lynis-report.dat
+        [ -f "$r" ] || die "Lynis didn't write a report."
+        grep -E '^(hardening_index|warning\[\]|suggestion\[\]|lynis_version|report_datetime_end)=' "$r" ;;
+    rkhunter)
+        command -v rkhunter >/dev/null || die "rkhunter isn't installed."
+        [ -f /var/lib/rkhunter/db/rkhunter.dat ] || rkhunter --propupd --nocolors >/dev/null 2>&1
+        rkhunter --check --sk --nocolors --rwo 2>/dev/null | sed 's/^Warning: //' | grep -v '^\s*$' | head -n 80
+        echo "--done" ;;
+
+    *) die "unknown: $verb" ;;
+esac

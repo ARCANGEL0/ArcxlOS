@@ -5,3 +5,4 @@ singleton Store Store.qml
 singleton Idle Idle.qml
 singleton Ghost Ghost.qml
 singleton Geo Geo.qml
+singleton Janitor Janitor.qml

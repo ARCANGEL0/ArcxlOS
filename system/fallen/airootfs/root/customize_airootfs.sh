@@ -13,7 +13,7 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
-enabled_services=('choose-mirror.service' 'archangelos-power-mode.service' 'sddm.service' 'pacman-init'
+enabled_services=('choose-mirror.service' 'archangelos-power-mode.service' 'firewalld.service' 'sddm.service' 'pacman-init'
   'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 rm -f /etc/systemd/system/display-manager.service
 systemctl enable ${enabled_services[@]}

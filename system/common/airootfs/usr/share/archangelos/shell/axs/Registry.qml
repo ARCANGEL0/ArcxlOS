@@ -69,6 +69,30 @@ Singleton {
             { id: "updates", label: "Updates", icon: "system_update", page: "UpdatesPage",
               desc: "System and app updates", keys: "update upgrade pacman packages" } ] },
         { name: "Privacy & Security", pages: [
+            { id: "security", label: "Security overview", icon: "health_and_safety", page: "SecurityPage",
+              desc: "How protected this computer is", keys: "security score check status overview protection" },
+            { id: "firewall", label: "Firewall", icon: "local_fire_department", page: "FirewallPage",
+              desc: "What may connect in", keys: "firewall firewalld zone port open block incoming" },
+            { id: "ports", label: "Services & Ports", icon: "settings_ethernet", page: "PortsPage",
+              desc: "What's listening, and the services behind it", keys: "ports listening services daemons systemd open sockets netstat ss" },
+            { id: "ssh", label: "Remote access", icon: "terminal", page: "SshPage",
+              desc: "SSH server, keys and logins", keys: "ssh sshd remote login keys authorized password" },
+            { id: "permissions", label: "App permissions", icon: "privacy_tip", page: "PermissionsPage",
+              desc: "Microphone, camera and screen", keys: "microphone mic camera webcam screen sharing permissions recording" },
+            { id: "usb", label: "USB devices", icon: "usb", page: "UsbPage",
+              desc: "Which USB devices may connect", keys: "usb usbguard badusb devices block allow" },
+            { id: "encryption", label: "Encryption", icon: "enhanced_encryption", page: "EncryptionPage",
+              desc: "Disks, USB drives, files and vaults", keys: "encryption luks cryptsetup disk usb drive encrypt decrypt vault gpg" },
+            { id: "encryption-files", label: "Files, folders & vaults", icon: "folder_zip", page: "EncFilesPage", hidden: true, parent: "encryption",
+              desc: "Encrypt files and folders", keys: "" },
+            { id: "encryption-hash", label: "Checksums", icon: "fingerprint", page: "EncHashPage", hidden: true, parent: "encryption",
+              desc: "Hashes of files", keys: "" },
+            { id: "toolkit", label: "Crypto toolkit", icon: "construction", page: "ToolkitPage", hidden: true, parent: "encryption",
+              desc: "Encode, hash, passwords, keys", keys: "" },
+            { id: "encryption-advanced", label: "Advanced", icon: "tune", page: "EncAdvancedPage", hidden: true, parent: "encryption",
+              desc: "Ciphers, hashing, GPG keys", keys: "" },
+            { id: "privacy", label: "Privacy & history", icon: "history_toggle_off", page: "PrivacyPage",
+              desc: "Recent files, clipboard, traces", keys: "privacy history recent clipboard thumbnails trash clear traces" },
             { id: "lock", label: "Lock Screen", icon: "lock", page: "LockPage",
               desc: "Locking, idle and sign-in", keys: "lock idle screensaver login password" },
             { id: "ghostwired", label: "GhostWired", icon: "shield_lock", page: "GhostPage",
@@ -76,7 +100,11 @@ Singleton {
             { id: "ghostwired-exclude", label: "Excluded apps", icon: "apps_outage", page: "GhostExcludePage", hidden: true, parent: "ghostwired",
               desc: "Apps that skip the Tor tunnel", keys: "" },
             { id: "ghostwired-advanced", label: "Tor configuration", icon: "tune", page: "GhostAdvancedPage", hidden: true, parent: "ghostwired",
-              desc: "Ports, exits and raw torrc", keys: "" } ] }
+              desc: "Ports, exits and raw torrc", keys: "" },
+            { id: "hardening", label: "Hardening", icon: "security", page: "HardeningPage",
+              desc: "AppArmor, kernel and boot", keys: "hardening apparmor sysctl kernel secure boot root ptrace" },
+            { id: "audit", label: "Audit", icon: "fact_check", page: "AuditPage",
+              desc: "Lynis and rootkit scans", keys: "audit lynis rkhunter rootkit scan vulnerability" } ] }
     ]
 
     function visible(p) { return !p.editions || p.editions.indexOf(root.edition) >= 0; }
