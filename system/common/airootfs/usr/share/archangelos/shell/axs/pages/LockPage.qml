@@ -1,6 +1,5 @@
 // Lock Screen — when the screen locks by itself, locking before sleep, and locking now.
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import qs.axs
 import qs.axs.ui
@@ -12,66 +11,14 @@ PageScaffold {
     title: "Lock Screen"
     desc: "Keep your session private when you step away."
 
-    // The lock screen in miniature: /etc/hypr/hyprlock.conf drawn at scale — same background
-    // (blurred, dimmed to 70%), mark, Quantico clock, user name and crimson password pill, at the
-    // same offsets from the centre of a 1080p screen.
-    QtObject { id: clock; property date now: new Date() }
-    Timer { interval: 1000; running: true; repeat: true; onTriggered: clock.now = new Date() }
+    // Your login and lock screen: the SDDM theme itself, live.
     Rectangle {
-        id: shot
         width: parent.width; height: Math.round(width * 9 / 16)
         radius: Ax.radius + 2
         color: "#0e0e0d"
         border.width: 1; border.color: Ax.border
         clip: true
-        readonly property real k: height / 1080              // screen px → preview px
-        readonly property real pt: 96 / 72 * k                // hyprlock font_size is in points
-        readonly property string dir: "file:///usr/share/sddm/themes/archangelos/assets/"
-        // hyprlock y offsets count up from the centre
-        function cy(off, h) { return height / 2 - off * k - h / 2; }
-
-        Image {
-            id: bg
-            anchors.fill: parent
-            source: shot.dir + "background.png"
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
-            visible: false
-        }
-        MultiEffect {
-            anchors.fill: parent
-            source: bg
-            blurEnabled: true; blur: 0.35; blurMax: 32
-            brightness: -0.3
-            visible: bg.status === Image.Ready
-        }
-        Image {
-            source: shot.dir + "logo.png"
-            width: 176 * shot.k; height: width
-            fillMode: Image.PreserveAspectFit
-            x: (shot.width - width) / 2; y: shot.cy(232, height)
-            smooth: true; mipmap: true
-        }
-        Text {
-            text: Qt.formatTime(clock.now, "HH:mm")
-            color: "#ecebe8"
-            font.family: "Quantico"; font.pixelSize: 64 * shot.pt
-            x: (shot.width - width) / 2; y: shot.cy(96, height)
-        }
-        Text {
-            text: Quickshell.env("USER") || "user"
-            color: "#9a9895"
-            font.family: "Quantico"; font.pixelSize: 15 * shot.pt
-            x: (shot.width - width) / 2; y: shot.cy(22, height)
-        }
-        Rectangle {
-            width: 320 * shot.k; height: 52 * shot.k; radius: height / 2
-            x: (shot.width - width) / 2; y: shot.cy(-48, height)
-            color: "#1a1a19"
-            border.width: Math.max(1, 2 * shot.k); border.color: "#c24a52"
-            Text { anchors.centerIn: parent; text: "Enter password"; color: "#9a9895"
-                   font.family: "Quantico"; font.pixelSize: 11 * shot.pt }
-        }
+        SddmPreview { anchors.fill: parent; anchors.margins: 1 }
         AxButton { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 16
                    icon: "lock"; text: "Lock now"; kind: "primary"; onClicked: Idle.lockNow() }
     }
