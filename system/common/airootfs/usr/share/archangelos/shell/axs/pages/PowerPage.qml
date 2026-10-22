@@ -118,7 +118,7 @@ PageScaffold {
                 AxSelect {
                     width: 200; anchors.verticalCenter: parent.verticalCenter
                     model: Idle.ladder.map(s => Idle.label(s))
-                    current: Idle.ladder.indexOf(Store.data[modelData.k])
+                    current: Idle.nearest(Idle.ladder, Store.data[modelData.k])
                     onPicked: (i) => Idle.pick(modelData.k, Idle.ladder[i])
                 }
             }
