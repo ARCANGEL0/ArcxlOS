@@ -1,0 +1,3 @@
+#!/bin/sh
+# Open ArchangelOS Settings, optionally on a page: archangelos-settings [network|sound|appearance|...]
+exec qs -p /usr/share/archangelos/shell ipc call settings open "${1:-}"
