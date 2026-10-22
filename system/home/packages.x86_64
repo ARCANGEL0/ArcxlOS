@@ -373,3 +373,14 @@ wpewebkit
 yt-dlp
 nftables
 pacman-contrib
+apparmor
+lynis
+rkhunter
+usbguard
+gocryptfs
+python-bcrypt
+python-argon2-cffi
+b3sum
+xxhash
+age
+rhash

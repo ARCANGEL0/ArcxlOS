@@ -100,7 +100,7 @@ SDDMEOF
 mkdir -p /var/lib/sddm
 printf '[Last]\nSession=/usr/share/wayland-sessions/hyprland.desktop\nUser=liveuser\n' > /var/lib/sddm/state.conf
 chown -R sddm:sddm /var/lib/sddm 2>/dev/null || true
-systemctl enable sddm NetworkManager
+systemctl enable sddm NetworkManager firewalld archangelos-power-mode
 
 cp -r /etc/skel/. /root/.
 
