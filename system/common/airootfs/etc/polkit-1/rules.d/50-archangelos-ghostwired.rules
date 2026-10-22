@@ -1,6 +1,6 @@
-// Admins at the machine toggle OnionLayer without a password, like switching Wi-Fi.
+// Admins at the machine toggle GhostWired without a password, like switching Wi-Fi.
 polkit.addRule(function(action, subject) {
-    if (action.id == "org.archangelos.onionlayer" &&
+    if (action.id == "org.archangelos.ghostwired" &&
         subject.local && subject.active && subject.isInGroup("wheel")) {
         return polkit.Result.YES;
     }

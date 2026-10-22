@@ -91,8 +91,10 @@ ax_stage() {
            "${airootfs}/usr/bin/archangelos-wallpaper-setup" \
            "${airootfs}/usr/bin/archangelos-lock" \
            "${airootfs}/usr/bin/archangelos-settings" \
-           "${airootfs}/usr/lib/archangelos/onionlayer" \
+           "${airootfs}/usr/lib/archangelos/ghostwired" \
+           "${airootfs}/usr/lib/archangelos/ghostwired-exempt" \
            "${airootfs}/usr/lib/archangelos/axs-admin" \
+           "${airootfs}/usr/lib/archangelos/power-mode" \
            "${airootfs}/usr/bin/archangelos-fastfetch-setup" \
            "${airootfs}/usr/bin/archangelos-theme-setup" \
            "${airootfs}/usr/bin/archangelos-region" \
