@@ -1,0 +1,10 @@
+#!/bin/bash
+# ghostwired-exempt CMD [ARGS...] — run an app outside the GhostWired tunnel.
+# The app runs under the ghostwired-exempt group, which GhostWired's firewall lets through
+# directly. Settings > GhostWired > Excluded apps puts this in front of an app's launcher entry.
+# Membership is read from /etc/group (as sg does), so it works before the next sign-in too.
+if getent group ghostwired-exempt | cut -d: -f4 | tr ',' '\n' | grep -qx "$(id -un)"; then
+    cmd="$(printf '%q ' "$@")"
+    exec sg ghostwired-exempt -c "exec $cmd"
+fi
+exec "$@"

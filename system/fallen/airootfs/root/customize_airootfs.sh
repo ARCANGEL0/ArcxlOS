@@ -13,7 +13,7 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
-enabled_services=('choose-mirror.service' 'sddm.service' 'pacman-init'
+enabled_services=('choose-mirror.service' 'archangelos-power-mode.service' 'sddm.service' 'pacman-init'
   'NetworkManager' 'irqbalance' 'vboxservice' 'power-profiles-daemon.service')
 # BlackArch's blackarch-config-lxdm claims /etc/systemd/system/display-manager.service
 # for lxdm, so `systemctl enable sddm.service` refuses to overwrite that symlink and
