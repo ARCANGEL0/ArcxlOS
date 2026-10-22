@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+# axs-crypto — helper for Settings > Encryption's checksum and toolkit pages.
+#
+# Reads one JSON request on stdin, writes one JSON reply on stdout, so passphrases and keys never
+# sit on a command line or in the process list. Runs as the user; nothing here needs root. It is a
+# thin, friendly front-end over Python's hashlib and the standard command-line crypto tools that
+# ship with the system (openssl, ssh-keygen, age-keygen); it does not implement crypto of its own.
+import base64
+import binascii
+import codecs
+import hashlib
+import hmac as hmaclib
+import json
+import os
+import secrets
+import shutil
+import subprocess
+import sys
+import zlib
+
+WORDLIST = "/usr/share/archangelos/crypto/eff_large_wordlist.txt"
+
+
+def reply(**kw):
+    kw.setdefault("ok", True)
+    sys.stdout.write(json.dumps(kw))
+    sys.exit(0)
+
+
+def fail(msg):
+    reply(ok=False, error=str(msg))
+
+
+def have(tool):
+    return shutil.which(tool) is not None
+
+
+def read_blocks(fh):
+    while True:
+        b = fh.read(1 << 20)
+        if not b:
+            break
+        yield b
+
+
+# ── which hashes this machine can do ────────────────────────────────────────────
+# name -> (kind, spec). kind "hashlib" uses hashlib; "cli" shells out to a tool.
+def hash_catalog():
+    cat = {}
+    names = [
+        ("md5", "MD5", "legacy, broken for security"),
+        ("sha1", "SHA-1", "legacy, weak"),
+        ("sha224", "SHA-224", ""), ("sha256", "SHA-256", ""), ("sha384", "SHA-384", ""),
+        ("sha512", "SHA-512", ""), ("sha512_256", "SHA-512/256", ""),
+        ("sha3_224", "SHA3-224", ""), ("sha3_256", "SHA3-256", ""), ("sha3_384", "SHA3-384", ""), ("sha3_512", "SHA3-512", ""),
+        ("blake2b", "BLAKE2b", ""), ("blake2s", "BLAKE2s", ""),
+        ("ripemd160", "RIPEMD-160", ""), ("sm3", "SM3", "Chinese national standard"),
+        ("shake_128", "SHAKE128", "256-bit output"), ("shake_256", "SHAKE256", "512-bit output"),
+    ]
+    avail = set(hashlib.algorithms_available)
+    for key, title, note in names:
+        if key in avail:
+            cat[key] = {"title": title, "note": note, "kind": "hashlib"}
+    # extras from standalone tools, when present
+    if have("b3sum"):
+        cat["blake3"] = {"title": "BLAKE3", "note": "", "kind": "cli", "cmd": ["b3sum", "--no-names"]}
+    if have("xxhsum"):
+        cat["xxh128"] = {"title": "xxHash-128", "note": "fast, non-cryptographic", "kind": "cli", "cmd": ["xxhsum", "-H2"]}
+        cat["xxh64"] = {"title": "xxHash-64", "note": "fast, non-cryptographic", "kind": "cli", "cmd": ["xxhsum", "-H1"]}
+    cat["crc32"] = {"title": "CRC32", "note": "a checksum, not a hash", "kind": "crc32"}
+    return cat
+
+
+def do_algos(_):
+    cat = hash_catalog()
+    order = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512", "sha512_256",
+             "sha3_224", "sha3_256", "sha3_384", "sha3_512", "blake2b", "blake2s", "blake3",
+             "ripemd160", "sm3", "shake_128", "shake_256", "xxh128", "xxh64", "crc32"]
+    reply(algos=[{"key": k, **cat[k]} for k in order if k in cat])
+
+
+def one_hash(key, spec, data=None, path=None, hmac_key=None):
+    if spec["kind"] == "crc32":
+        crc = 0
+        if path:
+            with open(path, "rb") as fh:
+                for b in read_blocks(fh):
+                    crc = zlib.crc32(b, crc)
+        else:
+            crc = zlib.crc32(data, crc)
+        return "%08x" % (crc & 0xFFFFFFFF)
+    if spec["kind"] == "cli":
+        src = open(path, "rb") if path else None
+        try:
+            p = subprocess.run(spec["cmd"], stdin=(src or subprocess.PIPE), input=(None if src else data),
+                               capture_output=True, timeout=600)
+        finally:
+            if src:
+                src.close()
+        if p.returncode != 0:
+            raise RuntimeError(p.stderr.decode("utf-8", "replace").strip() or "tool failed")
+        return p.stdout.decode("utf-8", "replace").split()[0]
+    # hashlib
+    if hmac_key is not None:
+        h = hmaclib.new(hmac_key.encode("utf-8"), digestmod=lambda: hashlib.new(key))
+    else:
+        h = hashlib.new(key)
+    if path:
+        with open(path, "rb") as fh:
+            for b in read_blocks(fh):
+                h.update(b)
+    else:
+        h.update(data)
+    if key.startswith("shake_"):
+        return h.hexdigest(32 if key == "shake_128" else 64)
+    return h.hexdigest()
+
+
+def do_hash(req):
+    cat = hash_catalog()
+    path = req.get("file")
+    data = None if path else req.get("text", "").encode("utf-8")
+    if path and not os.path.isfile(path):
+        fail("No such file.")
+    hmac_key = req.get("hmac")  # str or None
+    algos = req.get("algos") or ["sha256"]
+    res = {}
+    for key in algos:
+        spec = cat.get(key)
+        if not spec:
+            continue
+        if hmac_key and spec["kind"] != "hashlib":
+            continue  # HMAC only over the hashlib families
+        try:
+            res[key] = one_hash(key, spec, data=data, path=path, hmac_key=hmac_key)
+        except Exception as e:
+            res[key] = None
+    reply(results=res, hmac=bool(hmac_key))
+
+
+# ── encode / decode ─────────────────────────────────────────────────────────────
+def do_encode(req):
+    text = req.get("text", "")
+    codec = req.get("codec", "base64")
+    dec = bool(req.get("decode"))
+    raw = text.encode("utf-8")
+    try:
+        if codec == "base64":
+            r = base64.b64decode(text, validate=True) if dec else base64.b64encode(raw)
+            out = r.decode("utf-8", "replace") if dec else r.decode("ascii")
+        elif codec == "base64url":
+            r = base64.urlsafe_b64decode(text + "=" * (-len(text) % 4)) if dec else base64.urlsafe_b64encode(raw)
+            out = r.decode("utf-8", "replace") if dec else r.decode("ascii")
+        elif codec == "base32":
+            r = base64.b32decode(text, casefold=True) if dec else base64.b32encode(raw)
+            out = r.decode("utf-8", "replace") if dec else r.decode("ascii")
+        elif codec == "hex":
+            r = binascii.unhexlify("".join(text.split())) if dec else binascii.hexlify(raw)
+            out = r.decode("utf-8", "replace") if dec else r.decode("ascii")
+        elif codec == "url":
+            import urllib.parse
+            out = urllib.parse.unquote(text) if dec else urllib.parse.quote(text, safe="")
+        elif codec == "html":
+            import html
+            out = html.unescape(text) if dec else html.escape(text)
+        elif codec == "rot13":
+            out = codecs.encode(text, "rot_13")
+        elif codec == "quoted":
+            import quopri
+            out = (quopri.decodestring(raw).decode("utf-8", "replace") if dec
+                   else quopri.encodestring(raw).decode("ascii"))
+        else:
+            fail("Unknown encoding.")
+    except (binascii.Error, ValueError) as e:
+        fail("That text isn't valid %s: %s" % (codec, e))
+    reply(result=out)
+
+
+# ── password hashing ────────────────────────────────────────────────────────────
+# The crypt(3) schemes (yescrypt, sha512crypt…) go through the system's libcrypt directly;
+# Python dropped its `crypt` module in 3.13, and libcrypt is what the system itself uses.
+def _libcrypt():
+    import ctypes, ctypes.util
+    lib = ctypes.CDLL(ctypes.util.find_library("crypt") or "libcrypt.so.1")
+    lib.crypt.restype = ctypes.c_char_p
+    lib.crypt.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+    lib.crypt_gensalt.restype = ctypes.c_char_p
+    lib.crypt_gensalt.argtypes = [ctypes.c_char_p, ctypes.c_ulong, ctypes.c_char_p, ctypes.c_int]
+    return lib
+
+
+def _crypt(pw, setting):
+    out = _libcrypt().crypt(pw.encode("utf-8"), setting if isinstance(setting, bytes) else setting.encode())
+    if not out or out.startswith(b"*"):
+        raise RuntimeError("libcrypt couldn't hash with that setting")
+    return out.decode()
+
+
+def do_pwhash(req):
+    pw = req.get("password", "")
+    scheme = req.get("scheme", "bcrypt")
+    if not pw:
+        fail("Enter a password.")
+    try:
+        if scheme == "bcrypt":
+            import bcrypt
+            rounds = int(req.get("rounds", 12))
+            h = bcrypt.hashpw(pw.encode("utf-8"), bcrypt.gensalt(min(max(rounds, 4), 16))).decode()
+        elif scheme == "argon2":
+            from argon2 import PasswordHasher
+            ph = PasswordHasher(time_cost=int(req.get("time", 3)), memory_cost=int(req.get("memory", 65536)),
+                                parallelism=int(req.get("parallelism", 4)))
+            h = ph.hash(pw)
+        elif scheme in ("yescrypt", "sha512", "sha256", "md5"):
+            prefix = {"yescrypt": b"$y$", "sha512": b"$6$", "sha256": b"$5$", "md5": b"$1$"}[scheme]
+            setting = _libcrypt().crypt_gensalt(prefix, 0, None, 0)
+            if not setting:
+                fail("This system's libcrypt doesn't support %s." % scheme)
+            h = _crypt(pw, setting)
+        else:
+            fail("Unknown scheme.")
+    except ModuleNotFoundError as e:
+        fail("Missing library for %s (install python-%s)." % (scheme, e.name))
+    reply(hash=h)
+
+
+def do_pwverify(req):
+    pw = req.get("password", "")
+    h = (req.get("hash") or "").strip()
+    if not h:
+        fail("Paste a password hash to check against.")
+    try:
+        if h.startswith("$2"):
+            import bcrypt
+            ok = bcrypt.checkpw(pw.encode("utf-8"), h.encode("utf-8"))
+        elif h.startswith("$argon2"):
+            from argon2 import PasswordHasher
+            from argon2.exceptions import VerifyMismatchError, InvalidHashError
+            try:
+                PasswordHasher().verify(h, pw); ok = True
+            except VerifyMismatchError:
+                ok = False
+        elif h.startswith("$"):
+            ok = hmaclib.compare_digest(_crypt(pw, h), h)
+        else:
+            fail("Not a recognised password hash (expected a $-prefixed crypt, bcrypt or Argon2 string).")
+    except ModuleNotFoundError as e:
+        fail("Missing library to check this hash (install python-%s)." % e.name)
+    reply(valid=bool(ok))
+
+
+# ── identify a hash by shape ────────────────────────────────────────────────────
+def do_identify(req):
+    s = (req.get("hash") or "").strip()
+    cands = []
+    if s.startswith("$2") and len(s) == 60:
+        cands = ["bcrypt"]
+    elif s.startswith("$argon2"):
+        cands = ["Argon2"]
+    elif s.startswith("$6$"):
+        cands = ["sha512crypt"]
+    elif s.startswith("$5$"):
+        cands = ["sha256crypt"]
+    elif s.startswith("$y$"):
+        cands = ["yescrypt"]
+    elif s.startswith("$1$"):
+        cands = ["md5crypt"]
+    elif all(c in "0123456789abcdefABCDEF" for c in s) and s:
+        by_len = {32: ["MD5", "MD4", "NTLM"], 40: ["SHA-1", "RIPEMD-160"], 56: ["SHA-224", "SHA3-224"],
+                  64: ["SHA-256", "SHA3-256", "BLAKE2s", "SM3"], 96: ["SHA-384", "SHA3-384"],
+                  128: ["SHA-512", "SHA3-512", "BLAKE2b"], 16: ["CRC64", "xxHash-64"], 8: ["CRC32"]}
+        cands = by_len.get(len(s), [])
+    reply(candidates=cands, length=len(s))
+
+
+# ── random secrets ──────────────────────────────────────────────────────────────
+def do_random(req):
+    kind = req.get("kind", "password")
+    n = int(req.get("length", 20))
+    if kind == "password":
+        n = min(max(n, 6), 256)
+        alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        if req.get("symbols", True):
+            alpha += "!@#$%^&*()-_=+[]{};:,.?/"
+        value = "".join(secrets.choice(alpha) for _ in range(n))
+    elif kind == "passphrase":
+        words = int(req.get("words", 6))
+        sep = req.get("separator", "-")
+        try:
+            wl = [ln.split("\t")[-1].strip() for ln in open(WORDLIST) if ln.strip()]
+        except OSError:
+            fail("Word list not found.")
+        value = sep.join(secrets.choice(wl) for _ in range(min(max(words, 3), 20)))
+    elif kind == "hex":
+        value = secrets.token_hex(min(max(n, 4), 256))
+    elif kind == "base64":
+        value = secrets.token_urlsafe(min(max(n, 4), 256))
+    elif kind == "pin":
+        value = "".join(secrets.choice("0123456789") for _ in range(min(max(n, 3), 32)))
+    elif kind == "uuid":
+        import uuid
+        value = str(uuid.uuid4())
+    else:
+        fail("Unknown kind.")
+    reply(value=value)
+
+
+# ── key generation ──────────────────────────────────────────────────────────────
+def do_keygen(req):
+    kind = req.get("kind", "ssh-ed25519")
+    path = req.get("path", "")
+    if not path or not path.startswith("/"):
+        fail("Choose where to save the key.")
+    if os.path.exists(path):
+        fail("That file already exists.")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    try:
+        if kind.startswith("ssh-"):
+            if not have("ssh-keygen"):
+                fail("ssh-keygen isn't installed (openssh).")
+            t = {"ssh-ed25519": ["-t", "ed25519"], "ssh-rsa": ["-t", "rsa", "-b", "4096"],
+                 "ssh-ecdsa": ["-t", "ecdsa", "-b", "521"]}.get(kind)
+            if not t:
+                fail("Unknown key type.")
+            p = subprocess.run(["ssh-keygen"] + t + ["-f", path, "-C", req.get("comment", ""),
+                                "-N", req.get("passphrase", "")], capture_output=True, timeout=120)
+            if p.returncode != 0:
+                fail(p.stderr.decode().strip() or "ssh-keygen failed.")
+            pub = open(path + ".pub").read().strip()
+        elif kind == "age":
+            if not have("age-keygen"):
+                fail("age-keygen isn't installed (age).")
+            p = subprocess.run(["age-keygen", "-o", path], capture_output=True, timeout=60)
+            if p.returncode != 0:
+                fail(p.stderr.decode().strip() or "age-keygen failed.")
+            os.chmod(path, 0o600)
+            pub = ""
+            for ln in (p.stderr.decode() + open(path).read()).splitlines():
+                if "public key:" in ln:
+                    pub = ln.split("public key:")[-1].strip()
+        else:
+            fail("Unknown key kind.")
+    except subprocess.TimeoutExpired:
+        fail("Key generation timed out.")
+    reply(path=path, public=pub)
+
+
+# ── certificate / key viewer ────────────────────────────────────────────────────
+def do_certinfo(req):
+    path = req.get("file", "")
+    if not os.path.isfile(path):
+        fail("No such file.")
+    if not have("openssl"):
+        fail("openssl isn't installed.")
+    head = open(path, "rb").read(64)
+    probes = []
+    if b"CERTIFICATE" in head or path.endswith((".crt", ".cer", ".pem")):
+        probes.append(["x509", "-noout", "-text"])
+    probes += [["x509", "-noout", "-text"], ["req", "-noout", "-text"],
+               ["pkey", "-noout", "-text"], ["rsa", "-noout", "-text"], ["crl", "-noout", "-text"]]
+    for args in probes:
+        for form in ("PEM", "DER"):
+            p = subprocess.run(["openssl"] + args + ["-in", path, "-inform", form],
+                               capture_output=True, timeout=30)
+            if p.returncode == 0 and p.stdout.strip():
+                reply(text=p.stdout.decode("utf-8", "replace"), kind=args[0])
+    fail("Couldn't read that as a certificate, request or key.")
+
+
+# ── encrypt / decrypt short text ────────────────────────────────────────────────
+def _ssl_cipher(name):
+    return {"aes-256-cbc": "aes-256-cbc", "aes-256-ctr": "aes-256-ctr",
+            "chacha20": "chacha20", "camellia-256-cbc": "camellia-256-cbc"}.get(name, "aes-256-cbc")
+
+
+def do_encrypt_text(req):
+    if not have("openssl"):
+        fail("openssl isn't installed.")
+    text = req.get("text", "")
+    pw = req.get("password", "")
+    if not pw:
+        fail("Enter a passphrase.")
+    cipher = _ssl_cipher(req.get("cipher", "aes-256-cbc"))
+    it = str(int(req.get("iterations", 100000)))
+    # passphrase on fd 3, plaintext on stdin, armored (base64) out
+    args = ["openssl", "enc", "-" + cipher, "-pbkdf2", "-iter", it, "-md", "sha256", "-a", "-salt", "-pass", "fd:3"]
+    r, w = os.pipe()
+    os.write(w, pw.encode("utf-8")); os.close(w)
+    try:
+        p = subprocess.run(args, input=text.encode("utf-8"), capture_output=True, pass_fds=(r,), timeout=60)
+    finally:
+        os.close(r)
+    if p.returncode != 0:
+        fail(p.stderr.decode().strip() or "Encryption failed.")
+    reply(result=p.stdout.decode("ascii", "replace").strip())
+
+
+def do_decrypt_text(req):
+    if not have("openssl"):
+        fail("openssl isn't installed.")
+    text = req.get("text", "")
+    pw = req.get("password", "")
+    cipher = _ssl_cipher(req.get("cipher", "aes-256-cbc"))
+    it = str(int(req.get("iterations", 100000)))
+    args = ["openssl", "enc", "-d", "-" + cipher, "-pbkdf2", "-iter", it, "-md", "sha256", "-a", "-pass", "fd:3"]
+    body = text if text.endswith("\n") else text + "\n"
+    r, w = os.pipe()
+    os.write(w, pw.encode("utf-8")); os.close(w)
+    try:
+        p = subprocess.run(args, input=body.encode("utf-8"), capture_output=True, pass_fds=(r,), timeout=60)
+    finally:
+        os.close(r)
+    if p.returncode != 0:
+        fail("Wrong passphrase, wrong cipher, or not an OpenSSL message.")
+    reply(result=p.stdout.decode("utf-8", "replace"))
+
+
+OPS = {
+    "algos": do_algos, "hash": do_hash, "encode": do_encode,
+    "pwhash": do_pwhash, "pwverify": do_pwverify, "identify": do_identify,
+    "random": do_random, "keygen": do_keygen, "certinfo": do_certinfo,
+    "encrypt-text": do_encrypt_text, "decrypt-text": do_decrypt_text,
+}
+
+
+def main():
+    try:
+        req = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
+        fail("Bad request.")
+    op = req.get("op")
+    fn = OPS.get(op)
+    if not fn:
+        fail("Unknown operation.")
+    try:
+        fn(req)
+    except Exception as e:
+        fail("%s: %s" % (type(e).__name__, e))
+
+
+if __name__ == "__main__":
+    main()

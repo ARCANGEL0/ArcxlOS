@@ -95,6 +95,8 @@ ax_stage() {
            "${airootfs}/usr/lib/archangelos/ghostwired" \
            "${airootfs}/usr/lib/archangelos/ghostwired-exempt" \
            "${airootfs}/usr/lib/archangelos/axs-admin" \
+           "${airootfs}/usr/lib/archangelos/axs-sec" \
+           "${airootfs}/usr/lib/archangelos/axs-crypto" \
            "${airootfs}/usr/lib/archangelos/power-mode" \
            "${airootfs}/usr/bin/archangelos-fastfetch-setup" \
            "${airootfs}/usr/bin/archangelos-theme-setup" \
