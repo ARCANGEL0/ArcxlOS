@@ -116,3 +116,5 @@ noto-fonts
 
 ### arcfetch banner deps
 chafa
+nftables
+pacman-contrib

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Lock the screen: Super+L, idle and before sleep all come here. hyprlock uses
+# ~/.config/hypr/hyprlock.conf if there is one, else the ArchangelOS theme in /etc/hypr.
+pidof hyprlock >/dev/null 2>&1 && exit 0
+if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprlock.conf" ]; then exec hyprlock "$@"; fi
+exec hyprlock -c /etc/hypr/hyprlock.conf "$@"

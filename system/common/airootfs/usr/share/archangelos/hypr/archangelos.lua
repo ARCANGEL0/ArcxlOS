@@ -23,7 +23,23 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprctl keyword env XCURSOR_SIZE,24")
     hl.exec_cmd("bash -c 'command -v gsettings >/dev/null && gsettings set org.gnome.desktop.interface icon-theme Zafiro-Nord-Dark-Black; gsettings set org.gnome.desktop.interface cursor-theme Future-dark-cursors; true'")
     hl.exec_cmd("bash -c 'pgrep -x hypridle >/dev/null || hypridle'")
+    -- password prompts for Settings (users, packages, OnionLayer) and anything else using polkit
+    hl.exec_cmd("bash -c 'pidof polkit-gnome-authentication-agent-1 polkit-mate-authentication-agent-1 hyprpolkitagent polkit-kde-authentication-agent-1 >/dev/null || for a in /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 /usr/lib/mate-polkit/polkit-mate-authentication-agent-1; do [ -x \"$a\" ] && exec \"$a\"; done'")
 end)
+
+-- What Settings saves (Displays, Keyboard & Mouse) is loaded last, so it wins over the defaults.
+do
+    local cfg = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
+    for _, f in ipairs({ "/arcshell/hypr/monitors.lua", "/arcshell/hypr/input.lua", "/archangelos/hypr/pointer.lua" }) do
+        local path = cfg .. f
+        local fh = io.open(path, "r")
+        if fh then
+            fh:close()
+            local ok, err = pcall(dofile, path)
+            if not ok then print("archangelos: skipped " .. path .. ": " .. tostring(err)) end
+        end
+    end
+end
 
 -- Fallen: the red-team wheel draws on a transparent full-monitor window.
 hl.window_rule({ match = { class = "^archangelos-wheel$" }, float = true, center = true, size = "monitor_w monitor_h" })
