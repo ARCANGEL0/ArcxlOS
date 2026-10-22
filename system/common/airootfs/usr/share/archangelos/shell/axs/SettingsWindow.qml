@@ -20,6 +20,8 @@ FloatingWindow {
     implicitHeight: 780
     minimumSize: Qt.size(960, 620)
 
+    // created with the shell, so automatic time zone keeps working with Settings closed
+    readonly property bool geoAuto: Geo.auto
     property string pageId: "profile"
     property string query: ""
     readonly property var current: Registry.find(win.pageId) ?? Registry.find("profile")
@@ -117,7 +119,7 @@ FloatingWindow {
                             required property var modelData
                             icon: modelData.icon; label: modelData.label
                             badge: modelData.group
-                            active: modelData.id === win.pageId
+                            active: modelData.id === win.pageId || modelData.id === win.current.parent
                             onClicked: win.open(modelData.id)
                         }
                     }
@@ -142,11 +144,11 @@ FloatingWindow {
                                 Label { caption: true; text: grp.modelData.name; x: 12; anchors.bottom: parent.bottom; anchors.bottomMargin: 8 }
                             }
                             Repeater {
-                                model: grp.modelData.pages.filter(p => Registry.visible(p))
+                                model: grp.modelData.pages.filter(p => Registry.visible(p) && !p.hidden)
                                 delegate: NavItem {
                                     required property var modelData
                                     icon: modelData.icon; label: modelData.label
-                                    active: modelData.id === win.pageId
+                                    active: modelData.id === win.pageId || modelData.id === win.current.parent
                                     onClicked: win.open(modelData.id)
                                 }
                             }

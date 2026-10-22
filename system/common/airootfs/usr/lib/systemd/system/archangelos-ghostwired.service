@@ -1,5 +1,5 @@
 [Unit]
-Description=OnionLayer — route all traffic through Tor
+Description=GhostWired — route all traffic through Tor
 Documentation=man:tor(1)
 After=network-online.target nss-lookup.target
 Wants=network-online.target
@@ -8,10 +8,10 @@ Conflicts=tor.service
 
 [Service]
 Type=simple
-ExecStartPre=/usr/lib/archangelos/onionlayer _prepare
-ExecStart=/usr/bin/tor -f /run/archangelos-onionlayer/torrc
-ExecStartPost=/usr/lib/archangelos/onionlayer _started
-ExecStopPost=/usr/lib/archangelos/onionlayer _stopped
+ExecStartPre=/usr/lib/archangelos/ghostwired _prepare
+ExecStart=/usr/bin/tor -f /run/archangelos-ghostwired/torrc
+ExecStartPost=/usr/lib/archangelos/ghostwired _started
+ExecStopPost=/usr/lib/archangelos/ghostwired _stopped
 Restart=on-failure
 RestartSec=3
 KillSignal=SIGINT

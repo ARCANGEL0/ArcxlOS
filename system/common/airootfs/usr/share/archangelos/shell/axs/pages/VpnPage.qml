@@ -187,10 +187,10 @@ PageScaffold {
     Section {
         title: "More privacy"
         SRow {
-            icon: "shield_lock"; title: "OnionLayer"
+            icon: "shield_lock"; title: "GhostWired"
             desc: "Send everything through Tor instead of a single provider"
             clickable: true; chevron: true
-            onClicked: NSS.Shell.openSettings("onion")
+            onClicked: NSS.Shell.openSettings("ghostwired")
         }
     }
 }

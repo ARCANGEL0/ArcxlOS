@@ -4,8 +4,8 @@
 <policyconfig>
   <vendor>ArchangelOS</vendor>
 
-  <action id="org.archangelos.onionlayer">
-    <description>Turn OnionLayer on or off and change its settings</description>
+  <action id="org.archangelos.ghostwired">
+    <description>Turn GhostWired on or off and change its settings</description>
     <message>Authentication is required to change how this computer connects through Tor</message>
     <icon_name>security-high</icon_name>
     <defaults>
@@ -13,7 +13,19 @@
       <allow_inactive>auth_admin</allow_inactive>
       <allow_active>auth_admin_keep</allow_active>
     </defaults>
-    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/archangelos/onionlayer</annotate>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/archangelos/ghostwired</annotate>
+  </action>
+
+  <action id="org.archangelos.power">
+    <description>Change the power mode</description>
+    <message>Authentication is required to change the power mode</message>
+    <icon_name>battery</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/archangelos/power-mode</annotate>
   </action>
 
   <action id="org.archangelos.settings.admin">

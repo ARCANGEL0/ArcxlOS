@@ -1,7 +1,7 @@
-// Date & Time — clock format, automatic time and the time zone (systemd-timedated, live).
+// Date & Time — clock format, the time zone (automatic or chosen) and the clock (synced or set
+// by hand, DD-MM-YYYY HH:MM:SS), through systemd-timedated.
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.axs
 import qs.axs.ui
 import qs.ns.services as NSS
@@ -14,21 +14,13 @@ PageScaffold {
     title: "Date & Time"
     desc: "Clock format, automatic time and your time zone."
 
-    readonly property bool timedated: NSS.SysLocale.timezone !== ""
-    property string busy: ""
-    Component.onCompleted: { NSS.SysLocale.active = true; NSS.SysLocale.refresh(); }
     QtObject { id: clock; property date now: new Date() }
     Timer { interval: 1000; running: true; repeat: true; onTriggered: clock.now = new Date() }
-
-    Process {
-        id: setter
-        onExited: { page.busy = ""; NSS.SysLocale.refresh(); }
-    }
     function utcOffset(d) {
         const m = -d.getTimezoneOffset(), a = Math.abs(m);
         return "UTC" + (m >= 0 ? "+" : "−") + String(Math.floor(a / 60)).padStart(2, "0") + ":" + String(a % 60).padStart(2, "0");
     }
-    function run(what, args) { page.busy = what; setter.command = ["timedatectl"].concat(args); setter.running = true; }
+    Component.onCompleted: Geo.refresh()
 
     // ── clock face ─────────────────────────────────────────────────────────────
     Rectangle {
@@ -40,7 +32,7 @@ PageScaffold {
         Column {
             x: 28; anchors.verticalCenter: parent.verticalCenter
             spacing: 6
-            Label { caption: true; text: page.timedated ? NSS.SysLocale.timezone.replace("_", " ") : "Local time" }
+            Label { caption: true; text: Geo.timezone ? Geo.timezone.replace(/_/g, " ") : "Local time" }
             Row {
                 spacing: 10
                 Label { id: hm; mono: true; font.pixelSize: 54; text: Qt.formatTime(clock.now, Frame.PrefsService.use24HourTime ? "HH:mm" : "h:mm") }
@@ -67,28 +59,5 @@ PageScaffold {
         }
     }
 
-    Section {
-        title: "Time"
-        EmptyState {
-            visible: !page.timedated
-            icon: "schedule"
-            title: "Time settings are unavailable"
-            desc: "systemd-timedated isn't reachable, so the time zone and automatic time can't be changed from here."
-        }
-        SRow {
-            visible: page.timedated
-            icon: "sync"; title: "Set time automatically"; desc: "Keep the clock in sync with internet time servers"
-            AxSwitch { checked: NSS.SysLocale.ntp; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
-                       onToggled: (on) => page.run("ntp", ["set-ntp", on ? "true" : "false"]) }
-        }
-        SRow {
-            visible: page.timedated
-            icon: "public"; title: "Time zone"; desc: page.busy === "tz" ? "Applying…" : "Where you are, for the local time"
-            AxSelect { width: 300; anchors.verticalCenter: parent.verticalCenter
-                       model: NSS.SysLocale.timezones.map(t => t.replace(/_/g, " "))
-                       current: NSS.SysLocale.timezones.indexOf(NSS.SysLocale.timezone)
-                       searchable: true
-                       onPicked: (i) => page.run("tz", ["set-timezone", NSS.SysLocale.timezones[i]]) }
-        }
-    }
+    TimeSection { country: (Geo.zone && Geo.zone.cc.length) ? Geo.zone.cc[0] : "" }
 }

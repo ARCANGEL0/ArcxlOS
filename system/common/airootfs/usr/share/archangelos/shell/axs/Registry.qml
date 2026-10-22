@@ -71,8 +71,12 @@ Singleton {
         { name: "Privacy & Security", pages: [
             { id: "lock", label: "Lock Screen", icon: "lock", page: "LockPage",
               desc: "Locking, idle and sign-in", keys: "lock idle screensaver login password" },
-            { id: "onion", label: "OnionLayer", icon: "shield_lock", page: "OnionPage",
-              desc: "Route all traffic through Tor", keys: "tor onion anonymity anonsurf bridges obfs4 snowflake kill switch mac privacy proxy exit" } ] }
+            { id: "ghostwired", label: "GhostWired", icon: "shield_lock", page: "GhostPage",
+              desc: "Send every packet through Tor", keys: "tor onion onionlayer anonymity anonsurf tunnel bridges obfs4 snowflake meek kill switch mac privacy proxy exit invisible" },
+            { id: "ghostwired-exclude", label: "Excluded apps", icon: "apps_outage", page: "GhostExcludePage", hidden: true, parent: "ghostwired",
+              desc: "Apps that skip the Tor tunnel", keys: "" },
+            { id: "ghostwired-advanced", label: "Tor configuration", icon: "tune", page: "GhostAdvancedPage", hidden: true, parent: "ghostwired",
+              desc: "Ports, exits and raw torrc", keys: "" } ] }
     ]
 
     function visible(p) { return !p.editions || p.editions.indexOf(root.edition) >= 0; }
@@ -84,7 +88,7 @@ Singleton {
         q = q.trim().toLowerCase();
         const out = [];
         for (const g of root.groups) for (const p of g.pages) {
-            if (!root.visible(p)) continue;
+            if (!root.visible(p) || p.hidden) continue;
             if ((p.label + " " + p.desc + " " + p.keys + " " + g.name).toLowerCase().includes(q)) out.push(Object.assign({ group: g.name }, p));
         }
         return out;
