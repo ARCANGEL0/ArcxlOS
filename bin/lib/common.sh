@@ -90,6 +90,9 @@ ax_stage() {
   chmod +x "${airootfs}/usr/bin/archangelos-wallpaper" \
            "${airootfs}/usr/bin/archangelos-wallpaper-setup" \
            "${airootfs}/usr/bin/archangelos-lock" \
+           "${airootfs}/usr/bin/archangelos-settings" \
+           "${airootfs}/usr/lib/archangelos/onionlayer" \
+           "${airootfs}/usr/lib/archangelos/axs-admin" \
            "${airootfs}/usr/bin/archangelos-fastfetch-setup" \
            "${airootfs}/usr/bin/archangelos-theme-setup" \
            "${airootfs}/usr/bin/archangelos-region" \

@@ -3,6 +3,7 @@ PRETTY_NAME="ArchangelOS"
 ID=archangelos
 ID_LIKE="blackarch arch"
 BUILD_ID=rolling
+VARIANT_ID=home
 VERSION_ID="0.21-alpha.0926"
 ANSI_COLOR="38;2;194;74;82"
 HOME_URL="https://arcangelo.net/"

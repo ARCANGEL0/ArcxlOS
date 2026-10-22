@@ -5,6 +5,7 @@ import qs.axs
 Item {
     id: row
     property string icon: ""
+    property string image: ""                // app icon or picture in place of a glyph
     property string title: ""
     property string desc: ""
     property bool topDivider: false
@@ -32,13 +33,15 @@ Item {
     }
     Rectangle {
         id: tile
-        visible: row.icon !== ""
+        visible: row.icon !== "" || row.image !== ""
         anchors.left: parent.left; anchors.leftMargin: Ax.pad
         anchors.verticalCenter: parent.verticalCenter
         width: 32; height: 32; radius: 9
         color: Ax.raised
         border.width: 1; border.color: Ax.border
-        Icon { anchors.centerIn: parent; name: row.icon; size: 17; color: row.dim ? Ax.faint : Ax.text }
+        Icon { anchors.centerIn: parent; visible: row.image === ""; name: row.icon; size: 17; color: row.dim ? Ax.faint : Ax.text }
+        Image { anchors.centerIn: parent; visible: row.image !== ""; source: row.image; width: 22; height: 22
+                sourceSize.width: 44; sourceSize.height: 44; asynchronous: true; smooth: true }
     }
     Column {
         id: texts
