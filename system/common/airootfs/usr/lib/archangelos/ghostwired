@@ -1,38 +1,45 @@
 #!/bin/bash
-# OnionLayer — send the whole machine through Tor.
+# GhostWired — send the whole machine through Tor.
 #
-# Runs its own Tor (archangelos-onionlayer.service) with a TransPort and a DNSPort, and an
-# nftables layer that redirects every outgoing TCP connection and DNS query into it and drops
-# everything else (UDP, IPv6, ICMP). Only the tor user talks to the network directly. If Tor dies
-# while the layer is on, the rules stay and nothing leaks (kill switch) until it is turned off.
+# Runs its own Tor (archangelos-ghostwired.service) with a TransPort and a DNSPort, and an
+# nftables layer that redirects every outgoing TCP connection and DNS query into it and rejects
+# everything else (UDP, IPv6, ICMP). Only the tor user, and processes running under the
+# ghostwired-exempt group (excluded apps, launched through ghostwired-exempt), reach the network
+# directly. If Tor dies while the tunnel is up, the rules stay and nothing leaks (kill switch).
 #
-#   onionlayer status              key=value state, readable by anyone
-#   onionlayer on | off            start / stop the layer                       (root)
-#   onionlayer set key=value ...   change settings, restart if running          (root)
-#   onionlayer bridges             replace the bridge list with stdin           (root)
-#   onionlayer newnym              ask Tor for fresh circuits
-#   onionlayer exitip              JSON from check.torproject.org through Tor
+#   ghostwired status              key=value state, readable by anyone
+#   ghostwired on | off            start / stop the layer                       (root)
+#   ghostwired set key=value ...   change settings, restart if running          (root)
+#   ghostwired bridges             replace the custom bridge list with stdin    (root)
+#   ghostwired torrc               replace the extra torrc lines with stdin     (root)
+#   ghostwired exempt-join USER    let USER launch excluded apps                (root)
+#   ghostwired newnym              ask Tor for fresh circuits
+#   ghostwired exitip              JSON from check.torproject.org through Tor
 #
-# Settings live in /etc/archangelos/onionlayer.conf; bridges in onionlayer.bridges.
+# Settings live in /etc/archangelos/ghostwired.conf; custom bridges in ghostwired.bridges, extra
+# torrc lines in ghostwired.torrc. The built-in bridges are Tor Browser's, in BUILTIN.
 set -u
 
-CONF=/etc/archangelos/onionlayer.conf
-BRIDGES=/etc/archangelos/onionlayer.bridges
-RUN=/run/archangelos-onionlayer
-DATA=/var/lib/archangelos-onionlayer
-UNIT=archangelos-onionlayer.service
-SELF=/usr/lib/archangelos/onionlayer
+CONF=/etc/archangelos/ghostwired.conf
+BRIDGES=/etc/archangelos/ghostwired.bridges
+EXTRA=/etc/archangelos/ghostwired.torrc
+BUILTIN=/usr/share/archangelos/ghostwired/bridges
+EXEMPT=ghostwired-exempt
+RUN=/run/archangelos-ghostwired
+DATA=/var/lib/archangelos-ghostwired
+UNIT=archangelos-ghostwired.service
+SELF=/usr/lib/archangelos/ghostwired
 LAN4="10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 224.0.0.0/4"
 LAN6="fe80::/10, fc00::/7, ff00::/8"
 
 declare -A DEF=(
     [socks_port]=9050 [trans_port]=9040 [dns_port]=5353 [control_port]=9051
-    [bridges]=0 [exit_nodes]="" [strict_nodes]=0 [lan_bypass]=1 [kill_switch]=1
+    [bridges]=off [exit_nodes]="" [strict_nodes]=0 [lan_bypass]=0 [kill_switch]=1
     [autostart]=0 [isolate]=1
 )
 
 die() {
-    echo "onionlayer: $*" >&2
+    echo "ghostwired: $*" >&2
     [ -d "$RUN" ] && [ "$(id -u)" -eq 0 ] && echo "$*" > "$RUN/error"
     exit 1
 }
@@ -49,8 +56,10 @@ valid() {
     case "$1" in
         socks_port|trans_port|dns_port|control_port)
             [[ "$2" =~ ^[0-9]{2,5}$ ]] && [ "$2" -ge 1024 ] && [ "$2" -le 65535 ] ;;
-        bridges|strict_nodes|lan_bypass|kill_switch|autostart|isolate)
+        strict_nodes|lan_bypass|kill_switch|autostart|isolate)
             [[ "$2" =~ ^[01]$ ]] ;;
+        bridges)
+            [[ "$2" =~ ^(off|obfs4|snowflake|meek|custom)$ ]] ;;
         exit_nodes)
             [[ -z "$2" || "$2" =~ ^[a-z]{2}(,[a-z]{2})*$ ]] ;;
         *) return 1 ;;
@@ -63,23 +72,36 @@ need_root() {
 }
 
 # Bridge lines, without a leading "Bridge", one per line, only characters bridge lines use.
-bridge_lines() {
-    [ -r "$BRIDGES" ] || return 0
-    sed -e 's/^[[:space:]]*[Bb]ridge[[:space:]]\+//' -e 's/[[:space:]]\+$//' "$BRIDGES" \
-        | grep -E '^[A-Za-z0-9_]' | grep -vE '[^][A-Za-z0-9 .:=,/_+%&?-]'
+clean_bridges() {
+    sed -e 's/^[[:space:]]*[Bb]ridge[[:space:]]\+//' -e 's/[[:space:]]\+$//' "$1" 2>/dev/null \
+        | grep -E '^[A-Za-z0-9_]' | grep -vE '[^][A-Za-z0-9 .:=,/_+%&?;-]'
+}
+# The custom list (always, for the editor), and the lines the chosen mode actually uses.
+bridge_lines() { [ -r "$BRIDGES" ] && clean_bridges "$BRIDGES"; true; }
+active_bridges() {
+    case "$(get bridges)" in
+        off|"") ;;
+        custom) bridge_lines ;;
+        *) clean_bridges "$BUILTIN/$(get bridges).txt" ;;
+    esac
+}
+# Extra torrc lines, minus anything GhostWired itself owns: those would break the tunnel.
+extra_lines() {
+    [ -r "$EXTRA" ] || return 0
+    grep -vE '^[[:space:]]*$' "$EXTRA" | grep -viE '^[[:space:]]*(User|DataDirectory|RunAsDaemon|SocksPort|TransPort|DNSPort|ControlPort|CookieAuth[A-Za-z]*|Log|AutomapHosts[A-Za-z]*|VirtualAddrNetwork[A-Za-z0-9]*|ClientTransportPlugin|UseBridges|Bridge|ClientUseIPv6|PidFile|Sandbox)([[:space:]]|$)'
 }
 transport_bin() {
     case "$1" in
         obfs4|meek_lite|scramblesuit) command -v lyrebird || command -v obfs4proxy ;;
         webtunnel) command -v lyrebird || command -v webtunnel-client ;;
-        snowflake) command -v snowflake-client ;;
+        snowflake) command -v lyrebird || command -v snowflake-client ;;
     esac
 }
 
 write_torrc() {
     local t="$RUN/torrc" ports
     {
-        echo "# Generated by OnionLayer — edit through Settings, not by hand."
+        echo "# Generated by GhostWired — edit through Settings, not by hand."
         echo "User tor"
         echo "DataDirectory $DATA"
         echo "RunAsDaemon 0"
@@ -101,7 +123,7 @@ write_torrc() {
             echo "ExitNodes $(printf '%s' "$ex" | sed 's/\([a-z][a-z]\)/{\1}/g')"
             echo "StrictNodes $(get strict_nodes)"
         fi
-        if [ "$(get bridges)" = 1 ] && [ -n "$(bridge_lines)" ]; then
+        if [ -n "$(active_bridges)" ]; then
             echo "UseBridges 1"
             local seen="" kind bin
             while read -r line; do
@@ -114,7 +136,11 @@ write_torrc() {
                     seen="$seen $kind"
                 fi
                 echo "Bridge $line"
-            done < <(bridge_lines)
+            done < <(active_bridges)
+        fi
+        if [ -n "$(extra_lines)" ]; then
+            echo "# --- your lines (Settings > GhostWired > Tor configuration) ---"
+            extra_lines
         fi
     } > "$t.new" && chmod 644 "$t.new" && mv -f "$t.new" "$t"
 }
@@ -125,13 +151,14 @@ fw_up() {
     if [ "$(get lan_bypass)" = 1 ]; then
         lanret="ip daddr { $LAN4 } return"; lanok="ip daddr { $LAN4 } accept"; lan6ok="ip6 daddr { $LAN6 } accept"
     fi
-    nft delete table ip archangelos_onion 2>/dev/null
-    nft delete table ip6 archangelos_onion 2>/dev/null
+    nft delete table ip archangelos_ghost 2>/dev/null
+    nft delete table ip6 archangelos_ghost 2>/dev/null
     nft -f - <<EOF || die "could not load the firewall rules (is nftables installed?)"
-table ip archangelos_onion {
+table ip archangelos_ghost {
     chain nat_out {
         type nat hook output priority -100; policy accept;
         meta skuid "tor" return
+        meta skgid "$EXEMPT" return
         udp dport 53 redirect to :$dns
         ip daddr 10.192.0.0/10 meta l4proto tcp redirect to :$trans
         ip daddr 127.0.0.0/8 return
@@ -144,14 +171,16 @@ table ip archangelos_onion {
         # match what it was rewritten to (Tor's ports on loopback), not oifname.
         ip daddr 127.0.0.0/8 accept
         oifname "lo" accept
+        meta skgid "$EXEMPT" accept
         meta skuid "tor" accept
+        meta skgid "$EXEMPT" accept
         udp sport 68 udp dport 67 accept
         $lanok
         meta l4proto tcp reject with tcp reset
         reject
     }
 }
-table ip6 archangelos_onion {
+table ip6 archangelos_ghost {
     chain filter_out {
         type filter hook output priority 0; policy drop;
         oifname "lo" accept
@@ -163,8 +192,8 @@ EOF
     echo armed > "$RUN/state"
 }
 fw_down() {
-    nft delete table ip archangelos_onion 2>/dev/null
-    nft delete table ip6 archangelos_onion 2>/dev/null
+    nft delete table ip archangelos_ghost 2>/dev/null
+    nft delete table ip6 archangelos_ghost 2>/dev/null
     rm -f "$RUN/state"
 }
 
@@ -201,12 +230,15 @@ status() {
     for k in socks_port trans_port dns_port control_port bridges exit_nodes strict_nodes lan_bypass kill_switch autostart isolate; do
         echo "$k=$(get "$k")"
     done
-    echo "bridge_count=$(bridge_lines | grep -c .)"
+    echo "bridge_count=$(active_bridges | grep -c .)"
     echo "bridge_list=$(bridge_lines | tr '\n' '\t')"
+    echo "torrc_extra=$( [ -r "$EXTRA" ] && tr '\n' '\t' < "$EXTRA")"
+    echo "exempt_group=$(getent group "$EXEMPT" >/dev/null && echo 1 || echo 0)"
     local tr=""
     [ -n "$(transport_bin obfs4)" ] && tr="$tr obfs4"
     [ -n "$(transport_bin webtunnel)" ] && tr="$tr webtunnel"
     [ -n "$(transport_bin snowflake)" ] && tr="$tr snowflake"
+    [ -n "$(transport_bin meek_lite)" ] && tr="$tr meek"
     echo "transports=${tr# }"
     echo "error=$(cat "$RUN/error" 2>/dev/null | head -n1)"
     echo "system_tor=$(systemctl is-active tor.service 2>/dev/null)"
@@ -270,12 +302,33 @@ case "$cmd" in
         head -c 65536 > "$BRIDGES.new" && chmod 640 "$BRIDGES.new" && mv -f "$BRIDGES.new" "$BRIDGES"
         getent group wheel >/dev/null && chgrp wheel "$BRIDGES"
         echo "lines=$(bridge_lines | grep -c .)"
-        [ "$(get bridges)" = 1 ] && restart_kept
+        [ "$(get bridges)" = custom ] && restart_kept
+        echo ok ;;
+    torrc)
+        need_root torrc "$@"
+        mkdir -p "$(dirname "$EXTRA")"
+        head -c 32768 > "$EXTRA.new"
+        # Check the lines with Tor before taking them.
+        if command -v tor >/dev/null && [ -s "$EXTRA.new" ]; then
+            t="$(mktemp)"; grep -vE '^[[:space:]]*#' "$EXTRA.new" > "$t"
+            out="$(tor --verify-config -f "$t" --DataDirectory /tmp --SocksPort 0 --Log "err stdout" 2>&1)" \
+                || { rm -f "$t" "$EXTRA.new"; die "Tor rejected those lines: $(printf '%s' "$out" | grep -E '\[(err|warn)\]' | tail -n1 | sed 's/^.*\] //')"; }
+            rm -f "$t"
+        fi
+        chmod 644 "$EXTRA.new" && mv -f "$EXTRA.new" "$EXTRA"
+        restart_kept
+        echo ok ;;
+    exempt-join)
+        need_root exempt-join "$@"
+        u="${1:-}"; [[ "$u" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] && getent passwd "$u" >/dev/null || die "no such user"
+        getent group "$EXEMPT" >/dev/null || groupadd -r "$EXEMPT" || die "couldn't create the $EXEMPT group"
+        gpasswd -a "$u" "$EXEMPT" >/dev/null || die "couldn't add $u to $EXEMPT"
         echo ok ;;
     # Called by the unit.
     _prepare)
         [ "$(id -u)" -eq 0 ] || die "root only"
         install -d -m 755 -o tor -g tor "$RUN"
+        getent group "$EXEMPT" >/dev/null || groupadd -r "$EXEMPT"
         install -d -m 700 -o tor -g tor "$DATA"
         : > "$RUN/notice.log"; chown tor:tor "$RUN/notice.log"; chmod 644 "$RUN/notice.log"
         write_torrc

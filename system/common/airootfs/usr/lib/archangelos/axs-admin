@@ -131,7 +131,7 @@ case "$verb" in
         f=/etc/NetworkManager/conf.d/90-archangelos-mac.conf
         if [ "${1:-}" = 1 ]; then
             install -d /etc/NetworkManager/conf.d
-            printf '%s\n' "# Written by ArchangelOS Settings > OnionLayer." \
+            printf '%s\n' "# Written by ArchangelOS Settings > GhostWired." \
                 "[device]" "wifi.scan-rand-mac-address=yes" "" \
                 "[connection]" "wifi.cloned-mac-address=random" "ethernet.cloned-mac-address=random" > "$f"
         else

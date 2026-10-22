@@ -28,6 +28,7 @@ Singleton {
             property int screenOffAfter: 600
             property int suspendAfter: 1800
             property bool lockOnSleep: true
+            property bool autoTimezone: false
         }
     }
     Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", root.dir])

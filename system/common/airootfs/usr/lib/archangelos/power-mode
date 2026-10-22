@@ -1,0 +1,72 @@
+#!/bin/bash
+# power-mode — Saver / Balanced / Performance, on every machine.
+#
+# power-profiles-daemon does it where it can. Where it's missing, or the hardware offers it no
+# performance profile, the CPU governor and energy preference are set directly (that half needs
+# root and comes back here through pkexec), and remembered in /etc/archangelos/power-mode so
+# archangelos-power-mode.service puts it back at boot.
+#
+#   power-mode get          → mode=… ppd=0|1 native_perf=0|1
+#   power-mode set MODE     saver | balanced | performance
+#   power-mode _cpu MODE    (root) governor + EPP only
+set -u
+SELF=/usr/lib/archangelos/power-mode
+SAVED=/etc/archangelos/power-mode
+
+ppd() { command -v powerprofilesctl >/dev/null && powerprofilesctl get >/dev/null 2>&1; }
+ppd_has() { powerprofilesctl list 2>/dev/null | grep -qE "^[* ] *$1:"; }
+ppd_name() { case "$1" in saver) echo power-saver;; *) echo "$1";; esac; }
+
+cpu() {
+    local gov epp avail
+    avail="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors 2>/dev/null)"
+    case "$1" in
+        saver)       gov=powersave;  epp=power ;;
+        performance) gov=performance; epp=performance ;;
+        *)           gov=schedutil;  epp=balance_performance
+                     [[ " $avail " == *" schedutil "* ]] || gov=powersave ;;
+    esac
+    for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+        [ -w "$g" ] && echo "$gov" > "$g" 2>/dev/null
+    done
+    # with the performance governor intel_pstate pins EPP itself; writing it then is refused
+    for e in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do
+        [ -w "$e" ] && echo "$epp" > "$e" 2>/dev/null
+    done
+    true
+}
+
+case "${1:-get}" in
+    get)
+        mode=""
+        if [ -f "$SAVED" ]; then mode="$(cat "$SAVED")"
+        elif ppd; then mode="$(powerprofilesctl get)"; [ "$mode" = power-saver ] && mode=saver
+        else
+            case "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null)" in
+                performance) mode=performance ;; powersave) mode=saver ;; *) mode=balanced ;;
+            esac
+        fi
+        echo "mode=${mode:-balanced}"
+        echo "ppd=$(ppd && echo 1 || echo 0)"
+        echo "native_perf=$(ppd && ppd_has performance && echo 1 || echo 0)" ;;
+    set)
+        m="${2:-}"
+        [[ "$m" =~ ^(saver|balanced|performance)$ ]] || { echo "usage: power-mode set saver|balanced|performance" >&2; exit 2; }
+        if ppd && ppd_has "$(ppd_name "$m")"; then
+            # the daemon has it: hand over, and drop any governor override from before
+            powerprofilesctl set "$(ppd_name "$m")" || exit 1
+            [ -f "$SAVED" ] && pkexec "$SELF" _cpu clear
+        else
+            ppd && powerprofilesctl set balanced 2>/dev/null
+            pkexec "$SELF" _cpu "$m" || exit 1
+        fi
+        echo ok ;;
+    _cpu)
+        [ "$(id -u)" -eq 0 ] || { echo "root only" >&2; exit 1; }
+        if [ "${2:-}" = clear ]; then rm -f "$SAVED"; exit 0; fi
+        [[ "${2:-}" =~ ^(saver|balanced|performance)$ ]] || exit 2
+        cpu "$2"; mkdir -p /etc/archangelos; echo "$2" > "$SAVED" ;;
+    _boot)
+        [ -f "$SAVED" ] && cpu "$(cat "$SAVED")"; true ;;
+    *) echo "usage: power-mode get | set MODE" >&2; exit 2 ;;
+esac
