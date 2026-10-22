@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ArchangelOS mark, clean vector redraw of logo.png: the bladed A, its
+     two pairs of wings and the red four-point star. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1558 1140" width="1558" height="1140">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7F5F0"/>
+      <stop offset="0.55" stop-color="#E4E1DA"/>
+      <stop offset="1" stop-color="#C9C5BC"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F0444E"/>
+      <stop offset="0.5" stop-color="#D42A35"/>
+      <stop offset="1" stop-color="#A3161F"/>
+    </linearGradient>
+    <g id="half">
+      <!-- left leg of the A: tapers to the apex, steps out where the wings meet -->
+      <path d="M779 30 L482 612 L392 680 L94 1108 L350 1108 L779 186 Z"/>
+      <!-- upper wing -->
+      <path d="M548 363 L512 370 L450 400 L348 450 L261 500 L156 560 L45 620 L22 637
+               L140 637 L157 620 L278 560 L382 500 L467 450 L521 400 L539 376 Z"/>
+      <!-- lower wing -->
+      <path d="M462 486 L431 500 L345 560 L272 620 L198 680 L148 720 L112 752
+               L238 752 L275 720 L319 680 L372 620 L414 560 L455 505 Z"/>
+    </g>
+  </defs>
+  <g fill="url(#steel)">
+    <use href="#half"/>
+    <use href="#half" transform="matrix(-1 0 0 1 1558 0)"/>
+    <!-- seal the seam where the mirrored halves meet at the apex -->
+    <path d="M779 30 L784 42 L784 186 L774 186 L774 42 Z"/>
+  </g>
+  <!-- the star: long lower arm like a blade, hollow diamond at its heart -->
+  <path fill="url(#ember)" fill-rule="evenodd"
+        d="M779 380 L803 694 L1030 720 L803 746 L779 1130 L755 746 L528 720 L755 694 Z
+           M779 704 L795 720 L779 736 L763 720 Z"/>
+  <!-- short diagonal blades between the arms -->
+  <path fill="url(#ember)"
+        d="M769 706 L716 650 L758 699 Z M789 706 L842 650 L800 699 Z
+           M769 734 L716 790 L758 741 Z M789 734 L842 790 L800 741 Z"/>
+</svg>
