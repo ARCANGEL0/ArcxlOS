@@ -9,7 +9,7 @@ PageScaffold {
     property var meta
     group: "Personalize"
     title: "Desktop & Shell"
-    desc: "Tune the bar, the island and the panels around your screen."
+    desc: "Tune ArcShell: the bar, the island and the panels around your screen."
 
     readonly property var prefs: Frame.PrefsService
     readonly property var curves: ["smooth", "spring", "cinematic", "sharp", "linear", "jello"]
