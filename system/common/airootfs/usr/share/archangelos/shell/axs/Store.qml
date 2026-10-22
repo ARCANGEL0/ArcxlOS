@@ -29,6 +29,19 @@ Singleton {
             property int suspendAfter: 1800
             property bool lockOnSleep: true
             property bool autoTimezone: false
+            // Privacy & history: what to clear at every sign-in
+            property bool clearRecent: false
+            property bool clearClipboard: false
+            property bool clearThumbs: false
+            property bool clearShellHistory: false
+            property int trashDays: 0
+            // Encryption: defaults for new encrypted drives
+            property string luksCipher: "aes-xts-plain64"
+            property int luksKeyBits: 512
+            property string luksHash: "sha512"
+            property string luksPbkdf: "argon2id"
+            // gocryptfs vaults: [{ name, cipher, mount }]
+            property var vaults: []
         }
     }
     Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", root.dir])

@@ -607,3 +607,11 @@ wpewebkit
 yt-dlp
 nftables
 pacman-contrib
+gocryptfs
+python-bcrypt
+python-argon2-cffi
+b3sum
+xxhash
+age
+7zip
+rhash

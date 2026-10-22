@@ -105,6 +105,7 @@ system/*/airootfs/usr/lib/systemd/system/archangelos-ghostwired.service
 system/*/airootfs/usr/lib/sysusers.d/archangelos-ghostwired.conf
 system/*/airootfs/usr/lib/systemd/system/archangelos-power-mode.service
 system/*/airootfs/usr/share/archangelos/ghostwired/
+system/*/airootfs/usr/share/archangelos/crypto/
 system/*/airootfs/usr/share/polkit-1/
 system/*/airootfs/etc/polkit-1/
 !system/common/airootfs/usr/bin/archangelos-lock
@@ -115,6 +116,7 @@ system/*/airootfs/etc/polkit-1/
 !system/common/airootfs/usr/lib/sysusers.d/archangelos-ghostwired.conf
 !system/common/airootfs/usr/lib/systemd/system/archangelos-power-mode.service
 !system/common/airootfs/usr/share/archangelos/ghostwired/
+!system/common/airootfs/usr/share/archangelos/crypto/
 !system/common/airootfs/usr/share/polkit-1/
 !system/common/airootfs/etc/polkit-1/
 system/*/airootfs/usr/share/applications/cyberspace.desktop
