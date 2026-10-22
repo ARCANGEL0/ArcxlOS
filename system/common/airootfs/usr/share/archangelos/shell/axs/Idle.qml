@@ -20,6 +20,13 @@ Singleton {
         if (sec < 3600) return (sec / 60) + (sec === 60 ? " minute" : " minutes");
         return (sec / 3600) + (sec === 3600 ? " hour" : " hours");
     }
+    // Index of the ladder step closest to a stored value (a hand-edited 330 shows as 5 minutes).
+    function nearest(list, sec) {
+        if (sec <= 0) return list.indexOf(0);
+        let best = -1, d = 1e9;
+        for (let i = 0; i < list.length; i++) if (list[i] > 0 && Math.abs(list[i] - sec) < d) { d = Math.abs(list[i] - sec); best = i; }
+        return best;
+    }
     function pick(key, sec) { root.s[key] = sec; root.write(); }
     function set(key, v) { root.s[key] = v; root.write(); }
 
