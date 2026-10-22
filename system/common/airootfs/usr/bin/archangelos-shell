@@ -1,0 +1,66 @@
+#!/bin/bash
+# archangelos-shell — pick which desktop shell Hyprland runs.
+#
+# Shells live in ~/.config/hypr/themes/<name>/ and are loaded through their theme.lua; ArcShell
+# (ArchangelOS's own) is built in as "archangelos". Only the active one is loaded, so two shells
+# never run at once. A theme may carry a theme.json:
+#   { "name": "…", "description": "…", "preview": "preview.png",
+#     "keybinds": true,             — it brings its own keybinds (ArchangelOS's are then skipped)
+#     "start": "cmd", "stop": "cmd" — lets it be switched to without logging out }
+#
+#   archangelos-shell list          id|name|description|preview|own keybinds|live|active
+#   archangelos-shell current
+#   archangelos-shell use NAME [--now]
+set -u
+THEMES="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/themes"
+MARK="$THEMES/.active"
+ARC=archangelos
+
+current() { local a; a="$(head -n1 "$MARK" 2>/dev/null)"; [ -n "$a" ] && [ -f "$THEMES/$a/theme.lua" ] && echo "$a" || echo "$ARC"; }
+jget() { [ -f "$1/theme.json" ] && python3 -c 'import json,sys; v=json.load(open(sys.argv[1])).get(sys.argv[2],""); print(str(v).lower() if isinstance(v,bool) else v)' "$1/theme.json" "$2" 2>/dev/null; }
+preview() {
+    local p; p="$(jget "$1" preview)"
+    [ -n "$p" ] && [ -f "$1/$p" ] && { echo "$1/$p"; return; }
+    for p in preview.png preview.jpg screenshot.png screenshot.jpg assets/preview.png assets/preview.jpg; do
+        [ -f "$1/$p" ] && { echo "$1/$p"; return; }
+    done
+}
+ownkeys() { [ "$(jget "$1" keybinds)" = true ] || [ -f "$1/config/keybinds.lua" ] || [ -f "$1/keybinds.lua" ]; }
+
+stop_current() {
+    local c; c="$(current)"
+    if [ "$c" = "$ARC" ]; then pkill -f "qs -p /usr/share/archangelos/shell" 2>/dev/null
+    else local s; s="$(jget "$THEMES/$c" stop)"; [ -n "$s" ] && sh -c "$s" 2>/dev/null; fi
+    true
+}
+
+case "${1:-list}" in
+    current) current ;;
+    list)
+        a="$(current)"
+        echo "$ARC|ArcShell|ArchangelOS's own shell: bar, island and panels|/usr/share/archangelos/logo.png|0|1|$([ "$a" = $ARC ] && echo 1 || echo 0)"
+        for d in "$THEMES"/*/; do
+            d="${d%/}"; [ -f "$d/theme.lua" ] || continue
+            id="$(basename "$d")"
+            name="$(jget "$d" name)"; [ -n "$name" ] || name="$(echo "$id" | sed 's/[-_]/ /g; s/\b\(.\)/\u\1/g')"
+            desc="$(jget "$d" description | tr '|\n' '  ' | sed 's/ *$//')"
+            live=0; [ -n "$(jget "$d" start)" ] && live=1
+            echo "$id|$name|$desc|$(preview "$d")|$(ownkeys "$d" && echo 1 || echo 0)|$live|$([ "$a" = "$id" ] && echo 1 || echo 0)"
+        done ;;
+    use)
+        n="${2:-}"
+        [ "$n" = "$ARC" ] || [ -f "$THEMES/$n/theme.lua" ] || { echo "no such shell: $n" >&2; exit 1; }
+        now=0; [ "${3:-}" = --now ] && now=1
+        [ "$now" = 1 ] && stop_current
+        mkdir -p "$THEMES"
+        if [ "$n" = "$ARC" ]; then rm -f "$MARK"; else echo "$n" > "$MARK"; fi
+        if [ "$now" = 1 ]; then
+            # reload re-reads the config (binds, rules, the new theme.lua); its start hook doesn't
+            # fire on a reload, so start the shell ourselves
+            hyprctl reload >/dev/null 2>&1
+            if [ "$n" = "$ARC" ]; then setsid -f qs -p /usr/share/archangelos/shell >/dev/null 2>&1
+            else s="$(jget "$THEMES/$n" start)"; [ -n "$s" ] && setsid -f sh -c "$s" >/dev/null 2>&1; fi
+        fi
+        echo ok ;;
+    *) echo "usage: archangelos-shell list | current | use NAME [--now]" >&2; exit 2 ;;
+esac

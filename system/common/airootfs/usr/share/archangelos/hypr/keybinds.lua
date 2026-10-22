@@ -3,6 +3,22 @@
 -- file: Hyprland stacks duplicate binds instead of overriding them, so this has to be the
 -- single source of every bind rather than an overlay on top of another set.
 
+-- Another shell picked in Settings that brings its own keybinds gets the keyboard to itself
+-- (Hyprland would stack both sets). archangelos.lua keeps SUPER+CTRL+ALT+A as the way back.
+do
+    local dir = (os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")) .. "/hypr/themes"
+    local f = io.open(dir .. "/.active", "r")
+    local name = f and f:read("*l") or nil
+    if f then f:close() end
+    local function exists(p) local h = io.open(p, "r"); if h then h:close(); return true end; return false end
+    if name and name ~= "" and exists(dir .. "/" .. name .. "/theme.lua") then
+        local own = exists(dir .. "/" .. name .. "/config/keybinds.lua") or exists(dir .. "/" .. name .. "/keybinds.lua")
+        local j = io.open(dir .. "/" .. name .. "/theme.json", "r")
+        if j then own = own or (j:read("*a"):find('"keybinds"%s*:%s*true') ~= nil); j:close() end
+        if own then return end
+    end
+end
+
 local mod = "SUPER"
 
 -- first of these that is installed (the file manager differs per edition)
