@@ -21,6 +21,7 @@ import qs.ns.modules as NS
 import qs.ns.services as NSS
 import qs.ns as NSRoot
 import "src" as Frame
+import "axs" as AXS
 
 ShellRoot {
     // arcshell's frame goes first, so it stacks underneath: ArcShell's surface (which
@@ -35,12 +36,22 @@ ShellRoot {
     Variants { model: Quickshell.screens; NS.Bar {} }
     Variants { model: Quickshell.screens; NS.Launcher {} }
 
+    // ArchangelOS Settings — one window, opened by `archangelos-settings [page]` or the launcher.
+    AXS.SettingsWindow {}
+
     // One accent for both shells: ArcShell's (set from the wallpaper picker's swatches).
     Binding { target: NSRoot.Config; property: "accentOverride"; value: Frame.PrefsService.overrideActive }
 
     // arcshell's entry points (from its shell.qml), for keybinds:
     //   qs -p /usr/share/archangelos/shell ipc call launcher toggle
     //   qs -p /usr/share/archangelos/shell ipc call bar popout network
+    // ArchangelOS Settings: `qs -p /usr/share/archangelos/shell ipc call settings open <page>`
+    IpcHandler {
+        target: "settings"
+        function open(page: string): void { NSS.Shell.openSettings(page) }
+        function toggle(): void { NSS.Shell.settingsVisible = !NSS.Shell.settingsVisible }
+        function close(): void { NSS.Shell.settingsVisible = false }
+    }
     IpcHandler {
         target: "launcher"
         function toggle(): void { NSS.Shell.launcherVisible = !NSS.Shell.launcherVisible }
