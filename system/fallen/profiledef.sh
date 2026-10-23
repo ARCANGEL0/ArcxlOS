@@ -40,6 +40,7 @@ file_permissions=(
   ["/usr/lib/archangelos/axs-crypto"]="0:0:0755"
   ["/usr/lib/archangelos/axs-diag"]="0:0:0755"
   ["/usr/lib/archangelos/axs-tools"]="0:0:0755"
+  ["/usr/lib/archangelos/axs-clean"]="0:0:0755"
   ["/usr/lib/archangelos/power-mode"]="0:0:0755"
   ["/usr/bin/archangelos-welcome"]="0:0:0755"
   ["/usr/bin/archangelos-launcher"]="0:0:0755"
