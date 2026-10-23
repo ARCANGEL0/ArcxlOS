@@ -290,6 +290,9 @@ sleuthkit
 slowhttptest
 smali
 smartmontools
+pciutils
+dmidecode
+memtester
 smbmap
 sniffglue
 snmpcheck

@@ -37,7 +37,7 @@ Singleton {
     readonly property color accentSoft: alpha(accent, 0.16)
     readonly property color accentLine: alpha(accent, 0.55)
     readonly property color danger:     "#d96a6a"
-    readonly property color ok:         mix(accent, "#7fbf9a", 0.72)
+    readonly property color ok:         mix(accent, Qt.rgba(0.498, 0.749, 0.604, 1), 0.72)
 
     // --- type ---
     FontLoader { id: interFont;  source: Qt.resolvedUrl("../ns/assets/fonts/InterVariable.ttf") }

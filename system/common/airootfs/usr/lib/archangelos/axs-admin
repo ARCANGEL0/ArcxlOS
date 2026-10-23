@@ -12,6 +12,12 @@
 #   pkg-clean-cache | pkg-orphans | journal-vacuum
 #   locale-set LANG [FORMATS]
 #   mac-random 0|1
+#   mirrors-refresh | keyring-refresh | initramfs | db-check
+#   pacnew FILE keep|use               settle a .pacnew/.pacsave next to FILE
+#   diag-smart                         SMART data of every disk, one JSON object per line
+#   diag-smart-test DEV short|long     start a drive self-test
+#   diag-memtest MB LOOPS              memtester, last lines of its report
+#   diag-dmi                           memory modules, board and BIOS (dmidecode)
 set -u
 SELF=/usr/lib/archangelos/axs-admin
 
@@ -139,5 +145,61 @@ case "$verb" in
         fi
         systemctl reload NetworkManager 2>/dev/null || nmcli general reload 2>/dev/null
         echo ok ;;
+    mirrors-refresh)
+        command -v reflector >/dev/null || die "reflector isn't installed."
+        cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        reflector --latest 20 --protocol https --sort rate --age 24 --save /etc/pacman.d/mirrorlist 2>&1 | tail -n 3
+        [ "${PIPESTATUS[0]}" -eq 0 ] || { cp -f /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist; die "reflector failed; kept the old list."; }
+        echo "ok $(grep -c '^Server' /etc/pacman.d/mirrorlist)" ;;
+    keyring-refresh)
+        pacman-key --init >/dev/null 2>&1
+        pacman-key --populate archlinux >/dev/null 2>&1 || die "Couldn't load the Arch keyring."
+        echo ok ;;
+    initramfs)
+        command -v mkinitcpio >/dev/null || die "mkinitcpio isn't installed."
+        mkinitcpio -P 2>&1 | grep -E "==> (ERROR|WARNING|Image generation successful)" | tail -n 8
+        exit "${PIPESTATUS[0]}" ;;
+    db-check)
+        pacman -Dk 2>&1 | tail -n 20 ;;
+    pacnew)
+        f="${1:-}"; how="${2:-}"
+        [[ "$f" == /etc/* && "$f" != *..* ]] || die "Only files under /etc."
+        new=""; for x in "$f.pacnew" "$f.pacsave"; do [ -e "$x" ] && new="$x"; done
+        [ -n "$new" ] || die "Nothing to settle for $f."
+        case "$how" in
+            keep) rm -f -- "$new" ;;
+            use)  cp -a -- "$f" "$f.axs-old" 2>/dev/null; mv -f -- "$new" "$f" ;;
+            *) die "keep or use" ;;
+        esac
+        echo ok ;;
+    diag-smart)
+        command -v smartctl >/dev/null || { echo '{"missing":true}'; exit 0; }
+        smartctl --scan-open -j 2>/dev/null | python3 -c '
+import json, subprocess, sys
+for d in json.load(sys.stdin).get("devices", []):
+    o = subprocess.run(["smartctl", "-a", "-j", "-d", d.get("type", "auto"), d["name"]], capture_output=True, text=True).stdout
+    try: print(json.dumps(json.loads(o), separators=(",", ":")))
+    except ValueError: pass' ;;
+    diag-smart-test)
+        dev="${1:-}"; kind="${2:-short}"
+        [[ "$dev" =~ ^/dev/(sd[a-z]+|nvme[0-9]+(n[0-9]+)?|hd[a-z]+|vd[a-z]+)$ ]] || die "Bad device: $dev"
+        [[ "$kind" =~ ^(short|long)$ ]] || die "short or long"
+        smartctl -t "$kind" "$dev" 2>&1 | grep -iE "test will complete|please wait|testing has begun|not supported|error" | head -n 3 ;;
+    diag-memtest)
+        command -v memtester >/dev/null || die "memtester isn't installed."
+        mb="${1:-256}"; loops="${2:-1}"
+        [[ "$mb" =~ ^[0-9]+$ && "$mb" -ge 16 && "$mb" -le 65536 ]] || die "Bad size."
+        [[ "$loops" =~ ^[1-9]$ ]] || die "Bad loop count."
+        avail=$(( $(awk '/MemAvailable/ {print $2}' /proc/meminfo) / 1024 ))
+        [ "$mb" -lt $(( avail - 512 )) ] || die "Only ${avail} MB free — close some apps or test less."
+        memtester "${mb}M" "$loops" 2>&1 | tr '\r\b' '\n\n' | grep -E ":|Loop|Done|FAILURE|ok" | grep -v '^\s*$' | sed 's/  */ /g' | tail -n 40
+        exit "${PIPESTATUS[0]}" ;;
+    diag-dmi)
+        command -v dmidecode >/dev/null || die "dmidecode isn't installed."
+        dmidecode -t 16,17 2>/dev/null | awk -F': ' '
+            /^Memory Device/ { if (n) print row; row=""; n=1 }
+            /^\t(Size|Type|Speed|Configured Memory Speed|Manufacturer|Part Number|Locator|Form Factor|Rank):/ { gsub(/^\t/, "", $1); row = row $1 "=" $2 "|" }
+            /^\tMaximum Capacity:/ { print "max=" $2 } /^\tNumber Of Devices:/ { print "slots=" $2 }
+            END { if (n) print row }' | sed 's/^/dimm=/; s/^dimm=max=/max=/; s/^dimm=slots=/slots=/' ;;
     *) die "unknown: $verb" ;;
 esac
