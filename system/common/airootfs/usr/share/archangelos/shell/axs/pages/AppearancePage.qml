@@ -1,9 +1,12 @@
-// Appearance — accent, where colours come from, panel material and shape, and type.
-// Every control writes the shell's own preferences, which save themselves and apply live.
+// Appearance — accent, where colours come from, panel material and shape, type, and the system
+// cursor and icon themes. The shell controls write its own preferences; the cursor/icon theme
+// writes ~/.config/archangelos/appearance.conf (read at login) and applies live.
 import QtQuick
+import Quickshell
 import qs.axs
 import qs.axs.ui
 import qs.ns as NSRoot
+import qs.ns.services as NSS
 import "../../src" as Frame
 
 PageScaffold {
@@ -11,7 +14,94 @@ PageScaffold {
     property var meta
     group: "Personalize"
     title: "Appearance"
-    desc: "How the shell looks: its accent, its panels and its type."
+    desc: "How the shell looks: its accent, panels, type, cursor and icons."
+
+    readonly property string home: Quickshell.env("HOME") || ""
+    readonly property string conf: (Quickshell.env("XDG_CONFIG_HOME") || (page.home + "/.config")) + "/archangelos/appearance.conf"
+    property var cursorThemes: []
+    property var iconThemes: []
+    property string curCursor: ""
+    property string curIcon: ""
+    property int cursorSize: 24
+    property bool themesLoaded: false
+    property string busy: ""
+    property string notice: ""
+    property string error: ""
+
+    Cmd { id: tcmd }
+    function loadThemes() {
+        tcmd.sh('paths="/usr/share/icons $HOME/.local/share/icons $HOME/.icons"; '
+              + 'echo "--cursors"; for d in $paths; do [ -d "$d" ] || continue; for t in "$d"/*/; do [ -d "${t}cursors" ] && basename "$t"; done; done | sort -u; '
+              + 'echo "--icons"; for d in $paths; do [ -d "$d" ] || continue; for t in "$d"/*/; do n=$(basename "$t"); '
+              + 'case "$n" in hicolor|default|locolor) continue;; esac; [ -f "${t}index.theme" ] || continue; '
+              + 'grep -qiE "^Directories=.*(apps|actions|places|devices|mimetypes|status|[0-9]+x[0-9]+|scalable)" "${t}index.theme" && echo "$n"; done; done | sort -u; '
+              + 'echo "--cur"; . "$1" 2>/dev/null; '
+              + 'echo "cursor=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d \"\\x27\" || echo "$CURSOR_THEME")"; '
+              + 'echo "icon=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d \"\\x27\" || echo "$ICON_THEME")"; '
+              + 'echo "size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null || echo "${CURSOR_SIZE:-24}")"', [page.conf], (c, o) => {
+            const sec = (a, b) => { const i = o.indexOf(a), j = b ? o.indexOf(b) : o.length; return i < 0 ? "" : o.slice(i + a.length, j < 0 ? o.length : j); };
+            page.cursorThemes = sec("--cursors", "--icons").split("\n").filter(l => l.trim());
+            page.iconThemes = sec("--icons", "--cur").split("\n").filter(l => l.trim());
+            for (const l of sec("--cur").split("\n")) { const i = l.indexOf("="); if (i < 0) continue; const k = l.slice(0, i), v = l.slice(i + 1).trim();
+                if (k === "cursor" && v) page.curCursor = v; if (k === "icon" && v) page.curIcon = v; if (k === "size" && v) page.cursorSize = parseInt(v) || 24; }
+            page.themesLoaded = true;
+        });
+    }
+    Component.onCompleted: loadThemes()
+
+    function setKV(key, val, after) {
+        tcmd.sh('conf="$1"; mkdir -p "$(dirname "$conf")"; touch "$conf"; t="$(mktemp)"; grep -v "^$2=" "$conf" > "$t" 2>/dev/null; printf "%s=\\"%s\\"\\n" "$2" "$3" >> "$t"; mv "$t" "$conf"', [page.conf, key, val], after);
+    }
+    function gtkSet(key, val) {
+        tcmd.sh('for v in 3.0 4.0; do f="$HOME/.config/gtk-$v/settings.ini"; mkdir -p "$(dirname "$f")"; '
+              + '[ -f "$f" ] || printf "[Settings]\\n" > "$f"; grep -q "^\\[Settings\\]" "$f" || printf "[Settings]\\n" >> "$f"; '
+              + 'if grep -q "^$1=" "$f"; then sed -i "s|^$1=.*|$1=$2|" "$f"; else sed -i "/^\\[Settings\\]/a $1=$2" "$f"; fi; done', [key, val]);
+    }
+    function applyCursor(theme) {
+        page.curCursor = theme;
+        page.setKV("CURSOR_THEME", theme);
+        page.gtkSet("gtk-cursor-theme-name", theme);
+        Quickshell.execDetached(["sh", "-c",
+            'mkdir -p "$HOME/.config/environment.d"; printf "XCURSOR_THEME=%s\\n" "$1" > "$HOME/.config/environment.d/61-cursor-theme.conf"; '
+            + 'gsettings set org.gnome.desktop.interface cursor-theme "$1" 2>/dev/null; '
+            + 'hyprctl setcursor "$1" "$2" >/dev/null 2>&1; hyprctl keyword env XCURSOR_THEME,"$1" >/dev/null 2>&1; true', "sh", theme, String(page.cursorSize)]);
+        page.flash("Cursor theme changed.");
+    }
+    function applyIcon(theme) {
+        page.curIcon = theme;
+        page.setKV("ICON_THEME", theme);
+        page.gtkSet("gtk-icon-theme-name", theme);
+        Quickshell.execDetached(["sh", "-c", 'gsettings set org.gnome.desktop.interface icon-theme "$1" 2>/dev/null; true', "sh", theme]);
+        page.flash("Icon theme changed.");
+    }
+    function flash(t) { page.notice = t; flashT.restart(); }
+    Timer { id: flashT; interval: 4000; onTriggered: page.notice = "" }
+
+    FilePick {
+        id: themePick
+        title: "Choose a theme archive"
+        filters: ["Theme archives (*.tar.gz *.tgz *.tar.xz *.txz *.tar.bz2 *.tar *.zip)", "All files (*)"]
+        folder: Quickshell.env("XDG_DOWNLOAD_DIR") || (page.home + "/Downloads")
+        onPicked: (p) => page.install(p)
+    }
+    function install(archive) {
+        page.busy = "install"; page.error = ""; page.notice = "";
+        tcmd.sh('a="$1"; dest="$HOME/.local/share/icons"; mkdir -p "$dest"; tmp="$(mktemp -d)"; '
+              + 'case "$a" in *.tar.gz|*.tgz) tar -xzf "$a" -C "$tmp" ;; *.tar.xz|*.txz) tar -xJf "$a" -C "$tmp" ;; '
+              + '*.tar.bz2) tar -xjf "$a" -C "$tmp" ;; *.tar) tar -xf "$a" -C "$tmp" ;; '
+              + '*.zip) command -v unzip >/dev/null && unzip -q "$a" -d "$tmp" || bsdtar -xf "$a" -C "$tmp" ;; '
+              + '*) rm -rf "$tmp"; echo "ERR unsupported archive"; exit 2 ;; esac || { rm -rf "$tmp"; echo "ERR could not extract"; exit 1; }; '
+              + 'n=0; move() { mv -f "$1" "$dest/" 2>/dev/null && n=$((n+1)); }; '
+              + 'for d in "$tmp"/*/; do [ -d "$d" ] || continue; '
+              + 'if [ -f "${d}index.theme" ] || [ -d "${d}cursors" ]; then move "$d"; '
+              + 'else for e in "$d"*/; do [ -d "$e" ] && { [ -f "${e}index.theme" ] || [ -d "${e}cursors" ]; } && move "$e"; done; fi; done; '
+              + 'rm -rf "$tmp"; [ "$n" -gt 0 ] && echo "OK $n" || echo "ERR no theme found in the archive"', [archive], (c, o) => {
+            page.busy = "";
+            const r = o.trim();
+            if (r.startsWith("OK")) { page.flash("Installed " + r.split(" ")[1] + " theme(s) — pick it below."); page.loadThemes(); }
+            else page.error = r.replace(/^ERR /, "") || "Couldn't install that theme.";
+        });
+    }
 
     readonly property bool fromWallpaper: !Frame.PrefsService.dynamicThemeOverride
     readonly property var accents: [
@@ -158,6 +248,34 @@ PageScaffold {
                 current: keys.indexOf(NSRoot.Config.fontKey)
                 onPicked: (i) => NSRoot.Config.fontPreset = keys[i]
             }
+        }
+    }
+
+    Section {
+        title: "Cursor & icons"
+        note: page.notice
+        Label { visible: page.error !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.error; color: Ax.danger; font.pixelSize: Ax.fsSmall
+                property bool topDivider: false; leftPadding: Ax.pad; topPadding: 10 }
+        SRow {
+            icon: "mouse"; title: "Cursor theme"; desc: "The mouse pointer used across the desktop and apps"
+            AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: page.cursorThemes
+                       current: Math.max(0, page.cursorThemes.indexOf(page.curCursor))
+                       onPicked: (i) => page.applyCursor(page.cursorThemes[i]) }
+        }
+        SRow {
+            icon: "apps"; title: "Icon theme"; desc: "Icons for apps, files and folders (GTK applications)"
+            AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: page.iconThemes
+                       current: Math.max(0, page.iconThemes.indexOf(page.curIcon))
+                       onPicked: (i) => page.applyIcon(page.iconThemes[i]) }
+        }
+        SRow {
+            icon: "download"; title: "Install a theme"
+            desc: page.busy === "install" ? "Installing…" : "Add a cursor or icon theme from an archive you downloaded (.tar.gz, .tar.xz or .zip)"
+            AxButton { text: "Choose file…"; kind: "primary"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: themePick.open() }
+        }
+        SRow {
+            icon: "straighten"; title: "Pointer size"; desc: "Set a larger cursor in Accessibility"
+            clickable: true; chevron: true; onClicked: NSS.Shell.openSettings("accessibility")
         }
     }
 }

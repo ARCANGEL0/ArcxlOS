@@ -53,11 +53,22 @@ hl.on("hyprland.start", function()
         hl.exec_cmd("bash -c 'pgrep -f \"[q]s -p /usr/share/archangelos/shell\" >/dev/null || exec qs -p /usr/share/archangelos/shell'")
     end
     hl.exec_cmd("/usr/bin/archangelos-wallpaper boot")
-    -- default cursor: Future-dark (compositor cursor + toolkit hints)
-    hl.exec_cmd("hyprctl setcursor Future-dark-cursors 24")
-    hl.exec_cmd("hyprctl keyword env XCURSOR_THEME,Future-dark-cursors")
-    hl.exec_cmd("hyprctl keyword env XCURSOR_SIZE,24")
-    hl.exec_cmd("bash -c 'command -v gsettings >/dev/null && gsettings set org.gnome.desktop.interface icon-theme Zafiro-Nord-Dark-Black; gsettings set org.gnome.desktop.interface cursor-theme Future-dark-cursors; true'")
+    -- Cursor and icon theme. The defaults are Future-dark / Zafiro, but a choice saved from
+    -- Settings > Appearance (and the size from Accessibility) in appearance.conf wins, so it
+    -- survives a sign-out instead of being reset here every login.
+    hl.exec_cmd([[bash -c '
+        conf="${XDG_CONFIG_HOME:-$HOME/.config}/archangelos/appearance.conf"
+        CURSOR_THEME=Future-dark-cursors; ICON_THEME=Zafiro-Nord-Dark-Black; CURSOR_SIZE=24
+        [ -f "$conf" ] && . "$conf" 2>/dev/null
+        hyprctl setcursor "$CURSOR_THEME" "$CURSOR_SIZE"
+        hyprctl keyword env XCURSOR_THEME,"$CURSOR_THEME"
+        hyprctl keyword env XCURSOR_SIZE,"$CURSOR_SIZE"
+        if command -v gsettings >/dev/null; then
+            gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
+            gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
+            gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE"
+        fi
+        true']])
     hl.exec_cmd("bash -c 'pgrep -x hypridle >/dev/null || hypridle'")
     -- password prompts for Settings (users, packages, OnionLayer) and anything else using polkit
     hl.exec_cmd("bash -c 'pidof polkit-gnome-authentication-agent-1 polkit-mate-authentication-agent-1 hyprpolkitagent polkit-kde-authentication-agent-1 >/dev/null || for a in /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 /usr/lib/mate-polkit/polkit-mate-authentication-agent-1; do [ -x \"$a\" ] && exec \"$a\"; done'")
