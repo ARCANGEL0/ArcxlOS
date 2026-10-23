@@ -44,6 +44,9 @@ Singleton {
             property var vaults: []
             // Windows & workspaces: user window rules [{ match, kind(class|title), float, opacity, workspace }]
             property var wmRules: []
+            // Displays: night light (warm colours on a schedule)
+            property string nightMode: "off"    // off | on | auto
+            property int nightTemp: 4500        // Kelvin
             // Accessibility
             property int cursorSize: 24
             property real textScale: 1.0

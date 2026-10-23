@@ -2,6 +2,8 @@
 // Changes go to Hyprland at once and are saved by ArcShell's display service, so they survive a
 // restart.
 import QtQuick
+import Quickshell
+import Quickshell.Wayland
 import qs.axs
 import qs.axs.ui
 import qs.ns.services as NSS
@@ -18,14 +20,88 @@ PageScaffold {
     readonly property var sel: mons.find(m => m.name === selName) ?? mons.find(m => m.focused) ?? mons[0] ?? null
     readonly property var scales: [0.75, 1, 1.25, 1.333333, 1.5, 1.6, 1.75, 2, 2.5, 3]
     readonly property var rotations: ["Landscape", "Portrait", "Landscape (flipped)", "Portrait (flipped)"]
+    readonly property var selColor: page.sel ? NSS.Display.colorOf(page.sel) : ({ bitdepth: 8, hdr: false })
 
-    Component.onCompleted: { NSS.Display.active = true; NSS.Display.refresh(); sunProbe.sh("command -v hyprsunset >/dev/null && echo yes; pgrep -x hyprsunset >/dev/null && echo on", [], (c, o) => { page.hasSunset = o.indexOf("yes") >= 0; page.sunOn = o.indexOf("on") >= 0; }); }
+    // ── trial / revert ───────────────────────────────────────────────────────────
+    // A change that could black the screen out (resolution, refresh, scale, rotation, colour) is
+    // applied on trial: if you don't confirm within 15 seconds it's put back the way it was.
+    property var trial: null                 // { name, before }
+    property int trialSecs: 0
+    function snapshot(m) { return { width: m.width, height: m.height, refreshRate: m.refreshRate, scale: m.scale, transform: m.transform, color: NSS.Display.colorOf(m) }; }
+    function change(name, patch, colorPatch) {
+        const m = NSS.Display.byName(name); if (!m) return;
+        if (!page.trial || page.trial.name !== name) page.trial = { name: name, before: page.snapshot(m) };
+        if (colorPatch) NSS.Display.setColor(name, colorPatch);
+        NSS.Display.applyTrial(name, patch || {});
+        page.trialSecs = 15; trialTick.restart();
+    }
+    function keepTrial() { NSS.Display.commit(); page.trial = null; page.trialSecs = 0; trialTick.stop(); }
+    function revertTrial() {
+        if (!page.trial) return;
+        const b = page.trial.before, name = page.trial.name;
+        NSS.Display.setColor(name, b.color);
+        NSS.Display.applyTrial(name, { width: b.width, height: b.height, refreshRate: b.refreshRate, scale: b.scale, transform: b.transform });
+        NSS.Display.commit();
+        page.trial = null; page.trialSecs = 0; trialTick.stop();
+    }
+    Timer { id: trialTick; interval: 1000; repeat: true; onTriggered: { page.trialSecs--; if (page.trialSecs <= 0) page.revertTrial(); } }
+
+    // ── identify ───────────────────────────────────────────────────────────────────
+    property bool identifying: false
+    Timer { id: identifyTimer; interval: 2500; onTriggered: page.identifying = false }
+    function identify() { page.identifying = true; identifyTimer.restart(); }
+    Variants {
+        model: page.identifying ? Quickshell.screens : []
+        PanelWindow {
+            id: idWin
+            required property var modelData
+            screen: modelData
+            anchors { top: true; left: true; right: true; bottom: true }
+            exclusiveZone: 0
+            color: "transparent"
+            WlrLayershell.layer: WlrLayer.Overlay
+            Rectangle {
+                anchors.centerIn: parent
+                width: 260; height: 160; radius: 20
+                color: Ax.alpha(Ax.base, 0.9); border.width: 2; border.color: Ax.accent
+                Column {
+                    anchors.centerIn: parent; spacing: 8
+                    Label { anchors.horizontalCenter: parent.horizontalCenter; text: idWin.modelData.name; font.pixelSize: 44; font.weight: Font.DemiBold; color: Ax.accent }
+                    Label { anchors.horizontalCenter: parent.horizontalCenter; mono: true; font.pixelSize: Ax.fsBody; color: Ax.subtext
+                            text: idWin.modelData.width + "×" + idWin.modelData.height }
+                }
+            }
+        }
+    }
+
+    Component.onCompleted: { NSS.Display.active = true; NSS.Display.refresh(); sunProbe.sh("command -v hyprsunset >/dev/null && echo yes", [], (c, o) => { page.hasSunset = o.indexOf("yes") >= 0; }); }
     Component.onDestruction: NSS.Display.active = false
 
     // Logical size (what the layout sees): rotated and divided by scale.
     function lw(m) { return (m.transform % 2 ? m.height : m.width) / m.scale; }
     function lh(m) { return (m.transform % 2 ? m.width : m.height) / m.scale; }
     function nice(s) { return parseFloat(Number(s).toFixed(2)) + "×"; }
+
+    // ── keep-these-settings bar ──────────────────────────────────────────────────
+    Rectangle {
+        visible: page.trial !== null
+        width: parent.width; height: 60
+        radius: Ax.radius; color: Ax.alpha(Ax.accent, 0.1); border.width: 1; border.color: Ax.accentLine
+        Row {
+            anchors.left: parent.left; anchors.leftMargin: 18; anchors.verticalCenter: parent.verticalCenter; spacing: 12
+            Icon { name: "help"; size: 22; color: Ax.accent; anchors.verticalCenter: parent.verticalCenter }
+            Column {
+                anchors.verticalCenter: parent.verticalCenter; spacing: 2
+                Label { text: "Keep these display settings?"; font.weight: Font.Medium }
+                Label { text: "Reverting in " + page.trialSecs + " second" + (page.trialSecs === 1 ? "" : "s") + " if you don't."; font.pixelSize: Ax.fsSmall; color: Ax.muted }
+            }
+        }
+        Row {
+            anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter; spacing: 8
+            AxButton { text: "Revert"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.revertTrial() }
+            AxButton { text: "Keep"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.keepTrial() }
+        }
+    }
 
     // ── arrangement ────────────────────────────────────────────────────────────
     Rectangle {
@@ -38,6 +114,7 @@ PageScaffold {
         clip: true
         CornerTicks { len: 10; anchors.margins: 12 }
         Label { x: 20; y: 16; caption: true; text: page.mons.length > 1 ? "Drag to arrange" : "Arrangement" }
+        AxButton { anchors.right: parent.right; anchors.rightMargin: 16; y: 12; icon: "pageview"; text: "Identify"; onClicked: page.identify() }
 
         readonly property var live: page.mons.filter(m => !m.disabled)
         readonly property real minX: Math.min(...live.map(m => m.x), 0)
@@ -136,7 +213,7 @@ PageScaffold {
                 onPicked: (i) => {
                     const r = opts[i];
                     const hz = NSS.Display.rates(page.sel, r.key)[0] ?? page.sel.refreshRate;
-                    NSS.Display.apply(page.sel.name, { width: r.w, height: r.h, refreshRate: hz });
+                    page.change(page.sel.name, { width: r.w, height: r.h, refreshRate: hz });
                 }
             }
         }
@@ -147,7 +224,7 @@ PageScaffold {
                 readonly property var opts: page.sel ? NSS.Display.rates(page.sel, page.sel.width + "x" + page.sel.height) : []
                 model: opts.map(hz => NSS.Display.trim(hz, 2) + " Hz")
                 current: page.sel ? opts.findIndex(hz => Math.abs(hz - page.sel.refreshRate) < 0.05) : -1
-                onPicked: (i) => NSS.Display.apply(page.sel.name, { refreshRate: opts[i] })
+                onPicked: (i) => page.change(page.sel.name, { refreshRate: opts[i] })
             }
         }
         SRow {
@@ -156,7 +233,7 @@ PageScaffold {
                 width: 220; anchors.verticalCenter: parent.verticalCenter
                 model: page.scales.map(s => page.nice(s) + (s === 1 ? "  (100%)" : "  (" + Math.round(s * 100) + "%)"))
                 current: page.sel ? page.scales.findIndex(s => Math.abs(s - page.sel.scale) < 0.01) : -1
-                onPicked: (i) => NSS.Display.apply(page.sel.name, { scale: page.scales[i] })
+                onPicked: (i) => page.change(page.sel.name, { scale: page.scales[i] })
             }
         }
         SRow {
@@ -165,13 +242,24 @@ PageScaffold {
                 width: 220; anchors.verticalCenter: parent.verticalCenter
                 model: page.rotations
                 current: page.sel ? (page.sel.transform % 4) : -1
-                onPicked: (i) => NSS.Display.apply(page.sel.name, { transform: i })
+                onPicked: (i) => page.change(page.sel.name, { transform: i })
             }
         }
         SRow {
             icon: "sync"; title: "Adaptive sync"; desc: "VRR / FreeSync / G-Sync, for smoother games and video"
             AxSwitch { anchors.verticalCenter: parent.verticalCenter; checked: page.sel ? !!page.sel.vrr : false
                        onToggled: (on) => NSS.Display.apply(page.sel.name, { vrr: on }) }
+        }
+        SRow {
+            icon: "palette"; title: "Colour depth"; desc: "10-bit (deep colour) shows smoother gradients, if the screen and cable support it"
+            AxSegment { options: ["8-bit", "10-bit"]; current: page.selColor.bitdepth === 10 ? 1 : 0
+                        anchors.verticalCenter: parent.verticalCenter
+                        onPicked: (i) => page.change(page.sel.name, null, { bitdepth: i ? 10 : 8 }) }
+        }
+        SRow {
+            icon: "hdr_on"; title: "HDR"; desc: "High dynamic range on supported screens — experimental; if it looks washed out, turn it back off"
+            AxSwitch { anchors.verticalCenter: parent.verticalCenter; checked: page.selColor.hdr
+                       onToggled: (on) => page.change(page.sel.name, null, on ? { hdr: true, bitdepth: 10 } : { hdr: false }) }
         }
         SRow {
             visible: page.mons.length > 1
@@ -188,13 +276,8 @@ PageScaffold {
 
     // ── light ──────────────────────────────────────────────────────────────────
     property bool hasSunset: false
-    property bool sunOn: false
-    property int sunTemp: 4500
     Cmd { id: sunProbe }
-    function sunset(on) {
-        page.sunOn = on;
-        sunProbe.sh(on ? 'pkill -x hyprsunset; sleep 0.2; setsid -f hyprsunset -t "$1" >/dev/null 2>&1' : 'pkill -x hyprsunset', [String(page.sunTemp)], null);
-    }
+    readonly property string nightMode: Store.data.nightMode
     Section {
         visible: NSS.Brightness.available || page.hasSunset
         title: "Light"
@@ -207,15 +290,24 @@ PageScaffold {
         }
         SRow {
             visible: page.hasSunset
-            icon: "nightlight"; title: "Night light"; desc: "Warmer colours that are easier on the eyes after dark"
-            AxSwitch { anchors.verticalCenter: parent.verticalCenter; checked: page.sunOn; onToggled: (on) => page.sunset(on) }
+            icon: "nightlight"; title: "Night light"
+            desc: page.nightMode === "auto"
+                    ? (NightLight.sunsetText ? "Warm from sunset (" + NightLight.sunsetText + ") to sunrise (" + NightLight.sunriseText + ")" : "Automatic — set your region in Date & Time so it knows sunset")
+                    : page.nightMode === "on" ? "Warmer colours, all the time" : "Warmer colours that are easier on the eyes after dark"
+            AxSegment { options: ["Off", "On", "Automatic"]; anchors.verticalCenter: parent.verticalCenter
+                        current: page.nightMode === "on" ? 1 : page.nightMode === "auto" ? 2 : 0
+                        onPicked: (i) => Store.data.nightMode = ["off", "on", "auto"][i] }
         }
         SRow {
-            visible: page.hasSunset && page.sunOn
-            icon: "thermostat"; title: "Warmth"
+            visible: page.hasSunset && page.nightMode !== "off"
+            icon: "thermostat"; title: "Warmth"; desc: "How warm the screen gets — lower is warmer"
             AxSlider { width: 280; anchors.verticalCenter: parent.verticalCenter
-                       value: page.sunTemp; from: 2500; to: 6500; stepSize: 100; suffix: " K"
-                       onReleased: (v) => { page.sunTemp = Math.round(v); page.sunset(true); } }
+                       value: Store.data.nightTemp; from: 2500; to: 6500; stepSize: 100; suffix: " K"
+                       onMoved: (v) => Store.data.nightTemp = Math.round(v) }
+        }
+        SRow {
+            visible: !page.hasSunset
+            icon: "info"; dim: true; title: "Install hyprsunset for night light"; desc: "The night-light package isn't present on this system."
         }
     }
 }
