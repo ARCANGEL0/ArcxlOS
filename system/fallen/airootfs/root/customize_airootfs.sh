@@ -304,6 +304,12 @@ if [ -d /home/liveuser ]; then
   rm -rf /home/liveuser/.cache/yay/* 2>/dev/null || true
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
+
+if command -v pip >/dev/null 2>&1; then
+  pip install --no-cache-dir --break-system-packages --root-user-action=ignore mitsu \
+    && echo "  [ok] mitsu $(mitsu --version 2>/dev/null || echo installed)" \
+    || echo "  [warn] could not install mitsu from PyPI" >&2
+fi
 for h in /home/liveuser /root; do
   rm -rf "$h"/.cache/* "$h"/.cargo "$h"/.rustup "$h"/go "$h"/.npm "$h"/.nuget \
          "$h"/.cabal "$h"/.ghcup "$h"/.stack "$h"/.gradle "$h"/.m2 "$h"/.dotnet \
