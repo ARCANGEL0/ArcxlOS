@@ -45,7 +45,11 @@ Singleton {
             { id: "input", label: "Keyboard & Mouse", icon: "keyboard", page: "InputPage",
               desc: "Layouts, repeat rate, pointer and touchpad", keys: "keyboard layout mouse touchpad pointer speed" },
             { id: "power", label: "Power & Battery", icon: "battery_charging_full", page: "PowerPage",
-              desc: "Battery, power profile and sleep", keys: "battery power profile performance sleep suspend" } ] },
+              desc: "Battery, power profile and sleep", keys: "battery power profile performance sleep suspend" },
+            { id: "graphics", label: "Graphics", icon: "developer_board", page: "GraphicsPage",
+              desc: "GPUs, drivers, Vulkan and switchable graphics", keys: "gpu graphics driver nvidia amd intel vulkan opengl mesa envycontrol hybrid optimus prime" },
+            { id: "printers", label: "Printers & scanners", icon: "print", page: "PrintersPage",
+              desc: "Add printers, queues and scanners", keys: "printer print cups scanner scan ipp queue driver ppd" } ] },
         { name: "Personalize", pages: [
             { id: "appearance", label: "Appearance", icon: "palette", page: "AppearancePage",
               desc: "Accent, panels, corners and type", keys: "theme accent color colour dark light blur opacity font radius" },
@@ -53,6 +57,8 @@ Singleton {
               desc: "Images, video wallpapers and colours from them", keys: "background wallpaper video" },
             { id: "desktop", label: "Desktop & Shell", icon: "dashboard_customize", page: "DesktopPage",
               desc: "Bar, island, panels, OSD and motion", keys: "bar dock island hover osd visualiser animations clock" },
+            { id: "windows", label: "Windows & workspaces", icon: "grid_view", page: "WindowsPage",
+              desc: "Gaps, borders, animations, tearing, rules", keys: "window workspace hyprland gaps borders rounding opacity blur shadow animations tearing vrr tiling layout rules float" },
             { id: "notifications", label: "Notifications", icon: "notifications", page: "NotificationsPage",
               desc: "Do not disturb and per-app rules", keys: "notification dnd do not disturb toast" } ] },
         { name: "System", pages: [
@@ -69,7 +75,9 @@ Singleton {
             { id: "updates", label: "Updates", icon: "system_update", page: "UpdatesPage",
               desc: "System and app updates", keys: "update upgrade pacman packages" },
             { id: "shortcuts", label: "Keyboard shortcuts", icon: "keyboard_command_key", page: "ShortcutsPage",
-              desc: "Every keybind, changed or added", keys: "keybinds shortcuts hotkeys keys bind super remap hyprland" } ] },
+              desc: "Every keybind, changed or added", keys: "keybinds shortcuts hotkeys keys bind super remap hyprland" },
+            { id: "boot", label: "Boot & startup", icon: "restart_alt", page: "BootPage",
+              desc: "Boot menu, kernels, splash, auto-login", keys: "boot grub systemd-boot bootloader kernel linux lts zen splash plymouth autologin sddm login timeout" } ] },
         { name: "Maintenance", pages: [
             { id: "maintenance", label: "Packages & System", icon: "build", page: "MaintenancePage",
               desc: "Orphans, cache, config files, mirrors", keys: "maintenance packages orphans cache pacnew pacsave mirrors reflector keyring initramfs mkinitcpio integrity clean" },
@@ -113,7 +121,21 @@ Singleton {
             { id: "hardening", label: "Hardening", icon: "security", page: "HardeningPage",
               desc: "AppArmor, kernel and boot", keys: "hardening apparmor sysctl kernel secure boot root ptrace" },
             { id: "audit", label: "Audit", icon: "fact_check", page: "AuditPage",
-              desc: "Lynis and rootkit scans", keys: "audit lynis rkhunter rootkit scan vulnerability" } ] }
+              desc: "Lynis and rootkit scans", keys: "audit lynis rkhunter rootkit scan vulnerability" } ] },
+        { name: "Gaming", pages: [
+            { id: "gaming", label: "Gaming", icon: "sports_esports", page: "GamingPage", editions: ["gaming"],
+              desc: "Game mode, launchers, overlay, controllers", keys: "game gaming steam lutris heroic proton wine mangohud gamescope gamemode controller gamepad fps overlay vkbasalt" } ] },
+        { name: "Developer", pages: [
+            { id: "virtualization", label: "Virtualization", icon: "dns", page: "VirtualizationPage",
+              desc: "Virtual machines and containers", keys: "virtualization vm libvirt qemu kvm virt-manager docker podman container" },
+            { id: "devtools", label: "Developer tools", icon: "code", page: "DevToolsPage",
+              desc: "Shell, editor, git, toolchains, env", keys: "developer shell zsh bash editor git toolchain node python rust go environment variables" } ] },
+        { name: "Accessibility", pages: [
+            { id: "accessibility", label: "Accessibility", icon: "accessibility_new", page: "AccessibilityPage",
+              desc: "Text size, pointer, motion, colour, reading", keys: "accessibility a11y text size large cursor pointer motion contrast colour color filter grayscale invert screen reader orca keyboard" } ] },
+        { name: "Fallen", pages: [
+            { id: "toolrack", label: "Tool rack", icon: "swords", page: "ToolRackPage", editions: ["fallen"],
+              desc: "The installed security tools, by category", keys: "tools rack blackarch security pentest redteam wheel arsenal category launch" } ] }
     ]
 
     function visible(p) { return !p.editions || p.editions.indexOf(root.edition) >= 0; }

@@ -340,6 +340,11 @@ pkgconf
 plasma-systemmonitor
 plymouth
 print-manager
+mesa-utils
+vulkan-tools
+system-config-printer
+cups-pdf
+cups
 python
 remmina
 ruby

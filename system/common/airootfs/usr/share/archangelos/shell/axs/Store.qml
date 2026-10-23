@@ -42,6 +42,13 @@ Singleton {
             property string luksPbkdf: "argon2id"
             // gocryptfs vaults: [{ name, cipher, mount }]
             property var vaults: []
+            // Windows & workspaces: user window rules [{ match, kind(class|title), float, opacity, workspace }]
+            property var wmRules: []
+            // Accessibility
+            property int cursorSize: 24
+            property real textScale: 1.0
+            property bool reduceMotion: false
+            property string colorFilter: ""     // "" | grayscale | invert | highcontrast
         }
     }
     Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", root.dir])
