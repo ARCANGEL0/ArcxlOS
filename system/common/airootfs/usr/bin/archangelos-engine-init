@@ -325,4 +325,21 @@ JSONEOF
   log "seeded default appearance (glass + amoled)"
 fi
 
+# Alternate desktop shells (Settings > Desktop & Shell). Each ships read-only under
+# /usr/share/archangelos/themes/<name>; copy it into the user's theme dir (writable, since the
+# shells generate CSS and link node_modules at runtime) so the picker can switch to it. Copied
+# only when absent, so a user's edits survive a re-bake. ArcShell stays the default (no .active).
+themes_src="/usr/share/archangelos/themes"
+if [ -d "$themes_src" ]; then
+  themes_dir="$hypr_dir/themes"
+  mkdir -p "$themes_dir"
+  for t in "$themes_src"/*/; do
+    [ -d "$t" ] || continue
+    name="$(basename "$t")"
+    if [ ! -e "$themes_dir/$name" ]; then
+      cp -a "$t" "$themes_dir/$name" && log "seeded desktop shell: $name"
+    fi
+  done
+fi
+
 log "desktop baked into $HOME_DIR (release $RELEASE_ID)"

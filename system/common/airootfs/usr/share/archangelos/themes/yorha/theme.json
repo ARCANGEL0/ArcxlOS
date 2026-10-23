@@ -1,0 +1,8 @@
+{
+  "name": "YoRHa",
+  "description": "A NieR:Automata rice — khaki panels, hand-drawn workspace tiles and an AGS bar. Replaces ArcShell while active.",
+  "preview": "preview.png",
+  "keybinds": true,
+  "start": "bash \"$HOME/.config/hypr/themes/yorha/scripts/launch\"",
+  "stop": "bash \"$HOME/.config/hypr/themes/yorha/scripts/stop\""
+}
