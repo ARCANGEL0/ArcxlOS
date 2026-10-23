@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Mitsu
+GenericName=Red-team companion
+Comment=Guided and autonomous pentest framework client
+Exec=mitsu
+Icon=utilities-terminal
+Terminal=true
+Categories=Network;Security;Exploitation;
+Keywords=redteam;red team;pentest;security;mitsu;framework;exploit;

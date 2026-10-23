@@ -322,6 +322,15 @@ if [ -d /home/liveuser ]; then
   rm -rf /home/liveuser/.cache/yay/* 2>/dev/null || true
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
+
+# ArchangelOS Fallen: Mitsu — the project's own red-team companion, published to PyPI
+# (pip install mitsu). Installed system-wide so `mitsu` is on PATH for the live user.
+# Best-effort: a PyPI outage must not abort the build.
+if command -v pip >/dev/null 2>&1; then
+  pip install --no-cache-dir --break-system-packages --root-user-action=ignore mitsu \
+    && echo "  [ok] mitsu $(mitsu --version 2>/dev/null || echo installed)" \
+    || echo "  [warn] could not install mitsu from PyPI" >&2
+fi
 # AX slim: drop the toolchain caches the AUR source builds leave behind (cargo, rustup,
 # go, npm, NuGet, cabal, gradle, pip) — otherwise they ship inside the ISO.
 for h in /home/liveuser /root; do
