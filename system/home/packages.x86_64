@@ -70,6 +70,9 @@ rsync
 sdparm
 sg3_utils
 smartmontools
+pciutils
+dmidecode
+memtester
 sof-firmware
 squashfs-tools
 sudo

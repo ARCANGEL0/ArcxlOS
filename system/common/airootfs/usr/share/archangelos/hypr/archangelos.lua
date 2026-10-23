@@ -31,6 +31,20 @@ end
 -- Way back to ArcShell from any theme, even one that brings no keybinds of its own.
 hl.bind("SUPER + CTRL + ALT + A", hl.dsp.exec_cmd("bash -c 'archangelos-shell use archangelos --now'"), { description = "Back to ArcShell" })
 
+-- Shortcuts added in Settings > Keyboard shortcuts (any shell): each runs a command.
+do
+    local cfg = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
+    local ok, user = pcall(dofile, cfg .. "/archangelos/hypr/keys.lua")
+    if ok and type(user) == "table" then
+        for _, b in ipairs(user.custom or {}) do
+            if type(b.keys) == "string" and type(b.cmd) == "string" then
+                local fine, err = pcall(hl.bind, b.keys, hl.dsp.exec_cmd(b.cmd), { description = b.description or b.cmd })
+                if not fine then print("archangelos: shortcut " .. b.keys .. " skipped: " .. tostring(err)) end
+            end
+        end
+    end
+end
+
 -- Startup: launch the desktop shell, set the ArchangelOS wallpaper, apply the default cursor/icon theme,
 -- and ensure the idle-lock daemon runs.
 hl.on("hyprland.start", function()
