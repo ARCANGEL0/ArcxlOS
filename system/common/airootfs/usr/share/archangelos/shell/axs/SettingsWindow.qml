@@ -23,6 +23,7 @@ FloatingWindow {
     // created with the shell, so automatic time zone keeps working with Settings closed
     readonly property bool geoAuto: Geo.auto
     readonly property var janitor: Janitor
+    readonly property var nightLight: NightLight   // kept alive so night light runs on its schedule
     property string pageId: "profile"
     property string query: ""
     readonly property var current: Registry.find(win.pageId) ?? Registry.find("profile")

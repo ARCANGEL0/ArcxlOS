@@ -60,6 +60,20 @@ Singleton {
     function trim(n, digits) {
         return parseFloat(Number(n).toFixed(digits === undefined ? 2 : digits)).toString();
     }
+    // Colour depth / HDR is a per-monitor intent kept for the session (Hyprland doesn't report a
+    // "bitdepth" field back, only currentFormat), so remember it and fold it into every rule we
+    // write — that way it survives both a resolution change and, through the file, a reboot.
+    property var colorByName: ({})
+    function colorOf(m) {
+        const c = root.colorByName[m.name] || {};
+        const tenBit = /2101010/.test(m.currentFormat || "");
+        return { bitdepth: c.bitdepth !== undefined ? c.bitdepth : (tenBit ? 10 : 8), hdr: !!c.hdr };
+    }
+    function setColor(name, patch) {
+        const c = Object.assign({}, root.colorByName[name] || {}, patch);
+        const n = Object.assign({}, root.colorByName); n[name] = c; root.colorByName = n;
+    }
+
     // The argument half of `monitor = <this>`.
     function monitorArg(m) {
         if (m.disabled) return m.name + ",disable";
@@ -67,6 +81,9 @@ Singleton {
               + "," + Math.round(m.x) + "x" + Math.round(m.y) + "," + root.trim(m.scale, 6);
         if (m.transform) s += ",transform," + m.transform;
         if (m.vrr) s += ",vrr,1";
+        const col = root.colorOf(m);
+        if (col.bitdepth === 10) s += ",bitdepth,10";
+        if (col.hdr) s += ",cm,hdr";
         if (m.mirrorOf && m.mirrorOf !== "none") s += ",mirror," + m.mirrorOf;
         return s;
     }
@@ -83,6 +100,9 @@ Singleton {
             mirror: (m.mirrorOf && m.mirrorOf !== "none") ? m.mirrorOf : ""
         };
         if (m.vrr) spec.vrr = 1;
+        const col = root.colorOf(m);
+        if (col.bitdepth === 10) spec.bitdepth = 10;
+        if (col.hdr) spec.cm = "hdr";
         return spec;
     }
     // Human-readable "3840×2160 @ 60 Hz".
@@ -130,6 +150,17 @@ Singleton {
         root.pendingPersist = true;
         debounce.restart();
     }
+    // Like apply, but doesn't write the file — used while a mode change is on trial (Keep these
+    // settings?). commit() then saves whatever ended up live; a revert re-trials the old values.
+    function applyTrial(name, patch) {
+        const m = root.byName(name);
+        if (!m) return;
+        const next = Object.assign({}, m, patch ?? {});
+        HyprCtl.setMonitor(root.monitorArg(next), root.monitorSpec(next));
+        root.pendingPersist = false;
+        debounce.restart();
+    }
+    function commit() { root.pendingPersist = true; debounce.restart(); }
     function setDisabled(name, off) { root.apply(name, { disabled: !!off }); }
     // Blanking is a dispatch, not a keyword: it is a runtime state, not a configuration.
     function setDpms(name, on) {
