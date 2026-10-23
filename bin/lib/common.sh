@@ -99,6 +99,7 @@ ax_stage() {
            "${airootfs}/usr/lib/archangelos/axs-crypto" \
            "${airootfs}/usr/lib/archangelos/axs-diag" \
            "${airootfs}/usr/lib/archangelos/axs-tools" \
+           "${airootfs}/usr/lib/archangelos/axs-clean" \
            "${airootfs}/usr/lib/archangelos/power-mode" \
            "${airootfs}/usr/bin/archangelos-fastfetch-setup" \
            "${airootfs}/usr/bin/archangelos-theme-setup" \

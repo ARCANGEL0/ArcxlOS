@@ -72,6 +72,8 @@ Singleton {
               desc: "Installed, default and startup apps", keys: "default apps autostart startup browser uninstall remove packages" },
             { id: "storage", label: "Storage", icon: "hard_drive", page: "StoragePage",
               desc: "Disks, usage and cleanup", keys: "disk storage space cleanup cache" },
+            { id: "cleaning", label: "Cleaning", icon: "cleaning_services", page: "CleaningPage",
+              desc: "Sweep junk and find what's heavy", keys: "clean cleaning junk cache tmp temp trash thumbnails coredump crash sweep ccleaner reclaim free space biggest heaviest cleanup" },
             { id: "updates", label: "Updates", icon: "system_update", page: "UpdatesPage",
               desc: "System and app updates", keys: "update upgrade pacman packages" },
             { id: "shortcuts", label: "Keyboard shortcuts", icon: "keyboard_command_key", page: "ShortcutsPage",
