@@ -6,3 +6,4 @@ singleton Idle Idle.qml
 singleton Ghost Ghost.qml
 singleton Geo Geo.qml
 singleton Janitor Janitor.qml
+singleton NightLight NightLight.qml
