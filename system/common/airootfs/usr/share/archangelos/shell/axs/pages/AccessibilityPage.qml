@@ -62,6 +62,9 @@ PageScaffold {
         Store.data.cursorSize = size;
         Quickshell.execDetached(["sh", "-c",
             'mkdir -p "$HOME/.config/environment.d"; printf "XCURSOR_SIZE=%s\\n" "$1" > "$HOME/.config/environment.d/60-cursor.conf"; '
+            // keep the login-time size (Appearance reads the same file for the cursor theme)
+            + 'conf="${XDG_CONFIG_HOME:-$HOME/.config}/archangelos/appearance.conf"; mkdir -p "$(dirname "$conf")"; touch "$conf"; '
+            + 't="$(mktemp)"; grep -v "^CURSOR_SIZE=" "$conf" > "$t" 2>/dev/null; printf "CURSOR_SIZE=\\"%s\\"\\n" "$1" >> "$t"; mv "$t" "$conf"; '
             + 'th="$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d \"\\x27\")"; [ -n "$th" ] || th=Future-dark-cursors; '
             + 'hyprctl setcursor "$th" "$1" >/dev/null 2>&1; hyprctl keyword env XCURSOR_SIZE,"$1" >/dev/null 2>&1; '
             + 'gsettings set org.gnome.desktop.interface cursor-size "$1" 2>/dev/null; true', "sh", String(size)]);
