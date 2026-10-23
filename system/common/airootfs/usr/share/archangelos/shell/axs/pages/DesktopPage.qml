@@ -50,6 +50,19 @@ PageScaffold {
             page.load();
         });
     }
+    // Open a terminal and run CyberArch's own installer (clone → chmod → ./install.sh). It is
+    // interactive (asks before installing packages / changing the config), which is why it runs in
+    // a terminal rather than silently in the background.
+    function installCyberArch() {
+        const script = 'set -e; d="$(mktemp -d)"; '
+            + 'echo "Cloning CyberArch-Shell…"; git clone --depth 1 https://github.com/ARCANGEL0/CyberArch-Shell.git "$d/CyberArch-Shell"; '
+            + 'cd "$d/CyberArch-Shell"; chmod +x install.sh; ./install.sh; '
+            + 'echo; echo "— installer finished. Reopen Settings > Desktop & Shell and refresh —"; read -p "Press Enter to close… " _';
+        Quickshell.execDetached(["sh", "-c",
+            'for t in rio kitty foot alacritty konsole xterm; do command -v "$t" >/dev/null 2>&1 && exec "$t" -e bash -lc "$1"; done; '
+            + 'notify-send "No terminal found" "Install a terminal to run the CyberArch installer." 2>/dev/null',
+            "sh", script]);
+    }
 
     header: Row {
         spacing: 8
@@ -143,6 +156,24 @@ PageScaffold {
         }
     }
     Label { visible: page.error !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.error; color: Ax.danger; font.pixelSize: Ax.fsSmall }
+
+    // CyberArch is big (AGS rice + its own installer that pulls many packages), so it isn't baked
+    // in — it's installed on demand by its upstream installer, running in a terminal because that
+    // installer is interactive. Once installed it lands in ~/.config/hypr/themes/cyberpunk and
+    // shows up in the picker above like any other shell.
+    Section {
+        visible: !page.shells.some(x => x.id === "cyberpunk")
+        title: "Install more shells"
+        SRow {
+            icon: "download"; title: "CyberArch"
+            desc: "A Cyberpunk 2077 netrunner rice (AGS / Astal). Its installer downloads the packages it needs and asks before changing anything — a few GB and some minutes."
+            AxButton { text: "Install…"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.installCyberArch() }
+        }
+        SRow {
+            icon: "info"; dim: true; title: "After it finishes"
+            desc: "Come back here and press refresh (top-right) — CyberArch will appear as a shell you can switch to."
+        }
+    }
 
     Label {
         width: parent.width; topPadding: 6

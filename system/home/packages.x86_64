@@ -304,6 +304,13 @@ gcc
 github-cli
 gwenview
 imagemagick
+socat
+gtk4-layer-shell
+gtk-layer-shell
+gtk3
+cava
+sassc
+gjs
 jdk-openjdk
 jq
 kalzium
