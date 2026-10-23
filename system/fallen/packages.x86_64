@@ -525,6 +525,11 @@ plasma-systemmonitor
 plymouth
 powertop
 print-manager
+mesa-utils
+vulkan-tools
+system-config-printer
+cups-pdf
+cups
 python
 python-pip
 qbittorrent
