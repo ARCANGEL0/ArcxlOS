@@ -140,7 +140,7 @@ FloatingWindow {
                             width: navCol.width
                             spacing: 2
                             Item {
-                                visible: grp.modelData.name !== ""
+                                visible: grp.modelData.name !== "" && grp.modelData.pages.some(p => Registry.visible(p) && !p.hidden)
                                 width: parent.width; height: 32
                                 Label { caption: true; text: grp.modelData.name; x: 12; anchors.bottom: parent.bottom; anchors.bottomMargin: 8 }
                             }
