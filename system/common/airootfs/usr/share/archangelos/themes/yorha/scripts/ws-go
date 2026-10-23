@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+# Workspace switch. Normally handed to the YoRHa bar so its tile animation plays first;
+# if the bar isn't running (crashed, still starting) switch directly so the keys never die.
+SOCK="$XDG_RUNTIME_DIR/astal/yorha.sock"
+if [ -S "$SOCK" ] && echo "ws-go $1" | socat - UNIX-CONNECT:"$SOCK" 2>/dev/null; then exit 0; fi
+ws="$1"
+case "$ws" in +1) ws="e+1" ;; -1) ws="e-1" ;; esac
+if hyprctl -j status 2>/dev/null | grep -q '"configProvider": *"lua"'; then
+    case "$ws" in [0-9]*) arg="$ws" ;; *) arg="\"$ws\"" ;; esac
+    hyprctl eval "hl.dispatch(hl.dsp.focus({ workspace = $arg }))" >/dev/null 2>&1
+else
+    hyprctl dispatch workspace "$ws" >/dev/null 2>&1
+fi
