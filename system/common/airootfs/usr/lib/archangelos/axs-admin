@@ -9,7 +9,7 @@
 #   user-fullname NAME FULLNAME
 #   user-avatar NAME FILE             picture for the login screen (AccountsService)
 #   pkg-remove PKG...
-#   pkg-clean-cache | pkg-orphans | journal-vacuum
+#   pkg-clean-cache | pkg-orphans | journal-vacuum | clean-coredumps | clean-varlog
 #   locale-set LANG [FORMATS]
 #   mac-random 0|1
 #   mirrors-refresh | keyring-refresh | initramfs | db-check
@@ -125,6 +125,20 @@ case "$verb" in
         # shellcheck disable=SC2086
         pacman -Rns --noconfirm $o 2>&1 | tail -n 5
         exit "${PIPESTATUS[0]}" ;;
+    clean-coredumps)
+        # crash memory snapshots kept by systemd-coredump; safe to drop
+        n=0
+        if [ -d /var/lib/systemd/coredump ]; then
+            n=$(find /var/lib/systemd/coredump -type f 2>/dev/null | wc -l)
+            find /var/lib/systemd/coredump -type f -delete 2>/dev/null || true
+        fi
+        command -v journalctl >/dev/null && journalctl --rotate >/dev/null 2>&1
+        echo "ok $n" ;;
+    clean-varlog)
+        # rotated / compressed logs only — never the live ones
+        find /var/log -type f \( -name "*.gz" -o -name "*.xz" -o -name "*.old" -o -name "*.[0-9]" -o -name "*.[0-9].log" \) -delete 2>/dev/null || true
+        journalctl --vacuum-size=64M >/dev/null 2>&1 || true
+        echo ok ;;
     journal-vacuum)
         journalctl --vacuum-size=64M >/dev/null 2>&1 && echo ok ;;
     locale-set)
