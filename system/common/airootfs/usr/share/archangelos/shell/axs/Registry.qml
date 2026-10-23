@@ -67,7 +67,16 @@ Singleton {
             { id: "storage", label: "Storage", icon: "hard_drive", page: "StoragePage",
               desc: "Disks, usage and cleanup", keys: "disk storage space cleanup cache" },
             { id: "updates", label: "Updates", icon: "system_update", page: "UpdatesPage",
-              desc: "System and app updates", keys: "update upgrade pacman packages" } ] },
+              desc: "System and app updates", keys: "update upgrade pacman packages" },
+            { id: "shortcuts", label: "Keyboard shortcuts", icon: "keyboard_command_key", page: "ShortcutsPage",
+              desc: "Every keybind, changed or added", keys: "keybinds shortcuts hotkeys keys bind super remap hyprland" } ] },
+        { name: "Maintenance", pages: [
+            { id: "maintenance", label: "Packages & System", icon: "build", page: "MaintenancePage",
+              desc: "Orphans, cache, config files, mirrors", keys: "maintenance packages orphans cache pacnew pacsave mirrors reflector keyring initramfs mkinitcpio integrity clean" },
+            { id: "diagnostics", label: "Diagnostics", icon: "monitor_heart", page: "DiagnosticsPage",
+              desc: "Hardware health, tests and benchmarks", keys: "diagnostics cpu gpu ram memory disk smart health temperature fans sensors benchmark speed test ping latency dns memtest hardware info io read write" },
+            { id: "logs", label: "Logs", icon: "receipt_long", page: "LogsPage",
+              desc: "The journal, failures and crashes", keys: "logs journal journalctl errors warnings failed services crash coredump dmesg kernel" } ] },
         { name: "Privacy & Security", pages: [
             { id: "security", label: "Security overview", icon: "health_and_safety", page: "SecurityPage",
               desc: "How protected this computer is", keys: "security score check status overview protection" },

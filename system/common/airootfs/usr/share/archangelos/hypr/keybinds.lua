@@ -19,6 +19,28 @@ do
     end
 end
 
+-- Changes made in Settings > Keyboard shortcuts: config/archangelos/hypr/keys.lua returns
+-- { remap = { ["SUPER + D"] = "SUPER + SHIFT + D" | false }, custom = { ... } }. A remapped
+-- bind moves to its new keys, false drops it; custom binds are added in archangelos.lua.
+local hl = hl
+do
+    local cfg = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
+    local ok, user = pcall(dofile, cfg .. "/archangelos/hypr/keys.lua")
+    local remap = {}
+    local function norm(k) return (k:upper():gsub("%s+", "")) end
+    if ok and type(user) == "table" then
+        for k, v in pairs(user.remap or {}) do remap[norm(k)] = v end
+    end
+    local real = hl.bind
+    -- a local `hl` that routes bind() through the remap table; everything else is the real one
+    hl = setmetatable({ bind = function(keys, action, opts)
+        local r = remap[norm(keys)]
+        if r == false then return end
+        if type(r) == "string" and r ~= "" then keys = r end
+        return real(keys, action, opts)
+    end }, { __index = hl })
+end
+
 local mod = "SUPER"
 
 -- first of these that is installed (the file manager differs per edition)
