@@ -253,7 +253,7 @@ fi
 # restore the file so installed systems keep normal pacman behaviour.
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
-AUR_PKGS="anki cliamp mpvpaper fresh-editor geogebra jupyterlab proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor wps-office zotero-bin"
+AUR_PKGS="anki cliamp mpvpaper fresh-editor geogebra jupyterlab proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor wps-office zotero-bin aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
 if [ -d /home/liveuser ]; then
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Tear YoRHa down when switching away from it.
+AGS="$(command -v ags || echo "$HOME/.local/bin/ags")"
+[ -x "$AGS" ] && "$AGS" quit -i yorha >/dev/null 2>&1
+pkill -9 -f '[a]gs run.*themes/yorha' 2>/dev/null
+pkill -x awww-daemon 2>/dev/null
+true

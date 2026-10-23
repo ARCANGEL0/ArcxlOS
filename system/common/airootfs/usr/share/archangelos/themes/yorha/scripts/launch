@@ -1,0 +1,33 @@
+#!/bin/sh
+# Bring up the YoRHa desktop: its AGS bar/widgets, the wallpaper and the Nier cursor.
+# Safe to run more than once (switching to YoRHa, or relaunching after a crash).
+set -u
+THEME="$HOME/.config/hypr/themes/yorha"
+AGS="$(command -v ags || echo "$HOME/.local/bin/ags")"
+
+# AGS resolves `astal`/`ags`/`gnim` imports through these node_modules symlinks.
+NM="$THEME/components/ags/node_modules"; mkdir -p "$NM"
+ln -sfn /usr/share/astal/gjs "$NM/astal"
+ln -sfn /usr/share/ags/js "$NM/ags"
+ln -sfn /usr/share/ags/js/node_modules/gnim "$NM/gnim" 2>/dev/null || true
+
+# Nier cursor theme into the user's icon dir (once), then apply it.
+if [ -d "$THEME/EXTRAS/cursor/nier_cursors" ] && [ ! -d "$HOME/.local/share/icons/nier_cursors" ]; then
+    mkdir -p "$HOME/.local/share/icons"
+    cp -r "$THEME/EXTRAS/cursor/nier_cursors" "$HOME/.local/share/icons/nier_cursors" 2>/dev/null || true
+fi
+hyprctl setcursor nier_cursors 48 >/dev/null 2>&1 || true
+
+# Wallpaper via awww (the shell's animated-wallpaper daemon).
+if command -v awww >/dev/null 2>&1; then
+    pgrep -x awww-daemon >/dev/null 2>&1 || setsid -f awww-daemon >/dev/null 2>&1
+    ( sleep 1; awww img "$THEME/wallpapers/nier_light.png" --transition-type simple --transition-step 255 >/dev/null 2>&1 ) &
+fi
+
+# The bar itself. Quit any stale instance first.
+if [ -x "$AGS" ]; then
+    "$AGS" quit -i yorha >/dev/null 2>&1 || true
+    pkill -9 -f '[a]gs run.*themes/yorha' 2>/dev/null || true
+    sleep 0.5
+    setsid "$AGS" run --gtk 3 "$THEME/components/ags/app.ts" >/tmp/ags-yorha.log 2>&1 </dev/null &
+fi

@@ -297,6 +297,12 @@ smbmap
 sniffglue
 snmpcheck
 socat
+gtk4-layer-shell
+gtk-layer-shell
+gtk3
+cava
+sassc
+gjs
 spiderfoot
 spiped
 splint
