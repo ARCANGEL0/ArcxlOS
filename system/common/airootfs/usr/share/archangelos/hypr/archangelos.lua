@@ -66,7 +66,7 @@ end)
 -- What Settings saves (Displays, Keyboard & Mouse) is loaded last, so it wins over the defaults.
 do
     local cfg = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
-    for _, f in ipairs({ "/arcshell/hypr/monitors.lua", "/arcshell/hypr/input.lua", "/archangelos/hypr/pointer.lua" }) do
+    for _, f in ipairs({ "/arcshell/hypr/monitors.lua", "/arcshell/hypr/input.lua", "/archangelos/hypr/pointer.lua", "/archangelos/hypr/window.lua", "/archangelos/hypr/a11y.lua" }) do
         local path = cfg .. f
         local fh = io.open(path, "r")
         if fh then

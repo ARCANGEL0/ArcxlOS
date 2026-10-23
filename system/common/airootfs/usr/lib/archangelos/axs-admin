@@ -18,6 +18,17 @@
 #   diag-smart-test DEV short|long     start a drive self-test
 #   diag-memtest MB LOOPS              memtester, last lines of its report
 #   diag-dmi                           memory modules, board and BIOS (dmidecode)
+#   boot-get                           bootloader kind, timeout, default, kernel params
+#   boot-timeout SECS                  menu wait (GRUB or systemd-boot)
+#   boot-default ENTRY                 default entry (GRUB saved, or sd-boot id)
+#   boot-quiet 0|1                     quiet+splash on the kernel command line
+#   kernel-install PKG | kernel-remove PKG   linux / linux-lts / linux-zen / linux-hardened
+#   splash-get | splash-set THEME      Plymouth boot theme
+#   login-get | login-autologin USER|"" | login-numlock 0|1   SDDM
+#   gpu-mode integrated|hybrid|nvidia  switchable graphics (envycontrol)
+#   shell-set USER SHELL
+#   svc NAME 0|1 (libvirtd/docker/…) | group-add USER GROUP | vm NAME start|shutdown|stop
+#   printer-scan | printer-add NAME URI PPD | printer-remove NAME | printer-default NAME | printer-enable NAME 0|1
 set -u
 SELF=/usr/lib/archangelos/axs-admin
 
@@ -201,5 +212,169 @@ for d in json.load(sys.stdin).get("devices", []):
             /^\t(Size|Type|Speed|Configured Memory Speed|Manufacturer|Part Number|Locator|Form Factor|Rank):/ { gsub(/^\t/, "", $1); row = row $1 "=" $2 "|" }
             /^\tMaximum Capacity:/ { print "max=" $2 } /^\tNumber Of Devices:/ { print "slots=" $2 }
             END { if (n) print row }' | sed 's/^/dimm=/; s/^dimm=max=/max=/; s/^dimm=slots=/slots=/' ;;
+    # ---- boot ------------------------------------------------------------------------------
+    boot-get)
+        if [ -d /sys/firmware/efi ] && [ -f /boot/loader/loader.conf ] && command -v bootctl >/dev/null; then
+            echo "kind=systemd-boot"
+            echo "timeout=$(sed -n 's/^timeout\s*\([0-9]*\).*/\1/p' /boot/loader/loader.conf | head -n1)"
+            echo "default=$(sed -n 's/^default\s*\(.*\)/\1/p' /boot/loader/loader.conf | head -n1)"
+            for e in /boot/loader/entries/*.conf; do [ -e "$e" ] || continue
+                echo "entry=$(basename "$e" .conf)|$(sed -n 's/^title\s*\(.*\)/\1/p' "$e" | head -n1)"; done
+        elif [ -f /etc/default/grub ]; then
+            echo "kind=grub"
+            echo "timeout=$(sed -n 's/^GRUB_TIMEOUT=\([0-9]*\).*/\1/p' /etc/default/grub | head -n1)"
+            echo "default=$(sed -n 's/^GRUB_DEFAULT=\(.*\)/\1/p' /etc/default/grub | tr -d '"' | head -n1)"
+            if [ -f /boot/grub/grub.cfg ]; then
+                grep -E "^\s*menuentry " /boot/grub/grub.cfg | sed -E "s/^\s*menuentry ['\"]([^'\"]*)['\"].*/entry=\1/" | head -n 20
+            fi
+        else echo "kind=unknown"; fi
+        echo "cmdline=$(cat /proc/cmdline)"
+        echo "running=$(uname -r)"
+        for k in linux linux-lts linux-zen linux-hardened; do
+            pacman -Q "$k" >/dev/null 2>&1 && echo "kernel=$k|$(pacman -Q "$k" | awk '{print $2}')|installed" || echo "kernel=$k||available"
+        done ;;
+    boot-timeout)
+        [[ "${1:-}" =~ ^[0-9]{1,3}$ ]] || die "Give a number of seconds."
+        if [ -f /boot/loader/loader.conf ] && command -v bootctl >/dev/null && [ -d /sys/firmware/efi ] && grep -q timeout /boot/loader/loader.conf 2>/dev/null; then
+            sed -i "/^timeout/d" /boot/loader/loader.conf; echo "timeout $1" >> /boot/loader/loader.conf
+        elif [ -f /etc/default/grub ]; then
+            sed -i "s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=$1/" /etc/default/grub
+            command -v grub-mkconfig >/dev/null && grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+        else die "No bootloader configuration found."; fi
+        echo ok ;;
+    boot-default)
+        [ $# -ge 1 ] || die "usage: boot-default ENTRY"
+        if [ -f /boot/loader/loader.conf ] && [ -d /sys/firmware/efi ]; then
+            [[ "$1" =~ ^[A-Za-z0-9._@+-]+$ ]] || die "Bad entry id."
+            sed -i "/^default/d" /boot/loader/loader.conf; echo "default $1" >> /boot/loader/loader.conf
+        elif [ -f /etc/default/grub ]; then
+            sed -i "s/^GRUB_DEFAULT=.*/GRUB_DEFAULT=\"$(printf '%s' "$1" | sed 's/[\/&\"]/\\&/g')\"/" /etc/default/grub
+            grep -q "^GRUB_SAVEDEFAULT" /etc/default/grub || echo "GRUB_SAVEDEFAULT=false" >> /etc/default/grub
+            command -v grub-mkconfig >/dev/null && grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+        else die "No bootloader configuration found."; fi
+        echo ok ;;
+    boot-quiet)
+        want="${1:-1}"
+        if [ -f /etc/default/grub ]; then
+            cur="$(sed -n 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/\1/p' /etc/default/grub | head -n1)"
+            cur="$(echo "$cur" | sed -E 's/\b(quiet|splash|loglevel=[0-9]+)\b//g; s/  */ /g; s/^ //; s/ $//')"
+            [ "$want" = 1 ] && cur="loglevel=3 quiet splash${cur:+ $cur}"
+            sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"$(printf '%s' "$cur" | sed 's/[\/&]/\\&/g')\"/" /etc/default/grub
+            command -v grub-mkconfig >/dev/null && grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+        elif ls /boot/loader/entries/*.conf >/dev/null 2>&1; then
+            for e in /boot/loader/entries/*.conf; do
+                opts="$(sed -n 's/^options\s*\(.*\)/\1/p' "$e" | sed -E 's/\b(quiet|splash|loglevel=[0-9]+)\b//g; s/  */ /g; s/ $//')"
+                [ "$want" = 1 ] && opts="$opts loglevel=3 quiet splash"
+                sed -i "/^options/d" "$e"; echo "options $(echo "$opts" | sed 's/  */ /g; s/^ //')" >> "$e"
+            done
+        else die "No bootloader configuration found."; fi
+        echo ok ;;
+    kernel-install|kernel-remove)
+        k="${1:-}"
+        case "$k" in linux|linux-lts|linux-zen|linux-hardened) ;; *) die "Only the standard kernels." ;; esac
+        hdr="$k-headers"
+        if [ "$verb" = kernel-install ]; then
+            pacman -S --noconfirm --needed "$k" "$hdr" 2>&1 | tail -n 5
+        else
+            [ "$(pacman -Q linux linux-lts linux-zen linux-hardened 2>/dev/null | wc -l)" -ge 2 ] || die "This is the only kernel left — can't remove it."
+            [ "$k" = "linux-$(uname -r | grep -oE 'lts|zen|hardened' || echo none)" ] 2>/dev/null
+            pacman -Rns --noconfirm "$k" "$hdr" 2>&1 | tail -n 5
+        fi
+        rc="${PIPESTATUS[0]}"
+        command -v grub-mkconfig >/dev/null && [ -f /boot/grub/grub.cfg ] && grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+        exit "$rc" ;;
+    # ---- splash ----------------------------------------------------------------------------
+    splash-get)
+        command -v plymouth-set-default-theme >/dev/null || { echo "installed=0"; exit 0; }
+        echo "installed=1"; echo "current=$(plymouth-set-default-theme 2>/dev/null)"
+        plymouth-set-default-theme -l 2>/dev/null | sed 's/^/theme=/' ;;
+    splash-set)
+        command -v plymouth-set-default-theme >/dev/null || die "Plymouth isn't installed."
+        [[ "${1:-}" =~ ^[A-Za-z0-9._-]+$ ]] || die "Bad theme name."
+        plymouth-set-default-theme -R "$1" 2>&1 | tail -n 3 || die "Couldn't set that theme."
+        echo ok ;;
+    # ---- login (SDDM) ----------------------------------------------------------------------
+    login-get)
+        d=/etc/sddm.conf.d/10-archangelos.conf
+        echo "autologin=$(sed -n 's/^User=\(.*\)/\1/p' "$d" 2>/dev/null | head -n1)"
+        echo "session=$(sed -n 's/^Session=\(.*\)/\1/p' "$d" 2>/dev/null | head -n1)"
+        echo "numlock=$(sed -n 's/^Numlock=\(.*\)/\1/p' /etc/sddm.conf.d/*.conf 2>/dev/null | head -n1)" ;;
+    login-autologin)
+        d=/etc/sddm.conf.d/10-archangelos.conf; mkdir -p /etc/sddm.conf.d
+        [ -f "$d" ] || printf '[Theme]\nCurrent=archangelos\n' > "$d"
+        sed -i '/^\[Autologin\]/,/^\[/{/^User=/d; /^Session=/d}' "$d"
+        sed -i '/^\[Autologin\]$/d' "$d"
+        if [ -n "${1:-}" ]; then
+            user_ok "$1"; human "$1"
+            sess="$(ls /usr/share/wayland-sessions/*.desktop 2>/dev/null | grep -iE 'hypr|archangel' | head -n1)"
+            sess="$(basename "${sess:-hyprland.desktop}")"
+            printf '\n[Autologin]\nUser=%s\nSession=%s\n' "$1" "$sess" >> "$d"
+        fi
+        echo ok ;;
+    login-numlock)
+        d=/etc/sddm.conf.d/20-numlock.conf
+        if [ "${1:-0}" = 1 ]; then printf '[General]\nNumlock=on\n' > "$d"; else rm -f "$d"; fi
+        echo ok ;;
+    # ---- switchable graphics ---------------------------------------------------------------
+    gpu-mode)
+        command -v envycontrol >/dev/null || die "envycontrol isn't installed."
+        case "${1:-}" in integrated|hybrid|nvidia) ;; *) die "integrated, hybrid or nvidia." ;; esac
+        envycontrol -s "$1" --no-confirm 2>&1 | tail -n 4 || die "envycontrol failed."
+        echo ok ;;
+    # ---- printers (CUPS) -------------------------------------------------------------------
+    printer-add)
+        command -v lpadmin >/dev/null || die "CUPS isn't installed."
+        [ $# -ge 2 ] || die "usage: printer-add NAME URI [PPD]"
+        [[ "$1" =~ ^[A-Za-z0-9_-]+$ ]] || die "Printer names: letters, numbers, _ and - only."
+        systemctl is-active cups >/dev/null 2>&1 || systemctl start cups 2>/dev/null
+        if [ -n "${3:-}" ] && [ "$3" != "-" ]; then lpadmin -p "$1" -E -v "$2" -m "$3"
+        else lpadmin -p "$1" -E -v "$2" -m everywhere; fi
+        [ $? -eq 0 ] || die "Couldn't add the printer."
+        cupsenable "$1" 2>/dev/null; cupsaccept "$1" 2>/dev/null
+        echo ok ;;
+    shell-set)
+        user_ok "${1:-}"; human "$1"
+        sh="${2:-}"; grep -qxF "$sh" /etc/shells || die "That shell isn't in /etc/shells."
+        [ -x "$sh" ] || die "That shell isn't installed."
+        chsh -s "$sh" "$1" && echo ok || die "Couldn't change the shell." ;;
+    svc)
+        name="${1:-}"; on="${2:-}"
+        case "$name" in libvirtd|docker|docker.socket|containerd|podman.socket) ;; *) die "That service can't be toggled here." ;; esac
+        if [ "$on" = 1 ]; then systemctl enable --now "$name" 2>&1 | tail -n 2; else systemctl disable --now "$name" 2>&1 | tail -n 2; fi
+        echo ok ;;
+    group-add)
+        user_ok "${1:-}"; human "$1"
+        case "${2:-}" in libvirt|docker|kvm|lp|scanner|video|input|wheel|sys) ;; *) die "That group isn't managed here." ;; esac
+        getent group "$2" >/dev/null || die "No such group: $2"
+        gpasswd -a "$1" "$2" >/dev/null && echo "ok (log out and back in to take effect)" || die "Couldn't add to the group." ;;
+    vm)
+        command -v virsh >/dev/null || die "libvirt isn't installed."
+        [[ "${1:-}" =~ ^[A-Za-z0-9._-]+$ ]] || die "Bad VM name."
+        case "${2:-}" in
+            start) virsh -c qemu:///system start "$1" 2>&1 | tail -n 2 ;;
+            shutdown) virsh -c qemu:///system shutdown "$1" 2>&1 | tail -n 2 ;;
+            stop) virsh -c qemu:///system destroy "$1" 2>&1 | tail -n 2 ;;
+            *) die "start, shutdown or stop" ;;
+        esac
+        echo ok ;;
+    cups-on)
+        command -v cupsd >/dev/null || die "CUPS isn't installed."
+        systemctl enable --now cups.socket cups.service 2>/dev/null || systemctl enable --now cups 2>/dev/null || die "Couldn't start CUPS."
+        echo ok ;;
+    printer-scan)
+        command -v lpinfo >/dev/null || die "CUPS isn't installed."
+        systemctl is-active cups >/dev/null 2>&1 || systemctl start cups 2>/dev/null
+        lpinfo -v 2>/dev/null | grep -vE "^(file|https?) " ;;
+    printer-remove)
+        command -v lpadmin >/dev/null || die "CUPS isn't installed."
+        [[ "${1:-}" =~ ^[A-Za-z0-9_-]+$ ]] || die "Bad printer name."
+        lpadmin -x "$1" && echo ok || die "Couldn't remove it." ;;
+    printer-default)
+        [[ "${1:-}" =~ ^[A-Za-z0-9_-]+$ ]] || die "Bad printer name."
+        lpadmin -d "$1" && echo ok || die "Couldn't set the default." ;;
+    printer-enable)
+        [[ "${1:-}" =~ ^[A-Za-z0-9_-]+$ ]] || die "Bad printer name."
+        if [ "${2:-1}" = 1 ]; then cupsenable "$1" && cupsaccept "$1"; else cupsdisable "$1"; fi
+        echo ok ;;
     *) die "unknown: $verb" ;;
 esac
