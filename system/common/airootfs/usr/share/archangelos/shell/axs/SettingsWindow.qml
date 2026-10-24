@@ -7,8 +7,8 @@ import QtQuick
 import Quickshell
 import qs.axs
 import qs.axs.ui
-import qs.ns.services as NSS
-import "../src" as Frame
+import qs.arc.services as NSS
+import "../frame" as Frame
 
 FloatingWindow {
     id: win

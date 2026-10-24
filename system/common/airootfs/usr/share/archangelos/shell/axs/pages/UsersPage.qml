@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import qs.axs
 import qs.axs.ui
-import "../../src" as Frame
+import "../../frame" as Frame
 
 PageScaffold {
     id: page

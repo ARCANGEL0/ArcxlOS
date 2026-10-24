@@ -5,7 +5,7 @@ pragma Singleton
 // `scale` speeds all of it up or down at once (1 = normal, <1 = faster).
 import QtQuick
 import Quickshell
-import qs.ns
+import qs.arc
 
 Singleton {
     id: root

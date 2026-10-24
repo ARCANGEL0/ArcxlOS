@@ -29,7 +29,7 @@ import "../modules/Right/"
 import "../modules/Center/"
 import "../modules/Left/"
 import "../modules/Bottom/"
-import qs.ns.services as NSS
+import qs.arc.services as NSS
 
 // A morphing Wayland window layer for the unified screen frame
 PanelWindow {

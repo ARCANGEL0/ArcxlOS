@@ -4,7 +4,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import qs.ns
+import qs.arc
 Loader {
     id: fr
     // { key, kind, label, help, placeholder, options, accept, dialogTitle }

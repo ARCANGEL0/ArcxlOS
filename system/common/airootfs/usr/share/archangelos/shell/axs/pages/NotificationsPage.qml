@@ -3,8 +3,8 @@ import QtQuick
 import Quickshell
 import qs.axs
 import qs.axs.ui
-import "../../src" as Frame
-import "../../src/services" as N
+import "../../frame" as Frame
+import "../../frame/services" as N
 
 PageScaffold {
     id: page

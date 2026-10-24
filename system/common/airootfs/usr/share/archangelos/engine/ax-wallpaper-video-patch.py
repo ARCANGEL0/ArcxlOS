@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""ArchangelOS — teach ArcShell's wallpaper picker about video wallpapers.
+"""ArchangelOS — teach the ArcShell engine's wallpaper picker about video wallpapers.
 
-ArcShell's stock wallpaper pipeline is image-only: the picker lists png/jpg/webp,
+The engine's stock wallpaper pipeline is image-only: the picker lists png/jpg/webp,
 and every selection is pushed through the transactional awww (swww fork) renderer
 plus a matugen palette. This patch adds *smart routing* without disturbing that
 image path:
@@ -18,9 +18,9 @@ image path:
     unchanged.
   * WallpaperCard.qml shows a small play badge on video entries.
 
-Run at desktop-bake time against the ArcShell source tree ($1). Idempotent (a marker
+Run at desktop-bake time against the ArcShell engine source tree ($1). Idempotent (a marker
 guards each file) and strictly non-fatal: an anchor that no longer matches after an
-ArcShell update is logged and skipped so the rest of the desktop still bakes.
+An engine update is logged and skipped so the rest of the desktop still bakes.
 """
 import os
 import sys

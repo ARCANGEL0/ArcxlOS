@@ -1,0 +1,6 @@
+module ArcShell.Launcher.Providers
+singleton ApplicationsProvider 1.0 ApplicationsProvider.qml
+singleton ClipboardProvider 1.0 ClipboardProvider.qml
+singleton KeybindsProvider 1.0 KeybindsProvider.qml
+singleton ArcShellActionsProvider 1.0 ArcShellActionsProvider.qml
+singleton WorkspacesProvider 1.0 WorkspacesProvider.qml

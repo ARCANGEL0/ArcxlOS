@@ -4,7 +4,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
-import qs.ns
+import qs.arc
 
 Item {
     id: root

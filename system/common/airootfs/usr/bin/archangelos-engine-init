@@ -1,55 +1,49 @@
 #!/bin/bash
-# archangelos-engine-init — materialize a fully-installed ArcShell desktop at BUILD time.
+# archangelos-engine-init — materialize a fully-installed ArcShell desktop per user.
 #
-# ArcShell's own installer (./install.sh -> `arcshell bootstrap`) refuses to leave a
-# working install inside a headless mkarchiso chroot: its health gate waits for a
-# live `systemctl --user` session AND a running Hyprland/quickshell instance, and
+# ArcShell's engine runtime ships vendored in the image under
+# /usr/share/archangelos/engine/runtime (no network clone at build or boot).
+# Its own installer (`arcshell bootstrap`) refuses to leave a working install
+# inside a headless mkarchiso chroot: its health gate waits for a live
+# `systemctl --user` session AND a running Hyprland/quickshell instance, and
 # when they're absent it UNINSTALLS the release it just published and errors out.
 # The startup adapter (startupctl.sh) is likewise hard-gated on `systemctl --user
-# show-environment`. Result: nothing survives the chroot, so the ISO boots to a bare
-# default Hyprland (no bars, no keybinds).
+# show-environment`. Result: nothing survives the chroot, so the ISO would boot
+# to a bare default Hyprland (no bars, no keybinds).
 #
-# This script reproduces exactly what a successful managed-mode `arcshell bootstrap`
-# leaves on disk, using only build artifacts (no systemd, no live session):
+# This script reproduces exactly what a successful managed-mode `arcshell
+# bootstrap` leaves on disk, using only build artifacts (no systemd, no live session):
 #   - release trees under ~/.local/share/arcshell/{releases,manager/releases}/<id>
 #   - current symlinks + ~/.local/bin/arcshell launcher
 #   - host config (kitty/starship/fastfetch/hypridle) via the release's own script
 #   - the startup layer: hyprland.lua + split config/*.lua (launcher path substituted)
 #     + arcshell.lua integration + ~/.config/systemd/user/arcshell.service + enable link
 # It operates on $HOME, so run it once per target user (e.g. `su - liveuser -c ...`).
+#
+# Modes:
+#   archangelos-engine-init [--patch-only]
+#     --patch-only  apply the ArchangelOS patches (AMOLED surfaces, video
+#                   wallpaper routing, lock routing, relabels) to the vendored
+#                   runtime and exit. Run as ROOT at image build time, so the
+#                   shipped tree carries them and every later per-user bake
+#                   (live ISO and disk installs) inherits them without needing
+#                   write access to /usr/share.
+#     (default)     patch (no-op when already applied) + full per-user bake.
 set -euo pipefail
 
 log() { printf '  [arcshell-bake] %s\n' "$*"; }
 
-SRC="${ARCSHELL_SRC:-/opt/arcshell}"
+SRC="${ARCSHELL_SRC:-/usr/share/archangelos/engine/runtime}"
 [ -d "$SRC" ] || { log "no $SRC; nothing to bake"; exit 0; }
 command -v jq >/dev/null 2>&1      || { log "jq unavailable; skipping"; exit 0; }
 command -v python3 >/dev/null 2>&1 || { log "python3 unavailable; skipping"; exit 0; }
 
-HOME_DIR="${HOME:?HOME is required}"
-config_root="${XDG_CONFIG_HOME:-$HOME_DIR/.config}"
-data_root="${XDG_DATA_HOME:-$HOME_DIR/.local/share}"
-bin_home="${XDG_BIN_HOME:-$HOME_DIR/.local/bin}"
-odyroot="$data_root/arcshell"
-shell_releases="$odyroot/releases"
-manager_releases="$odyroot/manager/releases"
-shell_current="$odyroot/current"
-manager_current="$odyroot/manager/current"
-launcher="$bin_home/arcshell"
-hypr_dir="$config_root/hypr"
-split_dir="$hypr_dir/config"
-unit_dir="$config_root/systemd/user"
-unit_file="$unit_dir/arcshell.service"
-split_files=(animations.lua appearance.lua environment.lua input.lua keybinds.lua \
-             layouts.lua monitors.lua startup.lua window-rules.lua)
-
-if [ -e "$shell_current/shell.qml" ] && [ -f "$hypr_dir/hyprland.lua" ] && [ -f "$unit_file" ]; then
-  log "already baked in $HOME_DIR; skipping"; exit 0
-fi
+PATCH_ONLY=0
+[ "${1:-}" = "--patch-only" ] && PATCH_ONLY=1
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 
-# 0) Keybinds: ArcShell's keybinds.lua is replaced outright by ArchangelOS's own
+# 0) Keybinds: the engine's keybinds.lua is replaced outright by ArchangelOS's own
 # (/usr/share/archangelos/hypr/keybinds.lua) in step 4 below — Hyprland stacks duplicate
 # binds, so the desktop's key map has to come from one file, not a patch over another.
 
@@ -109,18 +103,18 @@ if [ -f "$tq" ]; then
     || log "Theme.qml AMOLED patch skipped"
 fi
 
-# 0c) ArchangelOS video-wallpaper — teach ArcShell's wallpaper picker to smart-route
+# 0c) ArchangelOS video-wallpaper — teach the engine's wallpaper picker to smart-route
 # by file type: a chosen image keeps the awww still pipeline (matugen palette and
 # all), a chosen video is displayed live via mpvpaper (archangelos-wallpaper) with no
 # palette. Patched into $SRC before the artifact is built so it ships in the release
 # on both the live ISO and every disk re-bake. Strictly non-fatal and idempotent (the
 # patcher guards each file with its own marker and always exits 0), so a stale anchor
-# after an ArcShell update logs and is skipped rather than aborting the desktop bake.
-vp="/usr/share/archangelos/arcshell/ax-wallpaper-video-patch.py"
+# logs and is skipped rather than aborting the desktop bake.
+vp="/usr/share/archangelos/engine/ax-wallpaper-video-patch.py"
 [ -f "$vp" ] && python3 "$vp" "$SRC" || log "video-wallpaper patcher absent; skipping"
 
-# 0d) ArchangelOS lock everywhere — route every ArcShell lock path to
-# /usr/bin/archangelos-lock (hyprlock themed to match the SDDM login). ArcShell
+# 0d) ArchangelOS lock everywhere — route every engine lock path to
+# /usr/bin/archangelos-lock (hyprlock themed to match the SDDM login). The engine
 # otherwise locks with its OWN hyprlock: on idle via the hypridle.conf that
 # idlectl.sh generates, and via the Control-Center Lock button / `arcshell ipc
 # session lock` through sessionctl.sh — the lockscreen that hangs on
@@ -139,7 +133,7 @@ if [ -f "$ssl" ]; then
     "$ssl" && log "sessionctl.sh: manual lock -> archangelos-lock" || log "sessionctl.sh lock patch skipped"
 fi
 
-# 0e) ArchangelOS relabel — ArcShell's avatar picker reuses the Wallpaper grid and
+# 0e) ArchangelOS relabel — the engine's avatar picker reuses the Wallpaper grid and
 # titles itself "Personal image", so it reads like a second, redundant wallpaper
 # tab. Rename its heading + subtitle to name the profile-image picker it actually
 # is. Patched into $SRC before the artifact build. Idempotent + non-fatal.
@@ -149,6 +143,32 @@ if [ -f "$wpp" ]; then
     -e 's@"Personal image"@"Profile avatar"@' \
     -e 's@"Choose from your wallpaper library"@"Choose an image for your profile"@' \
     "$wpp" && log "WallpaperPage.qml: Personal image -> Profile avatar" || log "WallpaperPage relabel skipped"
+fi
+
+if [ "$PATCH_ONLY" -eq 1 ]; then
+  log "patch-only: ArchangelOS patches applied to $SRC"
+  exit 0
+fi
+
+HOME_DIR="${HOME:?HOME is required}"
+config_root="${XDG_CONFIG_HOME:-$HOME_DIR/.config}"
+data_root="${XDG_DATA_HOME:-$HOME_DIR/.local/share}"
+bin_home="${XDG_BIN_HOME:-$HOME_DIR/.local/bin}"
+axroot="$data_root/arcshell"
+shell_releases="$axroot/releases"
+manager_releases="$axroot/manager/releases"
+shell_current="$axroot/current"
+manager_current="$axroot/manager/current"
+launcher="$bin_home/arcshell"
+hypr_dir="$config_root/hypr"
+split_dir="$hypr_dir/config"
+unit_dir="$config_root/systemd/user"
+unit_file="$unit_dir/arcshell.service"
+split_files=(animations.lua appearance.lua environment.lua input.lua keybinds.lua \
+             layouts.lua monitors.lua startup.lua window-rules.lua)
+
+if [ -e "$shell_current/shell.qml" ] && [ -f "$hypr_dir/hyprland.lua" ] && [ -f "$unit_file" ]; then
+  log "already baked in $HOME_DIR; skipping"; exit 0
 fi
 
 # 1) Build + independently verify the local release artifact (works headless).
@@ -216,7 +236,7 @@ for f in "${split_files[@]}"; do
       "$src" > "$split_dir/$f"
     grep -Fq "local arcshellLauncher = $launcher_literal" "$split_dir/$f" \
       || { log "keybinds launcher substitution failed"; exit 1; }
-    # ArchangelOS owns the key map: install ours over ArcShell's (see step 0).
+    # ArchangelOS owns the key map: install ours over the engine's (see step 0).
     ax_keys="/usr/share/archangelos/hypr/keybinds.lua"
     [ -f "$ax_keys" ] && cp -f "$ax_keys" "$split_dir/$f" && log "keybinds.lua: ArchangelOS key map"
   else
@@ -224,7 +244,7 @@ for f in "${split_files[@]}"; do
   fi
 done
 
-# ArchangelOS distro override: Rio is the default terminal. ArcShell ships kitty in
+# ArchangelOS distro override: Rio is the default terminal. The engine ships kitty in
 # both the SUPER+Return keybind (handled by the keybinds.lua sed above) and the
 # TERMINAL env in environment.lua (what apps / "open a terminal" actions resolve).
 if [ -f "$split_dir/environment.lua" ]; then
@@ -242,7 +262,7 @@ hl.layer_rule({
     ignore_alpha = 0.02,
 })
 -- ArchangelOS: the desktop shell is /usr/share/archangelos/shell (started by
--- config/archangelos.lua), so ArcShell's own Quickshell session is not started here.
+-- config/archangelos.lua), so the engine's own Quickshell session is not started here.
 hl.on("hyprland.start", function()
     hl.exec_cmd("bash -c \"pgrep -u $USER -x wl-paste >/dev/null || wl-paste --watch cliphist store &\"")
 end)
@@ -282,8 +302,9 @@ enable_user_unit() {
   done
 }
 # ArchangelOS: arcshell.service stays written but NOT enabled — its Quickshell would run
-# a second desktop on top of the ArchangelOS shell. Drop a link left by an older bake.
+# a second desktop on top of the ArchangelOS shell. Drop links left by an older bake.
 rm -f "$unit_dir/graphical-session.target.wants/arcshell.service"
+rm -f "$unit_dir/graphical-session.target.wants/arcshell.service" "$unit_dir/arcshell.service"
 
 # 5) Host config (kitty/starship/fastfetch/hypridle). The script writes its config
 # files before it touches systemd, so the tail `systemctl --user` failure in the
@@ -294,8 +315,8 @@ if [ -x "$shell_rel/scripts/host-configctl.sh" ]; then
   enable_user_unit hypridle.service
 fi
 
-# (No ArcShell managed-shortcut block: it binds SUPER+V / SUPER+SPACE / SUPER+A to
-# ArcShell's IPC, which would stack on top of the ArchangelOS key map.)
+# (No managed-shortcut block: it binds SUPER+V / SUPER+SPACE / SUPER+A to the
+# engine's IPC, which would stack on top of the ArchangelOS key map.)
 
 # ArchangelOS default appearance — ship the desktop "glassy" out of the box:
 # glass material + the lowest surfaceOpacity the shell allows (0.72 => maximum
@@ -305,10 +326,10 @@ fi
 # choices are never clobbered. Runs per-user (liveuser on the ISO, each new user
 # on disk installs re-run this bake), matching how the rest of the desktop is baked.
 state_root="${XDG_STATE_HOME:-$HOME_DIR/.local/state}"
-ody_state="$state_root/arcshell"
-if [ ! -f "$ody_state/settings.json" ]; then
-  mkdir -p "$ody_state"
-  cat > "$ody_state/settings.json" <<'JSONEOF'
+ax_state="$state_root/arcshell"
+if [ ! -f "$ax_state/settings.json" ]; then
+  mkdir -p "$ax_state"
+  cat > "$ax_state/settings.json" <<'JSONEOF'
 {
   "version": 1,
   "settings": {

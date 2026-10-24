@@ -1,0 +1,132 @@
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import "../core"
+
+Rectangle {
+    id: root
+
+    required property var result
+    property bool selected: false
+    property bool clipboardHistoryMotion: false
+    signal activated()
+    signal pointed()
+
+    readonly property color resultAccent: result.kind === "workspace"
+        ? Theme.tertiary : Theme.primary
+
+    implicitHeight: clipboardHistoryMotion ? 44 : 58
+    radius: Theme.radiusMedium
+    color: clipboardHistoryMotion
+        ? (selected ? Qt.alpha(Theme.primaryContainer, 0.62)
+            : resultHover.hovered ? Theme.surfaceContainerHigh
+            : Qt.alpha(Theme.surfaceContainerHigh, 0.52))
+        : selected ? Theme.primaryContainer
+            : resultHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+    opacity: result.enabled ? 1 : 0.46
+
+    RowLayout {
+        anchors.fill: parent
+        anchors.leftMargin: Theme.space2
+        anchors.rightMargin: Theme.space3
+        spacing: Theme.space3
+
+        Rectangle {
+            Layout.preferredWidth: root.clipboardHistoryMotion ? 30 : 40
+            Layout.preferredHeight: Layout.preferredWidth
+            radius: Theme.radiusSmall
+            color: root.selected ? Qt.alpha(root.resultAccent, 0.18)
+                : Theme.surfaceContainerHigh
+
+            Image {
+                id: themedIcon
+                anchors.fill: parent
+                anchors.margins: 7
+                visible: root.result.iconKind === "theme"
+                source: visible && root.result.icon
+                    ? Quickshell.iconPath(root.result.icon, true) : ""
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                smooth: true
+            }
+
+            Text {
+                anchors.centerIn: parent
+                visible: root.result.iconKind === "glyph"
+                    || themedIcon.status !== Image.Ready
+                text: root.result.iconKind === "glyph"
+                    ? root.result.icon : "󰣆"
+                color: root.selected
+                    ? root.resultAccent : Theme.surfaceVariantText
+                font.family: Config.appearance.monoFontFamily
+                font.pixelSize: Config.island.expandedPixelSize(Theme.iconSmall, true)
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 1
+
+            Text {
+                Layout.fillWidth: true
+                text: root.result.title
+                color: root.selected
+                    ? Theme.primaryContainerText : Theme.surfaceText
+                elide: Text.ElideRight
+                font.family: Config.appearance.fontFamily
+                font.pixelSize: Config.island.expandedPixelSize(Theme.textSmall, false)
+                font.weight: Font.DemiBold
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: root.result.subtitle
+                color: root.selected
+                    ? Qt.alpha(Theme.primaryContainerText, 0.72)
+                    : Theme.surfaceVariantText
+                elide: Text.ElideRight
+                font.family: Config.appearance.fontFamily
+                font.pixelSize: Config.island.expandedPixelSize(10, false)
+            }
+        }
+
+        Text {
+            text: root.result.badge
+            color: root.selected
+                ? Qt.alpha(Theme.primaryContainerText, 0.72)
+                : Theme.surfaceVariantText
+            font.family: Config.appearance.monoFontFamily
+            font.pixelSize: Config.island.expandedPixelSize(9, false)
+        }
+
+        Text {
+            visible: root.selected && root.result.enabled
+                && root.result.executable !== false
+            text: "↵"
+            color: Theme.primaryContainerText
+            font.family: Config.appearance.monoFontFamily
+            font.pixelSize: Config.island.expandedPixelSize(Theme.textBody, false)
+        }
+    }
+
+    HoverHandler {
+        id: resultHover
+        enabled: root.result.enabled
+        onHoveredChanged: {
+            if (hovered)
+                root.pointed()
+        }
+    }
+    TapHandler {
+        enabled: root.result.enabled && root.result.executable !== false
+        onTapped: root.activated()
+    }
+
+    Behavior on color {
+        ColorAnimation {
+            duration: Animations.fast
+            easing.type: root.clipboardHistoryMotion
+                ? Easing.Linear : Animations.emphasizedEase
+        }
+    }
+}

@@ -7,7 +7,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import qs.ns
+import qs.arc
 
 Singleton {
     id: root

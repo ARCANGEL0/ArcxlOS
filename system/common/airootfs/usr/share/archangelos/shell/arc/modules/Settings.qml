@@ -9,12 +9,12 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import qs.ns
-import qs.ns.components
-import qs.ns.services
-import qs.ns.modules.settings
-import qs.ns.modules.settings.common
-import qs.ns.modules.settings.pages
+import qs.arc
+import qs.arc.components
+import qs.arc.services
+import qs.arc.modules.settings
+import qs.arc.modules.settings.common
+import qs.arc.modules.settings.pages
 
 FloatingWindow {
     id: win

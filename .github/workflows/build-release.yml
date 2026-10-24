@@ -56,7 +56,7 @@ jobs:
     name: Build ${{ matrix.edition }}
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
@@ -110,7 +110,7 @@ jobs:
                 mtools dosfstools e2fsprogs erofs-utils
               pacman -Scc --noconfirm || true
               ( stamp="/mnt/axbuild/${EDITION}/work/base._make_packages"
-                while [ ! -e "$stamp" ]; do sleep 30; done
+                while [ ! -e "$stamp" ]; do sleep 3; done
                 rm -rf /var/cache/pacman/pkg/*
                 echo "[ci] package cache dropped after install" ) &
               ./build.sh --"${EDITION}"

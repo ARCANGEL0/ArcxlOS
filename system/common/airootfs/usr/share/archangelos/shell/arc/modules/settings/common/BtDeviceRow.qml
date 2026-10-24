@@ -4,9 +4,9 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Bluetooth
-import qs.ns
-import qs.ns.services
-import qs.ns.components
+import qs.arc
+import qs.arc.services
+import qs.arc.components
 Item {
     id: row
     property var dev

@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Services.UPower
 import qs.axs
 import qs.axs.ui
-import qs.ns.services as NSS
+import qs.arc.services as NSS
 
 PageScaffold {
     id: page
