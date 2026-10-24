@@ -1,0 +1,24 @@
+module ArcShell.Components
+EdgeAttachedSurface 1.0 EdgeAttachedSurface.qml
+CompactStatus 1.0 CompactStatus.qml
+ControlTile 1.0 ControlTile.qml
+ConnectivityRow 1.0 ConnectivityRow.qml
+DeviceOption 1.0 DeviceOption.qml
+InfoTile 1.0 InfoTile.qml
+IslandSurface 1.0 IslandSurface.qml
+LevelControl 1.0 LevelControl.qml
+LevelTrack 1.0 LevelTrack.qml
+MediaArtwork 1.0 MediaArtwork.qml
+MediaBackdrop 1.0 MediaBackdrop.qml
+MediaTransport 1.0 MediaTransport.qml
+ArcShellMark 1.0 ArcShellMark.qml
+RecordingDot 1.0 RecordingDot.qml
+PersonalLogo 1.0 PersonalLogo.qml
+PowerProfileChooser 1.0 PowerProfileChooser.qml
+SettingsChoice 1.0 SettingsChoice.qml
+SettingsSlider 1.0 SettingsSlider.qml
+SettingsStepper 1.0 SettingsStepper.qml
+SettingsToggle 1.0 SettingsToggle.qml
+Surface 1.0 Surface.qml
+StatusDot 1.0 StatusDot.qml
+TextButton 1.0 TextButton.qml

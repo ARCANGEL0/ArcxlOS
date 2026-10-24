@@ -7,7 +7,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import qs.ns
+import qs.arc
 
 ColumnLayout {
     id: cal

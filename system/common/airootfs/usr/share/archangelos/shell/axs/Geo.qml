@@ -7,7 +7,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.axs.ui
-import qs.ns.services as NSS
+import qs.arc.services as NSS
 
 Singleton {
     id: root

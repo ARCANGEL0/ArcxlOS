@@ -6,7 +6,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
-import qs.ns
+import qs.arc
 
 Singleton {
     id: root

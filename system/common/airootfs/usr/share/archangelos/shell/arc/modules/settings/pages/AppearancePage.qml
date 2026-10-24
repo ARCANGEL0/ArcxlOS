@@ -7,10 +7,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Effects
-import qs.ns
-import qs.ns.services
-import qs.ns.components
-import qs.ns.modules.settings.common
+import qs.arc
+import qs.arc.services
+import qs.arc.components
+import qs.arc.modules.settings.common
 StackView {
     id: stack
     clip: true

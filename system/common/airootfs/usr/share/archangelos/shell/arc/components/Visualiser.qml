@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 // Audio spectrum bars driven by the Cava service. Bottom-anchored, evenly spaced.
 import QtQuick
-import qs.ns
-import qs.ns.services
+import qs.arc
+import qs.arc.services
 
 Item {
     id: root

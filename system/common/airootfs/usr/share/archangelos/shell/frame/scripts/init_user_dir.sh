@@ -61,13 +61,13 @@ copy_template() {
     fi
 }
 
-copy_template "$INSTALL_DIR/src/config/hypridle.conf" "$CONFIG_DIR/hypridle.conf"
-copy_template "$INSTALL_DIR/src/config/hyprlock.conf" "$CONFIG_DIR/hyprlock.conf"
-copy_template "$INSTALL_DIR/src/config/matugen.toml"  "$CONFIG_DIR/matugen.toml"
-copy_template "$INSTALL_DIR/src/config/arcshell-colors.json.example" "$CONFIG_DIR/arcshell-colors.json.example"
-copy_template "$INSTALL_DIR/src/config/colors.conf.template" "$CONFIG_DIR/colors.conf.template"
-copy_template "$INSTALL_DIR/src/config/autostart/ArcShell-hyprland.conf" "$CONFIG_DIR/ArcShell-hyprland.conf"
-copy_template "$INSTALL_DIR/src/config/autostart/ArcShell-hyprland.lua"  "$CONFIG_DIR/ArcShell-hyprland.lua"
+copy_template "$INSTALL_DIR/frame/config/hypridle.conf" "$CONFIG_DIR/hypridle.conf"
+copy_template "$INSTALL_DIR/frame/config/hyprlock.conf" "$CONFIG_DIR/hyprlock.conf"
+copy_template "$INSTALL_DIR/frame/config/matugen.toml"  "$CONFIG_DIR/matugen.toml"
+copy_template "$INSTALL_DIR/frame/config/arcshell-colors.json.example" "$CONFIG_DIR/arcshell-colors.json.example"
+copy_template "$INSTALL_DIR/frame/config/colors.conf.template" "$CONFIG_DIR/colors.conf.template"
+copy_template "$INSTALL_DIR/frame/config/autostart/ArcShell-hyprland.conf" "$CONFIG_DIR/ArcShell-hyprland.conf"
+copy_template "$INSTALL_DIR/frame/config/autostart/ArcShell-hyprland.lua"  "$CONFIG_DIR/ArcShell-hyprland.lua"
 
 # 3. Detect Hyprland configuration format (Lua vs Hyprlang)
 # ARCSHELL_CONFIG_TYPE can be set by a wrapper (e.g. Nix) to "lua" or "hyprlang"
@@ -136,7 +136,7 @@ EOF
     fi
 elif [ ! -e "$HYPR_CONF" ] && [ ! -e "$HYPR_LUA" ]; then
     # No Hyprland config found — seed ArcShell's curated Lua template.
-    HYPR_TEMPLATE="$INSTALL_DIR/src/config/hypr_template"
+    HYPR_TEMPLATE="$INSTALL_DIR/frame/config/hypr_template"
     if [ -d "$HYPR_TEMPLATE" ]; then
         mkdir -p "$HYPR_DIR" 2>/dev/null || true
         cp -r "$HYPR_TEMPLATE/"* "$HYPR_DIR/" 2>/dev/null || {
@@ -160,8 +160,8 @@ fi
 # 6. Copy default wallpapers if missing (non-destructive)
 WALLPAPER_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers"
 mkdir -p "$WALLPAPER_DIR" 2>/dev/null || true
-if [ -d "$INSTALL_DIR/src/assets/wallpapers" ]; then
-    cp -n -r "$INSTALL_DIR/src/assets/wallpapers"/* "$WALLPAPER_DIR/" 2>/dev/null || true
+if [ -d "$INSTALL_DIR/frame/assets/wallpapers" ]; then
+    cp -n -r "$INSTALL_DIR/frame/assets/wallpapers"/* "$WALLPAPER_DIR/" 2>/dev/null || true
 fi
 
 # 7. Mark initialization complete

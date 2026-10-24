@@ -1,0 +1,279 @@
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import "../core"
+
+QtObject {
+    id: root
+
+    property bool changingScheme: false
+    property bool changingThemeSource: false
+    property bool changingIntegration: false
+    property bool terminalThemesEnabled: false
+    property bool terminalThemesReady: false
+    property string pendingScheme: ""
+    property string pendingIntegration: ""
+    property bool pendingIntegrationEnabled: false
+    property string statusMessage: ""
+    property string errorMessage: ""
+
+    readonly property string integrationHelper:
+        Quickshell.shellDir + "/scripts/manage-theme-integration.sh"
+    readonly property string terminalIntegrationHelper:
+        Quickshell.shellDir + "/scripts/terminal-integrations.sh"
+
+    Component.onCompleted: refreshTerminalThemeStatus()
+
+    function setMode(mode: string): void {
+        if (SettingsStore.setAppearanceMode(mode))
+            statusMessage = "Theme mode updated"
+    }
+
+    function setMaterial(material: string): void {
+        if (SettingsStore.setMaterial(material)) {
+            statusMessage = material === "glass"
+                ? "Glass material enabled" : "Solid material enabled"
+            materialPresentationRestore.restart()
+        }
+    }
+
+    // Changing compositor blur requires a fresh layer-surface namespace.
+    // Restore the Appearance page on the next event turn so the interaction
+    // remains continuous from the user's point of view.
+    property Timer materialPresentationRestore: Timer {
+        interval: 1
+        repeat: false
+        onTriggered: ShellActions.settingsOpenRequested("appearance")
+    }
+
+    function setSurfaceOpacity(opacity: real): void {
+        SettingsStore.setSurfaceOpacity(opacity)
+    }
+
+    function setAccentOverride(color: string): void {
+        setThemeSourceColor(color, false)
+    }
+
+    function clearAccentOverride(): void {
+        setThemeSourceWallpaper()
+    }
+
+    function setThemeSourceWallpaper(): void {
+        if (changingThemeSource)
+            return
+        errorMessage = ""
+        statusMessage = "Generating wallpaper theme…"
+        changingThemeSource = WallpaperService.changeThemeSource(
+            "wallpaper", "", false)
+        if (!changingThemeSource)
+            statusMessage = Config.appearance.themeSourceMode === "wallpaper"
+                ? "Wallpaper theme active" : ""
+    }
+
+    function setThemeSourceColor(color: string, rememberCustom: bool): void {
+        if (changingThemeSource)
+            return
+        const normalized = SettingsStore.normalizedThemeColor(color)
+        if (!normalized)
+            return
+        errorMessage = ""
+        statusMessage = "Generating color theme…"
+        changingThemeSource = WallpaperService.changeThemeSource(
+            "color", normalized, rememberCustom)
+        if (!changingThemeSource
+                && Config.appearance.themeSourceMode === "color"
+                && Config.appearance.themeSourceColor === normalized)
+            statusMessage = "Theme source updated"
+    }
+
+    function setReducedMotion(enabled: bool): void {
+        SettingsStore.setReducedMotion(enabled)
+        statusMessage = enabled ? "Reduced motion enabled" : "Full motion enabled"
+    }
+
+    function setMotionSpeed(speed: string): void {
+        if (SettingsStore.setMotionSpeed(speed))
+            statusMessage = "Motion speed updated"
+    }
+
+    function setDensity(density: string): void {
+        if (SettingsStore.setDensity(density))
+            statusMessage = "Surface density updated"
+    }
+
+    function setCornerStyle(style: string): void {
+        if (SettingsStore.setCornerStyle(style))
+            statusMessage = "Corner style updated"
+    }
+
+    function setIslandStyle(style: string): void {
+        if (SettingsStore.setIslandStyle(style))
+            statusMessage = "Island style updated"
+    }
+
+    function setIslandMetric(metric: string, value: real): void {
+        if (SettingsStore.setIslandMetric(metric, value))
+            statusMessage = "Island geometry updated"
+    }
+
+    function setIslandBorderEnabled(enabled: bool): void {
+        SettingsStore.setIslandBorderEnabled(enabled)
+        statusMessage = enabled ? "Island border enabled"
+            : "Island border disabled"
+    }
+
+    function resetIslandAndMotion(): void {
+        SettingsStore.resetIslandAndMotion()
+        statusMessage = "Island and motion defaults restored"
+    }
+
+    function setArcShellPaletteEnabled(enabled: bool): void {
+        SettingsStore.setWallpaperPaletteEnabled(enabled)
+        statusMessage = enabled ? "ArcShell follows the wallpaper palette"
+            : "ArcShell uses its built-in semantic palette"
+        ThemeExportService.refresh()
+    }
+
+    function setScheme(scheme: string): void {
+        if (changingScheme || SettingsStore.validSchemes.indexOf(scheme) < 0
+                || scheme === Config.wallpaper.scheme)
+            return
+        if (Config.appearance.themeSourceMode === "wallpaper"
+                && !WallpaperService.currentWallpaper) {
+            errorMessage = "Choose a wallpaper before changing its palette style"
+            return
+        }
+        pendingScheme = scheme
+        changingScheme = true
+        errorMessage = ""
+        statusMessage = "Generating palette…"
+        WallpaperService.changeScheme(scheme)
+    }
+
+    function setHyprlockEnabled(enabled: bool): void {
+        if (changingIntegration || enabled === Config.externalThemes.hyprlockEnabled)
+            return
+        pendingIntegration = "hyprlock"
+        pendingIntegrationEnabled = enabled
+        changingIntegration = true
+        errorMessage = ""
+        statusMessage = enabled ? "Enabling Hyprlock theme…"
+            : "Returning Hyprlock to manual control…"
+        integrationProcess.command = [integrationHelper, "hyprlock",
+            enabled ? "enable" : "disable"]
+        integrationProcess.running = true
+    }
+
+    function refreshTerminalThemeStatus(): void {
+        if (!terminalStatusProcess.running) {
+            terminalThemesReady = false
+            terminalStatusOutput = ""
+            terminalStatusProcess.command = [terminalIntegrationHelper, "status"]
+            terminalStatusProcess.running = true
+        }
+    }
+
+    function setTerminalThemesEnabled(enabled: bool): void {
+        if (changingIntegration || !terminalThemesReady
+                || enabled === terminalThemesEnabled)
+            return
+        pendingIntegration = "terminal"
+        pendingIntegrationEnabled = enabled
+        changingIntegration = true
+        errorMessage = ""
+        statusMessage = enabled ? "Enabling terminal palettes…"
+            : "Returning terminal tools to manual control…"
+        integrationProcess.command = [terminalIntegrationHelper,
+            enabled ? "enable" : "disable"]
+        integrationProcess.running = true
+    }
+
+    property Connections schemeCompletion: Connections {
+        target: WallpaperService
+        function onOperationStateChanged() {
+            if (!root.changingScheme || WallpaperService.operationState === "changingScheme")
+                return
+            root.changingScheme = false
+            if (WallpaperService.errorMessage.length === 0
+                    && Config.wallpaper.scheme === root.pendingScheme) {
+                root.statusMessage = "Palette style updated"
+                root.errorMessage = ""
+            } else {
+                root.statusMessage = ""
+                root.errorMessage = WallpaperService.errorMessage || "Palette generation failed"
+            }
+            root.pendingScheme = ""
+        }
+    }
+
+    property Connections themeSourceCompletion: Connections {
+        target: WallpaperService
+        function onOperationStateChanged() {
+            if (!root.changingThemeSource
+                    || WallpaperService.operationState === "changingThemeSource")
+                return
+            root.changingThemeSource = false
+            if (WallpaperService.errorMessage.length === 0) {
+                root.statusMessage = "Theme source updated"
+                root.errorMessage = ""
+            } else {
+                root.statusMessage = ""
+                root.errorMessage = WallpaperService.errorMessage
+            }
+        }
+    }
+
+    property string terminalStatusOutput: ""
+    property Process terminalStatusProcess: Process {
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: root.terminalStatusOutput = text.trim()
+        }
+        onExited: (exitCode, exitStatus) => {
+            root.terminalThemesReady = true
+            root.terminalThemesEnabled = exitCode === 0
+                && root.terminalStatusOutput.indexOf(
+                    "TERMINAL_THEMING=enabled") === 0
+        }
+    }
+
+    property Process integrationProcess: Process {
+        running: false
+        stderr: StdioCollector {
+            onStreamFinished: root.errorMessage = text.trim()
+        }
+        onExited: (exitCode, exitStatus) => {
+            root.changingIntegration = false
+            if (root.pendingIntegration === "terminal") {
+                if (exitCode === 0) {
+                    root.statusMessage = root.pendingIntegrationEnabled
+                        ? "Available terminal tools follow ArcShell"
+                        : "Terminal tools are under manual control"
+                    root.errorMessage = ""
+                    ThemeExportService.refresh()
+                } else {
+                    root.statusMessage = ""
+                    root.errorMessage = root.errorMessage
+                        || "Terminal theme ownership could not be changed"
+                }
+                root.pendingIntegration = ""
+                root.refreshTerminalThemeStatus()
+                return
+            }
+            if (exitCode === 0) {
+                SettingsStore.setExternalTheme(root.pendingIntegration,
+                    root.pendingIntegrationEnabled)
+                ThemeExportService.refresh()
+                root.statusMessage = root.pendingIntegrationEnabled
+                    ? "Hyprlock follows ArcShell" : "Hyprlock is under manual control"
+                root.errorMessage = ""
+            } else {
+                root.statusMessage = ""
+                root.errorMessage = root.errorMessage
+                    || "Integration ownership could not be changed"
+            }
+            root.pendingIntegration = ""
+        }
+    }
+}

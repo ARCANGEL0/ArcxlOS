@@ -10,11 +10,11 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
-import qs.ns
-import qs.ns.components
-import qs.ns.services
-import qs.ns.modules.bar
-import "../../src" as Frame
+import qs.arc
+import qs.arc.components
+import qs.arc.services
+import qs.arc.modules.bar
+import "../../frame" as Frame
 
 PanelWindow {
     id: bar

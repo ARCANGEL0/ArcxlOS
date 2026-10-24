@@ -6,7 +6,7 @@ import QtQuick
 import Quickshell
 import qs.axs
 import qs.axs.ui
-import qs.ns.services as NSS
+import qs.arc.services as NSS
 
 PageScaffold {
     id: page
@@ -16,7 +16,7 @@ PageScaffold {
     desc: "Text size, pointer, motion, colour, reading and typing aids."
 
     readonly property string home: Quickshell.env("HOME") || ""
-    readonly property string shaderDir: "/usr/share/archangelos/shell/src/config/shaders"
+    readonly property string shaderDir: "/usr/share/archangelos/shell/frame/config/shaders"
     readonly property var s: Store.data
     property var have: ({})
     property bool orcaOn: false

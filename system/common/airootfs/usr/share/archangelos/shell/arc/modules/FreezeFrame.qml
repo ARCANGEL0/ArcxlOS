@@ -5,7 +5,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import qs.ns.services
+import qs.arc.services
 
 PanelWindow {
     id: freeze

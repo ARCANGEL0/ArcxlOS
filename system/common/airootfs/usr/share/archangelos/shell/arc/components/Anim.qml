@@ -7,7 +7,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import qs.ns
+import qs.arc
 
 NumberAnimation {
     enum Type { Spatial, SpatialFast, Effect }

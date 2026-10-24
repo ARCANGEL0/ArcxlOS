@@ -4,7 +4,7 @@ pragma Singleton
 // GameMode turned around — that one trades power for frames, this one for runtime.
 import QtQuick
 import Quickshell
-import qs.ns
+import qs.arc
 
 Singleton {
     id: root
