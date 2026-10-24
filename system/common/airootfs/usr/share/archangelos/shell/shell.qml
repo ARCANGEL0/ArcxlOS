@@ -1,38 +1,38 @@
 //@ pragma UseQApplication
 
 /*
- * ArchangelOS shell — a mesh of two shells, run as one process:
+ * ArcShell — the ArchangelOS desktop shell, run as one process:
  *
- *   ArcShell   Copyright (C) 2026 arcxlo (ArchangelOS), AGPL-3.0
- *                 src/  — the morphing frame: top-centre island, top-right
- *                 panel, side and bottom notches (wallpaper picker, clipboard).
- *   arcshell  Copyright (c) 2026 arcxlo, MIT
- *                 ns/   — the vertical left bar, its popouts and the launcher.
+ *   frame/ — the morphing surface: top-centre island, top-right panel,
+ *            side and bottom notches (wallpaper picker, clipboard).
+ *   arc/   — the vertical left bar, its popouts and the launcher.
+ *   axs/   — ArchangelOS settings pages.
  *
- * The combined work is distributed under the GNU Affero General Public
- * License v3 or later; see LICENSE (and ns/LICENSE for arcshell's terms).
+ * Copyright (C) 2026 arcxlo (ArchangelOS). Distributed under the GNU
+ * Affero General Public License v3 or later; see LICENSE.
  */
 
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "src/windows"
-import qs.ns.modules as NS
-import qs.ns.services as NSS
-import qs.ns as NSRoot
-import "src" as Frame
+import "frame/windows"
+import qs.arc.modules as NS
+import qs.arc.services as NSS
+import qs.arc as NSRoot
+import "frame" as Frame
 import "axs" as AXS
 
 ShellRoot {
-    // arcshell's frame goes first, so it stacks underneath: ArcShell's surface (which
-    // also covers the bar's column) draws the one silhouette — bar, workspace tab, island,
-    // notches — over it, and only arcshell's bulges (launcher, bar popouts) show through.
+    // arc/'s frame layer stacks first, underneath: the morphing surface (which
+    // also covers the bar's column) draws the one silhouette — bar, workspace
+    // tab, island, notches — over it, and only arc/'s bulges (launcher, bar
+    // popouts) show through.
     Variants { model: Quickshell.screens; NS.Frame {} }
 
-    // ArcShell: frame, notches and their panels.
+    // frame/: the morphing surface, notches and their panels.
     ShellHost {}
 
-    // arcshell: the left bar's widgets and the launcher, above both frames.
+    // arc/: the left bar's widgets and the launcher, above the surface.
     Variants { model: Quickshell.screens; NS.Bar {} }
     Variants { model: Quickshell.screens; NS.Launcher {} }
 

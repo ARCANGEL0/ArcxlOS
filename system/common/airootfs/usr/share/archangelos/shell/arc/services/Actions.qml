@@ -11,7 +11,7 @@ pragma Singleton
 //   exec      — do something and get out of the way
 import QtQuick
 import Quickshell
-import qs.ns
+import qs.arc
 
 Singleton {
     id: root

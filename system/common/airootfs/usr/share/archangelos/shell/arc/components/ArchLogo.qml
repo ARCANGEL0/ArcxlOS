@@ -10,7 +10,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
-import qs.ns
+import qs.arc
 
 Item {
     id: root

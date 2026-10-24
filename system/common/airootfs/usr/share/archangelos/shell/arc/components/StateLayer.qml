@@ -6,7 +6,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Effects
-import qs.ns
+import qs.arc
 MouseArea {
     id: sl
     property color tint: Config.fg

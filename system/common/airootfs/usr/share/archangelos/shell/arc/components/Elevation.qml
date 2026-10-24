@@ -2,7 +2,7 @@
 // with `anchors.fill: parent; radius: parent.radius; z: -1` — the blur peeks out behind it.
 import QtQuick
 import QtQuick.Effects
-import qs.ns
+import qs.arc
 
 RectangularShadow {
     property int level: 2

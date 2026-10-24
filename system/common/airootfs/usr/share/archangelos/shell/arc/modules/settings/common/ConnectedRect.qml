@@ -3,8 +3,8 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import qs.ns
-import qs.ns.components
+import qs.arc
+import qs.arc.components
 Rectangle {
     property bool first: true
     property bool last: true

@@ -2,7 +2,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import qs.ns
+import qs.arc
 Text {
     font.family: Config.iconFont
     font.pixelSize: 16

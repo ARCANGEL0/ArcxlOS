@@ -1,5 +1,5 @@
 -- ArchangelOS keybinds — the desktop's complete key map.
--- Installed as config/keybinds.lua by archangelos-engine-init, REPLACING ArcShell's own
+-- Installed as config/keybinds.lua by archangelos-engine-init, REPLACING the engine's own
 -- file: Hyprland stacks duplicate binds instead of overriding them, so this has to be the
 -- single source of every bind rather than an overlay on top of another set.
 

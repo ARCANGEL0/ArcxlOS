@@ -7,8 +7,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import qs.ns
-import qs.ns.components
+import qs.arc
+import qs.arc.components
 ConnectedRect {
     id: row
     property string label: ""

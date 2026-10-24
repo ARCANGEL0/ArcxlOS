@@ -89,7 +89,7 @@ cp -r /etc/skel/. /root/.
 
 pacman-key --init || true
 pacman-key --populate archlinux || true
-if curl -s https://blackarch.org/strap.sh > /tmp/strap.sh; then
+if curl -sm 60 https://blackarch.org/strap.sh > /tmp/strap.sh; then
   sh /tmp/strap.sh || true
 else
   if [ -f /usr/share/doc/blackarch-keyring/keyring.gpg ] || [ -f /usr/share/pacman/keyrings/blackarch.gpg ]; then
@@ -106,11 +106,23 @@ EOF
 fi
 pacman -Syy --noconfirm || true
 
-if ! command -v yay >/dev/null 2>&1 && id -u liveuser >/dev/null 2>&1; then
+if { ! command -v yay >/dev/null 2>&1 || ! command -v paru >/dev/null 2>&1; } && id -u liveuser >/dev/null 2>&1; then
   pacman -S --noconfirm --needed git base-devel >/dev/null 2>&1 || true
-  su - liveuser -c "rm -rf /tmp/yay-bin && git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && cd /tmp/yay-bin && makepkg -s --noconfirm" >/dev/null 2>&1 || true
-  pacman -U --noconfirm /tmp/yay-bin/yay-bin-*.pkg.tar.zst >/dev/null 2>&1 || true
-  rm -rf /tmp/yay-bin
+  for helper in yay-bin paru-bin; do
+    command -v "${helper%-bin}" >/dev/null 2>&1 && continue
+    for attempt in 1 2 3; do
+      rm -rf "/tmp/$helper"
+      if su - liveuser -c "git clone --depth 1 https://aur.archlinux.org/$helper.git /tmp/$helper && cd /tmp/$helper && makepkg -s --noconfirm" \
+        && pacman -U --noconfirm "/tmp/$helper/${helper}-"[0-9]*.pkg.tar.zst; then
+        break
+      fi
+      echo "  [warn] $helper bootstrap attempt $attempt failed" >&2
+      sleep 5
+    done
+    rm -rf "/tmp/$helper"
+  done
+  command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 \
+    || echo "  [warn] no AUR helper — AUR packages (yorha's astal deps included) will be missing" >&2
 fi
 pacman-key --populate blackarch archlinux || true
 pacman -Fyy || true
@@ -183,14 +195,9 @@ rm -f /usr/share/xsessions/*gnome*.desktop 2>/dev/null || true
 rm -f /usr/share/xsessions/*kde*.desktop 2>/dev/null || true
 rm -f /root/install.txt 2>/dev/null || true
 
-ARCSHELL_DIR="/opt/arcshell"
-if [ ! -d "$ARCSHELL_DIR" ]; then
-  git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
-fi
-rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
-if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
-  chmod +x "$ARCSHELL_DIR/install.sh"
-  chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
+chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
+/usr/bin/archangelos-engine-init --patch-only || echo "  [warn] arcshell engine patch failed" >&2
+if [ -d /home/liveuser ]; then
   su - liveuser -c "/usr/bin/archangelos-engine-init" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true
@@ -279,9 +286,11 @@ if [ -d /usr/share/wayland-sessions ] && [ -f /usr/share/wayland-sessions/hyprla
   sed -i 's|^Name=.*|Name=ArchangelOS Fallen (Hyprland)|' /usr/share/wayland-sessions/hyprland.desktop
 fi
 
-cat > /etc/skel/.config/hypr/99-archangelos-wheel.conf << 'HYPRWHEELEOF'
+if [ -d /etc/skel/.config/hypr ]; then
+  cat > /etc/skel/.config/hypr/99-archangelos-wheel.conf << 'HYPRWHEELEOF'
 bind = SUPER, Tab, exec, archangelos-wheel
 HYPRWHEELEOF
+fi
 if [ -f /home/liveuser/.config/hypr/hyprland.conf ]; then
   grep -q 'archangelos-wheel' /home/liveuser/.config/hypr/hyprland.conf || \
     echo "bind = SUPER, Tab, exec, archangelos-wheel" >> /home/liveuser/.config/hypr/hyprland.conf
@@ -296,17 +305,19 @@ cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
 AUR_PKGS="cliamp mpvpaper geogebra gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor vagrant warpinator zotero-bin aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
 if [ -d /home/liveuser ]; then
+  h=yay; command -v yay >/dev/null 2>&1 || h=paru
   for p in $AUR_PKGS; do
     pacman -S --noconfirm --needed "$p" 2>/dev/null \
-      || su - liveuser -c "yay -S --noconfirm --needed $p" \
+      || su - liveuser -c "$h -S --noconfirm --needed $p" \
       || echo "  [warn] could not install $p" >&2
   done
-  rm -rf /home/liveuser/.cache/yay/* 2>/dev/null || true
+  rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
 
 if command -v pip >/dev/null 2>&1; then
-  pip install --no-cache-dir --break-system-packages --root-user-action=ignore mitsu \
+  timeout 1800 pip install --no-cache-dir --break-system-packages \
+    --root-user-action=ignore --timeout 60 --retries 3 mitsu \
     && echo "  [ok] mitsu $(mitsu --version 2>/dev/null || echo installed)" \
     || echo "  [warn] could not install mitsu from PyPI" >&2
 fi

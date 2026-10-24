@@ -49,7 +49,7 @@ system/*/airootfs/etc/skel/.config/rio/
 system/*/airootfs/usr/share/archangelos/capture/
 system/*/airootfs/usr/share/archangelos/hypr/
 system/*/airootfs/usr/share/archangelos/launcher/qml/
-system/*/airootfs/usr/share/archangelos/arcshell/
+system/*/airootfs/usr/share/archangelos/engine/
 system/*/airootfs/usr/share/archangelos/rio/
 system/*/airootfs/usr/share/archangelos/welcome/
 system/*/airootfs/usr/share/fonts/
@@ -73,7 +73,7 @@ system/*/airootfs/usr/bin/archangelos-menugen
 !system/common/airootfs/usr/share/archangelos/capture/
 !system/common/airootfs/usr/share/archangelos/hypr/
 !system/common/airootfs/usr/share/archangelos/launcher/qml/
-!system/common/airootfs/usr/share/archangelos/arcshell/
+!system/common/airootfs/usr/share/archangelos/engine/
 !system/common/airootfs/usr/share/archangelos/rio/
 !system/common/airootfs/usr/share/archangelos/welcome/
 !system/common/airootfs/usr/share/fonts/
@@ -89,6 +89,8 @@ system/*/airootfs/usr/bin/archangelos-launcher
 system/*/airootfs/usr/bin/archangelos-launcher-toggle
 system/*/airootfs/usr/bin/archangelos-lock
 system/*/airootfs/usr/bin/archangelos-engine-init
+system/*/airootfs/usr/bin/archangelos-theme-setup
+system/*/airootfs/usr/bin/archangelos-wallpaper-setup
 system/*/airootfs/usr/bin/archangelos-redops-tools
 system/*/airootfs/usr/bin/archangelos-region
 system/*/airootfs/usr/bin/archangelos-screenrecord
@@ -108,9 +110,12 @@ system/*/airootfs/usr/share/archangelos/ghostwired/
 system/*/airootfs/usr/share/archangelos/crypto/
 system/*/airootfs/usr/share/polkit-1/
 system/*/airootfs/etc/polkit-1/
+!system/common/airootfs/usr/bin/archangelos-engine-init
 !system/common/airootfs/usr/bin/archangelos-lock
 !system/common/airootfs/usr/bin/archangelos-settings
 !system/common/airootfs/usr/bin/archangelos-shell
+!system/common/airootfs/usr/bin/archangelos-theme-setup
+!system/common/airootfs/usr/bin/archangelos-wallpaper-setup
 !system/common/airootfs/usr/lib/archangelos/
 !system/common/airootfs/usr/lib/systemd/system/archangelos-ghostwired.service
 !system/common/airootfs/usr/lib/sysusers.d/archangelos-ghostwired.conf

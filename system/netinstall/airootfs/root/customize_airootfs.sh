@@ -34,18 +34,15 @@ usermod -s /bin/fish liveuser
 useradd -D -s /bin/fish
 passwd -d liveuser
 
-ARCSHELL_DIR="/opt/arcshell"
-if [ ! -d "$ARCSHELL_DIR" ]; then
-  git clone --depth 1 https://github.com/sud0-L/arcshell.git "$ARCSHELL_DIR" || true
-fi
-# Drop VCS history from the shallow clone — not needed at runtime, keeps it out of the ISO.
-rm -rf "$ARCSHELL_DIR/.git" "$ARCSHELL_DIR/.github" 2>/dev/null || true
-if [ -f "$ARCSHELL_DIR/install.sh" ] && [ -d /home/liveuser ]; then
-  chmod +x "$ARCSHELL_DIR/install.sh"
-  # ArcShell's own installer self-destructs in a headless chroot (its bootstrap
-  # health gate needs a live systemd user session + running shell). Bake the
-  # fully-installed desktop directly instead — see archangelos-engine-init.
-  chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
+# ArcShell engine runtime ships vendored in the image
+# (/usr/share/archangelos/engine/runtime) — no network clone. Patch it as root so
+# the shipped tree carries the ArchangelOS patches, then bake the per-user desktop
+# as liveuser (the engine's own installer self-destructs in a headless chroot —
+# its bootstrap health gate needs a live systemd user session + running shell —
+# so archangelos-engine-init reproduces the managed install directly).
+chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
+/usr/bin/archangelos-engine-init --patch-only || echo "  [warn] arcshell engine patch failed" >&2
+if [ -d /home/liveuser ]; then
   su - liveuser -c "/usr/bin/archangelos-engine-init" || echo "  [warn] arcshell desktop bake failed" >&2
   if [ -d /home/liveuser/.config ]; then
     cp -rf /home/liveuser/.config/. /etc/skel/.config/ 2>/dev/null || true

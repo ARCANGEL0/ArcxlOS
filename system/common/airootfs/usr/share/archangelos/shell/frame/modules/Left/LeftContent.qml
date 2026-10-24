@@ -27,7 +27,7 @@ Row {
 	// Note: Do NOT add anchors.centerIn: parent here. TopBar handles that.
 
 	// 1. ArchangelOS: the mark (menu trigger) heads arcshell's left bar now — see
-	//    ns/modules/Bar.qml — so this tab starts at the workspaces, right off the bar.
+	//    arc/modules/Bar.qml — so this tab starts at the workspaces, right off the bar.
 
 	// 2. Workspaces
 	Workspaces { 

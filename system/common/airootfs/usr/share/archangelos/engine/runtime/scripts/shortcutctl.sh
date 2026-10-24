@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Renders bindings in a receipt-owned public integration or the exact main
+# configuration recorded by a guarded source-development receipt.
+set -euo pipefail
+command_name=${1:-}; requested_main=${2:-}
+project_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+state_root=${XDG_STATE_HOME:-"${HOME:?HOME is required}/.local/state"}
+receipt="$state_root/arcshell/startup/session-startup.json"
+[[ -f $receipt ]] || { printf 'ArcShell host integration is unavailable\n' >&2; exit 1; }
+receipt_kind='' integration='' target_file='' configuration_mode=preserve
+if jq -e '.schema==3 and .adapter=="arcshell-startup" and (.main.path|type=="string") and (.integration.path|type=="string")' "$receipt" >/dev/null 2>&1; then
+    receipt_kind=public
+    main_file=$(jq -r .main.path "$receipt")
+    integration=$(jq -r .integration.path "$receipt")
+    configuration_mode=$(jq -r '.configurationMode // "managed"' "$receipt")
+    target_file=$integration
+elif jq -e '.version==1 and .phase=="active" and (.root|type=="string") and (.hyprlandFile|type=="string")' "$receipt" >/dev/null 2>&1; then
+    receipt_kind=development
+    main_file=$(jq -r .hyprlandFile "$receipt")
+    development_root=$(jq -r .root "$receipt")
+    canonical_root=$(cd -- "$development_root" 2>/dev/null && pwd -P) || canonical_root=
+    [[ $canonical_root == "$project_dir" ]] || { printf 'ArcShell development receipt root is invalid\n' >&2; exit 1; }
+    target_file=$main_file
+else
+    printf 'ArcShell host integration receipt is invalid\n' >&2
+    exit 1
+fi
+[[ -z $requested_main || $requested_main == "$main_file" ]] || { printf 'ArcShell host main configuration does not match its receipt\n' >&2; exit 1; }
+[[ -f $main_file && ! -L $main_file ]] || { printf 'ArcShell host main configuration is unavailable\n' >&2; exit 1; }
+[[ -f $target_file && ! -L $target_file ]] || { printf 'ArcShell integration file is unavailable\n' >&2; exit 1; }
+case $main_file in *.lua) format=lua;;*.conf) format=conf;;*) printf 'Unsupported Hyprland configuration\n' >&2; exit 1;;esac
+marker=$([[ $format == lua ]] && printf '%s' '-- Managed by ArcShell host integration v3' || printf '%s' '# Managed by ArcShell host integration v3')
+begin=$([[ $format == lua ]] && printf '%s' '-- BEGIN ARCSHELL MANAGED SHORTCUTS' || printf '%s' '# BEGIN ARCSHELL MANAGED SHORTCUTS')
+end=$([[ $format == lua ]] && printf '%s' '-- END ARCSHELL MANAGED SHORTCUTS' || printf '%s' '# END ARCSHELL MANAGED SHORTCUTS')
+[[ $receipt_kind == development ]] || grep -Fqx -- "$marker" "$integration" || { printf 'ArcShell integration is not owned\n' >&2; exit 1; }
+reload() { command -v hyprctl >/dev/null 2>&1 && hyprctl reload >/dev/null || true; }
+block_state() {
+    local begins ends
+    begins=$(grep -Fxc -- "$begin" "$target_file" || true)
+    ends=$(grep -Fxc -- "$end" "$target_file" || true)
+    if [[ $begins == 0 && $ends == 0 ]]; then printf absent; return; fi
+    if [[ $begins == 1 && $ends == 1 ]] && awk -v b="$begin" -v e="$end" '$0==b{if(seen||closed)exit 1;seen=1} $0==e{if(!seen||closed)exit 1;closed=1} END{exit !(seen&&closed)}' "$target_file"; then printf managed; else printf conflict; fi
+}
+managed() { [[ $(block_state) == managed ]]; }
+valid() { [[ $1 == true || $1 == false ]]; }
+[[ $(block_state) != conflict ]] || { printf 'ArcShell shortcut markers are ambiguous\n' >&2; exit 1; }
+conflict() {
+    local key=$1 modifiers=SUPER key_name=$1
+    if [[ $format == lua ]]; then
+        awk -v b="$begin" -v e="$end" -v dynamic="hl.bind(mod .. \" + ${key}\"" -v literal="hl.bind(\"SUPER + ${key}\"" '$0==b{inside=1;next}$0==e{inside=0;next}!inside&&$0!~/^[[:space:]]*--/&&(index($0,dynamic)||index($0,literal)){found=1} END{exit found?0:1}' "$main_file"
+        return
+    fi
+    if [[ $key == *' + '* ]]; then
+        modifiers="SUPER ${key% + *}"
+        key_name=${key##* + }
+    fi
+    grep -Eq "^[[:space:]]*bind[[:space:]]*=[[:space:]]*${modifiers// /[[:space:]]+}[[:space:]]*,[[:space:]]*${key_name}[[:space:]]*," "$main_file"
+}
+render() {
+    local target=$1 tmp launcher command action_literal
+    shift
+    launcher="${XDG_BIN_HOME:-${HOME:?HOME is required}/.local/bin}/arcshell"
+    [[ $launcher == /* && $launcher != *$'\n'* ]] || { printf 'ArcShell launcher path is invalid\n' >&2; return 1; }
+    command=$(jq -rn --arg path "$launcher" '$path|@sh')' ipc'
+    tmp=$(mktemp "${target_file}.arcshell.XXXXXX"); awk -v b="$begin" -v e="$end" '$0==b{inside=1;next}$0==e{inside=0;next}!inside{print}' "$target_file" > "$tmp"
+    if [[ $target == true ]]; then
+        printf '%s\n' "$begin" >> "$tmp"; local keys=(A 'CTRL + A' V comma N Y space 'ALT + L' 'SHIFT + S' 'SHIFT + R' 'ALT + N' 'SHIFT + N') actions=('launcher toggle' 'command-launcher toggle' 'clipboard toggle' 'settings open' 'notifications toggle' 'insights wallpaper' 'control-center toggle' 'session lock' 'capture screenshot region both' 'capture record region' 'notes toggle' 'notes create') labels=('Open application launcher' 'Open command launcher' 'Open clipboard history' 'Open ArcShell settings' 'Open notifications' 'Open wallpaper library' 'Open Control Center' 'Lock session' 'Capture and save a region screenshot' 'Record a screen region' 'Toggle Notes' 'Create a new note') index=0 enabled
+        for enabled in "$@"; do if [[ $enabled == true ]]; then
+            if [[ $format == lua ]]; then action_literal=$(jq -Rn --arg command "$command ${actions[$index]}" '$command'); printf 'hl.bind("SUPER + %s", hl.dsp.exec_cmd(%s), { description = "%s" })\n' "${keys[$index]}" "$action_literal" "${labels[$index]}" >> "$tmp"
+            elif [[ ${keys[$index]} == *' + '* ]]; then printf 'bind = SUPER %s, %s, exec, %s %s\n' "${keys[$index]% + *}" "${keys[$index]##* + }" "$command" "${actions[$index]}" >> "$tmp"
+            else printf 'bind = SUPER, %s, exec, %s %s\n' "${keys[$index]}" "$command" "${actions[$index]}" >> "$tmp"; fi
+        fi; ((index+=1)); done
+        if [[ $configuration_mode != managed && $format == lua ]]; then
+            printf 'hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(%s), { locked = true, repeating = true, description = "Raise volume" })\n' "$(jq -Rn --arg command "$command audio increment 3" '$command')" >> "$tmp"
+            printf 'hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(%s), { locked = true, repeating = true, description = "Lower volume" })\n' "$(jq -Rn --arg command "$command audio decrement 3" '$command')" >> "$tmp"
+            printf 'hl.bind("XF86AudioMute", hl.dsp.exec_cmd(%s), { locked = true, description = "Toggle audio mute" })\n' "$(jq -Rn --arg command "$command audio mute" '$command')" >> "$tmp"
+            printf 'hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd(%s), { locked = true, description = "Toggle microphone mute" })\n' "$(jq -Rn --arg command "$command audio micmute" '$command')" >> "$tmp"
+        elif [[ $configuration_mode != managed ]]; then
+            printf 'bindel = , XF86AudioRaiseVolume, exec, %s audio increment 3\n' "$command" >> "$tmp"
+            printf 'bindel = , XF86AudioLowerVolume, exec, %s audio decrement 3\n' "$command" >> "$tmp"
+            printf 'bindl = , XF86AudioMute, exec, %s audio mute\n' "$command" >> "$tmp"
+            printf 'bindl = , XF86AudioMicMute, exec, %s audio micmute\n' "$command" >> "$tmp"
+        fi
+        printf '%s\n' "$end" >> "$tmp"
+    fi
+    if ! cmp -s -- "$tmp" "$target_file"; then
+        chmod --reference="$target_file" "$tmp"; mv -f -- "$tmp" "$target_file"
+        if [[ $receipt_kind == public ]]; then
+            receipt_tmp=$(mktemp "$(dirname -- "$receipt")/.shortcut-receipt.XXXXXX")
+            jq --arg digest "$(sha256sum -- "$target_file" | awk '{print $1}')" '.integration.sha256=$digest' "$receipt" > "$receipt_tmp"
+            chmod 600 "$receipt_tmp"; mv -f -- "$receipt_tmp" "$receipt"
+        fi
+    else rm -f -- "$tmp"; fi
+    reload
+}
+case $command_name in
+ status) managed && printf 'MANAGED=true\n' || printf 'MANAGED=false\n' ;;
+ apply) shift 2; (($#==12)) || { printf 'Expected twelve shortcut toggles\n' >&2; exit 2; }; for value in "$@"; do valid "$value" || { printf 'Invalid shortcut toggle\n' >&2; exit 2; }; done; keys=(A 'CTRL + A' V comma N Y space 'ALT + L' 'SHIFT + S' 'SHIFT + R' 'ALT + N' 'SHIFT + N'); index=0; for value in "$@"; do [[ $value != true ]] || ! conflict "${keys[$index]}" || { printf 'Shortcut conflict: SUPER + %s is already in use\n' "${keys[$index]}" >&2; exit 1; }; ((index+=1)); done; render true "$@"; printf 'MANAGED=true\n' ;;
+ remove) render false; printf 'MANAGED=false\n' ;;
+ *) printf 'usage: %s {status|apply|remove} MAIN_CONFIG [TOGGLES...]\n' "$0" >&2; exit 2;;
+esac

@@ -11,7 +11,10 @@ arch="x86_64"
 pacman_conf="pacman.conf"
 
 airootfs_image_type="squashfs"
-airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M' '-processors' '4')
+# zstd over xz: compressing fallen's BlackArch-sized rootfs with xz spends hours
+# the CI job doesn't have; zstd 15 finishes in minutes. The ISO comes out a bit
+# larger — fine, it is hosted on SourceForge (no 2 GiB GitHub asset cap there).
+airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '15' '-b' '1M' '-processors' '4')
 
 file_permissions=(
   ["/etc/shadow"]="0:0:0400"

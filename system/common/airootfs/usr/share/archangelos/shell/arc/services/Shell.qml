@@ -2,7 +2,7 @@ pragma Singleton
 
 // Shell-wide UI toggles (launcher/settings/capture visibility, keep-awake idle inhibitor).
 import Quickshell
-import qs.ns
+import qs.arc
 
 Singleton {
     id: root
