@@ -5,7 +5,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.axs.ui
-import qs.ns.services as NSS
+import qs.arc.services as NSS
 
 Singleton {
     id: root

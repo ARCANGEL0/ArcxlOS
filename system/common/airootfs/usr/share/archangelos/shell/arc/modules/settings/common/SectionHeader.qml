@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import qs.ns
+import qs.arc
 Text {
     property bool first: false
     Layout.fillWidth: true

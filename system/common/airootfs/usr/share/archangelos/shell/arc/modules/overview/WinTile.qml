@@ -6,9 +6,9 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import qs.ns
-import qs.ns.components
-import qs.ns.services
+import qs.arc
+import qs.arc.components
+import qs.arc.services
 
 Rectangle {
     id: tile

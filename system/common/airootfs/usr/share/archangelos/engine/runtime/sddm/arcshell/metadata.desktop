@@ -1,0 +1,12 @@
+[SddmGreeterTheme]
+QtVersion=6
+Name=ArcShell
+Description=Minimal ArcShell login screen
+Author=ArcShell
+License=MIT
+Type=sddm-theme
+Version=1.0
+Theme-Id=arcshell
+Theme-API=2.0
+MainScript=Main.qml
+ConfigFile=theme.conf

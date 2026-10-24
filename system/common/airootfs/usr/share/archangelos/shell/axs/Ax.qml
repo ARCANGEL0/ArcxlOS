@@ -8,7 +8,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import "../src" as Frame
+import "../frame" as Frame
 
 Singleton {
     id: root
@@ -40,9 +40,9 @@ Singleton {
     readonly property color ok:         mix(accent, Qt.rgba(0.498, 0.749, 0.604, 1), 0.72)
 
     // --- type ---
-    FontLoader { id: interFont;  source: Qt.resolvedUrl("../ns/assets/fonts/InterVariable.ttf") }
-    FontLoader { id: monoFont;   source: Qt.resolvedUrl("../ns/assets/fonts/DepartureMono-Regular.otf") }
-    FontLoader { id: iconFont;   source: Qt.resolvedUrl("../ns/assets/fonts/MaterialSymbolsRounded.ttf") }
+    FontLoader { id: interFont;  source: Qt.resolvedUrl("../arc/assets/fonts/InterVariable.ttf") }
+    FontLoader { id: monoFont;   source: Qt.resolvedUrl("../arc/assets/fonts/DepartureMono-Regular.otf") }
+    FontLoader { id: iconFont;   source: Qt.resolvedUrl("../arc/assets/fonts/MaterialSymbolsRounded.ttf") }
     readonly property string sans: interFont.name || "sans-serif"
     readonly property string mono: monoFont.name || "monospace"
     readonly property string icons: iconFont.name

@@ -9,8 +9,8 @@
 
 import QtQuick
 import Quickshell
-import qs.ns.components as NSC
-import qs.ns.services as NSS
+import qs.arc.components as NSC
+import qs.arc.services as NSS
 import "../../"
 
 Row {

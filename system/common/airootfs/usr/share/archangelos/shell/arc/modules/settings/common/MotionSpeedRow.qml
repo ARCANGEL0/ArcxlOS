@@ -3,7 +3,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import qs.ns
+import qs.arc
 
 SliderRow {
     icon: "speed"

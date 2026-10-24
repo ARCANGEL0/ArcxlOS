@@ -31,7 +31,7 @@ def main():
         # Omit ArcShell bindings
         if "qs ipc" in arg or "quickshell ipc" in arg or "arcshell" in arg.lower() or "arcshell" in arg.lower():
             continue
-        if "arcshell" in desc.lower() or "arcshell" in desc.lower() or "arcshell" in desc.lower():
+        if "arcshell" in desc.lower():
             continue
             
         out.append({

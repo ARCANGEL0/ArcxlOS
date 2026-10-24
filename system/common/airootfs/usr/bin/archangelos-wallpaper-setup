@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -u
+
+homelist=(/home/liveuser /root)
+
+pacman -S --noconfirm --needed swaybg awww 2>/dev/null || true
+if command -v yay &>/dev/null && [ -d /home/liveuser ]; then
+  su - liveuser -c "yay -S --noconfirm --needed mpvpaper" 2>/dev/null || true
+  rm -rf /home/liveuser/.cache/yay/* 2>/dev/null || true
+fi
+
+# Install the ArchangelOS overlay into the ArcShell engine's Lua Hyprland config.
+# The engine configures Hyprland with hyprland.lua + config/*.lua (hl.bind /
+# hl.on / hl.window_rule), NOT the classic hyprland.conf. Our keybinds,
+# startup and window rules go in as a required Lua module, layered on top of
+# The engine's defaults (appended after `require("arcshell")`).
+OVERLAY_SRC=/usr/share/archangelos/hypr/archangelos.lua
+for base in /etc/skel /home/liveuser /root; do
+  hlua="$base/.config/hypr/hyprland.lua"
+  [ -f "$hlua" ] || continue
+  mkdir -p "$base/.config/hypr/config"
+  cp -f "$OVERLAY_SRC" "$base/.config/hypr/config/archangelos.lua"
+  grep -q 'require("config.archangelos")' "$hlua" 2>/dev/null || \
+    printf '\nrequire("config.archangelos")\n' >> "$hlua"
+done
+
+# Welcome window: live session only (liveuser), never /etc/skel.
+live_hlua=/home/liveuser/.config/hypr/hyprland.lua
+if [ -f "$live_hlua" ]; then
+  mkdir -p /home/liveuser/.config/hypr/config
+  cp -f /usr/share/archangelos/hypr/archangelos-welcome.lua \
+    /home/liveuser/.config/hypr/config/archangelos-welcome.lua
+  grep -q 'require("config.archangelos-welcome")' "$live_hlua" 2>/dev/null || \
+    printf '\nrequire("config.archangelos-welcome")\n' >> "$live_hlua"
+  chown -R liveuser:users /home/liveuser/.config/hypr 2>/dev/null || true
+fi
+
+QYLOCK_DIR=/opt/qylock
+if [ ! -d "$QYLOCK_DIR" ]; then
+  git clone --depth 1 https://github.com/Darkkal44/qylock.git "$QYLOCK_DIR" 2>/dev/null || true
+fi
+# Drop the cloned VCS history — it's ~570 MB of pack objects with zero runtime
+# value and would otherwise ship inside the ISO.
+rm -rf "$QYLOCK_DIR/.git" "$QYLOCK_DIR/.github" 2>/dev/null || true
+
+for pkg in qt6-declarative qt6-5compat qt6-multimedia qt6-multimedia-ffmpeg \
+  gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly; do
+  pacman -S --noconfirm --needed "$pkg" 2>/dev/null || true
+done
+
+# Inject the ArchangelOS theme (identical to the SDDM login theme) into Qylock.
+# The SDDM theme is Theme-API/QML and runs verbatim under Qylock's SDDM shim.
+SDDM_THEME=/usr/share/sddm/themes/archangelos
+if [ -d "$QYLOCK_DIR/themes" ] && [ -d "$SDDM_THEME" ]; then
+  rm -rf "$QYLOCK_DIR/themes/archangelos"
+  cp -a "$SDDM_THEME" "$QYLOCK_DIR/themes/archangelos"
+fi
+
+# ArchangelOS: qylock ships ~600 MB of upstream themes we never use — the config
+# below pins the injected "archangelos" theme, so drop every other theme to keep
+# them out of the ISO. Guarded on archangelos existing so we never wipe all themes.
+if [ -d "$QYLOCK_DIR/themes/archangelos" ]; then
+  find "$QYLOCK_DIR/themes" -mindepth 1 -maxdepth 1 ! -name archangelos \
+    -exec rm -rf {} + 2>/dev/null || true
+fi
+
+if [ -d "$QYLOCK_DIR/quickshell-lockscreen" ]; then
+  for home in "${homelist[@]}"; do
+    [ -d "$home" ] || continue
+    target="$home/.local/share/quickshell-lockscreen"
+    rm -rf "$target"
+    cp -r "$QYLOCK_DIR/quickshell-lockscreen" "$target"
+    ln -sfn "$QYLOCK_DIR/themes" "$target/themes_link"
+    chmod +x "$target/lock.sh" 2>/dev/null || true
+    mkdir -p "$home/.config/qylock"
+    echo "archangelos" > "$home/.config/qylock/theme"
+
+    # hypridle: lock with the ArchangelOS theme after 5 min, screen off after 10 min.
+    mkdir -p "$home/.config/hypr"
+    cat > "$home/.config/hypr/hypridle.conf" << 'IDLEEOF'
+# ArchangelOS idle daemon - locks with the ArchangelOS lockscreen (matches SDDM).
+general {
+    lock_cmd = /usr/bin/archangelos-lock
+    before_sleep_cmd = /usr/bin/archangelos-lock
+    after_sleep_cmd = hyprctl dispatch dpms on
+    ignore_dbus_inhibit = false
+}
+
+listener {
+    timeout = 300
+    on-timeout = /usr/bin/archangelos-lock
+}
+
+listener {
+    timeout = 600
+    on-timeout = hyprctl dispatch dpms off
+    on-resume = hyprctl dispatch dpms on
+}
+IDLEEOF
+  done
+  cp -rf /home/liveuser/.local/share/quickshell-lockscreen /etc/skel/.local/share/ 2>/dev/null || true
+  cp -rf /home/liveuser/.config/qylock /etc/skel/.config/ 2>/dev/null || true
+  mkdir -p /etc/skel/.config/hypr
+  cp -f /home/liveuser/.config/hypr/hypridle.conf /etc/skel/.config/hypr/hypridle.conf 2>/dev/null || true
+  if command -v yay &>/dev/null && [ -d /home/liveuser ]; then
+    su - liveuser -c "yay -S --noconfirm --needed ttf-orbitron" 2>/dev/null || true
+    rm -rf /home/liveuser/.cache/yay/* 2>/dev/null || true
+  fi
+fi
+
+chown -R liveuser:users /home/liveuser/.local/share/quickshell-lockscreen \
+  /home/liveuser/.config/qylock /home/liveuser/.config/hypr 2>/dev/null || true
+chown -R root:root /root/.local/share/quickshell-lockscreen \
+  /root/.config/qylock /root/.config/hypr 2>/dev/null || true
+
+exit 0

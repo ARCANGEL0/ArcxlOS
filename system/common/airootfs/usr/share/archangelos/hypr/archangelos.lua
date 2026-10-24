@@ -1,7 +1,7 @@
--- ArchangelOS overlay on top of ArcShell's compositor config (appearance, input, layouts).
+-- ArchangelOS overlay on top of the engine's compositor config (appearance, input, layouts).
 -- Loaded via `require("config.archangelos")` appended to hyprland.lua AFTER
 -- `require("arcshell")`. Every keybind lives in config/keybinds.lua (ours, which replaces
--- ArcShell's); this file holds window rules and session startup only.
+-- the engine's); this file holds window rules and session startup only.
 
 -- Float + center our own tool windows
 hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, center = true, size = "1120 720" })
