@@ -314,6 +314,7 @@ if [ -d /home/liveuser ]; then
       pacman -S --noconfirm --needed "$p" 2>/dev/null \
         || su - liveuser -c "$h -S --noconfirm --needed $p" \
         || echo "  [warn] could not install $p" >&2
+      rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
     done
   else
     echo "  [warn] no AUR helper installed - skipping the curated AUR package list" >&2
@@ -324,8 +325,18 @@ mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
 
 if command -v pip >/dev/null 2>&1; then
   timeout 1800 pip install --no-cache-dir --break-system-packages \
+    --root-user-action=ignore --timeout 60 --retries 3 \
+    bleach celery==5.4.0 croniter cvss elasticsearch faraday-agent-parameters-types \
+    Flask-Celery-Helper Flask-Limiter Flask-Security-Too kombu==5.4.2 psycogreen \
+    pyotp sh validators 'apispec-webframeworks==0.5.2' 'bcrypt<5.0.0' 'bidict==0.22.0' \
+    && echo "  [ok] faradaysec python dependencies satisfied" \
+    || echo "  [warn] could not satisfy faradaysec python dependencies" >&2
+fi
+
+if command -v pip >/dev/null 2>&1; then
+  timeout 1800 pip install --no-cache-dir --break-system-packages \
     --root-user-action=ignore --timeout 60 --retries 3 mitsu \
-    && echo "  [ok] mitsu $(mitsu --version 2>/dev/null || echo installed)" \
+    && echo "  [ok] mitsu installed" \
     || echo "  [warn] could not install mitsu from PyPI" >&2
 fi
 for h in /home/liveuser /root; do
