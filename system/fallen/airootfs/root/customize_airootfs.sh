@@ -340,6 +340,9 @@ if [ -d /home/liveuser ]; then
       pacman -S --noconfirm --needed "$p" 2>/dev/null \
         || su - liveuser -c "$h -S --noconfirm --needed $p" \
         || echo "  [warn] could not install $p" >&2
+      # Wipe the build tree after every package, same as gaming: ~23 source
+      # builds must not let helper caches grow toward the disk-space cliff.
+      rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
     done
   else
     echo "  [warn] no AUR helper installed - skipping the curated AUR package list" >&2
@@ -348,16 +351,30 @@ if [ -d /home/liveuser ]; then
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
 
+# ArchangelOS Fallen: faradaysec ships from BlackArch, but its Python metadata
+# declares requirements BlackArch does not package — every later pip run then
+# reports conflicts and faraday itself breaks at runtime. Satisfy the metadata
+# from PyPI: the packages BlackArch misses plus the three versions it
+# overshoots (pinned back to faraday's bounds). Best-effort.
+if command -v pip >/dev/null 2>&1; then
+  timeout 1800 pip install --no-cache-dir --break-system-packages \
+    --root-user-action=ignore --timeout 60 --retries 3 \
+    bleach celery==5.4.0 croniter cvss elasticsearch faraday-agent-parameters-types \
+    Flask-Celery-Helper Flask-Limiter Flask-Security-Too kombu==5.4.2 psycogreen \
+    pyotp sh validators 'apispec-webframeworks==0.5.2' 'bcrypt<5.0.0' 'bidict==0.22.0' \
+    && echo "  [ok] faradaysec python dependencies satisfied" \
+    || echo "  [warn] could not satisfy faradaysec python dependencies" >&2
+fi
+
 # ArchangelOS Fallen: Mitsu — the project's own red-team companion, published to PyPI
 # (pip install mitsu). Installed system-wide so `mitsu` is on PATH for the live user.
-# Best-effort: a PyPI outage must not abort the build.
+# Best-effort: a PyPI outage must not abort the build. Never probe `mitsu --version`
+# here: it is a textual TUI and the flag launches the full-screen app, which hangs
+# forever without a TTY — that silent hang once ate 5+ hours of CI.
 if command -v pip >/dev/null 2>&1; then
-  # --timeout/--retries for slow mirrors, plus a hard `timeout` cap: a stalled
-  # PyPI read once hung this step silently for 5+ hours until the CI job
-  # timeout killed the whole build.
   timeout 1800 pip install --no-cache-dir --break-system-packages \
     --root-user-action=ignore --timeout 60 --retries 3 mitsu \
-    && echo "  [ok] mitsu $(mitsu --version 2>/dev/null || echo installed)" \
+    && echo "  [ok] mitsu installed" \
     || echo "  [warn] could not install mitsu from PyPI" >&2
 fi
 # AX slim: drop the toolchain caches the AUR source builds leave behind (cargo, rustup,
