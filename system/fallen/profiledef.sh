@@ -11,10 +11,10 @@ arch="x86_64"
 pacman_conf="pacman.conf"
 
 airootfs_image_type="squashfs"
-# zstd over xz: compressing fallen's BlackArch-sized rootfs with xz spends hours
-# the CI job doesn't have; zstd 15 finishes in minutes. The ISO comes out a bit
-# larger — fine, it is hosted on SourceForge (no 2 GiB GitHub asset cap there).
-airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '15' '-b' '1M' '-processors' '4')
+# Same recipe as gaming/home (xz + x86 bcj + 1M dict): SourceForge rejects ISOs
+# above ~9.8 GB and zstd-15 shipped fallen at 11 GB. xz costs more build time,
+# but the job allows 6 h and the old 5 h mitsu hang is fixed.
+airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M' '-processors' '4')
 
 file_permissions=(
   ["/etc/shadow"]="0:0:0400"

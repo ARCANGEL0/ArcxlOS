@@ -87,6 +87,10 @@ chmod +x /etc/skel/Desktop/*.desktop /home/liveuser/Desktop/*.desktop 2>/dev/nul
 
 cp -r /etc/skel/. /root/.
 
+ln -sfn ../proc/self/mounts /etc/mtab
+mountpoint -q /proc || mount -t proc proc /proc
+echo "  [diag] mtab->$(readlink /etc/mtab 2>/dev/null || echo real-file) /proc $(mountpoint -q /proc && echo ok || echo missing) root-mounts $(grep -c ' / ' /proc/self/mounts 2>/dev/null || echo 0)"
+
 pacman-key --init || true
 pacman-key --populate archlinux || true
 if curl -sm 60 https://blackarch.org/strap.sh > /tmp/strap.sh; then
@@ -105,7 +109,6 @@ EOF
   fi
 fi
 pacman -Syy --noconfirm || true
-
 pacman -Scc --noconfirm || true
 rm -rf /var/cache/pacman/pkg/* 2>/dev/null || true
 
@@ -345,6 +348,7 @@ for h in /home/liveuser /root; do
          "$h"/.local/share/NuGet "$h"/.local/share/pnpm "$h"/.bun 2>/dev/null || true
 done
 rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
+find /usr/lib/python3* /usr/local/lib/python3* -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
 
 
 
@@ -398,6 +402,7 @@ pacman -Scc --noconfirm || true
 rm -rf /var/cache/pacman/pkg/* 2>/dev/null || true
 
 rm -rf /var/lib/pacman/sync/* 2>/dev/null || true
+
 
 rm -rf /root/.cache/* 2>/dev/null || true
 find /var/log -type f -exec truncate -s 0 {} + 2>/dev/null || true
