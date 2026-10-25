@@ -112,7 +112,8 @@ jobs:
               ( stamp="/mnt/axbuild/${EDITION}/work/base._make_packages"
                 while [ ! -e "$stamp" ]; do sleep 3; done
                 rm -rf /var/cache/pacman/pkg/*
-                echo "[ci] package cache dropped after install" ) &
+                rm -rf "/mnt/axbuild/${EDITION}/work/x86_64/airootfs/var/cache/pacman/pkg/"*
+                echo "[ci] package caches dropped after install" ) &
               ./build.sh --"${EDITION}"
             '
 
@@ -167,6 +168,7 @@ jobs:
           if [ -z "$root" ]; then
             echo "::error::No directory for project '${SF_PROJECT}' found on frs.sourceforge.net"
             echo "::error::(probed /home/frs/project/${SF_PROJECT} and /home/frs/p/... variants)."
+            echo "::error::Check that SF_PROJECT is the project's unix name and that the SF_USER account administers it"
             echo "::error::it. Run the 'SourceForge key check' workflow for a full diagnosis."
             exit 1
           fi
@@ -197,6 +199,7 @@ jobs:
             echo "::error::all 4 upload attempts failed — ${ASSET} did NOT reach SourceForge"
             exit 1
           fi
+          echo "UPLOAD OK: ${ASSET} -> frs.sourceforge.net:${dest}/"
           echo "URL: https://sourceforge.net/projects/${SF_PROJECT}/files/${VERSION}/${ASSET}/"
 
       - name: Keep the checksum for the release notes

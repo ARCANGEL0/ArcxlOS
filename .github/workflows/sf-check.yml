@@ -77,9 +77,11 @@ jobs:
 
           echo "================ DIAGNOSIS ================"
           echo "project dir: ${root:-NONE FOUND}"
+          if [ -n "$login" ]; then echo "login form: FOUND (not shown)"; else echo "login form: NONE WORKED"; fi
           if [ -z "$root" ] || [ -z "$login" ]; then
             echo "::error::No writable project directory was found for '${SF_PROJECT}'."
             echo "::error::Check that SF_PROJECT is the project's unix name (the slug in its"
+            echo "::error::sourceforge.net URL) and that the SF_USER account is an admin of it."
             exit 1
           fi
           rsync --list-only -e "$SSH" "${login}@frs.sourceforge.net:${root}/" || true

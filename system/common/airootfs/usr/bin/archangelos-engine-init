@@ -58,10 +58,15 @@ tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 #   - generated/palette.json      : the packaged fallback palette.
 #   - core/Theme.qml fallbackDark : the last-resort hard-coded dark palette.
 # Every step is value-idempotent and non-fatal (a miss must never abort the bake).
-gp="$SRC/scripts/generate-palette.sh"
-if [ -f "$gp" ] && ! grep -q 'AX AMOLED' "$gp"; then
-  ax_snip="$tmp/ax_amoled.sh"
-  cat > "$ax_snip" <<'AXEOF'
+# The patch phase rewrites $SRC in place and is meant to run ONCE as root at image
+# build time (--patch-only); the shipped tree then carries the patches and every
+# later per-user bake inherits them. As a non-root user every write below would
+# only produce permission errors, so skip the whole phase.
+if [ "$(id -u)" -eq 0 ]; then
+  gp="$SRC/scripts/generate-palette.sh"
+  if [ -f "$gp" ] && ! grep -q 'AX AMOLED' "$gp"; then
+    ax_snip="$tmp/ax_amoled.sh"
+    cat > "$ax_snip" <<'AXEOF'
 # AX AMOLED override: clamp dark surfaces to near-black (accents untouched).
 if command -v jq >/dev/null 2>&1; then
     jq '.dark.surface="#000000"|.dark.surfaceContainerLow="#0a0a0a"|.dark.surfaceContainer="#121212"|.dark.surfaceContainerHigh="#1c1c1c"' \
@@ -70,79 +75,82 @@ if command -v jq >/dev/null 2>&1; then
     rm -f "$temp_palette.ax"
 fi
 AXEOF
-  if awk -v snip="$ax_snip" '
-      /^chmod 0600 "\$temp_palette"/ {
-        while ((getline line < snip) > 0) print line
-        close(snip)
-      }
-      { print }
-    ' "$gp" > "$gp.axtmp" && mv -f "$gp.axtmp" "$gp"; then
-    chmod +x "$gp"
-    log "generate-palette.sh: AMOLED dark surfaces baked"
-  else
-    rm -f "$gp.axtmp"; log "generate-palette.sh AMOLED patch skipped"
+    if awk -v snip="$ax_snip" '
+        /^chmod 0600 "\$temp_palette"/ {
+          while ((getline line < snip) > 0) print line
+          close(snip)
+        }
+        { print }
+      ' "$gp" > "$gp.axtmp" && mv -f "$gp.axtmp" "$gp"; then
+      chmod +x "$gp"
+      log "generate-palette.sh: AMOLED dark surfaces baked"
+    else
+      rm -f "$gp.axtmp"; log "generate-palette.sh AMOLED patch skipped"
+    fi
   fi
-fi
 
-gpj="$SRC/generated/palette.json"
-if [ -f "$gpj" ]; then
-  jq '.dark.surface="#000000"|.dark.surfaceContainerLow="#0a0a0a"|.dark.surfaceContainer="#121212"|.dark.surfaceContainerHigh="#1c1c1c"' \
-    "$gpj" > "$gpj.axtmp" 2>/dev/null && mv -f "$gpj.axtmp" "$gpj" \
-    || { rm -f "$gpj.axtmp"; log "generated/palette.json AMOLED patch skipped"; }
-  log "generated/palette.json: AMOLED dark surfaces"
-fi
+  gpj="$SRC/generated/palette.json"
+  if [ -f "$gpj" ]; then
+    jq '.dark.surface="#000000"|.dark.surfaceContainerLow="#0a0a0a"|.dark.surfaceContainer="#121212"|.dark.surfaceContainerHigh="#1c1c1c"' \
+      "$gpj" > "$gpj.axtmp" 2>/dev/null && mv -f "$gpj.axtmp" "$gpj" \
+      && log "generated/palette.json: AMOLED dark surfaces" \
+      || { rm -f "$gpj.axtmp"; log "generated/palette.json AMOLED patch skipped"; }
+  fi
 
-tq="$SRC/core/Theme.qml"
-if [ -f "$tq" ]; then
-  sed -i \
-    -e 's/surface: "#121217"/surface: "#000000"/' \
-    -e 's/surfaceContainerLow: "#1a1a21"/surfaceContainerLow: "#0a0a0a"/' \
-    -e 's/surfaceContainer: "#202027"/surfaceContainer: "#121212"/' \
-    -e 's/surfaceContainerHigh: "#2a2931"/surfaceContainerHigh: "#1c1c1c"/' \
-    "$tq" && log "Theme.qml fallbackDark: AMOLED dark surfaces" \
-    || log "Theme.qml AMOLED patch skipped"
-fi
+  tq="$SRC/core/Theme.qml"
+  if [ -f "$tq" ]; then
+    sed -i \
+      -e 's/surface: "#121217"/surface: "#000000"/' \
+      -e 's/surfaceContainerLow: "#1a1a21"/surfaceContainerLow: "#0a0a0a"/' \
+      -e 's/surfaceContainer: "#202027"/surfaceContainer: "#121212"/' \
+      -e 's/surfaceContainerHigh: "#2a2931"/surfaceContainerHigh: "#1c1c1c"/' \
+      "$tq" && log "Theme.qml fallbackDark: AMOLED dark surfaces" \
+      || log "Theme.qml AMOLED patch skipped"
+  fi
 
-# 0c) ArchangelOS video-wallpaper — teach the engine's wallpaper picker to smart-route
-# by file type: a chosen image keeps the awww still pipeline (matugen palette and
-# all), a chosen video is displayed live via mpvpaper (archangelos-wallpaper) with no
-# palette. Patched into $SRC before the artifact is built so it ships in the release
-# on both the live ISO and every disk re-bake. Strictly non-fatal and idempotent (the
-# patcher guards each file with its own marker and always exits 0), so a stale anchor
-# logs and is skipped rather than aborting the desktop bake.
-vp="/usr/share/archangelos/engine/ax-wallpaper-video-patch.py"
-[ -f "$vp" ] && python3 "$vp" "$SRC" || log "video-wallpaper patcher absent; skipping"
+  # 0c) ArchangelOS video-wallpaper — teach the engine's wallpaper picker to smart-route
+  # by file type: a chosen image keeps the awww still pipeline (matugen palette and
+  # all), a chosen video is displayed live via mpvpaper (archangelos-wallpaper) with no
+  # palette. Patched into $SRC before the artifact is built so it ships in the release
+  # on both the live ISO and every disk re-bake. Strictly non-fatal and idempotent (the
+  # patcher guards each file with its own marker and always exits 0), so a stale anchor
+  # logs and is skipped rather than aborting the desktop bake.
+  vp="/usr/share/archangelos/engine/ax-wallpaper-video-patch.py"
+  [ -f "$vp" ] && python3 "$vp" "$SRC" || log "video-wallpaper patcher absent; skipping"
 
-# 0d) ArchangelOS lock everywhere — route every engine lock path to
-# /usr/bin/archangelos-lock (hyprlock themed to match the SDDM login). The engine
-# otherwise locks with its OWN hyprlock: on idle via the hypridle.conf that
-# idlectl.sh generates, and via the Control-Center Lock button / `arcshell ipc
-# session lock` through sessionctl.sh — the lockscreen that hangs on
-# "authenticating". Patched into $SRC before the artifact build. Non-fatal.
-idl="$SRC/scripts/idlectl.sh"
-if [ -f "$idl" ]; then
-  sed -i \
-    -e 's@lock_cmd = pidof hyprlock || hyprlock@lock_cmd = /usr/bin/archangelos-lock@' \
-    -e 's@before_sleep_cmd = loginctl lock-session@before_sleep_cmd = /usr/bin/archangelos-lock@' \
-    -e 's@on-timeout = loginctl lock-session@on-timeout = /usr/bin/archangelos-lock@' \
-    "$idl" && log "idlectl.sh: idle lock -> archangelos-lock" || log "idlectl.sh lock patch skipped"
-fi
-ssl="$SRC/scripts/sessionctl.sh"
-if [ -f "$ssl" ]; then
-  sed -i 's@exec hyprlock --config "$lock_config"@exec /usr/bin/archangelos-lock@' \
-    "$ssl" && log "sessionctl.sh: manual lock -> archangelos-lock" || log "sessionctl.sh lock patch skipped"
-fi
+  # 0d) ArchangelOS lock everywhere — route every engine lock path to
+  # /usr/bin/archangelos-lock (hyprlock themed to match the SDDM login). The engine
+  # otherwise locks with its OWN hyprlock: on idle via the hypridle.conf that
+  # idlectl.sh generates, and via the Control-Center Lock button / `arcshell ipc
+  # session lock` through sessionctl.sh — the lockscreen that hangs on
+  # "authenticating". Patched into $SRC before the artifact build. Non-fatal.
+  idl="$SRC/scripts/idlectl.sh"
+  if [ -f "$idl" ]; then
+    sed -i \
+      -e 's@lock_cmd = pidof hyprlock || hyprlock@lock_cmd = /usr/bin/archangelos-lock@' \
+      -e 's@before_sleep_cmd = loginctl lock-session@before_sleep_cmd = /usr/bin/archangelos-lock@' \
+      -e 's@on-timeout = loginctl lock-session@on-timeout = /usr/bin/archangelos-lock@' \
+      "$idl" && log "idlectl.sh: idle lock -> archangelos-lock" || log "idlectl.sh lock patch skipped"
+  fi
+  ssl="$SRC/scripts/sessionctl.sh"
+  if [ -f "$ssl" ]; then
+    sed -i 's@exec hyprlock --config "$lock_config"@exec /usr/bin/archangelos-lock@' \
+      "$ssl" && log "sessionctl.sh: manual lock -> archangelos-lock" || log "sessionctl.sh lock patch skipped"
+  fi
 
-# 0e) ArchangelOS relabel — the engine's avatar picker reuses the Wallpaper grid and
-# titles itself "Personal image", so it reads like a second, redundant wallpaper
-# tab. Rename its heading + subtitle to name the profile-image picker it actually
-# is. Patched into $SRC before the artifact build. Idempotent + non-fatal.
-wpp="$SRC/panels/WallpaperPage.qml"
-if [ -f "$wpp" ]; then
-  sed -i \
-    -e 's@"Personal image"@"Profile avatar"@' \
-    -e 's@"Choose from your wallpaper library"@"Choose an image for your profile"@' \
-    "$wpp" && log "WallpaperPage.qml: Personal image -> Profile avatar" || log "WallpaperPage relabel skipped"
+  # 0e) ArchangelOS relabel — the engine's avatar picker reuses the Wallpaper grid and
+  # titles itself "Personal image", so it reads like a second, redundant wallpaper
+  # tab. Rename its heading + subtitle to name the profile-image picker it actually
+  # is. Patched into $SRC before the artifact build. Idempotent + non-fatal.
+  wpp="$SRC/panels/WallpaperPage.qml"
+  if [ -f "$wpp" ]; then
+    sed -i \
+      -e 's@"Personal image"@"Profile avatar"@' \
+      -e 's@"Choose from your wallpaper library"@"Choose an image for your profile"@' \
+      "$wpp" && log "WallpaperPage.qml: Personal image -> Profile avatar" || log "WallpaperPage relabel skipped"
+  fi
+else
+  log "not root: runtime patches ship pre-applied; skipping patch phase"
 fi
 
 if [ "$PATCH_ONLY" -eq 1 ]; then

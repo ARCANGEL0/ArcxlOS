@@ -106,8 +106,11 @@ EOF
 fi
 pacman -Syy --noconfirm || true
 
+pacman -Scc --noconfirm || true
+rm -rf /var/cache/pacman/pkg/* 2>/dev/null || true
+
 if { ! command -v yay >/dev/null 2>&1 || ! command -v paru >/dev/null 2>&1; } && id -u liveuser >/dev/null 2>&1; then
-  pacman -S --noconfirm --needed git base-devel >/dev/null 2>&1 || true
+  pacman -S --noconfirm --needed git base-devel || echo "  [warn] git/base-devel install failed - AUR bootstrap will fail" >&2
   for helper in yay-bin paru-bin; do
     command -v "${helper%-bin}" >/dev/null 2>&1 && continue
     for attempt in 1 2 3; do
@@ -306,11 +309,15 @@ sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/shar
 AUR_PKGS="cliamp mpvpaper geogebra gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor vagrant warpinator zotero-bin aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
 if [ -d /home/liveuser ]; then
   h=yay; command -v yay >/dev/null 2>&1 || h=paru
-  for p in $AUR_PKGS; do
-    pacman -S --noconfirm --needed "$p" 2>/dev/null \
-      || su - liveuser -c "$h -S --noconfirm --needed $p" \
-      || echo "  [warn] could not install $p" >&2
-  done
+  if command -v "$h" >/dev/null 2>&1; then
+    for p in $AUR_PKGS; do
+      pacman -S --noconfirm --needed "$p" 2>/dev/null \
+        || su - liveuser -c "$h -S --noconfirm --needed $p" \
+        || echo "  [warn] could not install $p" >&2
+    done
+  else
+    echo "  [warn] no AUR helper installed - skipping the curated AUR package list" >&2
+  fi
   rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf

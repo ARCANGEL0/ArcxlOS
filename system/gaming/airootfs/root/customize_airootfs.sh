@@ -83,10 +83,15 @@ cp -r /etc/skel/. /root/.
 
 pacman -Syy --noconfirm || true
 
+# Drop the chroot package cache before the AUR phase: the base install leaves
+# multi-GB of downloaded packages here and the source builds need the headroom.
+pacman -Scc --noconfirm || true
+rm -rf /var/cache/pacman/pkg/* 2>/dev/null || true
+
 # Bootstrap the AUR helpers from AUR (yay-bin/paru-bin are prebuilt) so AUR
 # installs work in-chroot. Both ship on the ISO; either can drive installs.
 if { ! command -v yay >/dev/null 2>&1 || ! command -v paru >/dev/null 2>&1; } && id -u liveuser >/dev/null 2>&1; then
-  pacman -S --noconfirm --needed git base-devel >/dev/null 2>&1 || true
+  pacman -S --noconfirm --needed git base-devel || echo "  [warn] git/base-devel install failed - AUR bootstrap will fail" >&2
   for helper in yay-bin paru-bin; do
     command -v "${helper%-bin}" >/dev/null 2>&1 && continue
     for attempt in 1 2 3; do
@@ -213,16 +218,20 @@ sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/shar
 AUR_PKGS="anki cliamp mpvpaper aseprite bottles duckstation dxvk-bin frozen-bubble geogebra gpu-viewer hedgewars heroic-games-launcher-bin jupyterlab lact lbreakout2 legendary mission-center pcsx2 playonlinux proton-mail-bin proton-pass-bin proton-vpn-gtk-app protonplus protonup-qt steamcmd streamlink-twitch-gui-bin subtitleeditor umu-launcher vkbasalt vkd3d-proton-bin warpinator wps-office zotero-bin game-devices-udev aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
 if [ -d /home/liveuser ]; then
   h=yay; command -v yay >/dev/null 2>&1 || h=paru
-  for p in $AUR_PKGS; do
-    pacman -S --noconfirm --needed "$p" 2>/dev/null \
-      || su - liveuser -c "$h -S --noconfirm --needed --cleanafter $p" \
-      || echo "  [warn] could not install $p" >&2
-    # Wipe the build tree after every package. The helper's --cleanafter removes
-    # the extracted source, but the cloned repos + downloaded tarballs still pile
-    # up across ~34 source builds; clearing each round keeps the peak flat
-    # instead of letting it grow to tens of GB by the last package.
-    rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
-  done
+  if command -v "$h" >/dev/null 2>&1; then
+    for p in $AUR_PKGS; do
+      pacman -S --noconfirm --needed "$p" 2>/dev/null \
+        || su - liveuser -c "$h -S --noconfirm --needed --cleanafter $p" \
+        || echo "  [warn] could not install $p" >&2
+      # Wipe the build tree after every package. The helper's --cleanafter removes
+      # the extracted source, but the cloned repos + downloaded tarballs still pile
+      # up across ~34 source builds; clearing each round keeps the peak flat
+      # instead of letting it grow to tens of GB by the last package.
+      rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
+    done
+  else
+    echo "  [warn] no AUR helper installed - skipping the curated AUR package list" >&2
+  fi
   rm -rf /home/liveuser/.cache/yay/* /home/liveuser/.cache/paru/* 2>/dev/null || true
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
