@@ -302,7 +302,6 @@ gtk-layer-shell
 gtk3
 cava
 sassc
-gjs
 spiderfoot
 spiped
 splint
@@ -352,7 +351,6 @@ upx
 urh
 usb_modeswitch
 util-linux
-valabind
 valgrind
 veracrypt
 irqbalance
@@ -479,15 +477,11 @@ ffmpeg
 filelight
 filezilla
 firewalld
-foliate
-font-manager
 fzf
 gamemode
 gcc
 geany
-gimp
 github-cli
-gnome-boxes
 gnupg
 go
 go-yq
@@ -497,13 +491,11 @@ jq
 kcalc
 kcharselect
 kcolorchooser
-kdeconnect
 keepassxc
 kfind
 kleopatra
 konsole
 krename
-krita
 libvirt
 lm_sensors
 make
@@ -519,7 +511,6 @@ nodejs
 npm
 nvtop
 obs-studio
-obsidian
 okular
 openssl
 packer
@@ -547,7 +538,6 @@ ruby
 rust
 scrcpy
 seahorse
-sigil
 simple-scan
 skanlite
 syncthing
@@ -609,7 +599,6 @@ net-snmp
 openbsd-netcat
 openldap
 postgresql
-python-pwntools
 python-shodan
 qflipper
 sigrok-cli
@@ -617,7 +606,6 @@ smbclient
 valkey
 zaproxy
 chafa
-wpewebkit
 yt-dlp
 nftables
 pacman-contrib
