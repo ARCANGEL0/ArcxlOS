@@ -51,6 +51,7 @@ QtObject {
     
     property int borderWidth:   Metrics.borderWidth
     property int cornerRadius:  Metrics.cornerRadius
+    property int cardRadius:    Math.min(8, cornerRadius)
     property int notchHeight:   Metrics.notchHeight
         
     property int notchPadding:           Metrics.notchPadding

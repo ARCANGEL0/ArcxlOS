@@ -561,7 +561,7 @@ Item {
 
         // Card background
         Rectangle {
-            id: card; anchors.fill: parent; radius: Math.round(Theme.cornerRadius * localScale)
+            id: card; anchors.fill: parent; radius: Math.round(Theme.cardRadius * localScale)
             color: vRow.con.active
                 ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.08)
                 : vHov.hovered ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.04) : "transparent"

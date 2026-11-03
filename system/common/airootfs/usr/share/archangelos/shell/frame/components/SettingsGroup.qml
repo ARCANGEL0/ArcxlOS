@@ -24,6 +24,7 @@ Item {
     property real localScale: 1.0
     property string title: ""
     property string description: ""
+    property real cornerRadius: Theme.cardRadius
     default property alias content: innerCol.data
 
     width: parent ? parent.width : 400
@@ -62,7 +63,7 @@ Item {
             right: parent.right
         }
         height: innerCol.height + Math.round(16 * localScale)
-        radius: Math.round(Theme.cornerRadius * localScale)
+        radius: Math.round(root.cornerRadius * localScale)
         color: Theme.card
         border.color: Theme.border
         border.width: 1

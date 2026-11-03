@@ -61,7 +61,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Math.round(Theme.cornerRadius * localScale)
+        radius: Math.round(Theme.cardRadius * localScale)
         color: dRow.isConnected
             ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
             : rowHov.hovered && !dRow.isPaired ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.04) : "transparent"

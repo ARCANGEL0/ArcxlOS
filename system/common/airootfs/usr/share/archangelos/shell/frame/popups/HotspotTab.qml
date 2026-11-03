@@ -72,7 +72,7 @@ Item {
 
                 // Info banner
                 Rectangle {
-                    width: parent.width; height: infoCol.implicitHeight + Math.round(16 * localScale); radius: Math.round(Theme.cornerRadius * localScale)
+                    width: parent.width; height: infoCol.implicitHeight + Math.round(16 * localScale); radius: Math.round(Theme.cardRadius * localScale)
                     color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.06)
                     border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18); border.width: Math.max(1, Math.round(1 * localScale))
 
@@ -87,7 +87,7 @@ Item {
 
                 // Config card
                 Rectangle {
-                    width: parent.width; height: cfgCol.implicitHeight + Math.round(20 * localScale); radius: Math.round(Theme.cornerRadius * localScale)
+                    width: parent.width; height: cfgCol.implicitHeight + Math.round(20 * localScale); radius: Math.round(Theme.cardRadius * localScale)
                     color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.04); border.color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.07); border.width: Math.max(1, Math.round(1 * localScale))
 
                     Column {
