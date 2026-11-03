@@ -22,6 +22,7 @@ import "../"
 import "../components"
 import "../services"
 import "network"
+import qs.arc.services as NSS
 
 Item {
     id: root
@@ -34,6 +35,9 @@ Item {
     property string _connectingTo:  ""
     property string _forgetSsid:    ""
     property string _expandSsid:    ""
+    property bool   _advancedOpen:  false
+    property string _currentUuid:   ""
+    property string _currentIp4:    ""
 
     readonly property var _current: {
         for (var i = 0; i < _networks.length; i++)
@@ -57,8 +61,19 @@ Item {
                 root._needsPassword = ({})
                 root._checkRadio()
                 root._scan(false)
+                root._refreshCurrentInfo()
             }
         }
+    }
+
+    function _refreshCurrentInfo() {
+        if (!root._wifiEnabled || !root._current) { root._currentUuid = ""; root._currentIp4 = ""; return }
+        conInfoProc.command = ["bash", "-c",
+            "uuid=$(nmcli -t -f UUID,TYPE con show --active | awk -F: '$2==\"802-11-wireless\"{print $1; exit}'); " +
+            "dev=$(nmcli -t -f DEVICE,TYPE con show --active | awk -F: '$2==\"802-11-wireless\"{print $1; exit}'); " +
+            "ip=$(nmcli -g IP4.ADDRESS dev show \"$dev\" 2>/dev/null | head -1); " +
+            "echo \"${uuid}:${ip}\""]
+        conInfoProc.running = false; conInfoProc.running = true
     }
 
     // ── Processes ─────────────────────────────────────────────────────────────
@@ -79,6 +94,9 @@ Item {
                 if (secC < 0) return
                 var signalStr = t2.substring(secC + 1)
                 var t3        = t2.substring(0, secC)
+                var freqC     = t3.lastIndexOf(":")
+                if (freqC < 0) return
+                var freqStr   = t3.substring(freqC + 1)
                 var firstC    = t3.indexOf(":")
                 if (firstC < 0) return
                 var inUseStr  = t3.substring(0, firstC)
@@ -86,17 +104,21 @@ Item {
                 if (ssid === "" || ssid === "--") return
                 var inUse   = inUseStr.trim() === "*"
                 var signal  = parseInt(signalStr.trim()) || 0
+                var freq    = parseInt(freqStr.trim()) || 0
                 var secured = security.trim() !== "" && security.trim() !== "--"
+                var band = freq >= 4900 ? "5 GHz" : (freq >= 2400 ? "2.4 GHz" : "")
                 var nets = root._networks.slice()
                 var found = false
                 for (var i = 0; i < nets.length; i++) {
                     if (nets[i].ssid === ssid) {
-                        if (inUse || signal > nets[i].signal)
-                            nets[i] = { ssid: ssid, signal: signal, secured: secured, inUse: inUse }
+                        if (inUse || signal > nets[i].signal) {
+                            nets[i] = { ssid: ssid, signal: signal, secured: secured, inUse: inUse, band: band }
+                            if (nets[i].frequency) nets[i].frequency = freq
+                        }
                         found = true; break
                     }
                 }
-                if (!found) nets.push({ ssid: ssid, signal: signal, secured: secured, inUse: inUse })
+                if (!found) nets.push({ ssid: ssid, signal: signal, secured: secured, inUse: inUse, band: band })
                 root._networks = nets
             }
         }
@@ -155,7 +177,23 @@ Item {
         }
     }
 
-    Process { id: nmtuiProc; command: ["kitty", "--title", "nmtui", "nmtui"]; running: false }
+    Process {
+        id: conInfoProc
+        command: []
+        running: false
+        stdout: SplitParser {
+            onRead: function(line) {
+                var t = line.trim()
+                if (t === "") return
+                var c = t.split(":")
+                if (c.length === 2) {
+                    root._currentUuid = c[0]
+                    root._currentIp4   = c[1]
+                }
+            }
+        }
+    }
+
 
     Process {
         id: radioProc; command: []; running: false
@@ -183,7 +221,7 @@ Item {
         if (_scanning || !root._wifiEnabled) return
         _scanning = true; _networks = []
         scanProc.command = ["bash", "-c",
-            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list " +
+            "nmcli -t -f IN-USE,SSID,FREQ,SIGNAL,SECURITY dev wifi list " +
             (rescan ? "--rescan yes" : "--rescan no") + " 2>/dev/null"]
         scanProc.running = false; scanProc.running = true
     }
@@ -237,10 +275,40 @@ Item {
         // Header
         Item {
             width: parent.width; height: Math.round(40 * localScale)
-            Text {
-                anchors { left: parent.left; leftMargin: Math.round(2 * localScale); verticalCenter: parent.verticalCenter }
-                text: "Wi-Fi"; font.pixelSize: Math.round(15 * localScale); font.weight: Font.Bold; color: Theme.text
+
+            Item {
+                id: backBtn
+                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                width: Math.round(32 * localScale); height: Math.round(32 * localScale)
+                visible: root._advancedOpen
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Math.round(8 * localScale)
+                    color: backH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.09) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.03)
+                    border.color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.10)
+                    border.width: Math.max(1, Math.round(1 * localScale))
+                }
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    font.pixelSize: Math.round(14 * localScale)
+                    color: backH.hovered ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
+                    Behavior on color { ColorAnimation { duration: Anim.fast } }
+                }
+                HoverHandler { id: backH; cursorShape: Qt.PointingHandCursor }
+                MouseArea { anchors.fill: parent; onClicked: root._advancedOpen = false }
+                Tip { text: "Back"; localScale: root.localScale }
             }
+
+            Text {
+                anchors { left: backBtn.left; verticalCenter: parent.verticalCenter }
+                anchors.leftMargin: root._advancedOpen ? Math.round(36 * localScale) : Math.round(2 * localScale)
+                text: root._advancedOpen ? "Advanced configuration" : "Wi-Fi"
+                font.pixelSize: Math.round(15 * localScale)
+                font.weight: Font.Bold
+                color: Theme.text
+            }
+
             Row {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 spacing: Math.round(8 * localScale)
@@ -264,9 +332,10 @@ Item {
                     }
                     HoverHandler { id: wfPwrH; cursorShape: Qt.PointingHandCursor }
                     MouseArea { anchors.fill: parent; onClicked: root._setWifiEnabled(!root._wifiEnabled) }
+                    Tip { text: root._wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on"; localScale: root.localScale }
                 }
 
-                // Settings (nmtui)
+                // Settings (ArchangelOS Network page)
                 Rectangle {
                     width: Math.round(32 * localScale); height: Math.round(32 * localScale); radius: Math.round(8 * localScale)
                     color: settH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.09) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.03)
@@ -281,7 +350,8 @@ Item {
                         Behavior on color { ColorAnimation { duration: Anim.fast } }
                     }
                     HoverHandler { id: settH; cursorShape: Qt.PointingHandCursor }
-                    MouseArea { anchors.fill: parent; onClicked: { nmtuiProc.running = false; nmtuiProc.running = true } }
+                    MouseArea { anchors.fill: parent; onClicked: NSS.Shell.openSettings("network") }
+                    Tip { text: "Network settings"; localScale: root.localScale }
                 }
 
                 // Refresh scan
@@ -302,6 +372,7 @@ Item {
                     }
                     HoverHandler { id: rfH; cursorShape: root._wifiEnabled ? Qt.PointingHandCursor : Qt.ArrowCursor }
                     MouseArea { anchors.fill: parent; onClicked: if (!root._scanning && root._wifiEnabled) root._scan(true) }
+                    Tip { text: root._scanning ? "Scanning…" : "Rescan networks"; localScale: root.localScale }
                 }
             }
         }
@@ -313,6 +384,7 @@ Item {
             id: flick
             width: parent.width
             height: parent.height - Math.round(49 * localScale)
+            visible: !root._advancedOpen
             contentWidth: width
             contentHeight: contentCol.height
             clip: true
@@ -348,7 +420,7 @@ Item {
                         Rectangle {
                             width: parent.width
                             height: Math.round(48 * localScale)
-                            radius: Math.round(Theme.cornerRadius * localScale)
+                            radius: Math.round(Theme.cardRadius * localScale)
                             color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
                             border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.18)
                             border.width: Math.max(1, Math.round(1 * localScale))
@@ -435,6 +507,7 @@ Item {
                     onCancelForget: root._forgetSsid = ""
                     onConfirmForget: function(ssid) { root._forget(ssid) }
                     onCancelExpand: root._expandSsid = ""
+                    onAdvancedClicked: root._advancedOpen = true
                 }
 
                 Item {
@@ -589,7 +662,20 @@ Item {
                 }
 
                 Item { width: parent.width; height: Math.round(8 * localScale) }
+
             }
+        }
+
+        // ── ADVANCED CONFIGURATION (replaces list) ─────────────────────────────
+        WifiAdvanced {
+            id: advancedPanel
+            width: parent.width
+            height: parent.height - Math.round(49 * localScale)
+            visible: root._advancedOpen
+            localScale: root.localScale
+            uuid: root._currentUuid
+            ip4: root._currentIp4
+            ssid: root._current ? root._current.ssid : ""
         }
     }
 }

@@ -18,6 +18,7 @@
 
 import QtQuick
 import "../../"
+import "../../components"
 import "../../services"
 
 Item {
@@ -32,12 +33,24 @@ Item {
     property bool needsPassword: false
     property bool _showPass: false
 
+    readonly property string _signalTip: {
+        if (!netRow.net) return ""
+        var sig = netRow.net.signal || 0
+        var grade = sig >= 75 ? "Excellent" : sig >= 50 ? "Good" : sig >= 25 ? "Fair" : "Weak"
+        var parts = ["Signal " + sig + "% (" + grade + ")"]
+        if (netRow.net.band) parts.push(netRow.net.band)
+        if (netRow.net.security) parts.push(netRow.net.security)
+        if (netRow.net.ip4) parts.push(netRow.net.ip4)
+        return parts.join(" · ")
+    }
+
     signal connectClicked(string ssid, string password)
     signal disconnectClicked()
     signal toggleForget(string ssid)
     signal cancelForget()
     signal confirmForget(string ssid)
     signal cancelExpand()
+    signal advancedClicked()
 
     width: parent ? parent.width : 0
     height: baseRow.height + expandArea.height
@@ -84,7 +97,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Math.round(Theme.cornerRadius * localScale)
+        radius: Math.round(Theme.cardRadius * localScale)
         color: netRow.isCurrent
             ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.07)
             : rHov.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.04) : "transparent"
@@ -147,6 +160,65 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
+            // Advanced configuration
+            Item {
+                visible: netRow.isCurrent
+                width: Math.round(26 * localScale)
+                height: Math.round(26 * localScale)
+                anchors.verticalCenter: parent.verticalCenter
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Math.round(7 * localScale)
+                    color: advH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.10) : "transparent"
+                    Behavior on color { ColorAnimation { duration: Anim.fast } }
+                }
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    font.pixelSize: Math.round(13 * localScale)
+                    color: advH.hovered ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
+                    Behavior on color { ColorAnimation { duration: Anim.fast } }
+                }
+                HoverHandler { id: advH; cursorShape: Qt.PointingHandCursor }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: netRow.advancedClicked()
+                }
+                Tip { text: "Advanced configuration"; localScale: netRow.localScale }
+            }
+
+            // Forget
+            Item {
+                visible: netRow.isCurrent
+                width: Math.round(26 * localScale)
+                height: Math.round(26 * localScale)
+                anchors.verticalCenter: parent.verticalCenter
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Math.round(7 * localScale)
+                    color: fH.hovered
+                        ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.15)
+                        : netRow.isForgetPending
+                            ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.10)
+                            : "transparent"
+                    Behavior on color { ColorAnimation { duration: Anim.fast } }
+                }
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    font.pixelSize: Math.round(12 * localScale)
+                    color: (fH.hovered || netRow.isForgetPending) ? Theme.error : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
+                    Behavior on color { ColorAnimation { duration: Anim.fast } }
+                }
+                HoverHandler { id: fH; cursorShape: Qt.PointingHandCursor }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: netRow.toggleForget(netRow.net.ssid)
+                }
+                Tip { text: "Forget network"; localScale: netRow.localScale }
+            }
+
+            // Signal strength
             Item {
                 width: Math.round(22 * localScale)
                 height: Math.round(16 * localScale)
@@ -156,6 +228,7 @@ Item {
                     signal: netRow.net ? netRow.net.signal : 0
                     localScale: netRow.localScale
                 }
+                Tip { text: netRow._signalTip; localScale: netRow.localScale }
             }
 
             Item {
@@ -178,58 +251,30 @@ Item {
             }
 
             // Disconnect
-            Item {
+            Rectangle {
                 visible: netRow.isCurrent
-                width: Math.round(28 * localScale)
-                height: Math.round(28 * localScale)
                 anchors.verticalCenter: parent.verticalCenter
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Math.round(6 * localScale)
-                    color: dH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.10) : "transparent"
-                    Behavior on color { ColorAnimation { duration: Anim.fast } }
-                }
+                width: discLbl.implicitWidth + Math.round(20 * localScale)
+                height: Math.round(28 * localScale)
+                radius: Math.round(8 * localScale)
+                color: discH.hovered
+                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.22)
+                    : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.09)
+                border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                border.width: Math.max(1, Math.round(1 * localScale))
+                Behavior on color { ColorAnimation { duration: Anim.fast } }
                 Text {
+                    id: discLbl
                     anchors.centerIn: parent
-                    text: "󰖪"
-                    font.pixelSize: Math.round(14 * localScale)
-                    color: dH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.65) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
-                    Behavior on color { ColorAnimation { duration: Anim.fast } }
+                    text: "Disconnect"
+                    font.pixelSize: Math.round(11 * localScale)
+                    font.weight: Font.Medium
+                    color: Theme.active
                 }
-                HoverHandler { id: dH; cursorShape: Qt.PointingHandCursor }
+                HoverHandler { id: discH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {
                     anchors.fill: parent
                     onClicked: netRow.disconnectClicked()
-                }
-            }
-
-            // Forget
-            Item {
-                visible: netRow.isCurrent
-                width: Math.round(28 * localScale)
-                height: Math.round(28 * localScale)
-                anchors.verticalCenter: parent.verticalCenter
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Math.round(6 * localScale)
-                    color: fH.hovered
-                        ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.15)
-                        : netRow.isForgetPending
-                            ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.10)
-                            : "transparent"
-                    Behavior on color { ColorAnimation { duration: Anim.fast } }
-                }
-                Text {
-                    anchors.centerIn: parent
-                    text: "󰗼"
-                    font.pixelSize: Math.round(13 * localScale)
-                    color: (fH.hovered || netRow.isForgetPending) ? Theme.error : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
-                    Behavior on color { ColorAnimation { duration: Anim.fast } }
-                }
-                HoverHandler { id: fH; cursorShape: Qt.PointingHandCursor }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: netRow.toggleForget(netRow.net.ssid)
                 }
             }
 
@@ -430,6 +475,7 @@ Item {
                             anchors.fill: parent
                             onClicked: netRow._showPass = !netRow._showPass
                         }
+                        Tip { text: netRow._showPass ? "Hide password" : "Show password"; localScale: netRow.localScale }
                     }
                 }
             }

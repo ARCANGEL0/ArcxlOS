@@ -1,3 +1,4 @@
 ScanRings ScanRings.qml
 WifiNetworkRow WifiNetworkRow.qml
+WifiAdvanced WifiAdvanced.qml
 BluetoothDeviceRow BluetoothDeviceRow.qml
