@@ -15,11 +15,28 @@ import qs.arc.components
 import qs.arc.services
 import qs.arc.modules.bar
 import "../../frame" as Frame
+import "../../frame/state"
+import "../../frame/components" as FC
 
 PanelWindow {
     id: bar
     required property var modelData
     screen: modelData
+
+    property bool barHovered: false
+    property bool barExpanded: !Frame.ShellState.focusMode
+
+    // Thin hover strip at the extreme left edge for focus mode
+    Item {
+        id: barEdgeTrigger
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: Math.round(4 * bar.localScale)
+        visible: false
+        z: 1
+        HoverHandler { id: barEdgeHover; onHoveredChanged: bar.barHovered = hovered }
+    }
 
     // One popout at a time, with a small close delay so the cursor can travel into it.
     property string popout: ""
@@ -48,8 +65,12 @@ PanelWindow {
     // the bulge tracks tall popouts too. `anim` false lands the bulge in the same frame, for a
     // popout that merely resized. `height` overrides popup.implicitHeight where that binding may
     // still be stale at report time (the tray menu).
+    readonly property real screenScale: Math.max(0.75, Math.min(1.5, (bar.screen ? bar.screen.height : 1080) / 1080))
+    readonly property real screenTop: Frame.ShellState.focusMode
+        ? Math.round(Frame.Theme.borderWidth * bar.screenScale) * 2
+        : Math.round(40 * bar.screenScale) + Math.round(Frame.Theme.borderWidth * bar.screenScale) * 2
     function reportPopBox(widget, popup, anim, height) {
-        const gcy = widget.mapToItem(null, 0, widget.height / 2).y;   // widget center, screen y
+        const gcy = widget.mapToItem(null, 0, widget.height / 2).y + bar.screenTop;
         const tp0 = popup.topPad !== undefined ? popup.topPad : 0;
         const ph = height === undefined ? popup.implicitHeight - tp0 : height;
         const bh = ph - Config.popFillet * 2;                         // body height (minus fillets)
@@ -59,7 +80,7 @@ PanelWindow {
         // skirt is dead space between the menu and the edge, so trade it for the bar's own 12px
         // margin and let the body reach down. The window height is unchanged; the padding just
         // moves from under the body to above it, so the window still lands flush at the edge.
-        const bp = gcy + bh / 2 + pf > bar.height ? 12 : pf;
+        const bp = gcy + bh / 2 + pf > bar.screenTop + bar.height ? 12 : pf;
         if (popup.botPad !== undefined) popup.botPad = bp;
         let top = gcy - bh / 2;
         // ArchangelOS: the pane grows out of the main shell surface, whose top-left notch owns the
@@ -72,7 +93,7 @@ PanelWindow {
             top = reserve;
         }
         if (popup.topPad !== undefined && Math.abs(popup.topPad - tp) > 0.5) popup.topPad = tp;
-        top = Math.max(pf, Math.min(top, bar.height - bh - bp));      // keep body on-screen
+        top = Math.max(pf, Math.min(top, bar.screenTop + bar.height - bh - bp));
         // Where the bulge grows from and collapses back to, as a fraction of the box. Left edge
         // (0) is the bar; the vertical share is the WIDGET's centre, not the box's — once the
         // screen edge has clamped the body those differ, and the default (0,0) meant every popout
@@ -84,14 +105,16 @@ PanelWindow {
 
     // Which tray item's menu the shared tray-menu popout should show.
     property var trayMenuHandle: null
+    property var hoverInfo: ({ title: "", lines: [], hint: "" })
+    property Item hoverAnchor: null
     property Item trayMenuAnchor: null
 
     // Session actions for the power popout; the verbs live in services/Session.qml.
-    readonly property var sessionActions: Session.pick(["lock", "logout", "reboot", "poweroff"])
+    readonly property var sessionActions: Session.pick(["lock", "logout", "reboot", "poweroff", "suspend"])
     // Out of `sessionActions` on purpose: that array is the Repeater's model, so a palette
-    // dependency there would rebuild all four delegates per theme change. Indexed in parallel
+    // dependency there would rebuild all delegates per theme change. Indexed in parallel
     // instead, so a switch only repaints them.
-    readonly property var sessionTones: [Config.info, Config.warning, Config.success, Config.danger]
+    readonly property var sessionTones: [Config.info, Config.warning, Config.success, Config.danger, Config.warning]
 
     // Keep-awake: inhibits idle/sleep while Shell.keepAwake is on.
     IdleInhibitor { window: bar; enabled: Shell.keepAwake }
@@ -106,8 +129,8 @@ PanelWindow {
     // Never toggle `visible` on fullscreen: remapping the layer surface races with the Frame's own
     // remap and the bar routinely fails to reappear (QML reports visible=true, surface unmapped).
     // Keep it mapped — drop the exclusive zone, hide the content, empty the input region.
-    visible: true
-    exclusiveZone: bar.fullscreenHere ? 0 : implicitWidth
+    visible: !Frame.ShellState.focusMode
+    exclusiveZone: bar.fullscreenHere ? 0 : (Frame.ShellState.focusMode ? 0 : implicitWidth)
     mask: bar.fullscreenHere ? passthrough : null
     Region { id: passthrough }   // empty region → input passes through under fullscreen
 
@@ -117,81 +140,65 @@ PanelWindow {
         color: "transparent"
         visible: !bar.fullscreenHere   // hide widgets under a fullscreen window
 
-    // --- ArchangelOS mark (top-left corner) — the head of the bar, level with ArcShell's
-    // workspace tab beside it. Opens ArcShell's control menu out of the bar's edge. ---
-    Item {
-        id: markBtn
-        x: 0; y: 8
-        width: parent.width; height: 40
-        Rectangle {
-            anchors.centerIn: parent
-            width: 40; height: 32; radius: 10
-            color: markMa.containsMouse || Frame.Popups.archMenuOpen ? Config.container : "transparent"
-            Behavior on color { ColorAnim {} }
-        }
-        Image {
-            anchors.centerIn: parent
-            source: "file:///usr/share/archangelos/logo-mark.svg"
-            sourceSize: Qt.size(56, 41)
-            width: 26; height: 19
-            smooth: true
-            scale: markMa.pressed ? 0.9 : 1.0
-            Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-        }
-        MouseArea {
-            id: markMa
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                if (!Frame.Popups.archMenuOpen) {
-                    Frame.SurfaceState.open("leftCenter", "archMenu")
-                    Frame.Popups.archMenuPinned = true
-                } else {
-                    Frame.SurfaceState.close()
-                }
-            }
-        }
-    }
-
+    // --- ArchangelOS mark now lives in the frame's top-left tab (frame/modules/Left) —
+    // level with the workspaces, per the notch layout. The dock starts with the meters. ---
     ColumnLayout {
         anchors.fill: parent
-        // ArchangelOS: the bar grows down out of ArcShell's top-left notch (logo and
-        // workspaces live there), so the column starts below it.
-        anchors.topMargin: 64
+        anchors.topMargin: 14
         anchors.bottomMargin: 16
         spacing: 10
+
+        ColumnLayout {
+            id: statusTop
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 8
+
+            StatusPill {
+                id: healthPill
+                bar: bar
+                popout: "health"
+                icon: "monitor_heart"
+                tint: DockStatus.healthLevel === "bad" ? Config.danger
+                    : DockStatus.healthLevel === "warn" ? Config.warning : Config.success
+                pulse: DockStatus.healthLevel === "bad"
+                onClicked: Frame.IpcManager._openDashboard("maint")
+            }
+            StatusPill {
+                id: privacyPill
+                bar: bar
+                popout: "privacy"
+                icon: "visibility"
+                tint: DockStatus.screenShared || DockStatus.camInUse ? Config.danger
+                    : (DockStatus.micInUse && !DockStatus.micMuted) ? Config.warning : Config.dim
+                pulse: DockStatus.privacyActive && !(DockStatus.micMuted && !DockStatus.camInUse && !DockStatus.screenShared)
+                onClicked: Shell.openSettings("permissions")
+            }
+            StatusPill {
+                id: updatesPill
+                bar: bar
+                popout: "updates"
+                visible: DockStatus.totalUpdates > 0
+                icon: "system_update_alt"
+                tint: Config.accent
+                count: DockStatus.shortCount(DockStatus.totalUpdates)
+                onClicked: Frame.IpcManager._openDashboard("maint")
+            }
+            StatusPill {
+                id: dockerPill
+                bar: bar
+                popout: "docker"
+                glyph: "\uf308"
+                tint: DockStatus.dockerRunning > 0 ? Config.info : Config.dim
+                count: DockStatus.dockerRunning > 0 ? String(DockStatus.dockerRunning) : ""
+                onClicked: Frame.IpcManager._openDashboard("dev")
+            }
+        }
 
         // --- Monitors (ArchangelOS): live readings; each cluster opens a dock pane ---
         ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 12
             Component.onCompleted: Sys.active = true
-
-            // CPU / RAM / GPU / Storage / Battery — hover opens the system pane
-            Item {
-                id: sysWidget
-                Layout.alignment: Qt.AlignHCenter
-                implicitWidth: sysCol.implicitWidth
-                implicitHeight: sysCol.implicitHeight
-                ColumnLayout {
-                    id: sysCol
-                    anchors.fill: parent
-                    spacing: 12
-                    BarMeter { icon: "speed";           value: Sys.cpu;  valueText: Math.round(Sys.cpu * 100);  tint: Config.severity(Sys.cpu, Config.series[0], 0.75, 0.85) }
-                    BarMeter { icon: "memory";          value: Sys.mem;  valueText: Math.round(Sys.mem * 100);  tint: Config.severity(Sys.mem, Config.series[1], 0.8, 0.9) }
-                    BarMeter { icon: "developer_board"; value: Sys.gpu;  valueText: Math.round(Sys.gpu * 100);  tint: Config.severity(Sys.gpu, Config.series[2], 0.8, 0.9); visible: Sys.hasGpu }
-                    BarMeter { icon: "storage";         value: Sys.disk; valueText: Math.round(Sys.disk * 100); tint: Config.severity(Sys.disk, Config.series[3], 0.8, 0.9) }
-                    BarMeter { icon: Sys.batteryCharging ? "battery_charging_full" : "battery_full"
-                               value: Sys.batteryPct / 100; valueText: Sys.batteryPct
-                               tint: Sys.batteryPct <= 20 ? Config.tertiary : Config.accent; visible: Sys.hasBattery }
-                }
-                MouseArea {
-                    anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                    onEntered: bar.showPopout("sys"); onExited: bar.hidePopout()
-                    onClicked: bar.showPopout("sys")
-                }
-            }
 
             // Weather — hover opens the weather pane
             Item {
@@ -215,6 +222,7 @@ PanelWindow {
                     onEntered: bar.showPopout("weather"); onExited: bar.hidePopout()
                     onClicked: bar.showPopout("weather")
                 }
+                FC.Tip { text: "Weather"; suppressed: bar.popout !== "" }
             }
 
             // Network — wifi/eth status + rates; hover opens the network pane
@@ -250,12 +258,47 @@ PanelWindow {
                         }
                     }
                     }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: 2
+                        text: DockStatus.pingMs < 0 ? "-- ms" : DockStatus.pingMs + " ms"
+                        color: DockStatus.pingMs < 0 || DockStatus.pingMs > 150 ? Config.danger
+                             : DockStatus.pingMs > 70 ? Config.warning : Config.dim
+                        font.family: Config.textFont
+                        font.pixelSize: 8
+                        font.bold: true
+                    }
                 }
                 MouseArea {
                     anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onEntered: bar.showPopout("netinfo"); onExited: bar.hidePopout()
                     onClicked: bar.showPopout("netinfo")
                 }
+                FC.Tip { text: "Network traffic"; suppressed: bar.popout !== "" }
+            }
+
+            // CPU / RAM / GPU / Storage / Battery — hover opens the system pane
+            Item {
+                id: sysWidget
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: sysCol.implicitWidth
+                implicitHeight: sysCol.implicitHeight
+                ColumnLayout {
+                    id: sysCol
+                    anchors.fill: parent
+                    spacing: 12
+                    BarMeter { id: cpuMeter; icon: "speed";           value: Sys.cpu;  valueText: Math.round(Sys.cpu * 100);  tint: Config.severity(Sys.cpu, Config.series[0], 0.75, 0.85); hist: Sys.cpuHist;  popout: "cpu"
+                               onEntered: bar.showPopout("cpu");  onExited: bar.hidePopout() }
+                    BarMeter { icon: "developer_board"; value: Sys.gpu;  valueText: Math.round(Sys.gpu * 100);  tint: Config.severity(Sys.gpu, Config.series[2], 0.8, 0.9); hist: Sys.gpuHist; visible: Sys.hasGpu }
+                    BarMeter { id: ramMeter; icon: "memory";          value: Sys.mem;  valueText: Math.round(Sys.mem * 100);  tint: Config.severity(Sys.mem, Config.series[1], 0.8, 0.9); hist: Sys.memHist;  popout: "ram"
+                               onEntered: bar.showPopout("ram");  onExited: bar.hidePopout() }
+                    BarMeter { id: diskMeter; icon: "hard_disk";       value: Sys.disk; valueText: Math.round(Sys.disk * 100); tint: Config.severity(Sys.disk, Config.series[3], 0.8, 0.9); hist: Sys.diskHist; popout: "disk"
+                               onEntered: bar.showPopout("disk"); onExited: bar.hidePopout() }
+                    BarMeter { icon: Sys.batteryCharging ? "battery_charging_full" : "battery_full"
+                               value: Sys.batteryPct / 100; valueText: Sys.batteryPct
+                               tint: Sys.batteryPct <= 20 ? Config.tertiary : Config.accent; visible: Sys.hasBattery }
+                }
+                FC.Tip { text: "System stats"; suppressed: bar.popout !== "" }
             }
         }
 
@@ -268,8 +311,8 @@ PanelWindow {
             readonly property int pitch: slot + gap
             readonly property int pill: 42          // match the network pill width
             readonly property int padV: 7           // vertical padding inside the pill
-            implicitWidth: pill
-            implicitHeight: Hypr.maxWs * slot + (Hypr.maxWs - 1) * gap + padV * 2
+            implicitWidth: Config.barWorkspaces ? pill : 0
+            implicitHeight: Config.barWorkspaces ? Hypr.maxWs * slot + (Hypr.maxWs - 1) * gap + padV * 2 : 0
 
             // Scroll over the workspaces to switch (up = previous, down = next).
             WheelHandler {
@@ -445,6 +488,7 @@ PanelWindow {
                             else if (e.button === Qt.RightButton) trayItem.openMenu();
                         }
                     }
+                    FC.Tip { text: trayItem.modelData.tooltipTitle || trayItem.modelData.title || trayItem.modelData.id || ""; suppressed: bar.popout !== "" }
                 }
             }
         }
@@ -455,8 +499,8 @@ PanelWindow {
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barClock
             Layout.topMargin: 4
-            implicitWidth: clockCol.implicitWidth
-            implicitHeight: clockCol.implicitHeight
+            implicitWidth: Config.barClock ? clockCol.implicitWidth : 0
+            implicitHeight: Config.barClock ? clockCol.implicitHeight : 0
 
             ColumnLayout {
                 id: clockCol
@@ -519,20 +563,15 @@ PanelWindow {
             id: volWidget
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barVolume
-            implicitWidth: 40
-            implicitHeight: volStat.implicitHeight
-            Rectangle {
-                anchors.fill: parent; radius: 9
-                color: volMa.containsMouse ? Config.container : "transparent"
-                Behavior on color { ColorAnim {} }
-            }
+            implicitWidth: Config.barVolume ? 40 : 0
+            implicitHeight: Config.barVolume ? volStat.implicitHeight : 0
             Stat {
                 id: volStat
                 label: "Volume"
                 anchors.horizontalCenter: parent.horizontalCenter
                 icon: Audio.muted ? "volume_off" : (Audio.volume > 0.5 ? "volume_up" : "volume_down")
                 value: Audio.muted ? "—" : Math.round(Audio.volume * 100) + ""
-                tint: Audio.muted ? Config.dim : Config.fg
+                tint: Audio.muted ? Config.dim : (volMa.containsMouse ? Config.accent : Config.fg)
             }
             MouseArea {
                 id: volMa
@@ -544,6 +583,7 @@ PanelWindow {
                 onClicked: Audio.toggleMute()
                 onWheel: e => Audio.addVolume(e.angleDelta.y > 0 ? 0.05 : -0.05)
             }
+            FC.Tip { text: Audio.muted ? "Click to unmute · scroll to adjust" : "Click to mute · scroll to adjust"; suppressed: bar.popout !== "" }
         }
 
         // --- Recording indicator (only while recording: elapsed time, hover for pause/stop) ---
@@ -554,11 +594,6 @@ PanelWindow {
             Layout.preferredHeight: Capture.active ? implicitHeight : 0
             implicitWidth: 40
             implicitHeight: recStat.implicitHeight
-            Rectangle {
-                anchors.fill: parent; radius: 9
-                color: recMa.containsMouse ? Config.container : "transparent"
-                Behavior on color { ColorAnim {} }
-            }
             Stat {
                 id: recStat
                 label: "Recording"
@@ -567,7 +602,8 @@ PanelWindow {
                 // still-ticking clock would claim the capture is going when it is being written out.
                 icon: Capture.stopping ? "save" : (Capture.paused ? "pause_circle" : "fiber_manual_record")
                 value: Capture.elapsedText
-                tint: Capture.stopping ? Config.dim : (Capture.paused ? Config.warning : Config.error)
+                tint: Capture.stopping ? Config.dim
+                    : (recMa.containsMouse ? Config.accent : (Capture.paused ? Config.warning : Config.error))
                 // Pulse only while capturing, so a paused recording reads as held. The value source
                 // keeps the opacity it stopped on, so pausing must reset it to 1.
                 SequentialAnimation on opacity {
@@ -586,6 +622,7 @@ PanelWindow {
                 onExited: bar.hidePopout()
                 onClicked: Capture.togglePause()
             }
+            FC.Tip { text: Capture.paused ? "Resume recording" : "Pause recording"; suppressed: bar.popout !== "" }
         }
 
         // --- Game mode indicator (only shown while active; click to turn off) ---
@@ -602,38 +639,7 @@ PanelWindow {
                 color: Config.accent
             }
             StateLayer { ovRadius: 9; tint: Config.accent; onTapped: GameMode.toggle() }
-        }
-
-        // --- Brightness (standalone: scroll to change, hover for slider; DDC/CI monitor) ---
-        Item {
-            id: briWidget
-            visible: Config.barBrightness && Brightness.available
-            Layout.preferredHeight: briWidget.visible ? implicitHeight : 0
-            Layout.alignment: Qt.AlignHCenter
-            implicitWidth: 40
-            implicitHeight: briStat.implicitHeight
-            Rectangle {
-                anchors.fill: parent; radius: 9
-                color: briMa.containsMouse ? Config.container : "transparent"
-                Behavior on color { ColorAnim {} }
-            }
-            Stat {
-                id: briStat
-                label: "Brightness"
-                anchors.horizontalCenter: parent.horizontalCenter
-                icon: "brightness_medium"
-                value: Brightness.brightness + ""
-                tint: Config.fg
-            }
-            MouseArea {
-                id: briMa
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onEntered: bar.showPopout("brightness")
-                onExited: bar.hidePopout()
-                onWheel: e => Brightness.set(Brightness.brightness + (e.angleDelta.y > 0 ? 5 : -5))
-            }
+            FC.Tip { text: "Turn off game mode"; suppressed: bar.popout !== "" }
         }
 
         // --- Keyboard layout (standalone, click to switch) ---
@@ -641,14 +647,13 @@ PanelWindow {
             id: kbWidget
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barKeyboard
-            implicitWidth: kbStat.implicitWidth
-            implicitHeight: kbStat.implicitHeight
+            implicitWidth: Config.barKeyboard ? kbStat.implicitWidth : 0
+            implicitHeight: Config.barKeyboard ? kbStat.implicitHeight : 0
             Rectangle {
                 anchors.fill: parent; anchors.margins: -4; radius: 9
-                color: kbMa.containsMouse ? Config.container : "transparent"
-                Behavior on color { ColorAnim {} }
+                color: "transparent"
             }
-            Stat { id: kbStat; label: "Keyboard layout"; anchors.centerIn: parent; icon: "keyboard"; value: Hypr.kbLayout; tint: Config.fg }
+            Stat { id: kbStat; label: "Keyboard layout"; anchors.centerIn: parent; icon: "keyboard"; value: Hypr.kbLayout; tint: kbMa.containsMouse ? Config.accent : Config.fg }
             MouseArea {
                 id: kbMa
                 anchors.fill: parent
@@ -656,25 +661,15 @@ PanelWindow {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: Quickshell.execDetached(["hyprctl", "switchxkblayout", Hypr.kbDevice || "all", "next"])
             }
-        }
-
-        // --- Battery (laptops only) ---
-        Stat {
-            id: batWidget
-            label: Bat.charging ? "Battery, charging" : "Battery"
-            visible: Config.barBattery && Bat.has
-            Layout.preferredHeight: batWidget.visible ? implicitHeight : 0
-            icon: Bat.charging ? "battery_charging_full" : "battery_full"
-            value: Bat.percent + ""
-            tint: Bat.percent <= 15 ? Config.error : (Bat.percent <= 30 ? Config.warning : Config.tertiary)
+            FC.Tip { text: "Switch keyboard layout"; suppressed: bar.popout !== "" }
         }
 
         // --- Controls pill: network / bluetooth / VPN ---
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barControls
-            implicitWidth: 42
-            implicitHeight: ctrlCol.implicitHeight + 12
+            implicitWidth: Config.barControls ? 42 : 0
+            implicitHeight: Config.barControls ? ctrlCol.implicitHeight + 12 : 0
             radius: 16
             // Fade the group background while its popout is open, so the coves blend into the
             // plain bar instead of clipping the pill.
@@ -695,6 +690,7 @@ PanelWindow {
                     icon: Net.ethernetUp && (Net.ethernetIsDefault || !Net.wifiUp) ? "settings_ethernet"
                         : (!Net.wifiOn ? "wifi_off" : (Net.wifiUp ? Net.netIcon(Net.wifiSignal) : "wifi_find"))
                     tint: Net.netUp ? Config.accent : Config.dim
+                    tip: Net.wifiOn ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
                     onClicked: Net.toggleWifi()
                     onHoverIn: { bar.showPopout("network"); Net.scan(); }
                     onHoverOut: bar.hidePopout()
@@ -705,6 +701,7 @@ PanelWindow {
                     label: !Bt.enabled ? "Bluetooth, off" : (Bt.connected ? "Bluetooth, connected" : "Bluetooth, on")
                     icon: !Bt.enabled ? "bluetooth_disabled" : (Bt.connected ? "bluetooth_connected" : "bluetooth")
                     tint: Bt.connected ? Config.accent : (Bt.enabled ? Config.fg : Config.dim)
+                    tip: Bt.enabled ? "Turn Bluetooth off" : "Turn Bluetooth on"
                     onClicked: Bt.toggle()
                     onHoverIn: bar.showPopout("bluetooth")
                     onHoverOut: bar.hidePopout()
@@ -717,28 +714,193 @@ PanelWindow {
                     Layout.preferredHeight: Net.hasVpn ? implicitHeight : 0
                     icon: Net.vpnActive ? "vpn_lock" : "vpn_key_off"
                     tint: Net.vpnActive ? Config.accent : Config.dim
+                    tip: "VPN profiles"
                     onHoverIn: bar.showPopout("vpn")
                     onHoverOut: bar.hidePopout()
                 }
             }
         }
 
-        // (ArchangelOS: power lives in the top-right panel.)
+            // --- Bottom-left cluster: mop (top), battery (middle), gear (bottom) ---
+    ColumnLayout {
+        Layout.alignment: Qt.AlignHCenter
+        Layout.bottomMargin: 12
+        spacing: 10
+
+        Repeater {
+            model: DockStatus.btBattery
+            StatusPill {
+                required property var modelData
+                bar: bar
+                popout: "dockdev"
+                icon: (modelData.icon ?? "").indexOf("gam") >= 0 ? "sports_esports" : "headphones"
+                tint: modelData.battery <= 0.2 ? Config.danger : Config.fg
+                count: Math.round(modelData.battery * 100) + "%"
+                info: ({
+                    title: modelData.name || "Bluetooth device",
+                    color: modelData.battery <= 0.2 ? Config.danger : Config.accent,
+                    lines: ["Battery: " + Math.round(modelData.battery * 100) + "%" + (modelData.battery <= 0.2 ? " (low)" : ""), "Connected over Bluetooth"],
+                    hint: "Click to open Bluetooth"
+                })
+                onClicked: Frame.IpcManager._openNetwork("bluetooth")
+            }
+        }
+
+        Repeater {
+            model: DockStatus.drives
+            StatusPill {
+                required property var modelData
+                bar: bar
+                popout: "dockdev"
+                icon: "usb"
+                tint: Config.fg
+                info: ({
+                    title: modelData.label,
+                    color: Config.accent,
+                    lines: [DockStatus.fmtBytes(modelData.free) + " free of " + DockStatus.fmtBytes(modelData.size), "Mounted at " + modelData.mount],
+                    hint: "",
+                    actions: [
+                        { label: "Open", icon: "folder_open", run: () => DockStatus.open(modelData) },
+                        { label: "Eject", icon: "eject", run: () => DockStatus.eject(modelData) }
+                    ]
+                })
+                onClicked: DockStatus.open(modelData)
+            }
+        }
+
+        // Cleaning mop icon — opens ArchangelOS settings cleaning page
+        IconBtn {
+            id: mopWidget
+            icon: "cleaning_services"
+            label: "Cleaning"
+            tip: "Cleaning settings"
+            tipAbove: true
+            tint: Config.fg
+            onClicked: Shell.openSettings("cleaning")
+        }
+
+        // Horizontal battery icon — glyph and tint follow the charge level
+        Item {
+            id: batWidget
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: 32
+            implicitHeight: 40
+            visible: Bat.has
+
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: 1
+                MatIcon {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: Bat.charging ? "battery_android_bolt"
+                        : Bat.percent >= 99 ? "battery_android_full"
+                        : "battery_android_" + Math.min(6, Math.max(0, Math.floor(Bat.percent / 15)))
+                    font.pixelSize: 20
+                    color: {
+                        if (batMa.containsMouse) return Config.accent
+                        var p = Bat.percent
+                        if (p <= 0)   return "#ff4444"
+                        if (p >= 100) return "#00cc00"
+                        if (p < 50) {
+                            var t = p / 50
+                            return Qt.rgba(1, 0.42 + 0.58 * t, 0.27 * (1 - t), 1)
+                        }
+                        var t = (p - 50) / 50
+                        return Qt.rgba(1 - t, 1, 0, 1)
+                    }
+                }
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: Bat.percent + "%"
+                    color: batMa.containsMouse ? Config.accent : Config.fg
+                    font.family: Config.textFont
+                    font.pixelSize: 9
+                }
+            }
+            MouseArea {
+                id: batMa
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: bar.showPopout("battery")
+                onEntered: bar.showPopout("battery")
+                onExited: bar.hidePopout()
+            }
+            FC.Tip { text: "Battery & power"; above: true; suppressed: bar.popout !== "" }
+        }
+
+        // Gear icon — opens ArchangelOS settings
+        IconBtn {
+            id: gearWidget
+            icon: "settings"
+            label: "Settings"
+            tipAbove: true
+            tint: Config.fg
+            onClicked: Shell.openSettings()
+        }
+    }
+
+    // (ArchangelOS: power lives in the top-right panel.)
     }
     }
 
     // --- Popouts ---
+    StatusPopout {
+        bar: bar; widget: bar.hoverAnchor; name: "dockdev"
+        title: bar.hoverInfo.title ?? ""
+        titleColor: bar.hoverInfo.color ?? Config.accent
+        lines: bar.hoverInfo.lines ?? []
+        hint: bar.hoverInfo.hint ?? ""
+        actions: bar.hoverInfo.actions ?? []
+    }
+    StatusPopout {
+        bar: bar; widget: healthPill; name: "health"
+        title: "System health"
+        titleColor: healthPill.tint
+        lines: DockStatus.healthIssues.length > 0 ? ["Needs attention:"].concat(DockStatus.healthIssues)
+             : ["All good", "No failed services", "Disk " + Math.round(Sys.disk * 100) + "% used", "CPU " + Sys.temp + "°C"]
+        hint: "Click to open Upkeep"
+    }
+    StatusPopout {
+        bar: bar; widget: privacyPill; name: "privacy"
+        title: DockStatus.privacyActive ? "In use" : "Privacy"
+        titleColor: privacyPill.tint
+        lines: {
+            const l = [];
+            l.push("Microphone: " + (DockStatus.micInUse ? "in use" : "idle") + (DockStatus.micMuted ? " (muted)" : ""));
+            l.push("Camera: " + (DockStatus.camInUse ? "in use" : "idle"));
+            l.push("Screen sharing: " + (DockStatus.screenShared ? "active" : "off"));
+            return l;
+        }
+        hint: "Click to open App permissions"
+    }
+    StatusPopout {
+        bar: bar; widget: updatesPill; name: "updates"
+        title: DockStatus.totalUpdates + " updates"
+        lines: [DockStatus.repoUpdates + " from the repositories", DockStatus.aurUpdates + " from the AUR"]
+        hint: "Click to open Upkeep"
+    }
+    StatusPopout {
+        bar: bar; widget: dockerPill; name: "docker"
+        title: "Docker"
+        titleColor: dockerPill.tint
+        lines: [DockStatus.dockerRunning > 0 ? DockStatus.dockerRunning + " container" + (DockStatus.dockerRunning > 1 ? "s" : "") + " running" : "No containers running"]
+        hint: "Click to open Dev"
+    }
     // Each anchors to its widget and shows while bar.popout names it (modules/bar/BarPopout.qml).
     // ArchangelOS: the monitor panes
     SysPopout        { bar: bar; widget: sysWidget }
+    CpuPopout        { bar: bar; widget: cpuMeter }
+    RamPopout        { bar: bar; widget: ramMeter }
+    DiskPopout       { bar: bar; widget: diskMeter }
     NetInfoPopout    { bar: bar; widget: monNetWidget }
     WeatherPopout    { bar: bar; widget: weatherWidget }
     VolumePopout     { bar: bar; widget: volWidget }
     RecordingPopout  { bar: bar; widget: recWidget }
-    BrightnessPopout { bar: bar; widget: briWidget }
     NetworkPopout    { bar: bar; widget: netWidget }
     BluetoothPopout  { bar: bar; widget: btWidget }
     VpnPopout        { bar: bar; widget: vpnWidget }
+    BatteryPopout    { bar: bar; widget: batWidget }
     // The anchor moves: whichever tray icon the cursor is on.
     TrayMenuPopout   { bar: bar; widget: bar.trayMenuAnchor }
 }

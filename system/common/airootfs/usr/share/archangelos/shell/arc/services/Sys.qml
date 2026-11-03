@@ -15,6 +15,10 @@ Singleton {
     property int  temp: 0
     property real memTotalGb: 0
     property real memUsedGb: 0
+    property real memAvailGb: 0
+    property real memFreeGb: 0
+    property real swapTotalGb: 0
+    property real swapUsedGb: 0
     property real disk: 0
     property real diskUsedGb: 0
     property real diskTotalGb: 0
@@ -25,6 +29,9 @@ Singleton {
     property real vramUsedGb: 0
     property real vramTotalGb: 0
     property bool hasGpu: false
+    // Debug switch (ipc call gpu toggle): pretend a GPU exists with a wandering load,
+    // so the GPU readouts can be previewed on machines without one.
+    property bool emulateGpu: false
     property real down: 0
     property real up: 0
     property string uptime: ""
@@ -35,6 +42,7 @@ Singleton {
     property var  cpuHist: []
     property var  memHist: []
     property var  gpuHist: []
+    property var  diskHist: []
     function _hist(a, v) { var n = a.slice(-59); n.push(v); return n; }
     property var _prev: null
     property var _prevNet: null
@@ -82,14 +90,24 @@ Singleton {
                 root._prev = { total: total, idle: idle };
             }
 
-            const memText = memFile.text();   // one read, two lookups
+            const memText = memFile.text();   // one read, several lookups
             const mt = /MemTotal:\s+(\d+)/.exec(memText);
             const ma = /MemAvailable:\s+(\d+)/.exec(memText);
+            const mf = /MemFree:\s+(\d+)/.exec(memText);
+            const st = /SwapTotal:\s+(\d+)/.exec(memText);
+            const sf = /SwapFree:\s+(\d+)/.exec(memText);
             if (mt && ma) {
                 const totalKb = Number(mt[1]), availKb = Number(ma[1]);
                 root.mem = 1 - availKb / totalKb;
                 root.memTotalGb = totalKb / 1048576;
+                root.memAvailGb = availKb / 1048576;
                 root.memUsedGb = (totalKb - availKb) / 1048576;
+                if (mf) root.memFreeGb = Number(mf[1]) / 1048576;
+            }
+            if (st) {
+                const stKb = Number(st[1]);
+                root.swapTotalGb = stKb / 1048576;
+                root.swapUsedGb = (stKb - (sf ? Number(sf[1]) : stKb)) / 1048576;
             }
 
             const t = Number(tempFile.text().trim());
@@ -115,6 +133,11 @@ Singleton {
             // free space does not move in jumps worth a spawn every 10s.
             if (root._tick % 15 === 0) diskProc.running = true;
             root.readGpu();
+            if (root.emulateGpu) {
+                root.hasGpu = true;
+                root.gpu = Math.max(0, Math.min(1, 0.42 + 0.33 * Math.sin(root._tick / 2.5)));
+                root.gpuTemp = 57 + Math.round(6 * Math.sin(root._tick / 4));
+            }
             root._tick++;
 
             loadFile.reload();
@@ -167,6 +190,7 @@ Singleton {
                     root.disk = f[0] / 100;
                     root.diskUsedGb = f[1] / 1048576;
                     root.diskTotalGb = f[2] / 1048576;
+                    root.diskHist = root._hist(root.diskHist, root.disk);
                 }
             }
         }
@@ -207,6 +231,7 @@ Singleton {
 
     function readGpu() {
         if (root.gpuPaths === null) { gpuFind.running = true; return; }   // first sample: resolve
+        root.hasGpu = false;
         if (root.gpuPaths.b) {
             gpuBusyFile.reload();
             const b = parseInt(gpuBusyFile.text().trim());

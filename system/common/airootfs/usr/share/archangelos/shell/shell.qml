@@ -35,9 +35,32 @@ ShellRoot {
     // arc/: the left bar's widgets and the launcher, above the surface.
     Variants { model: Quickshell.screens; NS.Bar {} }
     Variants { model: Quickshell.screens; NS.Launcher {} }
+    // arc/: the freeze-frame still shown while a region pick is in progress.
+    Variants { model: Quickshell.screens; NS.FreezeFrame {} }
+    // arc/: the animated region-picker overlay (instant — no second qs process).
+    Variants { model: Quickshell.screens; NS.RegionSelector {} }
+    // arc/: instant fullscreen flash on immediate (screen) capture.
+    Variants { model: Quickshell.screens; Component {
+        Item { required property var modelData
+        Rectangle {
+            anchors.fill: parent
+            visible: NSS.Capture.flashing
+            color: "white"
+            opacity: 0
+            Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.InOutQuad } }
+            SequentialAnimation on opacity {
+                running: NSS.Capture.flashing
+                NumberAnimation { to: 1; duration: 60; easing.type: Easing.InOutQuad }
+                NumberAnimation { to: 0; duration: 120; easing.type: Easing.InOutQuad }
+                onRunningChanged: if (!running) NSS.Capture.flashing = false
+            }
+        }
+        } }
+    }
 
     // ArchangelOS Settings — one window, opened by `archangelos-settings [page]` or the launcher.
     AXS.SettingsWindow {}
+    AXS.PolkitPrompt {}
 
     // One accent for both shells: ArcShell's (set from the wallpaper picker's swatches).
     Binding { target: NSRoot.Config; property: "accentOverride"; value: Frame.PrefsService.overrideActive }
@@ -61,5 +84,9 @@ ShellRoot {
         target: "bar"
         function popout(name: string): void { NSS.Shell.barPopout = name ?? "" }
         function close(): void { NSS.Shell.barPopout = "" }
+    }
+    IpcHandler {
+        target: "gpu"
+        function toggle(): bool { NSS.Sys.emulateGpu = !NSS.Sys.emulateGpu; return NSS.Sys.emulateGpu }
     }
 }
