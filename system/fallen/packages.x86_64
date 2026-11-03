@@ -28,17 +28,6 @@ beef
 bettercap
 bind
 binwalk
-blackarch-config-awesome
-blackarch-config-bash
-blackarch-config-zsh
-blackarch-config-fluxbox
-blackarch-config-gtk
-blackarch-config-i3
-blackarch-config-lxdm
-blackarch-config-openbox
-blackarch-config-spectrwm
-blackarch-config-vim
-blackarch-config-x11
 blackarch-installer
 blackarch-keyring
 blackarch-menus

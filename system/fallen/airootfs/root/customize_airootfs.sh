@@ -54,7 +54,7 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias ll='ls -laf'
 PS1='\[\e[0;31m\]\u\[\e[0m\]@\[\e[0;34m\]\h\[\e[0m\] \W\$ '
-fastfetch
+arcfetch
 BASHEOF
   cp /etc/skel/.bashrc /etc/skel/.bash_profile
   cat > /etc/skel/.zshrc << 'ZSHEOF'
@@ -63,7 +63,7 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias ll='ls -laf'
 PROMPT='%F{red}%n%f@%F{blue}%m%f %F{green}%~%f %# '
-fastfetch
+arcfetch
 ZSHEOF
 fi
 
