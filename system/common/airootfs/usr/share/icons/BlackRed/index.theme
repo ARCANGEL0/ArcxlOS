@@ -1,0 +1,5 @@
+[Icon Theme]
+Name=BlackRed
+Inherits=hicolor
+ScaledDirectories=svg
+Directories=png,ICO

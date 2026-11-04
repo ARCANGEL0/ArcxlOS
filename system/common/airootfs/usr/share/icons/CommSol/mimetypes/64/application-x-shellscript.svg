@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64"
+   height="64"
+   viewBox="0 0 64 64.000003"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   sodipodi:docname="application-x-shellscript.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#d1d1d1"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="false"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     showgrid="true"
+     inkscape:zoom="8.651964"
+     inkscape:cx="29.704238"
+     inkscape:cy="42.649276"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       id="grid1"
+       units="px"
+       originx="0"
+       originy="0"
+       spacingx="1"
+       spacingy="1"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       enabled="true"
+       visible="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="rect1"
+       style="fill:#d9deed;stroke:none;stroke-width:0.999999;fill-opacity:1"
+       d="M 10 3 L 10 61 L 54 61 L 54 15 L 42 3 L 10 3 z " />
+    <path
+       id="rect3"
+       style="fill:#c3c8d5;stroke:none;stroke-width:1;fill-opacity:1"
+       d="M 42,3.0000005 V 14.999999 h 12 z" />
+    <rect
+       style="fill:#737c91;stroke:none;stroke-width:1;fill-opacity:1"
+       id="rect11"
+       width="24"
+       height="1.9999969"
+       x="20"
+       y="45" />
+    <path
+       style="fill:none;stroke:#737c91;stroke-width:2;stroke-dasharray:none;stroke-opacity:1"
+       d="m 20,24.999999 10,7.999999 -10,7"
+       id="path1"
+       sodipodi:nodetypes="ccc" />
+  </g>
+</svg>

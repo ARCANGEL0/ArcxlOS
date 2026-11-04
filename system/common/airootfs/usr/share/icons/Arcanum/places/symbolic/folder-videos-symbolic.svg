@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="64"
+   height="64"
+   version="1.1"
+   id="svg73"
+   sodipodi:docname="folder-videos.svg"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata
+     id="metadata77">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#f5f7fa"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1294"
+     inkscape:window-height="905"
+     id="namedview75"
+     showgrid="false"
+     inkscape:zoom="6.2890624"
+     inkscape:cx="38.320498"
+     inkscape:cy="30.529193"
+     inkscape:window-x="24"
+     inkscape:window-y="21"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1"
+     inkscape:document-rotation="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
+  <defs
+     id="defs29">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter18"
+       x="-0.11340893"
+       y="-0.13605348"
+       width="1.2268179"
+       height="1.272107">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur18" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter22"
+       x="-0.11618328"
+       y="-0.11604551"
+       width="1.2323666"
+       height="1.232091">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur22" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter26"
+       x="-0.11689105"
+       y="-0.12527219"
+       width="1.2337821"
+       height="1.2505444">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur26" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter30"
+       x="-0.11817706"
+       y="-0.14374423"
+       width="1.2363541"
+       height="1.2874885">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur30" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter34"
+       x="-0.1266515"
+       y="-0.11826871"
+       width="1.253303"
+       height="1.2365374">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur34" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter38"
+       x="-0.12703157"
+       y="-0.11812115"
+       width="1.2540631"
+       height="1.2362423">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur38" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter42"
+       x="-0.11843339"
+       y="-0.11841659"
+       width="1.2368668"
+       height="1.2368332">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur42" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter46"
+       x="-0.11850244"
+       y="-0.12405628"
+       width="1.2370049"
+       height="1.2481126">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur46" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter50"
+       x="-0.12190159"
+       y="-0.18997623"
+       width="1.2438032"
+       height="1.3799525">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur50" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Blur"
+       id="filter55"
+       x="-0.088181261"
+       y="-0.11008453"
+       width="1.1763625"
+       height="1.2201691">
+      <feGaussianBlur
+         stdDeviation="2 2"
+         result="blur"
+         id="feGaussianBlur55" />
+    </filter>
+  </defs>
+  <circle
+     cx="32.516094"
+     cy="31.877844"
+     r="0"
+     fill="url(#b)"
+     stroke-width="1.5715"
+     id="circle41"
+     style="fill:url(#b)" />
+  <g
+     aria-label="GZ"
+     transform="matrix(1.2212657,0,0,0.81882264,0.4960938,-0.1661539)"
+     id="text93"
+     style="font-weight:bold;font-size:11.5263px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';fill:#f2f2f2;stroke-width:0.288159" />
+  <g
+     id="g877"
+     transform="matrix(1.1,0,0,1.1,-3.1845928,-3.2065454)">
+    <g
+       id="g1"
+       transform="matrix(0.9,0,0,0.9,3.1987382,0.38652188)">
+      <path
+         style="fill:#2e3436;fill-opacity:1;stroke:none;stroke-width:1.58507;stroke-dasharray:none;stroke-opacity:0.5"
+         d="M 6.52642,5.2621153 V 65.003281 H 57.445386 V 5.2621165 H 54.262942 V 8.995928 H 51.080501 V 5.2621165 H 12.891294 V 8.995928 H 9.7088534 L 9.7082154,5.2621165 H 6.526293 Z M 19.256158,12.729752 H 44.715643 V 31.39888 H 19.256158 Z m -9.5479426,3.733833 h 3.1824406 v 7.467638 H 9.7082154 Z m 41.3716426,0 H 54.2623 v 7.467638 H 51.079858 Z M 9.7082154,31.39888 h 3.1824406 v 7.467635 H 9.7082154 Z m 41.3716426,0 H 54.2623 v 7.467635 H 51.079858 Z M 19.255519,38.866515 H 44.715002 V 57.535629 H 19.255519 Z m -9.5479383,7.467639 h 3.1824383 v 7.467651 H 9.7075807 Z m 41.3716703,0 h 3.182405 v 7.467651 H 51.079251 Z M 9.7075862,61.26947 h 3.1824398 v 3.733811 H 9.7075862 Z m 41.3716648,0 h 3.182405 v 3.733811 h -3.182405 z"
+         id="path4" />
+    </g>
+  </g>
+</svg>
