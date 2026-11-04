@@ -20,8 +20,20 @@ PageScaffold {
     readonly property string conf: (Quickshell.env("XDG_CONFIG_HOME") || (page.home + "/.config")) + "/archangelos/appearance.conf"
     property var cursorThemes: []
     property var iconThemes: []
+    property var gtkThemes: []
     property string curCursor: ""
     property string curIcon: ""
+    property string curGtk: ""
+    readonly property var colorSlots: [
+        { key: "Bg",      label: "Background" },
+        { key: "Border",  label: "Border" },
+        { key: "Active",  label: "Accent" },
+        { key: "Text",    label: "Text" },
+        { key: "Subtext", label: "Subtext" },
+        { key: "Icon",    label: "Icon" },
+    ]
+    property string colorEdit: ""
+    property string colorHex: ""
     property int cursorSize: 24
     property bool themesLoaded: false
     property string busy: ""
@@ -33,17 +45,20 @@ PageScaffold {
         tcmd.sh('paths="/usr/share/icons $HOME/.local/share/icons $HOME/.icons"; '
               + 'echo "--cursors"; for d in $paths; do [ -d "$d" ] || continue; for t in "$d"/*/; do [ -d "${t}cursors" ] && basename "$t"; done; done | sort -u; '
               + 'echo "--icons"; for d in $paths; do [ -d "$d" ] || continue; for t in "$d"/*/; do n=$(basename "$t"); '
-              + 'case "$n" in hicolor|default|locolor) continue;; esac; [ -f "${t}index.theme" ] || continue; '
-              + 'grep -qiE "^Directories=.*(apps|actions|places|devices|mimetypes|status|[0-9]+x[0-9]+|scalable)" "${t}index.theme" && echo "$n"; done; done | sort -u; '
-              + 'echo "--cur"; . "$1" 2>/dev/null; '
+              + 'case "$n" in hicolor|default|locolor) continue;; esac; [ -f "${t}index.theme" ] || continue; [ -d "${t}cursors" ] && continue; '
+              + 'echo "$n"; done; done | sort -u; '
+              + 'echo "--current"; . "$1" 2>/dev/null; '
               + 'echo "cursor=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d \"\\x27\" || echo "$CURSOR_THEME")"; '
               + 'echo "icon=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d \"\\x27\" || echo "$ICON_THEME")"; '
-              + 'echo "size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null || echo "${CURSOR_SIZE:-24}")"', [page.conf], (c, o) => {
+              + 'echo "size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null || echo "${CURSOR_SIZE:-24}")"; '
+              + 'echo "gtk=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "\\x27" || echo "$GTK_THEME")"; '
+              + 'echo "--gtk"; for d in /usr/share/themes "$HOME/.themes"; do [ -d "$d" ] || continue; for t in "$d"/*/; do { [ -d "${t}gtk-3.0" ] || [ -d "${t}gtk-4.0" ]; } && basename "$t"; done; done | sort -u', [page.conf], (c, o) => {
             const sec = (a, b) => { const i = o.indexOf(a), j = b ? o.indexOf(b) : o.length; return i < 0 ? "" : o.slice(i + a.length, j < 0 ? o.length : j); };
             page.cursorThemes = sec("--cursors", "--icons").split("\n").filter(l => l.trim());
-            page.iconThemes = sec("--icons", "--cur").split("\n").filter(l => l.trim());
-            for (const l of sec("--cur").split("\n")) { const i = l.indexOf("="); if (i < 0) continue; const k = l.slice(0, i), v = l.slice(i + 1).trim();
-                if (k === "cursor" && v) page.curCursor = v; if (k === "icon" && v) page.curIcon = v; if (k === "size" && v) page.cursorSize = parseInt(v) || 24; }
+            page.iconThemes = sec("--icons", "--current").split("\n").filter(l => l.trim());
+            page.gtkThemes = sec("--gtk").split("\n").filter(l => l.trim());
+            for (const l of sec("--current", "--gtk").split("\n")) { const i = l.indexOf("="); if (i < 0) continue; const k = l.slice(0, i), v = l.slice(i + 1).trim();
+                if (k === "cursor" && v) page.curCursor = v; if (k === "icon" && v) page.curIcon = v; if (k === "size" && v) page.cursorSize = parseInt(v) || 24; if (k === "gtk" && v) page.curGtk = v; }
             page.themesLoaded = true;
         });
     }
@@ -67,11 +82,27 @@ PageScaffold {
             + 'hyprctl setcursor "$1" "$2" >/dev/null 2>&1; hyprctl keyword env XCURSOR_THEME,"$1" >/dev/null 2>&1; true', "sh", theme, String(page.cursorSize)]);
         page.flash("Cursor theme changed.");
     }
+    function applyGtk(theme) {
+        page.curGtk = theme;
+        page.setKV("GTK_THEME", theme);
+        page.gtkSet("gtk-theme-name", theme);
+        Quickshell.execDetached(["sh", "-c", 'gsettings set org.gnome.desktop.interface gtk-theme "$1" 2>/dev/null; true', "sh", theme]);
+        page.flash("Window theme changed.");
+    }
+    function applyColorSlot() {
+        const hex = page.colorHex.trim();
+        if (!/^#[0-9a-fA-F]{6}$/.test(hex)) { page.error = "Enter a hex colour like #C24A52"; return; }
+        Frame.PrefsService["override" + page.colorEdit] = hex.toUpperCase();
+        page.error = ""; page.colorEdit = "";
+        page.flash("Colour updated.");
+    }
     function applyIcon(theme) {
         page.curIcon = theme;
         page.setKV("ICON_THEME", theme);
         page.gtkSet("gtk-icon-theme-name", theme);
-        Quickshell.execDetached(["sh", "-c", 'gsettings set org.gnome.desktop.interface icon-theme "$1" 2>/dev/null; true', "sh", theme]);
+        Quickshell.execDetached(["sh", "-c",
+            'gsettings set org.gnome.desktop.interface icon-theme "$1" 2>/dev/null; '
+            + 'mkdir -p "$HOME/.icons/default"; printf "[Icon Theme]\\nName=Default\\nInherits=%s\\n" "$1" > "$HOME/.icons/default/index.theme"; true', "sh", theme]);
         page.flash("Icon theme changed.");
     }
     function flash(t) { page.notice = t; flashT.restart(); }
@@ -205,6 +236,39 @@ PageScaffold {
                         }
                     }
                 }
+
+                Row {
+                    width: parent.width; spacing: 10; topPadding: 8
+                    Label { text: "Custom colours"; font.weight: Font.Medium; anchors.verticalCenter: parent.verticalCenter }
+                    Flow {
+                        width: parent.width - 130; spacing: 8
+                        Repeater {
+                            model: page.colorSlots
+                            delegate: Column {
+                                required property var modelData
+                                spacing: 3
+                                Rectangle {
+                                    width: 28; height: 28; radius: 8
+                                    color: Frame.PrefsService["override" + modelData.key]
+                                    border.width: page.colorEdit === modelData.key ? 2 : 1
+                                    border.color: page.colorEdit === modelData.key ? Ax.accent : Ax.border
+                                    MouseArea {
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; enabled: !page.fromWallpaper
+                                        onClicked: { page.colorEdit = modelData.key; page.colorHex = Frame.PrefsService["override" + modelData.key]; page.error = ""; }
+                                    }
+                                }
+                                Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; font.pixelSize: Ax.fsSmall - 1; color: Ax.faint }
+                            }
+                        }
+                    }
+                }
+                Row {
+                    visible: page.colorEdit !== ""
+                    width: parent.width; spacing: 8; topPadding: 4
+                    AxField { width: 130; text: page.colorHex; placeholder: "#RRGGBB"; onTextChanged: page.colorHex = text; onAccepted: page.applyColorSlot() }
+                    AxButton { text: "Apply"; kind: "primary"; onClicked: page.applyColorSlot() }
+                    AxButton { text: "Cancel"; onClicked: { page.colorEdit = ""; page.error = "" } }
+                }
             }
         }
     }
@@ -252,7 +316,7 @@ PageScaffold {
     }
 
     Section {
-        title: "Cursor & icons"
+        title: "Personalization"
         note: page.notice
         Label { visible: page.error !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.error; color: Ax.danger; font.pixelSize: Ax.fsSmall
                 property bool topDivider: false; leftPadding: Ax.pad; topPadding: 10 }
@@ -261,6 +325,12 @@ PageScaffold {
             AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: page.cursorThemes
                        current: Math.max(0, page.cursorThemes.indexOf(page.curCursor))
                        onPicked: (i) => page.applyCursor(page.cursorThemes[i]) }
+        }
+        SRow {
+            icon: "web_asset"; title: "Window theme"; desc: "GTK theme that restyles most application windows"
+            AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: page.gtkThemes
+                       current: Math.max(0, page.gtkThemes.indexOf(page.curGtk))
+                       onPicked: (i) => page.applyGtk(page.gtkThemes[i]) }
         }
         SRow {
             icon: "apps"; title: "Icon theme"; desc: "Icons for apps, files and folders (GTK applications)"
