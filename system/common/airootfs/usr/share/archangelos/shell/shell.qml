@@ -35,6 +35,7 @@ ShellRoot {
     // arc/: the left bar's widgets and the launcher, above the surface.
     Variants { model: Quickshell.screens; NS.Bar {} }
     Variants { model: Quickshell.screens; NS.Launcher {} }
+    Variants { model: Quickshell.screens; NS.KillOverlay {} }
     // arc/: the freeze-frame still shown while a region pick is in progress.
     Variants { model: Quickshell.screens; NS.FreezeFrame {} }
     // arc/: the animated region-picker overlay (instant — no second qs process).
@@ -88,5 +89,9 @@ ShellRoot {
     IpcHandler {
         target: "gpu"
         function toggle(): bool { NSS.Sys.emulateGpu = !NSS.Sys.emulateGpu; return NSS.Sys.emulateGpu }
+    }
+    IpcHandler {
+        target: "killmode"
+        function toggle(): void { NSS.Shell.killMode = !NSS.Shell.killMode }
     }
 }

@@ -22,6 +22,7 @@ Singleton {
     property bool dashboardVisible: false
     property bool overviewVisible: false
     property string barPopout: ""         // "volume", "network", … see modules/Bar.qml
+    property bool killMode: false         // SUPER+SHIFT+K overlay; click a window to force-kill its app
     // Open settings, optionally deep-linking to a page. Settings consumes settingsPage on show.
     function openSettings(pageId) {
         root.settingsPage = pageId ?? "";

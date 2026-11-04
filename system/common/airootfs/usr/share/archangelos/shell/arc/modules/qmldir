@@ -1,0 +1,15 @@
+Background Background.qml
+Bar Bar.qml
+CapturePanel CapturePanel.qml
+RegionSelector RegionSelector.qml
+Dashboard Dashboard.qml
+Frame Frame.qml
+FreezeFrame FreezeFrame.qml
+Launcher Launcher.qml
+KillOverlay KillOverlay.qml
+LockScreen LockScreen.qml
+MediaOsd MediaOsd.qml
+Overview Overview.qml
+Settings Settings.qml
+Toasts Toasts.qml
+VolumeOsd VolumeOsd.qml
