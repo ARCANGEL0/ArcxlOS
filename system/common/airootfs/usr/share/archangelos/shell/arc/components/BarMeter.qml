@@ -18,7 +18,7 @@ Item {
     // Name passed to bar.showPopout() when the cursor enters this meter.
     property string popout: ""
 
-    readonly property bool hasHist: meter.hist !== null && meter.hist.length >= 2
+    readonly property bool hasHist: meter.hist !== null && meter.hist !== undefined
     readonly property real pillW: 8
     readonly property real pillH: 38
 
