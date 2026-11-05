@@ -34,6 +34,8 @@ ShellRoot {
 
     // arc/: the left bar's widgets and the launcher, above the surface.
     Variants { model: Quickshell.screens; NS.Bar {} }
+    Variants { model: Quickshell.screens; EdgeStrips { rightEdge: true } }
+    Variants { model: Quickshell.screens; EdgeStrips { rightEdge: false } }
     Variants { model: Quickshell.screens; NS.Launcher {} }
     Variants { model: Quickshell.screens; NS.KillOverlay {} }
     // arc/: the freeze-frame still shown while a region pick is in progress.
@@ -93,5 +95,11 @@ ShellRoot {
     IpcHandler {
         target: "killmode"
         function toggle(): void { NSS.Shell.killMode = !NSS.Shell.killMode }
+    }
+    IpcHandler {
+        target: "surface"
+        function state(): string { return Frame.SurfaceState.activeSurface + ":" + Frame.SurfaceState.activeContent + " page=" + Frame.Popups.audioPage }
+        function open(s: string, c: string): void { Frame.SurfaceState.open(s, c) }
+        function page(p: string): void { Frame.Popups.audioPage = p }
     }
 }

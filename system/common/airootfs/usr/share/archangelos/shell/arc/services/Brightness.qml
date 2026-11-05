@@ -102,10 +102,10 @@ Singleton {
     }
 
     function set(v) {
-        // Floored at 1: the way back from a black panel is the widget that went dark with it.
-        const p = Math.max(1, Math.min(100, Math.round(v)));
+        // Floored at 10%: below that the screen looks off and there's no visible UI to recover with.
+        const p = Math.max(10, Math.min(100, Math.round(v)));
         if (root.hasInternal) {
-            root.blRaw = Math.max(1, Math.round(p * root.blMax / 100));   // optimistic; sysfs confirms
+            root.blRaw = Math.max(Math.round(root.blMax / 10), Math.round(p * root.blMax / 100));   // optimistic; sysfs confirms
         } else if (root.ddcBus >= 0) {
             root.ddcPercent = p;
         } else {

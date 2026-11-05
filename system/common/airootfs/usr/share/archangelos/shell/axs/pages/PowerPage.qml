@@ -131,7 +131,7 @@ PageScaffold {
             model: [
                 { k: "dimAfter", i: "brightness_low", t: "Dim the screen after" },
                 { k: "screenOffAfter", i: "desktop_access_disabled", t: "Turn the screen off after" },
-                { k: "suspendAfter", i: "bedtime", t: "Sleep after" }
+                { k: "lockAfter", i: "bedtime", t: "Lock the screen after" }
             ]
             SRow {
                 required property var modelData

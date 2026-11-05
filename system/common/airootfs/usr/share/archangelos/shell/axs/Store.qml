@@ -24,7 +24,7 @@ Singleton {
             // seconds; 0 = never
             property int dimAfter: 180
             property bool autoLock: true
-            property int lockAfter: 300
+            property int lockAfter: 1800
             property int screenOffAfter: 600
             property int suspendAfter: 1800
             property bool lockOnSleep: true

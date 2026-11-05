@@ -140,8 +140,7 @@ Item {
                 root._expandSsid    = ""
             } else {
                 var err = connectStderr.text.toLowerCase()
-                if (err.indexOf("secret") >= 0 || err.indexOf("password") >= 0
-                        || err.indexOf("no network") < 0) {
+                if (err.indexOf("secret") >= 0 || err.indexOf("password") >= 0) {
                     var np2 = Object.assign({}, root._needsPassword)
                     np2[connectProc._ssid] = true
                     root._needsPassword = np2
@@ -157,11 +156,22 @@ Item {
         id: passProc
         command: []
         running: false
-        onRunningChanged: if (!running) {
+        stderr: StdioCollector { id: passStderr }
+        onExited: function(code, status) {
             root._connectingTo = ""
-            root._expandSsid   = ""
+            if (code !== 0) {
+                // failed (e.g. wrong password): keep the password prompt open for retry
+                var np = Object.assign({}, root._needsPassword)
+                np[passProc._ssid] = true
+                root._needsPassword = np
+                root._expandSsid = passProc._ssid
+                console.warn("wifi connect failed:", passStderr.text.trim())
+            } else {
+                root._expandSsid = ""
+            }
             root._scan(false)
         }
+        property string _ssid: ""
     }
 
     Process {
@@ -251,8 +261,7 @@ Item {
         _connectingTo = ssid; _expandSsid = ""
         connectProc._ssid = ssid
         connectProc.command = ["bash", "-c",
-            "nmcli con up id \"" + ssid + "\" 2>&1 ||" +
-            " nmcli dev wifi connect \"" + ssid + "\" 2>&1"]
+            'nmcli con up id "$1" 2>&1 || nmcli dev wifi connect "$1" 2>&1', "sh", ssid]
         connectProc.running = false; connectProc.running = true
     }
 
@@ -261,8 +270,10 @@ Item {
         var np = Object.assign({}, root._needsPassword)
         delete np[ssid]
         root._needsPassword = np
+        // positional args, so quotes/specials in ssid/password can't break the command
+        passProc._ssid = ssid
         passProc.command = ["bash", "-c",
-            "nmcli dev wifi connect \"" + ssid + "\" password \"" + password + "\" 2>/dev/null"]
+            "nmcli dev wifi connect \"$1\" password \"$2\" 2>&1", "sh", ssid, password]
         passProc.running = false; passProc.running = true
     }
 

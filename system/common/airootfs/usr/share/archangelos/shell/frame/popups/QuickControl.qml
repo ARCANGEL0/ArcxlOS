@@ -40,11 +40,11 @@ Item {
     }
 
     readonly property var sink: Pipewire.defaultAudioSink
+    readonly property var source: Pipewire.defaultAudioSource
     PwObjectTracker {
-        objects: root.sink ? [root.sink] : []
+        objects: [root.sink, root.source].filter(o => o)
     }
 
-    property real _bVal: BrightnessService.brightness / 100
 
 
 
@@ -83,12 +83,19 @@ Item {
 
             ChannelSlider {
                 localScale: root.localScale
-                icon:   "󰃠"
-                value:  root._bVal
-                muted:  false
-                active: true
+                icon: {
+                    if (!root.source?.ready)         return "󰍭"
+                    if (root.source.audio.muted)     return "󰍭"
+                    return "󰍬"
+                }
+                value:  root.source?.ready ? root.source.audio.volume : 0
+                muted:  root.source?.audio.muted ?? false
+                active: root.source?.ready ?? false
                 onVolumeChanged: function(v) {
-                    BrightnessService.setBrightness(Math.round(v * 100))
+                    if (root.source?.ready) root.source.audio.volume = v
+                }
+                onMuteToggled: {
+                    if (root.source?.ready) root.source.audio.muted = !root.source.audio.muted
                 }
             }
         }

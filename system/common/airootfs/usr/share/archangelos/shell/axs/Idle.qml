@@ -53,7 +53,7 @@ Singleton {
         listener(s.dimAfter, "brightnessctl -s set 10", "brightnessctl -r");
         if (s.autoLock) listener(s.lockAfter, "loginctl lock-session");
         listener(s.screenOffAfter, root.dpms(false), root.dpms(true) + " && brightnessctl -r");
-        listener(s.suspendAfter, "systemctl suspend");
+        // No suspend-on-idle: the ladder's last rung locks the screen instead.
         const body = L.join("\n") + "\n";
         // Write, then restart hypridle so the new timers count from now.
         Quickshell.execDetached(["sh", "-c",

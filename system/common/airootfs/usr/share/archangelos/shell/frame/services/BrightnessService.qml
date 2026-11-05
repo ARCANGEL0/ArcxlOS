@@ -28,7 +28,7 @@ QtObject {
     signal externalBrightnessChanged(int val)
     
     function setBrightness(v) {
-        if (v < 1) v = 1
+        if (v < 10) v = 10   // never near-black: the UI can't be seen to recover from it
         brightWrite.command = ["brightnessctl", "set", v + "%"]
         brightWrite.running = true
         root.brightness = v

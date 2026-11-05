@@ -19,6 +19,7 @@
 import QtQuick
 import Quickshell.Services.Pipewire
 import "../components"
+import "../services"
 import "../"
 
 Item {
@@ -29,402 +30,177 @@ Item {
 
     readonly property var sink:   Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
-    
-    function reset() { switcher.reset() }
 
     PwObjectTracker {
         objects: Pipewire.nodes.values
     }
 
-    readonly property var sinkNodes: {
-        var result = []
-        var nodes = Pipewire.nodes.values
-        for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i]
-            if (n.audio !== null && !n.isStream && n.isSink)
-                result.push(n)
-        }
-        return result
-    }
-
-    readonly property var sourceNodes: {
-        var result = []
-        var nodes = Pipewire.nodes.values
-        for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i]
-            if (n.audio !== null && !n.isStream && !n.isSink)
-                result.push(n)
-        }
-        return result
-    }
-
-    function deviceName(node) {
-        if (!node) return "Unknown"
-        return node.nickname || node.description || node.name || "Unknown"
-    }
-
-    property string page: Popups.audioPage
-
+    // Three vertical bars shown directly — no tabs, no pages.
     Row {
-        anchors.fill: parent
-        spacing: 8
+        id: bars
+        anchors.centerIn: parent
+        spacing: Math.round(14 * localScale)
 
-        // ── Page content ──────────────────────────────────────────────────────
-        Item {
-            id: contentArea
-            width:  parent.width - switcher.implicitWidth - parent.spacing - 1 - parent.spacing
-            height: parent.height
-            clip:   true
+        VBar {
+            localScale: root.localScale
+            title: "VOLUME"
+            value: root.sink?.ready ? root.sink.audio.volume : 0
+            muted: root.sink?.audio.muted ?? false
+            icon: {
+                if (!root.sink?.ready)            return "󰕾"
+                if (root.sink.audio.muted)        return "󰖁"
+                if (root.sink.audio.volume > 0.6) return "󰕾"
+                if (root.sink.audio.volume > 0.2) return "󰖀"
+                return "󰕿"
+            }
+            muteable: true
+            onMuteToggled: {
+                if (root.sink?.ready) root.sink.audio.muted = !root.sink.audio.muted
+            }
+            onValueSet: function(v) {
+                if (root.sink?.ready) root.sink.audio.volume = v
+            }
+        }
 
-            property int pageIdx: Math.max(0, ["output", "input", "mixer"].indexOf(root.page))
+        VBar {
+            localScale: root.localScale
+            title: "MICROPHONE"
+            value: root.source?.ready ? root.source.audio.volume : 0
+            muted: root.source?.audio.muted ?? false
+            icon: {
+                if (!root.source?.ready)         return "󰍭"
+                if (root.source.audio.muted)     return "󰍭"
+                return "󰍬"
+            }
+            muteable: true
+            onMuteToggled: {
+                if (root.source?.ready) root.source.audio.muted = !root.source.audio.muted
+            }
+            onValueSet: function(v) {
+                if (root.source?.ready) root.source.audio.volume = v
+            }
+        }
 
-            // Output
-            PopupPage {
-                localScale: root.localScale
-                id: pageOutput
-                readonly property int myIdx: 0
-                property bool isCurrent: root.page === "output"
-                property bool wasCurrent: false
-                property real parallaxFactor: Anim.style === "parallax" ? 0.3 : 1.0
-                onIsCurrentChanged: { 
-                    if (isCurrent) wasCurrent = false;
-                    else if (Anim.style === "none") wasCurrent = false;
-                    else wasCurrent = true;
-                }
-                
-                width: parent.width; height: parent.height
-                
-                property real targetY: {
-                    if (Anim.style === "none" || Anim.style === "fade" || Anim.style === "scale") return 0;
-                    if (Anim.style === "rise") return isCurrent ? 0 : (myIdx < contentArea.pageIdx ? -30 : 30);
-                    if (isCurrent) return 0;
-                    if (myIdx < contentArea.pageIdx) return -height * parallaxFactor;
-                    return height;
-                }
-                
-                y: targetY
-                Behavior on y {
-                    enabled: Anim.style !== "none" && (SurfaceState.activeContent === "audio") && root.fullyOpen
-                    NumberAnimation { 
-                        duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageOutput.isCurrent) pageOutput.wasCurrent = false; }
+        VBar {
+            localScale: root.localScale
+            title: "BRIGHTNESS"
+            value: BrightnessService.brightness / 100
+            muted: false
+            icon: "󰃠"
+            muteable: false
+            onMuteToggled: {}
+            onValueSet: function(v) {
+                BrightnessService.setBrightness(Math.round(v * 100))
+            }
+        }
+    }
+
+    component VBar: Item {
+        property real localScale: 1.0
+        property string title: ""
+        property real value: 0
+        property bool muted: false
+        property string icon: ""
+        property bool muteable: true
+        signal muteToggled()
+        signal valueSet(real v)
+
+        implicitWidth: Math.round(56 * localScale)
+        implicitHeight: Math.round(260 * localScale)
+
+        Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: Math.round(10 * localScale)
+
+            Text {
+                text: Math.round(root.value * 100) + "%"
+                color: root.muted ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.25) : Theme.text
+                font.pixelSize: Math.round(13 * localScale)
+                font.bold: true
+            }
+
+            Item {
+                width: Math.round(30 * localScale)
+                height: Math.round(160 * localScale)
+
+                Rectangle {
+                    id: track
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08)
+
+                    Rectangle {
+                        anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                        height: Math.max(radius * 2, parent.height * root.value)
+                        radius: parent.radius
+                        color: root.muted ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.15) : Theme.active
+                        Behavior on color { ColorAnimation { duration: Anim.mediumFast } }
+                        Behavior on height { NumberAnimation { duration: Anim.superFast; easing.type: Anim.outCubic } }
                     }
-                }
-                
-                property real targetOpacity: {
-                    if (Anim.style === "none" || Anim.style === "slide") return 1.0;
-                    if (isCurrent) return 1.0;
-                    return 0.0;
-                }
-                opacity: targetOpacity
-                Behavior on opacity {
-                    enabled: Anim.style !== "none" && Anim.style !== "slide"
-                    NumberAnimation { duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageOutput.isCurrent) pageOutput.wasCurrent = false; } }
-                }
-                
-                scale: targetScale
-                property real targetScale: {
-                    if (Anim.style === "scale" || Anim.style === "rise") return isCurrent ? 1.0 : 0.95;
-                    return 1.0;
-                }
-                Behavior on scale {
-                    enabled: Anim.style === "scale" || Anim.style === "rise"
-                    NumberAnimation { duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageOutput.isCurrent) pageOutput.wasCurrent = false; } }
-                }
-                
-                visible: isCurrent || wasCurrent
 
-                ChannelSlider {
-                    localScale: root.localScale
-                    width:  parent.width
-                    height: pageOutput.height - Math.round(16 * root.localScale)
-                    label:  (root.sink && root.sink.ready) ? root.deviceName(root.sink) : "Output"
-                    icon: {
-                        if (!root.sink || !root.sink.ready)           return "󰕾"
-                        if (root.sink.audio.muted)        return "󰖁"
-                        if (root.sink.audio.volume > 0.6) return "󰕾"
-                        if (root.sink.audio.volume > 0.2) return "󰖀"
-                        return "󰕿"
+                    MouseArea {
+                        id: trackMouse
+                        anchors.fill: parent
+                        anchors.topMargin: -Math.round(8 * localScale)
+                        anchors.bottomMargin: -Math.round(8 * localScale)
+                        cursorShape: Qt.SizeVerCursor
+                        function calc(my) {
+                            return Math.max(0.0, Math.min(1.0, 1.0 - (my / track.height)))
+                        }
+                        onPressed: root.valueChanged(calc(mouseY))
+                        onPositionChanged: if (pressed) root.valueChanged(calc(mouseY))
                     }
-                    value:  (root.sink && root.sink.ready) ? root.sink.audio.volume : 0
-                    muted:  (root.sink && root.sink.audio) ? root.sink.audio.muted : false
-                    active: (root.sink && root.sink.ready) || false
-                    onVolumeChanged: function(v) {
-                        if (root.sink && root.sink.ready) root.sink.audio.volume = v
-                    }
-                    onMuteToggled: {
-                        if (root.sink && root.sink.ready)
-                            root.sink.audio.muted = !root.sink.audio.muted
+
+                    WheelHandler {
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: function(event) {
+                            var step = 0.05
+                            var delta = event.angleDelta.y > 0 ? step : -step
+                            root.valueChanged(Math.max(0.0, Math.min(1.0, root.value + delta)))
+                        }
                     }
                 }
             }
 
-            // Input
-            PopupPage {
-                localScale: root.localScale
-                id: pageInput
-                readonly property int myIdx: 1
-                property bool isCurrent: root.page === "input"
-                property bool wasCurrent: false
-                property real parallaxFactor: Anim.style === "parallax" ? 0.3 : 1.0
-                onIsCurrentChanged: { 
-                    if (isCurrent) wasCurrent = false;
-                    else if (Anim.style === "none") wasCurrent = false;
-                    else wasCurrent = true;
-                }
-                
-                width: parent.width; height: parent.height
-                
-                property real targetY: {
-                    if (Anim.style === "none" || Anim.style === "fade" || Anim.style === "scale") return 0;
-                    if (Anim.style === "rise") return isCurrent ? 0 : (myIdx < contentArea.pageIdx ? -30 : 30);
-                    if (isCurrent) return 0;
-                    if (myIdx < contentArea.pageIdx) return -height * parallaxFactor;
-                    return height;
-                }
-                
-                y: targetY
-                Behavior on y {
-                    enabled: Anim.style !== "none" && (SurfaceState.activeContent === "audio") && root.fullyOpen
-                    NumberAnimation { 
-                        duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageInput.isCurrent) pageInput.wasCurrent = false; }
-                    }
-                }
-                
-                property real targetOpacity: {
-                    if (Anim.style === "none" || Anim.style === "slide") return 1.0;
-                    if (isCurrent) return 1.0;
-                    return 0.0;
-                }
-                opacity: targetOpacity
-                Behavior on opacity {
-                    enabled: Anim.style !== "none" && Anim.style !== "slide"
-                    NumberAnimation { duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageInput.isCurrent) pageInput.wasCurrent = false; } }
-                }
-                
-                scale: targetScale
-                property real targetScale: {
-                    if (Anim.style === "scale" || Anim.style === "rise") return isCurrent ? 1.0 : 0.95;
-                    return 1.0;
-                }
-                Behavior on scale {
-                    enabled: Anim.style === "scale" || Anim.style === "rise"
-                    NumberAnimation { duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageInput.isCurrent) pageInput.wasCurrent = false; } }
-                }
-                
-                visible: isCurrent || wasCurrent
-
-                ChannelSlider {
-                    localScale: root.localScale
-                    width:  parent.width
-                    height: pageInput.height - Math.round(16 * root.localScale)
-                    label:  (root.source && root.source.ready) ? root.deviceName(root.source) : "Input"
-                    icon:   (root.source && root.source.audio && root.source.audio.muted) ? "󰍭" : "󰍬"
-                    value:  (root.source && root.source.ready) ? root.source.audio.volume : 0
-                    muted:  (root.source && root.source.audio) ? root.source.audio.muted : false
-                    active: (root.source && root.source.ready) || false
-                    onVolumeChanged: function(v) {
-                        if (root.source && root.source.ready) root.source.audio.volume = v
-                    }
-                    onMuteToggled: {
-                        if (root.source && root.source.ready)
-                            root.source.audio.muted = !root.source.audio.muted
-                    }
-                }
-            }
-
-            // Mixer
-            PopupPage {
-                localScale: root.localScale
-                id: pageMixer
-                readonly property int myIdx: 2
-                property bool isCurrent: root.page === "mixer"
-                property bool wasCurrent: false
-                property real parallaxFactor: Anim.style === "parallax" ? 0.3 : 1.0
-                onIsCurrentChanged: { 
-                    if (isCurrent) wasCurrent = false;
-                    else if (Anim.style === "none") wasCurrent = false;
-                    else wasCurrent = true;
-                }
-                
-                width: parent.width; height: parent.height
-                
-                property real targetY: {
-                    if (Anim.style === "none" || Anim.style === "fade" || Anim.style === "scale") return 0;
-                    if (Anim.style === "rise") return isCurrent ? 0 : (myIdx < contentArea.pageIdx ? -30 : 30);
-                    if (isCurrent) return 0;
-                    if (myIdx < contentArea.pageIdx) return -height * parallaxFactor;
-                    return height;
-                }
-                
-                y: targetY
-                Behavior on y {
-                    enabled: Anim.style !== "none" && (SurfaceState.activeContent === "audio") && root.fullyOpen
-                    NumberAnimation { 
-                        duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageMixer.isCurrent) pageMixer.wasCurrent = false; }
-                    }
-                }
-                
-                property real targetOpacity: {
-                    if (Anim.style === "none" || Anim.style === "slide") return 1.0;
-                    if (isCurrent) return 1.0;
-                    return 0.0;
-                }
-                opacity: targetOpacity
-                Behavior on opacity {
-                    enabled: Anim.style !== "none" && Anim.style !== "slide"
-                    NumberAnimation { duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageMixer.isCurrent) pageMixer.wasCurrent = false; } }
-                }
-                
-                scale: targetScale
-                property real targetScale: {
-                    if (Anim.style === "scale" || Anim.style === "rise") return isCurrent ? 1.0 : 0.95;
-                    return 1.0;
-                }
-                Behavior on scale {
-                    enabled: Anim.style === "scale" || Anim.style === "rise"
-                    NumberAnimation { duration: Anim.slow; easing.type: Anim.outExpo; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod
-                        onRunningChanged: { if (!running && !pageMixer.isCurrent) pageMixer.wasCurrent = false; } }
-                }
-                
-                visible: isCurrent || wasCurrent
-
-                SectionLabel { text: "Output Devices" }
-
-                Repeater {
-                    model: root.sinkNodes
-                    delegate: DeviceRow {
-                        localScale: root.localScale
-                        width:     parent.width
-                        label:     root.deviceName(modelData)
-                        isDefault: (root.sink && root.sink.ready && modelData.name === root.sink.name) || false
-                        onClicked: Pipewire.preferredDefaultAudioSink = modelData
-                    }
-                }
+            Rectangle {
+                width: Math.round(30 * localScale) + Math.round(16 * localScale)
+                height: Math.round(28 * localScale)
+                radius: Math.round(Theme.cornerRadius * localScale)
+                color: root.muted
+                    ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.2)
+                    : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.06)
+                Behavior on color { ColorAnimation { duration: Anim.mediumFast } }
 
                 Text {
-                
-                visible:        root.sinkNodes.length === 0
-                    text:           "No output devices"
-                    color:          Theme.subtext
-                    font.pixelSize: Math.round(11 * localScale)
-                    leftPadding:    Math.round(10 * localScale)
+                    anchors.centerIn: parent
+                    text: root.icon
+                    font.pixelSize: Math.round(14 * localScale)
+                    color: root.muted ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
                 }
 
                 Rectangle {
-                    width: parent.width; height: 1
-                    color: Theme.border
+                    anchors.fill: parent; radius: parent.radius
+                    color: muteHov.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.05) : "transparent"
+                    Behavior on color { ColorAnimation { duration: Anim.fast } }
                 }
 
-                SectionLabel { localScale: root.localScale; text: "Input Devices" }
-
-                Repeater {
-                    model: root.sourceNodes
-                    delegate: DeviceRow {
-                        localScale: root.localScale
-                        width:     parent.width
-                        label:     root.deviceName(modelData)
-                        isDefault: (root.source && root.source.ready && modelData.name === root.source.name) || false
-                        onClicked: Pipewire.preferredDefaultAudioSource = modelData
-                    }
+                HoverHandler { id: muteHov; enabled: root.muteable }
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: root.muteable
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.muteToggled()
                 }
-
-                Text {
-                
-                visible:        root.sourceNodes.length === 0
-                    text:           "No input devices"
-                    color:          Theme.subtext
-                    font.pixelSize: Math.round(11 * localScale)
-                    leftPadding:    Math.round(10 * localScale)
-                }
-            }
-        }
-
-        // Divider
-        Rectangle {
-            width: 1; height: parent.height
-            color: Theme.border
-        }
-
-        // Tab switcher — right side
-        TabSwitcher {
-            id: switcher
-            localScale: root.localScale
-            orientation: "vertical"
-            height: (parent.height - Math.round(17 * localScale))
-            anchors.verticalCenter: parent.verticalCenter
-            model: [
-                { key: "output", icon: "󰕾" },
-                { key: "input",  icon: "󰍬" },
-                { key: "mixer",  icon: "󰾝" },
-            ]
-            currentPage: root.page
-            onPageChanged: function(key) { Popups.audioPage = key }
-        }
-    }
-
-    // ── ChannelSlider ─────────────────────────────────────────────────────────
-
-    // ── SectionLabel ──────────────────────────────────────────────────────────
-    component SectionLabel: Text {
-        property real localScale: 1.0
-        color:           Theme.subtext
-        font.pixelSize:  Math.round(10 * localScale)
-        font.capitalization: Font.AllUppercase
-        font.letterSpacing: 0.8
-        leftPadding: Math.round(4 * localScale)
-        topPadding:  Math.round(2 * localScale)
-    }
-
-    // ── DeviceRow ─────────────────────────────────────────────────────────────
-    component DeviceRow: Item {
-        id: row
-        property real localScale: 1.0
-        implicitHeight: Math.round(28 * localScale)
-
-        property string label:     ""
-        property bool   isDefault: false
-        signal clicked()
-
-        Rectangle {
-            anchors.fill: parent
-            radius: Math.round((Theme.cornerRadius - 4) * localScale)
-            color:  row.isDefault
-                        ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12)
-                        : (rowHov.hovered ? Theme.border : "transparent")
-            Behavior on color { ColorAnimation { duration: Anim.color} }
-        }
-
-        Row {
-            anchors { left: parent.left; leftMargin: Math.round(8 * localScale); right: parent.right; rightMargin: Math.round(8 * localScale); verticalCenter: parent.verticalCenter }
-            spacing: Math.round(6 * localScale)
-
-            Rectangle {
-                width: Math.round(6 * localScale); height: Math.round(6 * localScale); radius: width / 2
-                anchors.verticalCenter: parent.verticalCenter
-                color: row.isDefault ? Theme.active : Theme.subtext
-                Behavior on color { ColorAnimation { duration: Anim.mediumFast} }
             }
 
             Text {
-                text:           row.label
-                color:          row.isDefault ? Theme.text : Theme.subtext
-                font.pixelSize: Math.round(11 * localScale)
-                elide:          Text.ElideRight
-                width:          parent.width - Math.round(14 * localScale) - parent.spacing
-                anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: Anim.mediumFast} }
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.title
+                color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
+                font.pixelSize: Math.round(10 * localScale)
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 1
             }
         }
-
-        HoverHandler { id: rowHov; cursorShape: Qt.PointingHandCursor }
-        MouseArea { anchors.fill: parent; onClicked: row.clicked() }
     }
 }

@@ -7,12 +7,14 @@ import Quickshell
 import Quickshell.Wayland
 import qs.arc
 import qs.arc.services
+import "../../frame" as FrameState
 
 PanelWindow {
     id: frame
     required property var modelData
     property bool suppressed: false
-    property int barWidth: 56
+    property real barWidth: FrameState.ShellState.focusMode ? 0 : 56
+    Behavior on barWidth { NumberAnimation { duration: 460; easing.type: Easing.OutCubic } }
     // Shared, so the flat surface lands on the same geometry as the shader.
     readonly property real borderT: 8    // top/right/bottom border thickness
     readonly property real holeR: 20     // content-hole and popout corner radius
@@ -24,7 +26,7 @@ PanelWindow {
     visible: true
     exclusionMode: ExclusionMode.Ignore   // span the whole output; coords = real screen
     WlrLayershell.layer: WlrLayer.Top
-    mask: Region {}   // clicks pass through; the bar window handles bar input
+    mask: Region { Region { x: 0; y: 0; width: 1; height: 1 } }   // clicks pass through; the bar window handles bar input
 
     // One popout slot as a plain plate — the flat frame's answer to a bulge.
     component Plate: Rectangle {

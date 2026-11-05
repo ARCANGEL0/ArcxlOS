@@ -48,6 +48,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     
     color: "transparent"
+    visible: !ShellState.shellHidden
 
     // --- INPUT MANAGER ---
     SurfaceInputManager {
@@ -103,8 +104,8 @@ PanelWindow {
         Region { x: Math.round(root.width / 2 - (160 * root.localScale) / 2); y: 0; width: Math.round(160 * root.localScale); height: 1 }
         
         // Side Notches
-        Region { x: 0; y: (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnCenterY : root.height / 2) - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.le + surfaceShape.lcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
-        Region { x: root.width - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)); y: root.height / 2 - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale) }
+        Region { x: 0; y: (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnCenterY : root.height / 2) - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.le + surfaceShape.lcnDepth : Math.max(28, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
+        Region { x: root.width - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness)); y: root.height / 2 - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness); height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale) }
         
         // Bottom Notches
         Region { x: root.width / 2 - (surfaceShape.bcnDepth > 1 ? surfaceShape.bcnWidth : Math.round(300 * root.localScale)) / 2; y: root.height - (surfaceShape.bcnDepth > 1 ? surfaceShape.bcnDepth : Math.max(1, surfaceShape.frameThickness)); width: surfaceShape.bcnDepth > 1 ? surfaceShape.bcnWidth : Math.round(300 * root.localScale); height: surfaceShape.bcnDepth > 1 ? surfaceShape.bcnDepth : Math.max(1, surfaceShape.frameThickness) }
@@ -137,16 +138,16 @@ PanelWindow {
         anchors { left: parent.left; top: parent.top; leftMargin: Math.round(Theme.borderWidth * root.localScale) }
         width: Math.max(Math.round(Theme.lNotchMinWidth * localScale), Math.min(Math.round(Theme.lNotchMaxWidth * localScale), leftContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
         height: Math.round(Theme.notchHeight * root.localScale)
-        visible: ShellState.focusMode
+        visible: false
         z: -1
         HoverHandler { id: fmLeftHov }
     }
     Item {
         id: fmCenterTrigger
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
-        width: Math.max(Math.round(Theme.cNotchMinWidth * localScale), Math.min(Math.round(Theme.cNotchMaxWidth * localScale), centerContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
+        width: centerContent.islandWidth
         height: Math.round(Theme.notchHeight * root.localScale)
-        visible: ShellState.focusMode
+        visible: false
         z: -1
         HoverHandler { id: fmCenterHov; onHoveredChanged: Popups.dashboardTriggerHovered = hovered }
         TapHandler {
@@ -162,69 +163,9 @@ PanelWindow {
         anchors { right: parent.right; top: parent.top; rightMargin: Math.round(Theme.borderWidth * root.localScale) }
         width: Math.max(Math.round(Theme.rNotchMinWidth * localScale), Math.min(Math.round(Theme.rNotchMaxWidth * localScale), rightContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
         height: Math.round(Theme.notchHeight * root.localScale)
-        visible: ShellState.focusMode
+        visible: false
         z: -1
         HoverHandler { id: fmRightHov }
-    }
-
-    // --- ArchangelOS: black smoke --------------------------------------------------------
-    // The frame's silhouette, blurred at quarter resolution and pushed through drifting noise
-    // (assets/shaders/smoke.frag): a shadow that curls off every edge and notch and follows them
-    // as they morph. It drifts while something is open or moving and rests otherwise.
-    Item {
-        id: smoke
-        anchors.fill: parent
-        readonly property bool busy: SurfaceState.activeSurface !== "none" || NSS.Shell.launcherVisible
-        onBusyChanged: settle.restart()
-        readonly property bool stirred: busy || settle.running
-        Timer { id: settle; interval: 1600 }
-
-        ShaderEffectSource {
-            id: silhouette
-            anchors.fill: parent
-            sourceItem: surfaceShape
-            hideSource: false
-            visible: false
-            textureSize: Qt.size(Math.max(1, Math.round(width / 4)), Math.max(1, Math.round(height / 4)))
-        }
-        MultiEffect {
-            id: silhouetteBlur
-            anchors.fill: parent
-            source: silhouette
-            autoPaddingEnabled: false
-            blurEnabled: true
-            blur: 1.0
-            blurMax: 64
-            blurMultiplier: 1.5
-        }
-        ShaderEffectSource {
-            id: blurred
-            anchors.fill: parent
-            sourceItem: silhouetteBlur
-            hideSource: true
-            visible: false
-            textureSize: silhouette.textureSize
-        }
-        ShaderEffect {
-            anchors.fill: parent
-            property var src: blurred
-            property vector2d res: Qt.vector2d(width, height)
-            property real time: 0
-            property real strength: smoke.stirred ? 0.9 : 0.7
-            property real reach: Math.round(70 * root.localScale)
-            property color tint: "#000000"
-            Behavior on strength { NumberAnimation { duration: 900; easing.type: Easing.InOutSine } }
-            NumberAnimation on time {
-                running: smoke.stirred
-                from: 0; to: 100000
-                duration: 100000 * 1000
-                loops: Animation.Infinite
-            }
-            layer.enabled: true
-            layer.smooth: true
-            layer.textureSize: Qt.size(Math.max(1, Math.round(width / 2)), Math.max(1, Math.round(height / 2)))
-            fragmentShader: Qt.resolvedUrl("../assets/shaders/smoke.frag.qsb")
-        }
     }
 
     SurfaceShape {
@@ -289,21 +230,20 @@ PanelWindow {
         
         // ArchangelOS: the left edge of the inner boundary is arcshell's vertical bar
         // (ns/modules/Bar.qml), which grows down out of this notch.
-        leftEdge: 56
-        leftNotchWidth: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmLeftHov.hovered || leftNotchHover.hovered))) ? 0.001 : (surfaceShape.le - surfaceShape.frameThickness) + Math.max(Math.round(Theme.lNotchMinWidth * localScale), Math.min(Math.round(Theme.lNotchMaxWidth * localScale), leftContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
-        leftNotchHeight: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmLeftHov.hovered || leftNotchHover.hovered))) ? surfaceShape.innerRadius : Math.round(Theme.notchHeight * root.localScale)
-        centerNotchWidth: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmCenterHov.hovered || centerNotchHover.hovered)) && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording && !Popups.miniPlayerOpen) ? 0.001 : (SurfaceState.isTopExpanded ? Math.round(Popups.dashboardPageWidth * root.localScale) : Math.max(Math.round(Theme.cNotchMinWidth * localScale), Math.min(Math.round(Theme.cNotchMaxWidth * localScale), centerContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale))))
+        leftEdge: ShellState.focusMode ? 0 : 56
+        Behavior on leftEdge { NumberAnimation { duration: Anim.transition; easing.type: Easing.OutCubic } }
+        leftNotchWidth: (ShellState.focusMode) ? 0.001 : Math.max(Math.round(Theme.lNotchMinWidth * localScale), Math.min(Math.round(Theme.lNotchMaxWidth * localScale), leftContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
+        leftNotchHeight: (ShellState.focusMode) ? surfaceShape.innerRadius : Math.round(Theme.notchHeight * root.localScale)
+        centerNotchWidth: (false && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording && !Popups.miniPlayerOpen) ? 0.001 : (SurfaceState.isTopExpanded ? Math.round(Popups.dashboardPageWidth * root.localScale) : centerContent.islandWidth)
         centerNotchHeight: {
-            if (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmCenterHov.hovered || centerNotchHover.hovered)) && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording && !Popups.miniPlayerOpen) return 0.001;
+            if (false && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording && !Popups.miniPlayerOpen) return 0.001;
             if (SurfaceState.isTopExpanded) return Math.round(Theme.dashboardHeight * root.localScale);
             if (Popups.miniPlayerOpen) return Math.round(Theme.notchHeight * root.localScale) + miniPlayerView.height + Math.round(16 * root.localScale);
             if (ShellState.screenRecord && !ScreenRecService.recording && ScreenRecService.optionsExpanded) return Math.round(Theme.notchHeight * root.localScale) + screenRecOptionsPopupView.height + Math.round(16 * root.localScale);
-            // ArchangelOS: taller island while a track plays (clock + media controls)
-            if (centerContent.showMedia) return Math.round((Theme.notchHeight + 30) * root.localScale);
-            return Math.round(Theme.notchHeight * root.localScale);
+            return centerContent.islandHeight;
         }
         rightNotchWidth: {
-            if (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmRightHov.hovered || rightNotchHover.hovered)) && !SurfaceState.isRightExpanded && !Popups.notificationToastOpen) return 0.001;
+            if (ShellState.focusMode && !SurfaceState.isRightExpanded && !Popups.notificationToastOpen) return 0.001;
             if (!SurfaceState.isRightExpanded) {
                 if (Popups.notificationToastOpen) return notificationToastView.toastWidth + Math.round(Theme.cornerRadius * root.localScale);
                 return Math.max(Math.round(Theme.rNotchMinWidth * localScale), Math.min(Math.round(Theme.rNotchMaxWidth * localScale), rightContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)));
@@ -314,7 +254,7 @@ PanelWindow {
             return Math.round(Theme.popupMaxWidth * root.localScale);
         }
         rightNotchHeight: {
-            if (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmRightHov.hovered || rightNotchHover.hovered)) && !SurfaceState.isRightExpanded && !Popups.notificationToastOpen) return surfaceShape.innerRadius;
+            if (ShellState.focusMode && !SurfaceState.isRightExpanded && !Popups.notificationToastOpen) return surfaceShape.innerRadius;
             if (!SurfaceState.isRightExpanded) {
                 if (Popups.notificationToastOpen) return notificationToastView.targetHeight;
                 return Math.round(Theme.notchHeight * root.localScale);
@@ -341,7 +281,7 @@ PanelWindow {
         anchors.topMargin: Math.round(Theme.borderWidth * root.localScale)
         clip: true
         
-        opacity: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmLeftHov.hovered || leftNotchHover.hovered)) && !SurfaceState.isTopExpanded) ? 0 : 1
+        opacity: (ShellState.focusMode && !SurfaceState.isTopExpanded) ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
         
         Item {
@@ -353,9 +293,9 @@ PanelWindow {
             LeftContent {
                 localScale: root.localScale
                 id: leftContent
-                anchors.centerIn: parent
-                // ArchangelOS: the tab spans the bar's head too; centre the content beside it.
-                anchors.horizontalCenterOffset: (surfaceShape.le - surfaceShape.frameThickness) / 2
+                anchors.left: parent.left
+                anchors.leftMargin: Math.round(Theme.borderWidth * root.localScale)
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
@@ -370,22 +310,23 @@ PanelWindow {
         anchors.topMargin: Math.round(Theme.borderWidth * root.localScale)
         clip: true
         
-        opacity: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmCenterHov.hovered || centerNotchHover.hovered)) && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording) ? 0 : 1
+        opacity: (false && !SurfaceState.isTopExpanded && !ShellState.screenRecord && !ScreenRecService.recording) ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
         
         Item {
             id: centerNotchHead
             width: parent.width
             // ArchangelOS: grow to the full island when the media player is up, so the clock isn't clipped
-            height: (centerContent.showMedia && !SurfaceState.isTopExpanded && !Popups.miniPlayerOpen) ? parent.height : Math.round(Theme.notchHeight * root.localScale)
+            height: (!SurfaceState.isTopExpanded && !Popups.miniPlayerOpen) ? parent.height : Math.round(Theme.notchHeight * root.localScale)
             anchors.top: parent.top
             
             CenterContent {
                 localScale: root.localScale
                 id: centerContent
-                anchors.centerIn: parent
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
                 // the island expands to the media player only while the notch is hovered
-                notchHovered: centerNotchHover.hovered || fmCenterHov.hovered
+                notchHovered: centerNotchHover.hovered || fmCenterHov.hovered || ShellState.islandExpanded
             }
         }
 
@@ -434,7 +375,7 @@ PanelWindow {
         anchors.topMargin: Math.round(Theme.borderWidth * root.localScale)
         clip: true
         
-        opacity: (ShellState.focusMode && !(PrefsService.focusModeHoverExpand && (fmRightHov.hovered || rightNotchHover.hovered)) && !SurfaceState.isRightExpanded && !Popups.notificationToastOpen) ? 0 : 1
+        opacity: (ShellState.focusMode && !SurfaceState.isRightExpanded && !Popups.notificationToastOpen) ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
         
         Item {
@@ -474,7 +415,8 @@ PanelWindow {
             Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
         }
 
-        // ArchangelOS: the session/power menu, out of the top-right.
+        // ArchangelOS: the session/power menu, out of the top-right — expands from the right edge
+        // as the notch surface morphs wide, fluid via the rightNotchWidth morph.
         Item {
             id: powerPopupView
             anchors.fill: parent
@@ -486,8 +428,17 @@ PanelWindow {
             MouseArea { anchors.fill: parent; onClicked: Popups.powerPinned = true }
             PowerMenu {
                 localScale: root.localScale
-                anchors.centerIn: parent
+                // Slide in from the right edge, fully off-screen when closed, fluid liquid
+                // ease-out as it comes to rest — not an expansion from the right border.
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: Math.round(28 * root.localScale)
                 width: parent.width - Math.round(28 * root.localScale)
+                transform: Translate {
+                    id: powerMenuTranslate
+                    x: SurfaceState.activeContent === "power" ? 0 : width
+                    Behavior on x { NumberAnimation { duration: Anim.transition * 1.2; easing.type: Easing.OutCubic } }
+                }
             }
         }
 
@@ -554,8 +505,8 @@ PanelWindow {
     Item {
         id: rightCenterNotchArea
         HoverHandler { id: rightCenterNotchHover }
-        width: surfaceShape.rcnDepth
-        height: surfaceShape.rcnHeight
+        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness)
+        height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)
         anchors.right: parent.right
         anchors.rightMargin: Math.round(Theme.borderWidth * root.localScale)
         anchors.verticalCenter: parent.verticalCenter
@@ -599,6 +550,17 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Math.round(Theme.borderWidth * root.localScale)
+
+        Item {
+            id: bottomEdgeTrigger
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            width: Math.round(160 * root.localScale)
+            height: Math.round(4 * root.localScale)
+            visible: false
+            z: 1
+            HoverHandler { id: bottomEdgeHover; onHoveredChanged: Popups.bottomDockHovered = hovered }
+        }
 
         QuickDock {
             id: quickDock

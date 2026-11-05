@@ -30,14 +30,8 @@ Item {
     readonly property int popupHeight: Math.round(340 * root.localScale)
     readonly property int maxWidth: Math.round(300 * root.localScale)
 
-    readonly property var pageWidths: ({
-        "output": Math.round(200 * root.localScale),
-        "input":  Math.round(200 * root.localScale),
-        "mixer":  Math.round(300 * root.localScale)
-    })
-    
-    // Animate target width slightly for tab changes
-    property real targetWidth: (pageWidths[Popups.audioPage] ?? maxWidth)
+        // Fixed width for the three-bar layout
+    property real targetWidth: Math.round(260 * root.localScale)
 
     readonly property int popupWidth: targetWidth
 

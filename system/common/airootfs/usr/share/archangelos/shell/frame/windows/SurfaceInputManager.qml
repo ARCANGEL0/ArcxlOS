@@ -160,7 +160,8 @@ Item {
     }
     Item { 
         id: rightCenterNotchMask
-        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)
+        // Closed state keeps a 28px invisible hover zone at the right edge — 1px border was unhittable.
+        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness)
         height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * inputManager.localScale)
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
