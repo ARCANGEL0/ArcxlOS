@@ -536,6 +536,17 @@ PanelWindow {
             Behavior on opacity { NumberAnimation { duration: Anim.mediumFast } }
         }
 
+        // sibling of quickDock so the anchors resolve; bottomCenterNotchArea does not clip
+        TermThemePopup {
+            id: termThemePopup
+            localScale: root.localScale
+            anchors.bottom: quickDock.top
+            anchors.horizontalCenter: quickDock.horizontalCenter
+            anchors.bottomMargin: Math.round(-6 * root.localScale)
+            open: Popups.termThemeOpen
+            z: 100
+        }
+
         WallpaperFlow {
             id: wallpaperPopupView
             localScale: root.localScale

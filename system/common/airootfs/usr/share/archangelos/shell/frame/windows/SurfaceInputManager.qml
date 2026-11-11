@@ -103,7 +103,6 @@ Item {
             else if (Popups.audioTriggerHovered && Popups.audioAllowHover) { Popups.closeAll(); SurfaceState.open("rightCenter", "audio") }
             else if (Popups.networkTriggerHovered && Popups.networkAllowHover) { Popups.closeAll(); SurfaceState.open("right", "network") } 
             else if (Popups.notificationsTriggerHovered && Popups.notificationsAllowHover) { Popups.closeAll(); SurfaceState.open("right", "notifications") }
-            else if (Popups.wallpaperTriggerHovered && Popups.wallpaperAllowHover) { Popups.closeAll(); SurfaceState.open("bottomCenter", "wallpaper") }
             else if (Popups.quickTriggerHovered && Popups.quickAllowHover) { Popups.closeAll(); SurfaceState.open("rightCenter", "quick") }
             else if (Popups.clipboardTriggerHovered && Popups.clipboardAllowHover) { Popups.closeAll(); SurfaceState.open("bottomRight", "clipboard") }
         }
@@ -205,15 +204,7 @@ Item {
         MouseArea { 
             anchors.fill: parent
             onClicked: {
-                if (SurfaceState.activeContent === "wallpaper" && Popups.wallpaperAllowHover) {
-                    Popups.wallpaperPinned = !Popups.wallpaperPinned
-                    return
-                }
-                if (!Popups.wallpaperAllowHover) {
-                    var next = (SurfaceState.activeContent !== "wallpaper")
-                    SurfaceState.toggle("bottomCenter", "wallpaper")
-                    if (next) Popups.wallpaperPinned = true
-                }
+                if (SurfaceState.activeContent === "wallpaper") Popups.wallpaperPinned = !Popups.wallpaperPinned
             }
         }
         HoverHandler {

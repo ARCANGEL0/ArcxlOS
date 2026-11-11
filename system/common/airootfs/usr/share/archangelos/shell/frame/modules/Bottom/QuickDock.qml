@@ -19,6 +19,13 @@ Row {
     readonly property int cell: Math.round(32 * localScale)
     spacing: Math.round(4 * localScale)
 
+    // hovering the terminal cell opens the theme popup; it stays sticky until a click outside dismisses it (ClickShield)
+    function armShow() { showTimer.restart() }
+    Timer {
+        id: showTimer; interval: 250; repeat: false
+        onTriggered: Popups.termThemeOpen = true
+    }
+
     // [glyph, tooltip, action]
     readonly property var launches: [
         // the constellation launcher (archangelos-launcher, SUPER+TAB) …
@@ -57,8 +64,17 @@ Row {
             scale: tap.pressed ? 0.86 : (hov.hovered ? 1.08 : 1.0)
             Behavior on scale { NumberAnimation { duration: Anim.mediumFast; easing.type: Easing.OutCubic } }
         }
-        HoverHandler { id: hov; cursorShape: Qt.PointingHandCursor }
-        MouseArea { id: tap; anchors.fill: parent; onClicked: c.modelData[2]() }
+        HoverHandler {
+            id: hov; cursorShape: Qt.PointingHandCursor
+            onHoveredChanged: {
+                if (c.modelData[0] === "terminal") {
+                    if (hovered) dock.armShow()
+                } else if (c.modelData[0] === "wallpaper") {
+                    if (hovered && SurfaceState.activeContent !== "wallpaper") { Popups.closeAll(); SurfaceState.open("bottomCenter", "wallpaper") }
+                }
+            }
+        }
+        MouseArea { id: tap; anchors.fill: parent; onClicked: { Popups.termThemeOpen = false; c.modelData[2]() } }
     }
 
     Repeater { model: dock.launches; Cell {} }

@@ -66,6 +66,8 @@ QtObject {
     readonly property bool clipboardOpen: SurfaceState.activeContent === "clipboard"
     property bool colorPickerActive: false
     property bool miniPlayerOpen: false
+    // dock terminal theme popup: opens on hover, stays sticky until an outside click dismisses it
+    property bool termThemeOpen: false
     
     property bool audioPinned:         false
     property bool networkPinned:       false
@@ -152,6 +154,7 @@ QtObject {
         SurfaceState.close()
         isInputFocused      = false
         miniPlayerOpen      = false
+        termThemeOpen       = false
         bottomDockHovered   = false
         audioPinned         = false
         networkPinned       = false

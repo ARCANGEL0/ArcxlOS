@@ -25,15 +25,17 @@ Item {
     id: root
     anchors.fill: parent
     
-    // Only active when a surface is expanded
-    property bool isActive: SurfaceState.activeSurface !== "none" || (ShellState.screenRecord && !ScreenRecService.recording) || Popups.miniPlayerOpen
-    
+    // Only active when a surface is expanded (or a sticky popup like the dock's terminal themes is open)
+    property bool isActive: SurfaceState.activeSurface !== "none" || (ShellState.screenRecord && !ScreenRecService.recording) || Popups.miniPlayerOpen || Popups.termThemeOpen
+
     MouseArea {
         anchors.fill: parent
         enabled: root.isActive
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: (mouse) => {
-            if (Popups.miniPlayerOpen) {
+            if (Popups.termThemeOpen) {
+                Popups.termThemeOpen = false
+            } else if (Popups.miniPlayerOpen) {
                 Popups.miniPlayerOpen = false
             } else if (ScreenRecService.optionsExpanded) {
                 if (mouse.y > 100) {
