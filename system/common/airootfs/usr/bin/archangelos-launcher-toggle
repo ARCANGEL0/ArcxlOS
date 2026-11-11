@@ -1,8 +1,9 @@
 #!/bin/sh
-# Toggle the ArchangelOS radial app launcher (bound to SUPER+TAB).
-MARK="archangelos/launcher/qml/shell.qml"
-if pgrep -f "$MARK" >/dev/null 2>&1; then
-  pkill -f "$MARK"
-else
-  exec /usr/bin/archangelos-launcher
-fi
+CFG="${ARCHANGELOS_LAUNCHER_QML:-/usr/share/archangelos/launcher/qml/shell.qml}"
+RUN="${XDG_RUNTIME_DIR:-/tmp}"
+PID=$(cat "$RUN/archangelos-launcher.pid" 2>/dev/null)
+FIFO="$RUN/archangelos-launcher.$PID.fifo"
+[ -n "$PID" ] && kill -0 "$PID" 2>/dev/null && [ -p "$FIFO" ] \
+  && timeout 0.3 sh -c 'echo toggle > "$1"' sh "$FIFO" 2>/dev/null && exit 0
+qs -p "$CFG" ipc call launcher toggle >/dev/null 2>&1 && exit 0
+ARCHANGELOS_SHOW=1 setsid -f "$(dirname "$0")/archangelos-launcher" >/dev/null 2>&1

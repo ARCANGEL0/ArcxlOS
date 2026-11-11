@@ -1,10 +1,5 @@
-//  ArchangelOS — radial "ink constellation" application launcher.
-//  Level 1: a hub ("APPS") at the heart of a two-armed spiral; category
-//  nodes ride the arms, which are drawn in from the hub when it opens. Click a category and the whole
-//  constellation flows toward it; its applications fan out, each wired back
-//  with the same geometric traces. Monochrome sumi-e to match the samurai
-//  wallpaper — soft ink pills and hairlines, no color, no hard 90° chrome.
 import QtQuick
+import QtQuick.Shapes
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
@@ -15,47 +10,53 @@ Item {
 
     property string menuPath: "/usr/share/archangelos/launcher/menu.json"
     property string logoPath: "/usr/share/archangelos/logo-mark.svg"
+    property string hubLogo: "/usr/share/archangelos/logo.png"
     property int startFocus: -1
-    property string startQuery: ""   // debug/screenshot aid: pre-fill the search
+    property string startQuery: ""
+    property bool active: true
     signal dismiss()
 
-    // ── data ──
+    readonly property real s: Math.max(0.8, Math.min(1.6, height / 1080))
+    function px(v) { return Math.round(v * s) }
+
+    FontLoader { id: sans; source: "file://" + Quickshell.shellDir + "/../../shell/arc/assets/fonts/InterVariable.ttf" }
+    FontLoader { id: silk; source: "file://" + Quickshell.shellDir + "/../../shell/arc/assets/fonts/DepartureMono-Regular.otf" }
+    readonly property string sansFamily: sans.status === FontLoader.Ready ? sans.name : "Inter"
+    readonly property string silkFamily: silk.status === FontLoader.Ready ? silk.name : Theme.mono
+
+    readonly property color surface: "#0a0a0a"
+    readonly property color surfaceHi: "#140e0e"
+    readonly property color ink: "#ECEAE4"
+    readonly property color inkSoft: "#b9b7b1"
+    readonly property color inkMute: "#8a8884"
+    readonly property color silkInk: "#6a6864"
+    readonly property color copper: "#4a4743"
+    readonly property color edge: "#34322f"
+    readonly property color accent: Theme.accent
+
     property string edition: "ArchangelOS"
-    property var cats: []
-    readonly property int n: cats.length
-
-    // ── navigation state ──
-    property int focused: -1      // -1 = ring view, else focused category
-    property int selCat: 0        // keyboard highlight on the ring
-    property int selApp: 0        // keyboard highlight in the app fan
-    property int hoverCat: -1
-    property int hoverApp: -1
-    property bool intro: false    // entrance-animation gate
-
-    // ── Apps grid state ──
-    // The "Apps" category (first, emitted by archangelos-menugen) is shown as a
-    // full icon grid instead of the organic fan: the constellation lifts away
-    // and every installed app is laid out in icon-top cells.
-    property bool gridMode: focused >= 0 && focused < cats.length
-                            && clean(cats[focused].name) === "Apps"
-    property string gridQuery: ""     // type-to-filter within the grid
-    property int gridSel: 0
-    property int hoverGrid: -1
-    property var gridItems: {
-        if (!gridMode) return []
-        var all = (cats[focused] && cats[focused].items) ? cats[focused].items : []
-        var q = gridQuery.trim().toLowerCase()
-        if (q.length === 0) return all
-        var out = []
-        for (var i = 0; i < all.length; i++) {
-            if (("" + (all[i].name || "")).toLowerCase().indexOf(q) >= 0) out.push(all[i])
+    property string osName: edition
+    property string kernel: ""
+    FileView {
+        path: "/etc/os-release"
+        onLoaded: {
+            var m = text().match(/^PRETTY_NAME="?([^"\n]*)"?/m) || text().match(/^NAME="?([^"\n]*)"?/m)
+            if (m && m[1]) root.osName = m[1]
         }
-        return out
     }
-    onGridModeChanged: { gridQuery = ""; gridSel = 0; hoverGrid = -1 }
-    onGridItemsChanged: gridSel = 0
-    // resolve a .desktop Icon= (theme name or absolute path) to an Image source,
-    // honouring the active icon theme; falls back to a generic executable glyph.
+    Process {
+        running: true
+        command: ["uname", "-r"]
+        stdout: StdioCollector { onStreamFinished: root.kernel = "Linux " + text.trim() }
+    }
+    property var cats: []
+    property bool shown: false
+
+    function clean(s) { var m = ("" + (s || "")).match(/[A-Za-z0-9].*/); return m ? m[0] : (s || "") }
+    function catName(i) {
+        var n = clean(cats[i] ? cats[i].name : "")
+        return n === "Apps" ? "All apps" : n
+    }
     function iconFor(ic) {
         if (!ic) return Quickshell.iconPath("application-x-executable", true)
         if (("" + ic).indexOf("/") === 0) return "file://" + ic
@@ -63,162 +64,193 @@ Item {
         return (p && p.length > 0) ? p : Quickshell.iconPath("application-x-executable", true)
     }
 
-    // ── live search state ──
-    property string query: ""     // typed text; non-empty = search overlay up
-    property bool searching: query.length > 0   // hides the constellation
-    property var results: []      // matched apps across every category
-    property int selResult: 0
-    onQueryChanged: rebuildResults()
-    function rebuildResults() {
-        var q = query.trim().toLowerCase(), out = [], seen = ({})
-        if (q.length > 0) {
-            for (var c = 0; c < cats.length && out.length < 13; c++) {
-                var items = cats[c].items || []
-                for (var i = 0; i < items.length && out.length < 13; i++) {
-                    var nm = ("" + (items[i].name || "")).toLowerCase()
-                    if (nm.indexOf(q) < 0 || seen[nm]) continue   // filter + dedupe by name
-                    seen[nm] = true
-                    out.push({ item: items[i], cat: clean(cats[c].name) })
+    readonly property real hubW: px(240)
+    readonly property real hubH: px(156)
+    readonly property real chipW: px(200)
+    readonly property real chipH: px(52)
+    readonly property real appW: px(204)
+    readonly property real appH: px(40)
+    readonly property real appGapX: px(24)
+    readonly property real appGapY: px(14)
+    readonly property real feedLen: px(64)
+    readonly property real stub: px(26)
+
+    readonly property var slots: [[560,0],[-560,0],[0,-260],[0,260],[440,-170],[-440,-170],[440,170],[-440,170],[250,-340],[-250,340],[-250,-340],[250,340]]
+    readonly property int count: Math.min(cats.length, slots.length)
+    function catX(i) { return px(slots[i][0]) }
+    function catY(i) { return px(slots[i][1]) }
+    function sideOf(i) { return slots[i][0] < 0 ? -1 : 1 }
+
+    readonly property var routes: {
+        var out = []
+        var groups = { r: [], l: [], t: [], b: [] }
+        for (var i = 0; i < count; i++) {
+            var x = slots[i][0], y = slots[i][1]
+            var key = Math.abs(x) >= 400 ? (x > 0 ? "r" : "l") : (y < 0 ? "t" : "b")
+            groups[key].push(i)
+            out.push({ key: key })
+        }
+        var hw = hubW / 2, hh = hubH / 2
+        for (var k in groups) {
+            var g = groups[k]
+            var horiz = k === "r" || k === "l"
+            g.sort((a, b) => horiz ? slots[a][1] - slots[b][1] : slots[a][0] - slots[b][0])
+            var span = horiz ? hubH - px(52) : hubW - px(92)
+            for (var j = 0; j < g.length; j++) {
+                var idx = g[j]
+                var t = g.length === 1 ? 0 : (j / (g.length - 1) - 0.5) * span
+                var cx = catX(idx), cy = catY(idx)
+                var pts
+                if (horiz) {
+                    var sd = k === "r" ? 1 : -1
+                    var sx = sd * hw, sy = t
+                    var ex = cx - sd * chipW / 2
+                    var x1 = sx + sd * stub
+                    var x2 = x1 + sd * Math.abs(cy - sy)
+                    pts = [[sx, sy], [x1, sy], [x2, cy], [ex, cy]]
+                } else {
+                    var sv = k === "b" ? 1 : -1
+                    var px0 = t, py0 = sv * hh
+                    var ey = cy - sv * chipH / 2
+                    var y1 = py0 + sv * stub
+                    var y2 = y1 + sv * Math.abs(cx - px0)
+                    pts = [[px0, py0], [px0, y1], [cx, y2], [cx, ey]]
                 }
+                out[idx] = { key: k, horiz: horiz, pts: pts }
             }
         }
-        results = out; selResult = 0
+        return out
     }
 
-    // ── geometry ──
-    readonly property real cx: width / 2
-    readonly property real cy: height / 2
-    readonly property real rx: Math.min(width * 0.30, 560)
-    readonly property real ry: Math.min(height * 0.32, 320)
-    readonly property real anchorX: width * 0.26
-    readonly property real anchorY: height * 0.50
+    property int sel: -1
+    property string pane: "cats"
+    property string filter: ""
+    property int appSel: 0
+    readonly property bool searching: filter.trim().length > 0
+    readonly property string query: filter.trim().toLowerCase()
+    readonly property bool atHub: sel < 0 && !searching
 
-    // graph translation — flows the constellation toward the focused node
-    property real gx: focused < 0 ? 0 : (anchorX - catHomeX(focused))
-    property real gy: focused < 0 ? 0 : (anchorY - catHomeY(focused))
-    Behavior on gx { NumberAnimation { duration: 560; easing.type: Easing.OutCubic } }
-    Behavior on gy { NumberAnimation { duration: 560; easing.type: Easing.OutCubic } }
-    onGxChanged: connCanvas.requestPaint()
-    onGyChanged: connCanvas.requestPaint()
-    onFocusedChanged: { selApp = 0; connCanvas.requestPaint() }
-    // stable per-index pseudo-random in 0..1 (hash-noise; salt varies the axis)
-    function jf(i, salt) {
-        var s = Math.sin((i + 1) * 12.9898 + salt * 78.233) * 43758.5453
-        return s - Math.floor(s)
+    readonly property var listItems: {
+        var q = query
+        if (!searching) return (sel >= 0 && cats[sel] && cats[sel].items) ? cats[sel].items : []
+        var out = [], seen = ({})
+        for (var c = 0; c < cats.length; c++) {
+            var items = cats[c].items || []
+            for (var i = 0; i < items.length; i++) {
+                var nm = ("" + (items[i].name || "")).toLowerCase()
+                if (nm.indexOf(q) < 0 || seen[nm]) continue
+                seen[nm] = true
+                out.push(items[i])
+            }
+        }
+        out.sort((a, b) => (("" + a.name).toLowerCase().indexOf(q) === 0 ? 0 : 1) - (("" + b.name).toLowerCase().indexOf(q) === 0 ? 0 : 1))
+        return out
     }
+    onListItemsChanged: appSel = 0
+    onSearchingChanged: pane = searching ? "apps" : "cats"
 
-    // ── layout helpers (home = screen coords with the graph at rest) ──
-    // Categories ride a two-armed spiral that winds out of the hub: node i
-    // sits on arm i % 2, spaced along it, so the field reads as a galaxy
-    // turning around the mark rather than a ring.
-    readonly property real spTurns: 0.95
-    function spR(t) { return 0.46 + 0.74 * (Math.exp(1.7 * t) - 1) / (Math.exp(1.7) - 1) }
-    function spAng(t, arm) { return -Math.PI * 0.62 + arm * Math.PI + t * spTurns * 2 * Math.PI }
-    function spX(t, arm) { return cx + rx * spR(t) * Math.cos(spAng(t, arm)) }
-    function spY(t, arm) { return cy + ry * spR(t) * Math.sin(spAng(t, arm)) }
-    function catArm(i) { return i % 2 }
-    function catT(i) {
-        var per = Math.ceil(Math.max(n, 1) / 2)
-        return per <= 1 ? 0.5 : 0.08 + 0.84 * Math.floor(i / 2) / (per - 1)
-    }
-    function catHomeX(i) { return spX(catT(i), catArm(i)) }
-    function catHomeY(i) { return spY(catT(i), catArm(i)) }
+    readonly property real margin: px(56)
 
-    // 0 → 1 as the launcher opens: the arms ink outward and nodes surface
-    // as the stroke reaches them.
-    property real drawIn: intro ? 1 : 0
-    Behavior on drawIn { NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
-    onDrawInChanged: connCanvas.requestPaint()
-    function surfaced(i) { return Math.max(0, Math.min(1, (drawIn - catT(i) * 0.8) * 5)) }
-    // apps: a loose organic spray to the right of the anchored category node.
-    // columns only guard against collisions; per-column phase + per-item jitter
-    // break any table-like alignment so it reads scattered, not gridded.
-    function appCols(len) { return Math.min(4, Math.max(1, Math.ceil(len / 9))) }
-    function appPerCol(len) { return Math.ceil(len / appCols(len)) }
-    function appX(i, len) {
-        var per = appPerCol(len), col = Math.floor(i / per)
-        return anchorX + 300 + col * 276 + (jf(i, 3) - 0.5) * 46
-    }
-    function appY(i, len) {
-        var per = appPerCol(len), col = Math.floor(i / per), row = i % per
-        var count = Math.min(per, len - col * per)
-        var phase = (jf(col, 5) - 0.5) * 46          // per-column vertical drift
-        return anchorY - (count - 1) * 34 + row * 68 + phase + (jf(i, 4) - 0.5) * 30
-    }
-    function upper(s) { return (s || "").toUpperCase() }
-    // strip any leading icon/emoji glyphs the data embeds in a name so the
-    // launcher stays monochrome (e.g. "⭐ Favorites" → "Favorites")
-    function clean(s) { var m = ("" + (s || "")).match(/[A-Za-z0-9].*/); return m ? m[0] : (s || "") }
-    function pad2(k) { k = "" + k; return k.length < 2 ? "0" + k : k }
-    // search results: floating scatter across the field — never a column.
-    // columns only bound density; jf jitter + per-column phase break alignment.
-    function resCols(len) { return len <= 1 ? 1 : Math.min(4, Math.max(2, Math.ceil(len / 3))) }
-    function resPerCol(len) { return Math.ceil(len / resCols(len)) }
-    function resX(i, len) {
-        var cols = resCols(len), per = resPerCol(len), col = Math.floor(i / per)
-        var span = width * 0.66, x0 = width / 2 - span / 2
-        var step = cols > 1 ? span / (cols - 1) : 0
-        return x0 + col * step + (jf(i, 6) - 0.5) * 70
-    }
-    function resY(i, len) {
-        var per = resPerCol(len), col = Math.floor(i / per), row = i % per
-        var count = Math.min(per, len - col * per)
-        var phase = (jf(col, 8) - 0.5) * 64
-        return height * 0.52 - (count - 1) * 42 + row * 84 + phase + (jf(i, 7) - 0.5) * 34
+    readonly property int side: sel >= 0 ? sideOf(sel) : 1
+    readonly property real anchorX: sel >= 0 ? catX(sel) : 0
+    readonly property real anchorY: sel >= 0 ? catY(sel) : 0
+    readonly property real anchorHalfW: chipW / 2
+    readonly property real availW: width - width * 0.12 - anchorHalfW * 2 - feedLen - margin
+    readonly property int hCols: Math.max(1, Math.min(4, Math.floor((availW + appGapX) / (appW + appGapX))))
+    readonly property int hRows: Math.max(1, Math.min(8, Math.floor((height - px(170) * 2 + appGapY) / (appH + appGapY))))
+    readonly property int sCols: Math.max(1, Math.min(5, Math.floor((width - margin * 2 + appGapX) / (appW + appGapX))))
+    readonly property int sRows: Math.max(1, Math.min(6, Math.floor((height - px(190) - hubH - feedLen - margin + appGapY) / (appH + appGapY))))
+    readonly property int cols: searching ? sCols : hCols
+    readonly property int visRows: searching ? sRows : hRows
+    readonly property int totalRows: Math.max(1, Math.ceil(listItems.length / cols))
+    readonly property bool rolling: totalRows > visRows
+    readonly property int rowsUsed: Math.min(visRows, totalRows)
+    readonly property int colsUsed: Math.max(1, Math.min(cols, listItems.length))
+    readonly property int selRow: Math.floor(appSel / cols)
+    readonly property int selCol: appSel % cols
+    readonly property int topRow: Math.max(0, Math.min(totalRows - rowsUsed, selRow - Math.floor(rowsUsed / 2)))
+    property real scrollRow: topRow
+    Behavior on scrollRow { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+    readonly property int winStart: Math.max(0, Math.floor(scrollRow) - 1)
+    readonly property int winRows: rowsUsed + 3
+    function rowFade(vr) {
+        if (!rolling) return 1
+        var half = rowsUsed / 2
+        var d = Math.abs(vr - (rowsUsed - 1) / 2) / half
+        return Math.max(0, Math.min(1, (1 - d) / 0.42))
     }
 
-    // ── menu loading ──
-    // Apps are enumerated dynamically every time the launcher opens:
-    // archangelos-menugen scans the installed .desktop files and prints the
-    // catalog on stdout, so the menu always mirrors what is actually installed
-    // (never a hardcoded list). Only if the generator is missing or fails do we
-    // fall back to the shipped static menu.json.
+    readonly property real groupW: anchorHalfW * 2 + feedLen + Math.min(hCols, Math.max(1, listItems.length)) * (appW + appGapX) - appGapX
+    readonly property real focusInset: Math.max(margin + anchorHalfW, (width - groupW) / 2 + anchorHalfW)
+
+    readonly property real trunkX: anchorX + side * (anchorHalfW + feedLen - px(22))
+    readonly property real gridX0: anchorX + side * (anchorHalfW + feedLen)
+    function hAppCx(k) { return gridX0 + side * ((k % cols) * (appW + appGapX) + appW / 2) }
+    function hRowCy(r) { return anchorY + (r - (rowsUsed - 1) / 2) * (appH + appGapY) }
+
+    readonly property real sTrunkY: -hubH / 2 - feedLen + px(22)
+    function sColCx(c) { return (c - (colsUsed - 1) / 2) * (appW + appGapX) }
+    function sRowCy(r) { return -hubH / 2 - feedLen - appH / 2 - r * (appH + appGapY) }
+    readonly property real sTop: sRowCy(rowsUsed - 1) - appH / 2
+
+    readonly property real camX: atHub ? 0 : searching ? 0 : anchorX + side * (width / 2 - focusInset)
+    readonly property real camY: atHub ? 0 : searching ? (sTop + hubH / 2) / 2 - px(20) : anchorY
+
     property bool dynamicLoaded: false
+    property string menuText: ""
+    property bool startApplied: false
     function parseMenu(txt) {
+        if (txt === root.menuText) return
         try {
             var d = JSON.parse(txt)
+            root.menuText = txt
             root.edition = d.edition || "ArchangelOS"
             root.cats = d.categories || []
-            if (root.startFocus >= 0 && root.startFocus < root.cats.length)
-                focusStartTimer.start()
-            if (root.startQuery.length > 0) root.query = root.startQuery
+            if (root.sel >= root.count) root.sel = -1
+            if (!root.startApplied) {
+                root.startApplied = true
+                if (root.startFocus >= 0 && root.startFocus < root.count) root.sel = root.startFocus
+                if (root.startQuery.length > 0) root.filter = root.startQuery
+            }
         } catch (e) { console.warn("menu parse error:", e) }
-        connCanvas.requestPaint()
     }
-    Timer { id: focusStartTimer; interval: 120; onTriggered: root.focused = root.startFocus }
+    function reset() {
+        filter = ""
+        sel = -1
+        appSel = 0
+        pane = "cats"
+    }
+    onActiveChanged: {
+        if (active) {
+            reset()
+            shown = true
+            forceActiveFocus()
+            if (!menuGen.running) menuGen.running = true
+        } else {
+            shown = false
+            reset()
+        }
+    }
     Process {
         id: menuGen
         command: ["/usr/bin/archangelos-menugen"]
-        running: false
         stdout: StdioCollector {
             id: menuGenOut
             onStreamFinished: {
                 var good = false
-                try {
-                    var d = JSON.parse(menuGenOut.text)
-                    good = d && d.categories && d.categories.length > 0
-                } catch (e) { good = false }
+                try { var d = JSON.parse(menuGenOut.text); good = d && d.categories && d.categories.length > 0 } catch (e) {}
                 if (good) { root.dynamicLoaded = true; root.parseMenu(menuGenOut.text) }
             }
         }
-        onExited: function(code, status) {
-            // generator unavailable / errored → load the shipped static catalog
-            if (!root.dynamicLoaded) menuFile.path = root.menuPath
-        }
+        onExited: if (!root.dynamicLoaded) menuFile.path = root.menuPath
     }
     FileView {
         id: menuFile
-        // path is left unset so the dynamic generator is preferred; it is only
-        // assigned (triggering a load) when menuGen fails, above.
         onLoaded: if (!root.dynamicLoaded) root.parseMenu(menuFile.text())
         onLoadFailed: console.warn("menu load failed:", root.menuPath)
     }
-    Component.onCompleted: { introTimer.start(); menuGen.running = true }
-    Timer { id: introTimer; interval: 40; onTriggered: root.intro = true }
-    // ── launching (install-on-demand, detached) ──
-    // Fully detach the child from the launcher process: dismiss() tears the
-    // launcher down immediately after, and a Quickshell `Process` child would be
-    // reaped with it before the app ever exec'd. execDetached reparents it away.
+    Component.onCompleted: { menuGen.running = true; shown = active }
+
     function launchItem(item) {
         if (!item || !item.exec) return
         var exe = item.exec
@@ -235,662 +267,586 @@ Item {
         root.dismiss()
     }
 
-    // ── keyboard ──
-    Keys.onPressed: function(e) {
-        // Apps grid: typing filters the grid in place; arrows walk the cells.
-        if (root.gridMode) {
-            if (e.key === Qt.Key_Escape) {
-                if (root.gridQuery.length > 0) root.gridQuery = ""
-                else root.focused = -1
-                e.accepted = true; return
-            }
-            if (e.key === Qt.Key_Backspace) { root.gridQuery = root.gridQuery.slice(0, -1); e.accepted = true; return }
-            var gi = root.gridItems
-            if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) {
-                if (gi.length > 0) root.launchItem(gi[Math.max(0, Math.min(root.gridSel, gi.length - 1))])
-                e.accepted = true; return
-            }
-            var gcols = appGrid.columnsShown
-            if (e.key === Qt.Key_Right) { root.gridSel = Math.min(root.gridSel + 1, gi.length - 1); e.accepted = true; return }
-            if (e.key === Qt.Key_Left)  { root.gridSel = Math.max(root.gridSel - 1, 0); e.accepted = true; return }
-            if (e.key === Qt.Key_Down)  { root.gridSel = Math.min(root.gridSel + gcols, gi.length - 1); e.accepted = true; return }
-            if (e.key === Qt.Key_Up)    { root.gridSel = Math.max(root.gridSel - gcols, 0); e.accepted = true; return }
-            if (e.text.length === 1 && e.text >= " ") { root.gridQuery += e.text; e.accepted = true; return }
-            e.accepted = true; return
-        }
-        // live search takes priority whenever a query is active
-        if (root.query.length > 0) {
-            if (e.key === Qt.Key_Escape) { root.query = ""; e.accepted = true; return }
-            if (e.key === Qt.Key_Backspace) { root.query = root.query.slice(0, -1); e.accepted = true; return }
-            if (e.key === Qt.Key_Down) { root.selResult = Math.min(root.selResult + 1, root.results.length - 1); e.accepted = true; return }
-            if (e.key === Qt.Key_Up) { root.selResult = Math.max(root.selResult - 1, 0); e.accepted = true; return }
-            if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) {
-                if (root.results.length > 0) root.launchItem(root.results[root.selResult].item)
-                e.accepted = true; return
-            }
-            if (e.text.length === 1 && e.text >= " ") { root.query += e.text; e.accepted = true; return }
-            e.accepted = true; return
-        }
-        // any printable (non-space) key starts a search
-        if (e.text.length === 1 && e.text > " ") { root.query = e.text; e.accepted = true; return }
-
-        if (e.key === Qt.Key_Escape) {
-            if (root.focused >= 0) root.focused = -1; else root.dismiss()
-            e.accepted = true; return
-        }
-        var m = Math.max(root.n, 1)
-        if (root.focused < 0) {
-            if (e.key === Qt.Key_Right) root.selCat = (root.selCat + 1) % m
-            else if (e.key === Qt.Key_Left) root.selCat = (root.selCat - 1 + m) % m
-            else if (e.key === Qt.Key_Up) root.selCat = (root.selCat - 2 + m) % m
-            else if (e.key === Qt.Key_Down) root.selCat = (root.selCat + 2) % m
-            else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) root.focused = root.selCat
-            else return
-            connCanvas.requestPaint(); e.accepted = true
-        } else {
-            var items = root.cats[root.focused].items || []
-            if (e.key === Qt.Key_Down) root.selApp = Math.min(root.selApp + 1, items.length - 1)
-            else if (e.key === Qt.Key_Up) root.selApp = Math.max(root.selApp - 1, 0)
-            else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { root.launchItem(items[root.selApp]); return }
-            else return
-            connCanvas.requestPaint(); e.accepted = true
-        }
+    function selectCat(i) {
+        filter = ""
+        sel = i
+        appSel = 0
+        pane = "cats"
     }
-    // ── background: dim wash (click to dismiss) ──
+    function step(dx, dy) {
+        var fx = sel >= 0 ? catX(sel) : 0, fy = sel >= 0 ? catY(sel) : 0
+        var best = -2, bestScore = 1e12
+        for (var i = -1; i < count; i++) {
+            if (i === sel) continue
+            var x = i >= 0 ? catX(i) : 0, y = i >= 0 ? catY(i) : 0
+            var ax = x - fx, ay = (y - fy) * 1.6
+            var along = dx !== 0 ? ax * dx : ay * dy
+            if (along <= 0) continue
+            var across = dx !== 0 ? Math.abs(ay) : Math.abs(ax)
+            var score = along + across * 1.5
+            if (score < bestScore) { bestScore = score; best = i }
+        }
+        if (best > -2) selectCat(best)
+    }
+    function enterApps() { if (listItems.length > 0) pane = "apps" }
+    property point hoverLock: Qt.point(-1, -1)
+    function lockHover() { hoverLock = pointer.point.scenePosition }
+    function hoverFree() {
+        var p = pointer.point.scenePosition
+        return Math.abs(p.x - hoverLock.x) > 2 || Math.abs(p.y - hoverLock.y) > 2
+    }
+    HoverHandler { id: pointer }
+    function scrollAppSel(dy) {
+        var n = listItems.length, c = cols
+        if (n === 0 || c === 0) return
+        appSel = Math.min(Math.max(0, appSel + dy * c), n - 1)
+    }
+
+    Keys.onPressed: function(e) {
+        root.lockHover()
+        var printable = e.text.length === 1 && e.text > " " && !(e.modifiers & Qt.ControlModifier)
+        var n = root.listItems.length
+        var c = root.cols
+        var outward = root.side > 0 ? Qt.Key_Right : Qt.Key_Left
+        var inward = root.side > 0 ? Qt.Key_Left : Qt.Key_Right
+        if (e.key === Qt.Key_Escape) {
+            if (root.searching) root.filter = ""
+            else if (root.pane === "apps") root.pane = "cats"
+            else if (root.sel >= 0) root.selectCat(-1)
+            else root.dismiss()
+        } else if (e.key === Qt.Key_Backspace) {
+            root.filter = root.filter.slice(0, -1)
+        } else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) {
+            if (root.atHub) root.step(1, 0)
+            else if (root.pane === "cats") root.enterApps()
+            else if (n > 0) root.launchItem(root.listItems[Math.min(root.appSel, n - 1)])
+        } else if (root.searching) {
+            var sc = root.selCol
+            if (e.key === Qt.Key_Right) { if (sc < c - 1 && root.appSel + 1 < n) root.appSel += 1 }
+            else if (e.key === Qt.Key_Left) { if (sc > 0) root.appSel -= 1 }
+            else if (e.key === Qt.Key_Up) { root.scrollAppSel(1) }
+            else if (e.key === Qt.Key_Down) { root.scrollAppSel(-1) }
+            else if (printable || e.key === Qt.Key_Space) root.filter += e.text
+            else return
+        } else if (root.pane === "cats") {
+            if (!root.atHub && e.key === outward) root.enterApps()
+            else if (e.key === Qt.Key_Right) root.step(1, 0)
+            else if (e.key === Qt.Key_Left) root.step(-1, 0)
+            else if (e.key === Qt.Key_Down) root.step(0, 1)
+            else if (e.key === Qt.Key_Up) root.step(0, -1)
+            else if (printable) root.filter += e.text
+            else return
+        } else {
+            var col = root.selCol
+            if (e.key === outward) { if (col < c - 1 && root.appSel + 1 < n) root.appSel += 1 }
+            else if (e.key === inward) { if (col === 0) root.pane = "cats"; else root.appSel -= 1 }
+            else if (e.key === Qt.Key_Down) { root.scrollAppSel(1) }
+            else if (e.key === Qt.Key_Up) { root.scrollAppSel(-1) }
+            else if (printable) root.filter += e.text
+            else return
+        }
+        e.accepted = true
+    }
+
     Rectangle {
         anchors.fill: parent
-        color: Theme.bg
-        opacity: root.intro ? 0.8 : 0
-        Behavior on opacity { NumberAnimation { duration: 400 } }
-        MouseArea { anchors.fill: parent; onClicked: root.dismiss() }
+        color: "#000000"
+        opacity: root.shown ? 0.5 : 0
+        Behavior on opacity { NumberAnimation { duration: 220 } }
     }
 
-    // ── horizon bloom + drifting ink motes ──
-    Canvas {
-        id: bgCanvas
+    MouseArea {
         anchors.fill: parent
-        opacity: root.intro ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 700 } }
-        property var motes: []
-        Component.onCompleted: {
-            var s = 7, arr = []
-            function rnd() { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff }
-            for (var i = 0; i < 46; i++) arr.push([rnd(), rnd(), 1.6 + rnd() * 3.0, 0.05 + rnd() * 0.12])
-            motes = arr; requestPaint()
+        onClicked: root.dismiss()
+        onWheel: function(w) {
+            root.lockHover()
+            root.scrollAppSel(w.angleDelta.y < 0 ? 1 : -1)
         }
-        onPaint: {
-            var ctx = getContext("2d"); ctx.reset(); ctx.clearRect(0, 0, width, height)
-            var g = ctx.createRadialGradient(root.cx, root.cy, 0, root.cx, root.cy, Math.min(width, height) * 0.62)
-            g.addColorStop(0.0, "rgba(255,253,248,0.16)")
-            g.addColorStop(0.45, "rgba(255,253,248,0.05)")
-            g.addColorStop(1.0, "rgba(255,253,248,0.0)")
-            ctx.fillStyle = g; ctx.fillRect(0, 0, width, height)
-            for (var i = 0; i < motes.length; i++) {
-                var m = motes[i], mx = m[0] * width, my = m[1] * height, rr = m[2] * 3.0
-                var d = ctx.createRadialGradient(mx, my, 0, mx, my, rr)
-                d.addColorStop(0.0, "rgba(255,255,255," + m[3] + ")")
-                d.addColorStop(1.0, "rgba(255,255,255,0.0)")
-                ctx.fillStyle = d; ctx.beginPath(); ctx.arc(mx, my, rr, 0, 6.2832); ctx.fill()
-            }
-        }
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
     }
-    // ── twinkling stars ──
-    Repeater {
-        model: 40
+
+    component Part: Item {
+        id: part
+        property var item
+        property bool active: false
+        width: root.appW
+        height: root.appH
         Rectangle {
-            required property int index
-            readonly property real sz: 1 + root.jf(index, 11) * 2.2
-            x: root.jf(index, 12) * root.width
-            y: root.jf(index, 13) * root.height
-            width: sz; height: sz; radius: sz / 2
-            color: "#f4f1ea"
-            opacity: 0
-            SequentialAnimation on opacity {
-                running: root.intro
-                loops: Animation.Infinite
-                PauseAnimation { duration: root.jf(index, 14) * 3000 }
-                NumberAnimation { to: 0.15 + root.jf(index, 15) * 0.55; duration: 1400 + root.jf(index, 16) * 1800; easing.type: Easing.InOutSine }
-                NumberAnimation { to: 0.04; duration: 1400 + root.jf(index, 17) * 1800; easing.type: Easing.InOutSine }
-            }
+            anchors.fill: parent
+            radius: root.px(2)
+            color: part.active ? root.surfaceHi : (partMa.containsMouse ? "#121212" : root.surface)
+            border.width: 1
+            border.color: part.active ? root.accent : (partMa.containsMouse ? "#5a5853" : root.edge)
         }
-    }
-
-    // ── connectors: spiral arms (ring view), 45° traces (app fan) ──
-    Canvas {
-        id: connCanvas
-        anchors.fill: parent
-        opacity: (root.intro && !root.searching && !root.gridMode) ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
-        // stroke one spiral arm from t0 to t1 (graph-relative)
-        function spiral(ctx, arm, t0, t1) {
-            if (t1 <= t0) return
-            var steps = Math.max(2, Math.ceil((t1 - t0) * 120))
-            ctx.beginPath()
-            for (var s = 0; s <= steps; s++) {
-                var t = t0 + (t1 - t0) * s / steps
-                var x = root.spX(t, arm) + root.gx, y = root.spY(t, arm) + root.gy
-                if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
-            }
-            ctx.stroke()
+        Image {
+            id: partIcon
+            anchors { left: parent.left; leftMargin: root.px(12); verticalCenter: parent.verticalCenter }
+            width: root.px(20); height: width
+            sourceSize: Qt.size(root.px(32), root.px(32))
+            asynchronous: true
+            source: root.iconFor(part.item ? part.item.icon : "")
         }
-        function elbow(ctx, x0, y0, x1, y1) {
-            var dx = x1 - x0, dy = y1 - y0
-            var sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1
-            var mm = Math.min(Math.abs(dx), Math.abs(dy))
-            ctx.beginPath(); ctx.moveTo(x0, y0)
-            ctx.lineTo(x0 + sx * mm, y0 + sy * mm)
-            ctx.lineTo(x1, y1); ctx.stroke()
-        }
-        onPaint: {
-            var ctx = getContext("2d"); ctx.reset(); ctx.clearRect(0, 0, width, height)
-            // In Apps grid mode the constellation is replaced by the icon grid;
-            // bail immediately so no elbow traces flash during the flow-up
-            // animation (the opacity fade alone lags a few frames and glitches).
-            if (root.n === 0 || root.gridMode) return
-            if (root.focused < 0) {
-                var reach = root.drawIn
-                for (var arm = 0; arm < 2; arm++) {
-                    var tEnd = 0
-                    for (var k = 0; k < root.n; k++)
-                        if (root.catArm(k) === arm) tEnd = Math.max(tEnd, root.catT(k))
-                    tEnd = Math.min(1, tEnd + 0.1) * reach
-                    // the arm: a faint dashed trace…
-                    ctx.setLineDash([2, 6])
-                    ctx.strokeStyle = "rgba(231,229,224,0.22)"
-                    ctx.lineWidth = 1.0
-                    spiral(ctx, arm, 0, tEnd)
-                    ctx.setLineDash([])
-                    // …dusted with stars that drift either side of it
-                    for (var d = 0; d < 34; d++) {
-                        var td = d / 34
-                        if (td > tEnd) break
-                        var off = (root.jf(d + arm * 50, 21) - 0.5) * 46
-                        var a = root.spAng(td, arm) + Math.PI / 2
-                        var px = root.spX(td, arm) + root.gx + Math.cos(a) * off
-                        var py = root.spY(td, arm) + root.gy + Math.sin(a) * off * 0.6
-                        var rr = 0.7 + root.jf(d + arm * 50, 22) * 1.4
-                        ctx.fillStyle = "rgba(244,241,234," + (0.18 + root.jf(d + arm * 50, 23) * 0.45) + ")"
-                        ctx.beginPath(); ctx.arc(px, py, rr, 0, 6.2832); ctx.fill()
-                    }
-                }
-                // the lit node's arm glows from the hub out to it
-                var h = root.hoverCat >= 0 ? root.hoverCat : root.selCat
-                if (h >= 0 && h < root.n) {
-                    ctx.strokeStyle = "rgba(247,246,242,0.85)"
-                    ctx.lineWidth = 1.6
-                    ctx.shadowColor = "rgba(247,246,242,0.7)"
-                    ctx.shadowBlur = 10
-                    spiral(ctx, root.catArm(h), 0, Math.min(root.catT(h), reach))
-                    ctx.shadowBlur = 0
-                }
-            } else {
-                var fx = root.catHomeX(root.focused) + root.gx
-                var fy = root.catHomeY(root.focused) + root.gy
-                var items = root.cats[root.focused].items || []
-                for (var j = 0; j < items.length; j++) {
-                    var ha = (j === root.hoverApp || j === root.selApp)
-                    ctx.strokeStyle = ha ? "rgba(247,246,242,0.85)" : "rgba(231,229,224,0.28)"
-                    ctx.lineWidth = ha ? 1.5 : 1.0
-                    elbow(ctx, fx, fy, root.appX(j, items.length), root.appY(j, items.length))
-                }
-            }
-        }
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-    }
-    // ── the constellation (hub + category nodes) ──
-    Item {
-        id: graph
-        anchors.fill: parent
-        opacity: (root.intro && !root.searching && !root.gridMode) ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 300 } }
-        // lift the whole constellation upward as the Apps grid takes over
-        transform: Translate {
-            y: root.gridMode ? -root.height * 0.16 : 0
-            Behavior on y { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-        }
-
-        // central hub — the ArchangelOS mark with APPS beneath it
-        Item {
-            width: 168; height: 150
-            x: root.cx + root.gx - width / 2
-            y: root.cy + root.gy - height / 2
-            opacity: root.focused < 0 ? 1 : 0.06
-            Behavior on opacity { NumberAnimation { duration: 380 } }
-            Column {
-                anchors.centerIn: parent; spacing: 8
-                Image {
-                    id: hubMark
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    source: "file://" + root.logoPath
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize: Qt.size(260, 190)
-                    height: 88; width: 120
-                    smooth: true; asynchronous: true
-                    // soft silver halo that breathes
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        shadowEnabled: true
-                        shadowColor: Qt.rgba(1, 1, 1, 0.35)
-                        shadowBlur: 1.0
-                        shadowHorizontalOffset: 0
-                        shadowVerticalOffset: 0
-                        shadowOpacity: hubMark.glow
-                    }
-                    property real glow: 0.15
-                    SequentialAnimation on glow {
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 0.4; duration: 3200; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 0.15; duration: 3200; easing.type: Easing.InOutSine }
-                    }
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter; text: "APPS"
-                    font.family: Theme.display; font.pixelSize: 26; font.bold: true
-                    font.letterSpacing: 6; color: Theme.fg
-                }
-            }
-            // brush underline beneath the APPS label
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom; anchors.bottomMargin: 2
-                width: 96; height: 1.4; radius: 0.7; opacity: 0.6
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.5; color: Theme.a4 }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-            }
-            MouseArea { anchors.fill: parent; onClicked: if (root.focused >= 0) root.focused = -1 }
-            onXChanged: connCanvas.requestPaint()
-
-            // a slow orbit round the mark, a diamond riding it
-            Item {
+        Rectangle {
+            visible: partIcon.status !== Image.Ready
+            anchors.fill: partIcon
+            color: "transparent"
+            border.width: 1
+            border.color: root.edge
+            Text {
                 anchors.centerIn: parent
-                z: -1
-                width: 250; height: 250
-                transform: Scale { origin.x: 125; origin.y: 125; yScale: 0.42 }
+                text: ("" + ((part.item && part.item.name) || "?")).charAt(0).toUpperCase()
+                color: root.inkMute
+                font { family: root.sansFamily; pixelSize: root.px(10); weight: Font.Medium }
+            }
+        }
+        Text {
+            anchors { left: partIcon.right; leftMargin: root.px(10); right: parent.right; rightMargin: root.px(10); verticalCenter: parent.verticalCenter }
+            text: (part.item && part.item.name) || ""
+            textFormat: Text.PlainText
+            elide: Text.ElideRight
+            color: part.active ? root.ink : root.inkSoft
+            font { family: root.sansFamily; pixelSize: root.px(13); weight: part.active ? Font.Medium : Font.Normal }
+        }
+        property alias hovered: partMa.containsMouse
+        signal hoveredIn()
+        MouseArea {
+            id: partMa
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: part.hoveredIn()
+            onPositionChanged: if (!part.active) part.hoveredIn()
+            onClicked: root.launchItem(part.item)
+        }
+    }
+
+    component Pad: Rectangle {
+        property bool vertical: false
+        property bool lit: false
+        property real cx: 0
+        property real cy: 0
+        width: vertical ? root.px(12) : root.px(8)
+        height: vertical ? root.px(8) : root.px(12)
+        x: cx - width / 2
+        y: cy - height / 2
+        color: lit ? root.accent : root.copper
+    }
+
+    Item {
+        id: world
+        x: root.width / 2 - root.camX
+        y: root.height / 2 - root.camY
+        opacity: root.shown ? 1 : 0
+        Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
+        Behavior on y { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 220 } }
+
+        function catFade(i) {
+            if (root.searching) return 0.1
+            if (root.sel < 0) return 1
+            if (i === root.sel) return 1
+            return 0.26
+        }
+
+        Repeater {
+            model: root.count
+            delegate: Shape {
+                id: trace
+                required property int index
+                readonly property var r: root.routes[index] || ({ pts: [[0,0],[0,0]], horiz: true })
+                readonly property bool lit: index === root.sel && !root.searching
+                z: lit ? 2 : 1
+                opacity: lit ? 1 : root.atHub ? 0.85 : 0.3
+                Behavior on opacity { NumberAnimation { duration: 260 } }
+                ShapePath {
+                    strokeColor: trace.lit ? root.accent : root.copper
+                    strokeWidth: root.px(2)
+                    fillColor: "transparent"
+                    joinStyle: ShapePath.MiterJoin
+                    capStyle: ShapePath.FlatCap
+                    PathPolyline { path: trace.r.pts.map(p => Qt.point(p[0], p[1])) }
+                }
                 Rectangle {
-                    anchors.fill: parent; radius: width / 2
-                    color: "transparent"; border.width: 1
-                    border.color: Qt.rgba(231/255, 229/255, 224/255, 0.13)
+                    readonly property var v: trace.r.pts[2] || [0, 0]
+                    readonly property var u: trace.r.pts[1] || [0, 0]
+                    visible: Math.abs(v[0] - u[0]) > 1 || Math.abs(v[1] - u[1]) > 1
+                    x: v[0] - width / 2; y: v[1] - height / 2
+                    width: root.px(10); height: width; radius: width / 2
+                    color: "#050505"
+                    border.width: root.px(2)
+                    border.color: trace.lit ? root.accent : root.copper
+                }
+                Pad {
+                    vertical: !trace.r.horiz
+                    lit: trace.lit
+                    cx: trace.r.pts[0][0]; cy: trace.r.pts[0][1]
+                }
+            }
+        }
+
+        Item {
+            id: hub
+            x: -root.hubW / 2
+            y: -root.hubH / 2
+            width: root.hubW
+            height: root.hubH
+            z: 3
+            opacity: root.searching || root.sel < 0 ? 1 : 0.22
+            Behavior on opacity { NumberAnimation { duration: 260 } }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: root.px(3)
+                color: root.surface
+                border.width: 1
+                border.color: root.searching ? root.accent : root.edge
+            }
+            Rectangle {
+                anchors { fill: parent; margins: root.px(6) }
+                radius: root.px(1)
+                color: "transparent"
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+            }
+            Rectangle {
+                x: root.px(14); y: root.px(14)
+                width: root.px(6); height: width; radius: width / 2
+                color: root.searching ? root.accent : root.silkInk
+            }
+            Text {
+                anchors { left: parent.left; bottom: parent.top; bottomMargin: root.px(8) }
+                text: "U0"
+                color: root.silkInk
+                font { family: root.silkFamily; pixelSize: root.px(11) }
+            }
+            Column {
+                anchors.centerIn: parent
+                spacing: root.px(3)
+            Item {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: Math.round(height * 1541 / 1211)
+                height: root.px(70)
+                MultiEffect {
+                    anchors.fill: parent
+                    source: hubLogo
+                    blurEnabled: true
+                    blur: 1.0
+                    blurMax: 32
+                    colorization: 1.0
+                    colorizationColor: root.accent
+                    opacity: root.searching ? 0.9 : 0.55
+                    Behavior on opacity { NumberAnimation { duration: 260 } }
+                }
+                Image {
+                    id: hubLogo
+                    anchors.fill: parent
+                    sourceSize: Qt.size(width * 2, height * 2)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                    source: "file://" + root.hubLogo
+                }
+            }
+            Item { width: 1; height: root.px(6) }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.osName
+                color: root.ink
+                font { family: root.sansFamily; pixelSize: root.px(13); weight: Font.Medium }
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.kernel
+                visible: text.length > 0
+                color: root.inkMute
+                font { family: root.silkFamily; pixelSize: root.px(10) }
+            }
+            }
+        }
+
+        Repeater {
+            model: root.count
+            delegate: Item {
+                id: chip
+                required property int index
+                readonly property bool active: index === root.sel && !root.searching
+                readonly property var r: root.routes[index] || ({ pts: [[0,0],[0,0]], horiz: true })
+                readonly property var entry: r.pts[r.pts.length - 1]
+                x: root.catX(index) - width / 2
+                y: root.catY(index) - height / 2
+                width: root.chipW
+                height: root.chipH
+                z: 4
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: root.px(3)
+                    color: root.surface
+                    opacity: root.searching ? 0.5 : 1
                 }
                 Item {
-                    anchors.fill: parent
-                    RotationAnimation on rotation { from: 0; to: 360; duration: 26000; loops: Animation.Infinite }
-                    Rectangle {
-                        x: parent.width / 2 - 3.5; y: -3.5
-                        width: 7; height: 7; rotation: 45; antialiasing: true
-                        color: "#C24A52"
-                    }
-                }
-            }
-        }
+                anchors.fill: parent
+                opacity: world.catFade(chip.index)
+                Behavior on opacity { NumberAnimation { duration: 260 } }
 
-        Repeater { model: root.cats; delegate: catNode }
-    }
-    // ── capsule behind every node: matte ink with a barely-there rim and a
-    //    soft black aura, so nodes sit in shadow rather than shine ──
-    component InkGlass: Item {
-        id: glass
-        property bool hot: false
-        // the aura: dark smoke bleeding out round the capsule
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: -10
-            radius: height / 2
-            color: Qt.rgba(0, 0, 0, glass.hot ? 0.55 : 0.4)
-            layer.enabled: true
-            layer.effect: MultiEffect { blurEnabled: true; blur: 1.0; blurMax: 24 }
-        }
-        Rectangle {
-            anchors.fill: parent
-            radius: height / 2
-            color: glass.hot ? Qt.rgba(0.075, 0.072, 0.068, 0.97) : Qt.rgba(0.035, 0.034, 0.032, 0.94)
-            border.width: 1
-            border.color: glass.hot ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.06)
-            Behavior on color { ColorAnimation { duration: 160 } }
-            Behavior on border.color { ColorAnimation { duration: 160 } }
-        }
-    }
-
-    // ── category node delegate ──
-    Component {
-        id: catNode
-        Item {
-            id: nd
-            property bool active: index === root.focused
-            property bool hot: index === root.hoverCat || index === root.selCat
-            property string label: root.upper(root.clean(modelData.name))
-            width: Math.max(132, tm.advanceWidth + label.length * 1.6 + 72)
-            height: 38
-            x: root.catHomeX(index) + root.gx - width / 2
-            y: root.catHomeY(index) + root.gy - height / 2
-            z: active ? 5 : 1
-            opacity: root.focused < 0 ? root.surfaced(index) : (active ? 1 : 0.05)
-            scale: nd.hot ? 1.05 : 1
-            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
-            onXChanged: connCanvas.requestPaint()
-
-            TextMetrics {
-                id: tm; text: nd.label
-                font.family: Theme.display; font.pixelSize: 12; font.letterSpacing: 1.6
-            }
-            InkGlass { anchors.fill: parent; hot: nd.hot }
-            Rectangle {
-                width: 6; height: 6; rotation: 45; x: 16; antialiasing: true
-                color: nd.hot ? "#C24A52" : Theme.a2
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Text {
-                anchors.left: parent.left; anchors.leftMargin: 30
-                anchors.right: cnt.left; anchors.rightMargin: 6
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: -1
-                text: nd.label; elide: Text.ElideRight
-                font.family: Theme.display; font.pixelSize: 12; font.letterSpacing: 1.6
-                color: nd.hot ? Theme.a4 : Theme.fg
-            }
-            Text {
-                id: cnt; anchors.right: parent.right; anchors.rightMargin: 15
-                anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: -1
-                text: root.pad2(modelData.items ? modelData.items.length : 0)
-                font.family: Theme.mono; font.pixelSize: 9; color: Theme.a3
-            }
-            MouseArea {
-                anchors.fill: parent; hoverEnabled: true
-                onEntered: { root.hoverCat = index; root.selCat = index; connCanvas.requestPaint() }
-                onExited: { root.hoverCat = -1; connCanvas.requestPaint() }
-                onClicked: { root.focused = (root.focused === index) ? -1 : index; connCanvas.requestPaint() }
-            }
-        }
-    }
-    // ── application fan (level 2) ──
-    Repeater {
-        model: (root.focused >= 0 && !root.searching && !root.gridMode) ? (root.cats[root.focused].items || []) : []
-        delegate: appNode
-    }
-    Component {
-        id: appNode
-        Item {
-            id: an
-            property var items: root.focused >= 0 ? (root.cats[root.focused].items || []) : []
-            property bool hot: index === root.hoverApp || index === root.selApp
-            width: 210; height: 34; z: 6
-            x: root.appX(index, items.length) - width / 2
-            y: root.appY(index, items.length) - height / 2
-            opacity: 0
-            Component.onCompleted: appIn.start()
-            NumberAnimation on opacity { id: appIn; to: 1; duration: 300; easing.type: Easing.OutCubic }
-            InkGlass { anchors.fill: parent; hot: an.hot }
-            Image {
-                x: 12; width: 16; height: 16
-                anchors.verticalCenter: parent.verticalCenter
-                source: root.iconFor(modelData.icon)
-                sourceSize: Qt.size(32, 32)
-                asynchronous: true; smooth: true
-            }
-            Text {
-                anchors.left: parent.left; anchors.leftMargin: 36
-                anchors.right: parent.right; anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: -1
-                text: modelData.name; elide: Text.ElideRight
-                font.family: Theme.display; font.pixelSize: 13
-                color: an.hot ? Theme.a4 : Theme.fg
-            }
-            MouseArea {
-                anchors.fill: parent; hoverEnabled: true
-                onEntered: { root.hoverApp = index; root.selApp = index; connCanvas.requestPaint() }
-                onExited: { root.hoverApp = -1; connCanvas.requestPaint() }
-                onClicked: root.launchItem(modelData)
-            }
-        }
-    }
-    // ── Apps grid (icon-top cells; replaces the fan for the "Apps" category) ──
-    Item {
-        id: gridLayer
-        anchors.fill: parent
-        z: 40
-        visible: root.gridMode && !root.searching
-        opacity: visible ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 320 } }
-        transform: Translate {
-            y: gridLayer.visible ? 0 : 46
-            Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
-        }
-        GridView {
-            id: appGrid
-            anchors.fill: parent
-            anchors.topMargin: 150; anchors.bottomMargin: 78
-            anchors.leftMargin: 64; anchors.rightMargin: 64
-            clip: true
-            cellWidth: 150; cellHeight: 128
-            property int columnsShown: Math.max(1, Math.floor(width / cellWidth))
-            model: root.gridItems
-            currentIndex: root.gridSel
-            boundsBehavior: Flickable.StopAtBounds
-            onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
-            delegate: Item {
-                id: cell
-                width: appGrid.cellWidth; height: appGrid.cellHeight
-                property bool hot: index === root.gridSel || index === root.hoverGrid
                 Rectangle {
-                    anchors.fill: parent; anchors.margins: 6; radius: 12
-                    color: cell.hot ? "#2a251d" : "transparent"
-                    border.width: cell.hot ? 1 : 0; border.color: Theme.a3
-                    Behavior on color { ColorAnimation { duration: 130 } }
+                    anchors.fill: parent
+                    radius: root.px(3)
+                    color: chip.active ? root.surfaceHi : root.surface
+                    border.width: 1
+                    border.color: chip.active ? root.accent : (chipMa.containsMouse ? "#5a5853" : root.edge)
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
                 }
-                Column {
-                    anchors.centerIn: parent; spacing: 9; width: parent.width - 20
-                    Image {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        source: root.iconFor(modelData.icon)
-                        sourceSize.width: 52; sourceSize.height: 52
-                        width: 52; height: 52; asynchronous: true; smooth: true; mipmap: true
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    Text {
-                        width: parent.width; horizontalAlignment: Text.AlignHCenter
-                        text: modelData.name; elide: Text.ElideRight
-                        maximumLineCount: 2; wrapMode: Text.WordWrap
-                        font.family: Theme.display; font.pixelSize: 12
-                        color: cell.hot ? Theme.a4 : Theme.fg
-                    }
+                Rectangle {
+                    anchors { fill: parent; margins: root.px(5) }
+                    radius: root.px(1)
+                    color: "transparent"
+                    border.width: 1
+                    border.color: chip.active ? Qt.rgba(194/255, 74/255, 82/255, 0.35) : Qt.rgba(1, 1, 1, 0.05)
                 }
-                MouseArea {
-                    anchors.fill: parent; hoverEnabled: true
-                    onEntered: root.hoverGrid = index
-                    onExited: if (root.hoverGrid === index) root.hoverGrid = -1
-                    onClicked: root.launchItem(modelData)
+                Rectangle {
+                    x: root.px(12); y: root.px(12)
+                    width: root.px(5); height: width; radius: width / 2
+                    color: chip.active ? root.accent : root.silkInk
                 }
-            }
-        }
-    }
-
-    // ── focused-category heading (top-left title, clear of the app spray) ──
-    Column {
-        x: 36
-        y: 54
-        spacing: 4
-        opacity: (root.focused >= 0 && !root.searching) ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 320 } }
-        Text {
-            text: root.focused >= 0 ? root.upper(root.clean(root.cats[root.focused].name)) : ""
-            font.family: Theme.display; font.pixelSize: 30; font.bold: true
-            font.letterSpacing: 4; color: Theme.fg
-        }
-        Text {
-            text: root.focused >= 0 ? (root.gridMode
-                    ? (root.gridItems.length + (root.gridQuery.length > 0 ? " OF " + ((root.cats[root.focused].items || []).length) + " APPLICATIONS" : " APPLICATIONS"))
-                    : ((root.cats[root.focused].items || []).length + " APPLICATIONS")) : ""
-            font.family: Theme.mono; font.pixelSize: 10; font.letterSpacing: 3; color: Theme.a3
-        }
-    }
-
-    // ── HUD ──
-    Text {
-        x: 34; y: 28
-        opacity: root.intro ? 0.8 : 0
-        Behavior on opacity { NumberAnimation { duration: 500 } }
-        text: root.upper(root.edition) + "  —  LAUNCHER"
-        font.family: Theme.mono; font.pixelSize: 10; font.letterSpacing: 3; color: Theme.a3
-    }
-    Text {
-        anchors.right: parent.right; anchors.rightMargin: 34
-        anchors.bottom: parent.bottom; anchors.bottomMargin: 30
-        opacity: root.intro ? 0.7 : 0
-        Behavior on opacity { NumberAnimation { duration: 500 } }
-        text: root.query.length > 0 ? "type to search · enter to launch · esc to clear"
-            : (root.gridMode ? "type to filter · arrows to move · enter to launch · esc to go back"
-            : (root.focused < 0 ? "click a node · type to search · esc to close"
-                                : "click an app · type to search · esc to go back"))
-        font.family: Theme.mono; font.pixelSize: 9; font.letterSpacing: 2.5; color: Theme.a3
-    }
-
-    // ── Apps-grid input bubble (top-right; shows the type-to-filter text) ──
-    // While filtering the Apps grid there is no full-screen search prompt, so
-    // this little ink bubble pops in at the top-right to echo what is typed.
-    Item {
-        id: inputBubble
-        z: 55
-        anchors.right: parent.right; anchors.top: parent.top
-        anchors.rightMargin: 34; anchors.topMargin: 52
-        width: Math.max(150, bubbleCol.width + 34)
-        height: bubbleCol.height + 22
-        visible: root.gridMode
-        opacity: (root.gridMode && root.gridQuery.length > 0) ? 1 : 0
-        scale: (root.gridMode && root.gridQuery.length > 0) ? 1 : 0.88
-        transformOrigin: Item.TopRight
-        Behavior on opacity { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 190; easing.type: Easing.OutBack } }
-        // ink wash bubble
-        Rectangle {
-            anchors.fill: parent; radius: 11
-            color: "#17140f"; opacity: 0.96
-            border.width: 1; border.color: Theme.lnm
-        }
-        Column {
-            id: bubbleCol
-            anchors.centerIn: parent; spacing: 3
-            Row {
-                spacing: 5
+                Pad {
+                    vertical: !chip.r.horiz
+                    lit: chip.active
+                    cx: chip.entry[0] - chip.x
+                    cy: chip.entry[1] - chip.y
+                }
                 Text {
-                    text: root.gridQuery
-                    font.family: Theme.display; font.pixelSize: 18; color: Theme.a4
+                    anchors { left: parent.left; bottom: parent.top; bottomMargin: root.px(6) }
+                    text: "U" + (chip.index + 1)
+                    color: chip.active ? root.accent : root.silkInk
+                    font { family: root.silkFamily; pixelSize: root.px(11) }
                 }
-                Rectangle {   // blinking caret
-                    width: 2; height: 18; color: Theme.a4
-                    anchors.verticalCenter: parent.verticalCenter
-                    SequentialAnimation on opacity {
-                        running: inputBubble.opacity > 0; loops: Animation.Infinite
-                        NumberAnimation { to: 0; duration: 520 }
-                        NumberAnimation { to: 1; duration: 520 }
-                    }
+                Text {
+                    anchors { left: parent.left; leftMargin: root.px(26); verticalCenter: parent.verticalCenter }
+                    text: root.catName(chip.index)
+                    color: chip.active ? root.ink : root.inkSoft
+                    font { family: root.sansFamily; pixelSize: root.px(15); weight: chip.active ? Font.DemiBold : Font.Medium }
+                }
+                Text {
+                    anchors { right: parent.right; rightMargin: root.px(16); verticalCenter: parent.verticalCenter }
+                    text: ((root.cats[chip.index] || {}).items || []).length
+                    color: chip.active ? root.ink : root.inkMute
+                    font { family: root.sansFamily; pixelSize: root.px(13); features: { "tnum": 1 } }
+                }
+                }
+
+                MouseArea {
+                    id: chipMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.selectCat(chip.index)
                 }
             }
         }
-    }
 
-    // ── live search overlay (floats above everything while typing) ──
-    Item {
-        id: searchLayer
-        anchors.fill: parent
-        z: 60
-        visible: root.query.length > 0
-
-        // deeper wash so results read clearly over the constellation
-        Rectangle {
-            anchors.fill: parent; color: Theme.bg; opacity: 0.55
-            MouseArea { anchors.fill: parent; onClicked: root.query = "" }
-        }
-
-        // query line — brush-underlined ink prompt, pinned near the top
         Item {
-            width: 620; height: 58
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 70
-            Text {
-                id: qText
-                anchors.left: parent.left; anchors.leftMargin: 4
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.query
-                font.family: Theme.display; font.pixelSize: 34; color: Theme.fg
+            id: board
+            z: 6
+            visible: !root.searching && root.sel >= 0 && root.listItems.length > 0
+            readonly property bool lit: root.pane === "apps"
+            readonly property real topY: root.hRowCy(0)
+            readonly property real botY: root.hRowCy(root.rowsUsed - 1)
+            readonly property real feedFrom: root.anchorX + root.side * root.anchorHalfW
+            readonly property real litY: root.hRowCy(Math.max(0, Math.min(root.rowsUsed - 1, root.selRow - root.scrollRow)))
+
+            Rectangle {
+                x: Math.min(board.feedFrom, root.trunkX); y: root.anchorY - height / 2
+                width: Math.abs(root.trunkX - board.feedFrom); height: root.px(2)
+                color: root.accent
             }
-            Rectangle {   // blinking caret
-                x: qText.x + qText.width + 6
-                anchors.verticalCenter: parent.verticalCenter
-                width: 2; height: 30; color: Theme.a4
-                SequentialAnimation on opacity {
-                    running: searchLayer.visible; loops: Animation.Infinite
-                    NumberAnimation { to: 0; duration: 520 }
-                    NumberAnimation { to: 1; duration: 520 }
-                }
-            }
-            Text {
-                anchors.right: parent.right; anchors.rightMargin: 4
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.results.length + (root.results.length === 1 ? " MATCH" : " MATCHES")
-                font.family: Theme.mono; font.pixelSize: 10; font.letterSpacing: 2.5; color: Theme.a3
+            Pad { lit: true; cx: board.feedFrom; cy: root.anchorY }
+            Rectangle {
+                x: root.trunkX - width / 2
+                y: Math.min(board.topY, root.anchorY) - root.px(1)
+                width: root.px(2)
+                height: Math.max(board.botY, root.anchorY) - Math.min(board.topY, root.anchorY) + root.px(2)
+                color: root.copper
             }
             Rectangle {
-                anchors.left: parent.left; anchors.right: parent.right
-                anchors.bottom: parent.bottom; height: 1.2; opacity: 0.5
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Theme.a3 }
-                    GradientStop { position: 0.85; color: Theme.a3 }
-                    GradientStop { position: 1.0; color: "transparent" }
+                visible: board.lit
+                x: root.trunkX - width / 2
+                y: Math.min(board.litY, root.anchorY) - root.px(1)
+                width: root.px(2)
+                height: Math.abs(board.litY - root.anchorY) + root.px(2)
+                color: root.accent
+            }
+            Rectangle {
+                x: root.trunkX - width / 2; y: root.anchorY - height / 2
+                width: root.px(10); height: width; radius: width / 2
+                color: "#050505"
+                border.width: root.px(2)
+                border.color: root.accent
+            }
+
+            Repeater {
+                model: board.visible ? root.winRows : 0
+                delegate: Item {
+                    id: hstub
+                    required property int index
+                    readonly property int absRow: root.winStart + index
+                    readonly property real vr: absRow - root.scrollRow
+                    readonly property bool lit: board.lit && absRow === root.selRow
+                    readonly property real cy: root.hRowCy(vr)
+                    visible: absRow < root.totalRows
+                    opacity: root.rowFade(vr)
+                    Rectangle {
+                        x: Math.min(root.trunkX, root.gridX0); y: hstub.cy - height / 2
+                        width: Math.abs(root.gridX0 - root.trunkX); height: root.px(2)
+                        color: hstub.lit ? root.accent : root.copper
+                    }
+                    Rectangle {
+                        x: root.trunkX - width / 2; y: hstub.cy - height / 2
+                        width: root.px(6); height: width; radius: width / 2
+                        color: hstub.lit ? root.accent : root.copper
+                    }
+                }
+            }
+
+            Repeater {
+                model: board.visible ? root.winRows * root.cols : 0
+                delegate: Item {
+                    id: hcell
+                    required property int index
+                    readonly property int absIdx: root.winStart * root.cols + index
+                    readonly property var entry: root.listItems[absIdx]
+                    readonly property int col: absIdx % root.cols
+                    readonly property int absRow: Math.floor(absIdx / root.cols)
+                    readonly property real vr: absRow - root.scrollRow
+                    readonly property bool linkLit: board.lit && absRow === root.selRow && col <= root.selCol
+                    visible: !!entry && opacity > 0.01
+                    opacity: root.rowFade(vr)
+                    x: root.hAppCx(col) - root.appW / 2
+                    y: root.hRowCy(vr) - root.appH / 2
+                    Rectangle {
+                        visible: hcell.col > 0
+                        x: root.side > 0 ? -root.appGapX : root.appW
+                        y: root.appH / 2 - height / 2
+                        width: root.appGapX; height: root.px(2)
+                        color: hcell.linkLit ? root.accent : root.copper
+                    }
+                    Pad { lit: hcell.linkLit; cx: root.side > 0 ? 0 : root.appW; cy: root.appH / 2 }
+                    Part {
+                        item: hcell.entry
+                        active: board.lit && hcell.absIdx === root.appSel
+                        onHoveredIn: if (root.hoverFree()) { root.pane = "apps"; root.appSel = hcell.absIdx }
+                    }
                 }
             }
         }
 
-        // empty state
+        Item {
+            id: sboard
+            z: 6
+            visible: root.searching && root.listItems.length > 0
+            readonly property real hubTop: -root.hubH / 2
+            readonly property real leftX: root.sColCx(0)
+            readonly property real rightX: root.sColCx(root.colsUsed - 1)
+            readonly property real litX: root.sColCx(root.selCol)
+
+            Rectangle {
+                x: -width / 2; y: root.sTrunkY
+                width: root.px(2); height: sboard.hubTop - root.sTrunkY
+                color: root.accent
+            }
+            Pad { vertical: true; lit: true; cx: 0; cy: sboard.hubTop }
+            Rectangle {
+                x: Math.min(sboard.leftX, 0); y: root.sTrunkY - height / 2
+                width: Math.max(sboard.rightX, 0) - Math.min(sboard.leftX, 0); height: root.px(2)
+                color: root.copper
+            }
+            Rectangle {
+                x: Math.min(sboard.litX, 0); y: root.sTrunkY - height / 2
+                width: Math.abs(sboard.litX); height: root.px(2)
+                color: root.accent
+            }
+            Rectangle {
+                x: -width / 2; y: root.sTrunkY - height / 2
+                width: root.px(10); height: width; radius: width / 2
+                color: "#050505"
+                border.width: root.px(2)
+                border.color: root.accent
+            }
+
+            Repeater {
+                model: sboard.visible ? root.colsUsed : 0
+                delegate: Item {
+                    id: vstub
+                    required property int index
+                    readonly property bool lit: index === root.selCol
+                    readonly property real cx: root.sColCx(index)
+                    Rectangle {
+                        x: vstub.cx - width / 2; y: root.sRowCy(0) + root.appH / 2
+                        width: root.px(2); height: root.sTrunkY - y
+                        color: vstub.lit ? root.accent : root.copper
+                    }
+                    Rectangle {
+                        x: vstub.cx - width / 2; y: root.sTrunkY - height / 2
+                        width: root.px(6); height: width; radius: width / 2
+                        color: vstub.lit ? root.accent : root.copper
+                    }
+                }
+            }
+
+            Repeater {
+                model: sboard.visible ? root.winRows * root.cols : 0
+                delegate: Item {
+                    id: scell
+                    required property int index
+                    readonly property int absIdx: root.winStart * root.cols + index
+                    readonly property var entry: root.listItems[absIdx]
+                    readonly property int col: absIdx % root.cols
+                    readonly property int absRow: Math.floor(absIdx / root.cols)
+                    readonly property real vr: absRow - root.scrollRow
+                    readonly property bool linkLit: col === root.selCol && absRow <= root.selRow
+                    visible: !!entry && opacity > 0.01
+                    opacity: root.rowFade(vr)
+                    x: root.sColCx(col) - root.appW / 2
+                    y: root.sRowCy(vr) - root.appH / 2
+                    Rectangle {
+                        visible: scell.absRow > 0
+                        x: root.appW / 2 - width / 2; y: root.appH
+                        width: root.px(2); height: root.appGapY
+                        color: scell.linkLit ? root.accent : root.copper
+                    }
+                    Pad { vertical: true; lit: scell.linkLit; cx: root.appW / 2; cy: root.appH }
+                    Part {
+                        item: scell.entry
+                        active: scell.absIdx === root.appSel
+                        onHoveredIn: if (root.hoverFree()) root.appSel = scell.absIdx
+                    }
+                }
+            }
+        }
+    }
+
+    Item {
+        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: root.px(76) }
+        width: searchText.width
+        height: root.px(40)
+        visible: root.filter.length > 0
         Text {
+            id: searchText
             anchors.centerIn: parent
-            visible: root.results.length === 0
-            text: "no applications match"
-            font.family: Theme.mono; font.pixelSize: 13; font.letterSpacing: 2; color: Theme.a3
+            text: root.filter
+            textFormat: Text.PlainText
+            color: root.ink
+            font { family: root.sansFamily; pixelSize: root.px(22); weight: Font.Medium }
         }
-
-        // results — scattered/floating across the field, never a single column
-        Repeater {
-            model: root.results
-            delegate: Item {
-                id: ri
-                property bool hot: index === root.selResult
-                width: Math.max(148, rtm.advanceWidth + 92)
-                height: 40
-                x: root.resX(index, root.results.length) - width / 2
-                y: root.resY(index, root.results.length) - height / 2
-                opacity: 0
-                Component.onCompleted: rin.start()
-                NumberAnimation on opacity { id: rin; to: 1; duration: 260; easing.type: Easing.OutCubic }
-                TextMetrics { id: rtm; text: modelData.item.name; font.family: Theme.display; font.pixelSize: 15 }
-                InkGlass { anchors.fill: parent; hot: ri.hot }
-                Image {
-                    x: 13; width: 18; height: 18
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: root.iconFor(modelData.item.icon)
-                    sourceSize: Qt.size(36, 36)
-                    asynchronous: true; smooth: true
-                }
-                Text {
-                    anchors.left: parent.left; anchors.leftMargin: 38
-                    anchors.right: parent.right; anchors.rightMargin: 14
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: modelData.item.name; elide: Text.ElideRight
-                    font.family: Theme.display; font.pixelSize: 15
-                    color: ri.hot ? Theme.a4 : Theme.fg
-                }
-                MouseArea {
-                    anchors.fill: parent; hoverEnabled: true
-                    onEntered: root.selResult = index
-                    onClicked: root.launchItem(modelData.item)
-                }
-            }
+        Rectangle {
+            anchors { left: searchText.right; leftMargin: root.px(3); verticalCenter: searchText.verticalCenter }
+            width: Math.max(1, root.px(2)); height: root.px(24)
+            color: root.accent
+        }
+        Text {
+            anchors { horizontalCenter: parent.horizontalCenter; top: searchText.bottom; topMargin: root.px(4) }
+            text: root.listItems.length === 0 ? "Nothing matches. Backspace to edit, Esc to clear." : root.listItems.length + (root.listItems.length === 1 ? " match" : " matches")
+            color: root.inkMute
+            font { family: root.sansFamily; pixelSize: root.px(12) }
         }
     }
 }

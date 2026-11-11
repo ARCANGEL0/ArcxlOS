@@ -1,3 +1,4 @@
 #!/bin/sh
-# ArchangelOS radial application launcher — Quickshell overlay (SUPER+TAB).
-exec qs -p /usr/share/archangelos/launcher/qml/shell.qml
+CFG="${ARCHANGELOS_LAUNCHER_QML:-/usr/share/archangelos/launcher/qml/shell.qml}"
+pgrep -f "qs -p $CFG" >/dev/null 2>&1 && exit 0
+exec qs -p "$CFG"
