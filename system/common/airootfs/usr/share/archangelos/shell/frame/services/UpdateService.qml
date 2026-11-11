@@ -36,6 +36,16 @@ QtObject {
     property bool   updateAvailable: false
     property bool   hasConflict:     false
     property bool   updateSuccess:   false
+    property bool   osUpdateAvailable: false
+    property string osUpdateVersion: ""
+
+    FileView {
+        path: "/var/lib/archangelos/update-available"
+        onLoaded: {
+            root.osUpdateVersion = text().trim()
+            root.osUpdateAvailable = root.osUpdateVersion !== ""
+        }
+    }
     
     property string updateVersion:   ""
     property string patchNotes:      ""
@@ -81,6 +91,7 @@ QtObject {
     readonly property bool showPopup:
         !Paths.isNix && PrefsService.autoUpdate && (
             updateAvailable ||
+            osUpdateAvailable ||
             updating ||
             hasConflict ||
             updateSuccess ||

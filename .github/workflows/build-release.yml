@@ -109,6 +109,8 @@ jobs:
                 archiso git grub syslinux libisoburn squashfs-tools \
                 mtools dosfstools e2fsprogs erofs-utils
               pacman -Scc --noconfirm || true
+              pacman-key --recv-keys F9A6E68A711354D84A9B91637533BAFE69A25079 --keyserver hkps://keyserver.ubuntu.com 2>/dev/null || true
+              pacman-key --lsign-key F9A6E68A711354D84A9B91637533BAFE69A25079 2>/dev/null || true
               ( stamp="/mnt/axbuild/${EDITION}/work/base._make_packages"
                 while [ ! -e "$stamp" ]; do sleep 3; done
                 rm -rf /var/cache/pacman/pkg/*

@@ -1,0 +1,8 @@
+[Unit]
+Description=ArchangelOS update check
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/archangelos-update check

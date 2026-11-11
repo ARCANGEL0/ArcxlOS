@@ -116,6 +116,7 @@ ax_stage() {
   ax_log "Stamping release version (system/${edition}/airootfs/etc/archangelos/version)..."
   mkdir -p "${airootfs}/etc/archangelos"
   printf '%s\n' "${AX_VERSION}" > "${airootfs}/etc/archangelos/version"
+  printf '%s\n' "${edition}"  > "${airootfs}/etc/archangelos/edition"
 
   ax_log "Staging wallpaper pool (assets/wallpapers)..."
   mkdir -p "${pool_dest}"

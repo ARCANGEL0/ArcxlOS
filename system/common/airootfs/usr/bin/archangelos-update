@@ -1,0 +1,121 @@
+#!/bin/sh
+# archangelos-update — git-based OS updater for ArchangelOS.
+# The installed system is stamped with /etc/archangelos/version (+ edition);
+# the remote VERSION on the repo branch is the source of truth.
+set -eu
+
+REPO_URL="https://github.com/ARCANGEL0/ArcxlOS.git"
+BRANCH="dev"
+REPO_DIR="/var/lib/archangelos/repo"
+STATE_DIR="/var/lib/archangelos"
+LOCAL_VERSION="/etc/archangelos/version"
+LOCAL_EDITION="/etc/archangelos/edition"
+REMOTE_VERSION_URL="https://raw.githubusercontent.com/ARCANGEL0/ArcxlOS/${BRANCH}/VERSION"
+FLAG="$STATE_DIR/update-available"
+LAST="$STATE_DIR/last-version"
+
+local_ver() { [ -f "$LOCAL_VERSION" ] && tr -d '[:space:]' < "$LOCAL_VERSION" || echo "0.0"; }
+edition()   { [ -f "$LOCAL_EDITION" ] && tr -d '[:space:]' < "$LOCAL_EDITION" || echo "home"; }
+remote_ver() { curl -fsSL --max-time 15 "$REMOTE_VERSION_URL" 2>/dev/null | tr -d '[:space:]' || true; }
+ver_gt() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -n1)" = "$1" ]; }
+
+ensure_repo() {
+    mkdir -p "$STATE_DIR"
+    if [ ! -d "$REPO_DIR/.git" ]; then
+        git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$REPO_DIR" 2>/dev/null \
+            || git clone --depth 1 "$REPO_URL" "$REPO_DIR"
+        git -C "$REPO_DIR" sparse-checkout set system VERSION 2>/dev/null || true
+    fi
+    git -C "$REPO_DIR" fetch --depth 1 origin "$BRANCH" --quiet 2>/dev/null || true
+}
+
+has_tag() { git -C "$REPO_DIR" cat-file -e "v$1" 2>/dev/null; }
+fetch_tag() { git -C "$REPO_DIR" fetch --depth 1 origin "tag v$1" --quiet 2>/dev/null || true; }
+
+cmd_check() {
+    lv="$(local_ver)"; rv="$(remote_ver)"
+    if [ -z "$rv" ]; then echo "archangelos-update: could not reach $REMOTE_VERSION_URL" >&2; exit 2; fi
+    echo "local:  $lv"
+    echo "remote: $rv"
+    if ver_gt "$rv" "$lv"; then
+        mkdir -p "$STATE_DIR"; printf '%s\n' "$rv" > "$FLAG"
+        echo "update available: $lv -> $rv"
+        exit 3
+    fi
+    rm -f "$FLAG"
+    echo "up to date"
+}
+
+sync_tree() {
+    ed="$1"; tag="$2"
+    git -C "$REPO_DIR" checkout -q "$tag" -- system
+    rsync -a --backup --suffix=.axbak "$REPO_DIR/system/common/airootfs/" / || return 1
+    if [ -d "$REPO_DIR/system/$ed/airootfs" ]; then
+        rsync -a --backup --suffix=.axbak "$REPO_DIR/system/$ed/airootfs/" / || return 1
+    fi
+    return 0
+}
+
+cmd_update() {
+    [ "$(id -u)" = "0" ] || { echo "run as root: pkexec archangelos-update update" >&2; exit 1; }
+    lv="$(local_ver)"; rv="$(remote_ver)"; ed="$(edition)"
+    [ -n "$rv" ] || { echo "no remote VERSION reachable" >&2; exit 2; }
+    ver_gt "$rv" "$lv" || { echo "already up to date ($lv)"; exit 0; }
+    ensure_repo
+    fetch_tag "$rv"; fetch_tag "$lv"
+    oldtag=""; has_tag "$lv" && oldtag="v$lv"
+    tag="v$rv"
+
+    if [ -n "$oldtag" ]; then
+        newpkgs=$(git -C "$REPO_DIR" diff "$oldtag" "$tag" -- "system/$ed/packages.x86_64" "system/common/packages.x86_64" 2>/dev/null \
+            | sed -n 's/^+\([^+#]\)/\1/p' | tr -d ' \t' | grep -v '^$' || true)
+        if [ -n "$newpkgs" ]; then
+            echo "installing new packages: $newpkgs"
+            pacman -S --noconfirm --needed $newpkgs || { echo "pacman failed; aborting before file sync" >&2; exit 1; }
+        fi
+    fi
+
+    sync_tree "$ed" "$tag" || { echo "file sync failed" >&2; exit 1; }
+
+    if [ -n "$oldtag" ]; then
+        git -C "$REPO_DIR" diff --name-only --diff-filter=D "$oldtag" "$tag" -- system 2>/dev/null \
+            | sed -n 's|^system/[^/]*/airootfs/|/|p' | while read -r f; do
+                [ -n "$f" ] && [ -e "$f" ] || continue
+                mkdir -p "$STATE_DIR/removed/$rv"
+                cp -a "$f" "$STATE_DIR/removed/$rv$f" 2>/dev/null || true
+                rm -f "$f"
+            done
+    fi
+
+    if ! mkinitcpio -P 2>/dev/null; then
+        echo "WARNING: mkinitcpio failed; NOT stamping version. roll back with: archangelos-update rollback" >&2
+        exit 1
+    fi
+    systemctl daemon-reload 2>/dev/null || true
+    printf '%s\n' "$lv" > "$LAST"
+    printf '%s\n' "$rv" > "$LOCAL_VERSION"
+    rm -f "$FLAG"
+    echo "ArchangelOS updated: $lv -> $rv (edition $ed). Reboot recommended."
+}
+
+cmd_rollback() {
+    [ "$(id -u)" = "0" ] || { echo "run as root: pkexec archangelos-update rollback" >&2; exit 1; }
+    [ -f "$LAST" ] || { echo "no previous version recorded" >&2; exit 1; }
+    old="$(tr -d '[:space:]' < "$LAST")"; ed="$(edition)"
+    ensure_repo; fetch_tag "$old"
+    sync_tree "$ed" "v$old" || { echo "rollback sync failed" >&2; exit 1; }
+    if [ -d "$STATE_DIR/removed/$(local_ver)" ]; then
+        cp -a "$STATE_DIR/removed/$(local_ver)/." / 2>/dev/null || true
+    fi
+    mkinitcpio -P 2>/dev/null || true
+    systemctl daemon-reload 2>/dev/null || true
+    printf '%s\n' "$old" > "$LOCAL_VERSION"
+    echo "rolled back to $old. Reboot recommended."
+}
+
+case "${1:-check}" in
+    check)    cmd_check ;;
+    update)   cmd_update ;;
+    rollback) cmd_rollback ;;
+    *) echo "usage: archangelos-update [check|update|rollback]" >&2; exit 2 ;;
+esac

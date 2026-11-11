@@ -23,10 +23,12 @@ PageScaffold {
     property string lastUpgrade: ""
     property string version: ""
     property string note: ""
+    property string osRemote: ""
     readonly property int total: repo.length + aur.length + flat.length
 
     Cmd { id: cmd }
     FileView { path: "/etc/archangelos/version"; onLoaded: page.version = text().trim() }
+    FileView { path: "/var/lib/archangelos/update-available"; onLoaded: page.osRemote = text().trim() }
 
     function parse(text) {
         return text.split("\n").map(l => /^(\S+)\s+(\S+)\s+->\s+(\S+)/.exec(l.trim())).filter(m => m).map(m => ({ name: m[1], from: m[2], to: m[3] }));
@@ -48,6 +50,18 @@ PageScaffold {
             page.lastCheck = Qt.formatTime(new Date(), "HH:mm");
             page.checking = false; page.checked = true;
         });
+        cmd.sh('archangelos-update check 2>/dev/null; echo "EXIT:$?"', [], (c, out) => {
+            const m = /remote:\s*(\S+)/.exec(out || "");
+            const ex = /EXIT:(\d+)/.exec(out || "");
+            page.osRemote = (m && ex && ex[1] === "3") ? m[1] : "";
+        });
+    }
+    function updateOs() {
+        const script = 'pkexec archangelos-update update; echo; read -rp "Finished. Press Enter to close. " _';
+        Quickshell.execDetached(["sh", "-c",
+            'for t in rio kitty foot alacritty; do command -v $t >/dev/null || continue; '
+          + 'case $t in rio) exec rio -e bash -c "$1";; *) exec $t bash -c "$1";; esac; done', "sh", script]);
+        relook.restart();
     }
     Component.onCompleted: check()
 
@@ -70,6 +84,27 @@ PageScaffold {
     }
     // Look again a little after the terminal opens, and again once it is likely done.
     Timer { id: relook; interval: 60000; onTriggered: page.check() }
+
+    // ── OS update card ──────────────────────────────────────────────────────────
+    Rectangle {
+        visible: page.osRemote !== "" && page.osRemote !== page.version
+        width: parent.width; height: 86
+        radius: Ax.radius + 2
+        color: Ax.panel
+        border.width: 1; border.color: Ax.alpha(Ax.accent, 0.35)
+        CornerTicks { len: 10; anchors.margins: 12 }
+        Column {
+            x: 28; anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+            Label { caption: true; text: "ArchangelOS update available" }
+            Label { font.pixelSize: 20; font.weight: Font.DemiBold
+                    text: (page.version || "?") + "  →  " + page.osRemote + "  ·  updates from git" }
+        }
+        AxButton {
+            anchors.right: parent.right; anchors.rightMargin: 28; anchors.verticalCenter: parent.verticalCenter
+            icon: "system_update_alt"; text: "Update ArchangelOS"; kind: "primary"; onClicked: page.updateOs()
+        }
+    }
 
     // ── status card ────────────────────────────────────────────────────────────
     Rectangle {
