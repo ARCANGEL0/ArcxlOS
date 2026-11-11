@@ -31,10 +31,8 @@ import "../modules/Left/"
 import "../modules/Bottom/"
 import qs.arc.services as NSS
 
-// A morphing Wayland window layer for the unified screen frame
 PanelWindow {
     id: root
-    // --- CLICK SHIELD ---
     ClickShield { id: clickShield }
     readonly property real localScale: Math.max(0.75, Math.min(1.5, (screen ? screen.height : 1080.0) / 1080.0))
 
@@ -50,7 +48,6 @@ PanelWindow {
     color: "transparent"
     visible: !ShellState.shellHidden
 
-    // --- INPUT MANAGER ---
     SurfaceInputManager {
         id: inputManager
         anchors.fill: parent
@@ -69,10 +66,9 @@ PanelWindow {
     }
     
     WlrLayershell.layer: WlrLayer.Top
-    // ArchangelOS: the bottom-centre quick dock rests unless the launcher has the edge.
     readonly property bool dockResting: !NSS.Shell.launcherVisible && !ShellState.focusMode
     WlrLayershell.namespace: "arcshell-frame"
-    WlrLayershell.keyboardFocus: (SurfaceState.activeSurface !== "none" || (ShellState.screenRecord && !ScreenRecService.recording)) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: ((SurfaceState.activeSurface !== "none" && !Popups.osdOpened) || (ShellState.screenRecord && !ScreenRecService.recording)) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     Region {
         id: fullRegion
@@ -81,38 +77,29 @@ PanelWindow {
         height: root.height
     }
 
-    // Pass the entire window bounding box to the compositor.
     BackgroundEffect.blurRegion: PrefsService.bgBlur ? fullRegion : null
 
-    // Mask logic: Combine frame borders + active notches + click shield. 
     mask: Region {
         Region { item: clickShield.isActive ? clickShield : null }
         
-        // Top and Bottom frame borders
         Region { x: 0; y: 0; width: root.width; height: Math.max(1, surfaceShape.frameThickness) }
         Region { x: 0; y: root.height - Math.max(1, surfaceShape.frameThickness); width: root.width; height: Math.max(1, surfaceShape.frameThickness) }
         
-        // Left and Right frame borders
         Region { x: 0; y: 0; width: Math.max(1, surfaceShape.frameThickness); height: root.height }
         Region { x: root.width - Math.max(1, surfaceShape.frameThickness); y: 0; width: Math.max(1, surfaceShape.frameThickness); height: root.height }
         
-        // Top Notches
         Region { x: 0; y: 0; width: surfaceShape.leftNotchWidth; height: surfaceShape.leftNotchHeight }
         Region { x: root.width / 2 - surfaceShape.centerNotchWidth / 2; y: 0; width: surfaceShape.centerNotchWidth; height: surfaceShape.centerNotchHeight }
         Region { x: root.width - surfaceShape.rightNotchWidth; y: 0; width: surfaceShape.rightNotchWidth; height: surfaceShape.rightNotchHeight }
-        // Top Center 1px fallback region (active when borderWidth === 0 or focusMode)
         Region { x: Math.round(root.width / 2 - (160 * root.localScale) / 2); y: 0; width: Math.round(160 * root.localScale); height: 1 }
         
-        // Side Notches
         Region { x: 0; y: (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnCenterY : root.height / 2) - (surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.lcnDepth > 1 ? surfaceShape.le + surfaceShape.lcnDepth : Math.max(28, surfaceShape.frameThickness); height: surfaceShape.lcnDepth > 1 ? surfaceShape.lcnHeight : Math.round(200 * root.localScale) }
-        Region { x: root.width - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness)); y: root.height / 2 - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness); height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale) }
+        Region { x: root.width - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)); y: root.height / 2 - (surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)) / 2; width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness); height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale) }
         
-        // Bottom Notches
         Region { x: root.width / 2 - (surfaceShape.bcnDepth > 1 ? surfaceShape.bcnWidth : Math.round(300 * root.localScale)) / 2; y: root.height - (surfaceShape.bcnDepth > 1 ? surfaceShape.bcnDepth : Math.max(1, surfaceShape.frameThickness)); width: surfaceShape.bcnDepth > 1 ? surfaceShape.bcnWidth : Math.round(300 * root.localScale); height: surfaceShape.bcnDepth > 1 ? surfaceShape.bcnDepth : Math.max(1, surfaceShape.frameThickness) }
         Region { x: root.width - (surfaceShape.brnDepth > 1 ? surfaceShape.brnWidth : Math.round(200 * root.localScale)); y: root.height - (surfaceShape.brnDepth > 1 ? surfaceShape.brnDepth : Math.max(1, surfaceShape.frameThickness)); width: surfaceShape.brnDepth > 1 ? surfaceShape.brnWidth : Math.round(200 * root.localScale); height: surfaceShape.brnDepth > 1 ? surfaceShape.brnDepth : Math.max(1, surfaceShape.frameThickness) }
     }
 
-    // --- TOP CENTER 1PX FALLBACK TRIGGER ---
     Item {
         id: topCenterTapTrigger
         anchors.horizontalCenter: parent.horizontalCenter
@@ -131,8 +118,6 @@ PanelWindow {
         }
     }
 
-    // --- VECTOR GEOMETRY ---
-    // Focus Mode Independent Hitboxes
     Item {
         id: fmLeftTrigger
         anchors { left: parent.left; top: parent.top; leftMargin: Math.round(Theme.borderWidth * root.localScale) }
@@ -190,11 +175,8 @@ PanelWindow {
             if (SurfaceState.activeContent === "clipboard") return clipboardPopupView.popupWidth + Math.round(Theme.cornerRadius * root.localScale);
             return Math.round(Theme.popupMaxWidth * root.localScale);
         }
-        // ArchangelOS: arcshell's dock panes grow out of this same surface, so the dock and
-        // the pane are one shape — no seam where two surfaces used to meet.
         readonly property vector4d dockPane: NSS.PopoutState.owner === "bar" ? NSS.PopoutState.box : Qt.vector4d(0, 0, 0, 0)
         readonly property bool dockPaneOpen: !SurfaceState.isLeftCenterExpanded && dockPane.z > 1
-        // the last pane's centre is held so a closing pane sinks back where it came from
         property real paneCY: root.height / 2
         onDockPaneChanged: if (dockPane.z > 1) paneCY = dockPane.y + dockPane.w / 2
         lcnCenterY: SurfaceState.isLeftCenterExpanded ? root.height / 2 : paneCY
@@ -210,8 +192,6 @@ PanelWindow {
             if (SurfaceState.activeContent === "archMenu") return archMenuPopupView.popupHeight + Math.round(Theme.cornerRadius * root.localScale * 2); 
             return Math.round(Theme.popupMaxHeight * root.localScale); 
         }
-        // ArchangelOS: at rest the bottom-centre notch holds the quick dock; it folds away while
-        // arcshell's launcher rises from the same edge.
         bcnWidth: { 
             if (!SurfaceState.isBottomCenterExpanded) return (root.dockResting ? quickDock.implicitWidth + Math.round(Theme.notchPadding * 2 * root.localScale) : 0.001); 
             if (SurfaceState.activeContent === "wallpaper") return wallpaperPopupView.popupWidth + Math.round(Theme.cornerRadius * root.localScale * 2); 
@@ -228,8 +208,6 @@ PanelWindow {
             return Math.round(Theme.popupMaxHeight * root.localScale);
         }
         
-        // ArchangelOS: the left edge of the inner boundary is arcshell's vertical bar
-        // (ns/modules/Bar.qml), which grows down out of this notch.
         leftEdge: ShellState.focusMode ? 0 : 56
         Behavior on leftEdge { NumberAnimation { duration: Anim.transition; easing.type: Easing.OutCubic } }
         leftNotchWidth: (ShellState.focusMode) ? 0.001 : Math.max(Math.round(Theme.lNotchMinWidth * localScale), Math.min(Math.round(Theme.lNotchMaxWidth * localScale), leftContent.implicitWidth + Math.round(Theme.notchPadding * 2 * localScale)))
@@ -265,11 +243,9 @@ PanelWindow {
             return Math.round(Theme.popupMaxHeight * root.localScale);
         }
         
-        // Geometry animates with smooth CUBIC curve (never detaches)
     }
     
     
-    // --- NOTCH CONTENT ---
     Item {
         id: leftNotchArea
         HoverHandler { id: leftNotchHover }
@@ -316,7 +292,6 @@ PanelWindow {
         Item {
             id: centerNotchHead
             width: parent.width
-            // ArchangelOS: grow to the full island when the media player is up, so the clock isn't clipped
             height: (!SurfaceState.isTopExpanded && !Popups.miniPlayerOpen) ? parent.height : Math.round(Theme.notchHeight * root.localScale)
             anchors.top: parent.top
             
@@ -325,14 +300,12 @@ PanelWindow {
                 id: centerContent
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
-                // the island expands to the media player only while the notch is hovered
                 notchHovered: centerNotchHover.hovered || fmCenterHov.hovered || ShellState.islandExpanded
             }
         }
 
         Dashboard {
             id: dashboardView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - dashboardView.opacity; brightness: -0.5 * (1 - dashboardView.opacity) }
 
@@ -362,7 +335,6 @@ PanelWindow {
         z: 998
     }
     }
-
 
     Item {
         id: rightNotchArea
@@ -395,7 +367,6 @@ PanelWindow {
 
         NetworkPopup {
             id: networkPopupView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - networkPopupView.opacity; brightness: -0.5 * (1 - networkPopupView.opacity) }
 
@@ -415,8 +386,6 @@ PanelWindow {
             Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
         }
 
-        // ArchangelOS: the session/power menu, out of the top-right — expands from the right edge
-        // as the notch surface morphs wide, fluid via the rightNotchWidth morph.
         Item {
             id: powerPopupView
             anchors.fill: parent
@@ -428,8 +397,6 @@ PanelWindow {
             MouseArea { anchors.fill: parent; onClicked: Popups.powerPinned = true }
             PowerMenu {
                 localScale: root.localScale
-                // Slide in from the right edge, fully off-screen when closed, fluid liquid
-                // ease-out as it comes to rest — not an expansion from the right border.
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.rightMargin: Math.round(28 * root.localScale)
@@ -444,7 +411,6 @@ PanelWindow {
 
         NotificationsPopup {
             id: notifsPopupView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - notifsPopupView.opacity; brightness: -0.5 * (1 - notifsPopupView.opacity) }
 
@@ -488,7 +454,6 @@ PanelWindow {
 
         ArchMenu {
             id: archMenuPopupView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - archMenuPopupView.opacity; brightness: -0.5 * (1 - archMenuPopupView.opacity) }
 
@@ -504,8 +469,8 @@ PanelWindow {
 
     Item {
         id: rightCenterNotchArea
-        HoverHandler { id: rightCenterNotchHover }
-        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness)
+        HoverHandler { id: rightCenterNotchHover; onHoveredChanged: Popups.rightCenterHovered = hovered }
+        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)
         height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * root.localScale)
         anchors.right: parent.right
         anchors.rightMargin: Math.round(Theme.borderWidth * root.localScale)
@@ -513,7 +478,6 @@ PanelWindow {
 
         AudioPopup {
             id: audioPopupView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - audioPopupView.opacity; brightness: -0.5 * (1 - audioPopupView.opacity) }
 
@@ -528,7 +492,6 @@ PanelWindow {
 
         QuickControl {
             id: quickControlPopupView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - quickControlPopupView.opacity; brightness: -0.5 * (1 - quickControlPopupView.opacity) }
 
@@ -573,7 +536,6 @@ PanelWindow {
             Behavior on opacity { NumberAnimation { duration: Anim.mediumFast } }
         }
 
-        // ArchangelOS: a coverflow in place of ArcShell's grid (WallpaperPopup.qml).
         WallpaperFlow {
             id: wallpaperPopupView
             localScale: root.localScale
@@ -598,7 +560,6 @@ PanelWindow {
 
         ClipboardPopup {
             id: clipboardPopupView
-            // ArchangelOS: rises out of the shadow — blur and darkness lift as it fades in.
             layer.enabled: opacity > 0 && opacity < 1
             layer.effect: MultiEffect { blurEnabled: true; blurMax: 40; blur: 1 - clipboardPopupView.opacity; brightness: -0.5 * (1 - clipboardPopupView.opacity) }
 

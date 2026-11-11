@@ -22,17 +22,8 @@ import Quickshell
 import Quickshell.Io
 import "../"
 
-// ─────────────────────────────────────────────────────────────
-// IpcManager — centralized entry point for all external IPC signals.
-//
-// Moving handlers here ensures that on multi-monitor setups (where
-// TopBar/PopupLayer are duplicated) only ONE handler reacts to a signal.
-// ─────────────────────────────────────────────────────────────
-
 QtObject {
     id: root
-
-    // ── Dashboard Toggles ────────────────────────────────────
 
     function _openDashboard(page) {
         Popups._ignoreDefaultTab = true
@@ -80,8 +71,6 @@ QtObject {
         function toggle() { _openDashboard("config") }
     }
 
-    // ── Audio Toggles ────────────────────────────────────────
-
     function _openAudio(page) {
         Popups._ignoreDefaultTab = true
         if (Popups.audioOpen && Popups.audioPage !== page) {
@@ -96,22 +85,30 @@ QtObject {
         Popups._ignoreDefaultTab = false
     }
 
+    property var audioMain: IpcHandler {
+        target: "audio-toggle"
+        function toggle() { _openAudio("volume") }
+    }
+
     property var audioOut: IpcHandler {
         target: "audioOut-toggle"
-        function toggle() { _openAudio("output") }
+        function toggle() { _openAudio("volume") }
     }
 
     property var audioMix: IpcHandler {
         target: "audioMix-toggle"
-        function toggle() { _openAudio("mixer") }
+        function toggle() { _openAudio("devices") }
     }
 
     property var audioIn: IpcHandler {
         target: "audioIn-toggle"
-        function toggle() { _openAudio("input") }
+        function toggle() { _openAudio("volume") }
     }
 
-    // ── Network Toggles ──────────────────────────────────────
+    property var audioDisplay: IpcHandler {
+        target: "audioDisplay-toggle"
+        function toggle() { _openAudio("display") }
+    }
 
     function _openNetwork(page) {
         if(Popups.anyOpen && !Popups.networkOpen) {
@@ -151,8 +148,6 @@ QtObject {
         target: "hotspot-toggle"
         function toggle() { _openNetwork("hotspot") }
     }
-
-    // ── Misc Toggles ─────────────────────────────────────────
 
     property var notification: IpcHandler {
         target: "notification-toggle"
@@ -222,7 +217,6 @@ QtObject {
             ShellState.focusMode = !ShellState.focusMode
         }
     }
-
 
     property var _lockProc: Process {
         command: ["loginctl", "lock-session"]

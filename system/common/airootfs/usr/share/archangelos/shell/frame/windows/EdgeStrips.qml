@@ -19,68 +19,40 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import qs.arc.components as NSC
 import "../" as Frame
 
-// Thin always-on-top strips at the left/right screen edges (middle band).
-// The frame's own notch masks sit under other full-screen layer surfaces and
-// never saw pointer input, so hover triggers live here where the window itself
-// IS the hover zone (default mask = whole window = the strip).
 PanelWindow {
     id: root
 
-    required property bool rightEdge   // true: right edge (quick/audio), false: left edge (arch menu)
+    required property bool rightEdge
     required property var modelData
+
+    readonly property real uiScale: Math.max(0.75, Math.min(1.5, (screen ? screen.height : 1080) / 1080))
+    readonly property int frameBorder: Math.round(Frame.Theme.borderWidth * root.uiScale)
 
     screen: modelData
     anchors { top: true; bottom: true; left: !rightEdge; right: rightEdge }
-    width: 28
+    implicitWidth: 28
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: rightEdge ? "arcshell-edge-right" : "arcshell-edge-left"
-    // input only on the middle band, so window corner controls at the edges stay clickable
-    mask: Region { Region { item: zone } }
+    mask: Region { Region { item: root.rightEdge ? tabHit : zone } }
 
     Item {
         id: zone
+        visible: !root.rightEdge
         anchors.centerIn: parent
         width: parent.width
-        height: Math.round(320 * (screen ? screen.height / 1080 : 1))
+        height: Math.round(320 * root.uiScale)
 
         HoverHandler {
-            onHoveredChanged: {
-                if (root.rightEdge) {
-                    Frame.Popups.quickTriggerHovered = Frame.Popups.audioOpen ? false : hovered
-                    Frame.Popups.audioTriggerHovered = hovered
-                } else {
-                    Frame.Popups.archMenuTriggerHovered = hovered
-                }
-            }
+            onHoveredChanged: Frame.Popups.archMenuTriggerHovered = hovered
         }
-
         MouseArea {
             anchors.fill: parent
-        onClicked: {
-            if (root.rightEdge) {
-                if (Frame.Popups.audioOpen && Frame.Popups.audioAllowHover) {
-                    Frame.Popups.audioPinned = !Frame.Popups.audioPinned
-                    return
-                }
-                if (Frame.SurfaceState.activeContent === "quick" && Frame.Popups.quickAllowHover) {
-                    Frame.Popups.quickPinned = !Frame.Popups.quickPinned
-                    return
-                }
-                if (!Frame.Popups.audioAllowHover && !Frame.Popups.quickAllowHover) {
-                    if (Frame.Popups.audioOpen) {
-                        Frame.SurfaceState.toggle("rightCenter", "audio")
-                    } else if (Frame.SurfaceState.activeContent === "quick") {
-                        Frame.SurfaceState.toggle("rightCenter", "quick")
-                    } else {
-                        Frame.SurfaceState.toggle("rightCenter", "quick")
-                        Frame.Popups.quickPinned = true
-                    }
-                }
-            } else {
+            onClicked: {
                 if (Frame.SurfaceState.activeContent === "archMenu" && Frame.Popups.archMenuAllowHover) {
                     Frame.Popups.archMenuPinned = !Frame.Popups.archMenuPinned
                     return
@@ -93,5 +65,56 @@ PanelWindow {
             }
         }
     }
+
+    Item {
+        id: tabHit
+        visible: root.rightEdge
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: parent.width
+        height: Math.round(64 * root.uiScale)
+
+        Rectangle {
+            id: tab
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: root.frameBorder + Math.round(13 * root.uiScale)
+            height: Math.round(44 * root.uiScale)
+            radius: Math.round(8 * root.uiScale)
+            color: Frame.Theme.background
+            opacity: Frame.Popups.audioOpen ? 0 : 1
+            Behavior on opacity { NumberAnimation { duration: Frame.Anim.fast } }
+
+            NSC.MatIcon {
+                x: Math.round((tab.width - root.frameBorder - width) / 2)
+                anchors.verticalCenter: parent.verticalCenter
+                text: "chevron_left"
+                font.pixelSize: Math.round(13 * root.uiScale)
+                color: tabHover.hovered ? Frame.Theme.active : Frame.Theme.subtext
+                Behavior on color { ColorAnimation { duration: Frame.Anim.fast } }
+            }
+        }
+
+        HoverHandler {
+            id: tabHover
+            cursorShape: Qt.PointingHandCursor
+            onHoveredChanged: {
+                Frame.Popups.audioTriggerHovered = hovered
+                if (hovered && !Frame.Popups.audioOpen) {
+                    Frame.Popups.closeAll()
+                    Frame.SurfaceState.open("rightCenter", "audio")
+                }
+            }
+        }
+        TapHandler {
+            onTapped: {
+                if (Frame.Popups.audioOpen) Frame.Popups.audioPinned = !Frame.Popups.audioPinned
+                else {
+                    Frame.Popups.closeAll()
+                    Frame.SurfaceState.open("rightCenter", "audio")
+                    Frame.Popups.audioPinned = true
+                }
+            }
+        }
     }
 }

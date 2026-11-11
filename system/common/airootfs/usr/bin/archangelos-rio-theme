@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/rio/config.toml"
+THEMES_DIR="$(dirname "$CFG")/themes"
+
+usage() {
+  echo "usage: archangelos-rio-theme [apply <name> | list]"
+  exit 1
+}
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+[ $# -ge 2 ] || usage
+name="$2"
+
+case "$cmd" in
+  list)
+    [ -d "$THEMES_DIR" ] || exit 0
+    for f in "$THEMES_DIR"/*.toml; do
+      [ -e "$f" ] || continue
+      echo "$(basename "$f" .toml)"
+    done
+    ;;
+  apply)
+    src="$THEMES_DIR/$name.toml"
+    [ -f "$src" ] || { echo "archangelos-rio-theme: unknown theme '$name'" >&2; exit 1; }
+    [ -d "$THEMES_DIR" ] || mkdir -p "$THEMES_DIR"
+    mkdir -p "$(dirname "$CFG")"
+    touch "$CFG"
+    cp "$CFG" "$CFG.tmp-$$"
+    awk '/^\[colors\]/{skip=1; next} skip && (/^[a-zA-Z]/ && !/^\[/){skip=0} !skip' "$CFG.tmp-$$" > "$CFG.new-$$"
+    {
+      cat "$CFG.new-$$"
+      printf 'theme = "%s"\n' "$name"
+      cat "$src"
+    } > "$CFG"
+    rm -f "$CFG.tmp-$$" "$CFG.new-$$"
+    pkill -f '[r]io' -HUP 2>/dev/null || true
+    echo "archangelos-rio-theme: applied '$name'"
+    ;;
+  *)
+    usage
+    ;;
+esac

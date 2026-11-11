@@ -25,10 +25,14 @@ import "../components"
 import "../services"
 import Quickshell.Services.Pipewire
 
-// The new unified root for the morphing UI
 Scope {
     id: screenRoot
-    
+    property bool splashVisible: true
+    onSplashVisibleChanged: if (!splashVisible) {
+        ShellState.booted = true
+        Quickshell.execDetached(["qs", "-p", Paths.installDir + "/splash", "ipc", "call", "splash", "dismiss"])
+    }
+
     property var _keybinds: KeybindService
     property var _updater:  UpdateService
     property var _ipc:      IpcManager
@@ -41,19 +45,38 @@ Scope {
             if (event.name === "configreloaded") {
                 PrefsService.updateHyprlandBlur()
                 WallpaperService.updateBorders()
-                ShellState.applyZeroGaps()
+                ShellState.applyWindowGaps()
+                ShellState.applyWindowRounding()
             }
         }
     }
 
-    // ── OSD Triggers ──────────────────────────────────────────────────────────
     property bool _isBooting: true
+    property bool _bootComplete: false
+
+    Connections {
+        target: WallpaperService
+        function onWallpaperApplied() {
+            if (!_bootComplete) {
+                _bootComplete = true
+                _isBooting = false
+                splashVisible = false
+            }
+        }
+    }
+
     Timer {
         id: bootGuardTimer
-        interval: 3000
+        interval: 400
         running: true
         repeat: false
-        onTriggered: screenRoot._isBooting = false
+        onTriggered: {
+            if (!_bootComplete) {
+                _bootComplete = true
+                _isBooting = false
+                splashVisible = false
+            }
+        }
     }
 
     Timer {
@@ -61,63 +84,70 @@ Scope {
         interval: Math.max(100, Math.min(5000, PrefsService.osdDuration * 1000))
         repeat: false
         onTriggered: {
-            if (SurfaceState.activeContent === "quick" && !Popups.quickPinned && !Popups.quickTriggerHovered) {
+            if (Popups.osdOpened && SurfaceState.activeContent === "audio"
+                    && !Popups.audioPinned && !Popups.audioTriggerHovered && !Popups.rightCenterHovered) {
                 SurfaceState.close()
             }
         }
     }
 
-    function _triggerOsd() {
+    Connections {
+        target: SurfaceState
+        function onActiveContentChanged() { if (SurfaceState.activeContent !== "audio") Popups.osdOpened = false }
+    }
+
+    function _triggerOsd(page) {
         if (_isBooting || !PrefsService.enableOsd) return;
-        if (SurfaceState.activeContent === "none" || SurfaceState.activeContent === "notifications" || SurfaceState.activeContent === "quick") {
-            if (SurfaceState.activeContent !== "quick") SurfaceState.open("rightCenter", "quick")
+        const c = SurfaceState.activeContent
+        if (c === "audio") {
+            if (page) Popups.audioPage = page
+            if (Popups.osdOpened) osdCloseTimer.restart()
+            return
+        }
+        if (c === "none" || c === "notifications" || c === "quick") {
+            Popups.audioPage = page || "volume"
+            Popups.osdOpened = true
+            SurfaceState.open("rightCenter", "audio")
             osdCloseTimer.restart()
         }
     }
 
     Connections {
         target: BrightnessService
-        function onExternalBrightnessChanged(val) {
-            _triggerOsd()
-        }
+        function onExternalBrightnessChanged(val) { _triggerOsd("display") }
     }
 
     property var _sinkAudio: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
     Connections {
         target: _sinkAudio
         ignoreUnknownSignals: true
-        function onVolumeChanged() { _triggerOsd() }
-        function onMutedChanged() { _triggerOsd() }
+        function onVolumeChanged() { _triggerOsd("volume") }
+        function onMutedChanged() { _triggerOsd("volume") }
     }
 
     Variants {
         model: Quickshell.screens
         
-        // Wrap everything in a standard Component for multi-monitor support
         delegate: Component {
             Item {
                 required property var modelData
                 readonly property var screen: modelData
                 readonly property real localScale: Math.max(0.75, Math.min(1.5, (screen ? screen.height : 1080.0) / 1080.0))
-                
-                // --- EXCLUSIVE ZONE STRUTS ---
-                // Using phantom windows to seamlessly push active Hyprland windows inward
-                // without requiring the user to manually edit hyprland.conf gaps.
-                StrutWindow { 
-                    screen: modelData; 
-                    edge: "top"; 
-                    reserveSpace: ShellState.focusMode ? Math.round(Theme.borderWidth * localScale) * 2 : Math.round(40 * localScale) + Math.round(Theme.borderWidth * localScale) * 2 
+                visible: !_isBooting
+
+                StrutWindow {
+                    screen: modelData;
+                    edge: "top";
+                    reserveSpace: ShellState.focusMode ? Math.round(Theme.borderWidth * localScale) * 2 : Math.round(40 * localScale) + Math.round(Theme.borderWidth * localScale) * 2
                     Behavior on reserveSpace { NumberAnimation { duration: Anim.transition; easing.type: Anim.globalCurve; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
                 }
                 StrutWindow { screen: modelData; edge: "bottom"; reserveSpace: Math.round(Theme.borderWidth * localScale) * 2 }
-                // ArchangelOS: the left edge is reserved by arcshell's bar instead.
                 StrutWindow { screen: modelData; edge: "right"; reserveSpace: Math.round(Theme.borderWidth * localScale) * 2 }
-                
-                // The morphing unified screen frame
+
                 DynamicSurface {
                     screen: modelData
                 }
-                
+
                 ConfirmDialog { screen: modelData }
                 UpdatePopup { screen: modelData }
                 MigrationOverlay { screen: modelData }

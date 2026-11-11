@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
-# ArchangelOS: put a wallpaper on the desktop — stills through awww, videos live through
-# mpvpaper (as the ISO's wallpaper setup does), dropping whichever layer is not needed.
-# Usage: show_wallpaper.sh PATH POSTER MODE
-#   MODE preview : quick fade, nothing remembered (the picker while browsing)
-#   MODE apply   : the grow transition, and ~/.curr_wall / ~/.curr_wall_static.jpg updated
 path="$1"; poster="$2"; mode="${3:-apply}"
 [ -f "$path" ] || exit 1
+awww_up() {
+    pgrep -x awww-daemon >/dev/null 2>&1 || setsid -f awww-daemon >/dev/null 2>&1
+    local i
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        awww query >/dev/null 2>&1 && return 0
+        sleep 0.15
+    done
+    return 1
+}
 case "${path,,}" in
     *.mp4|*.webm|*.mkv|*.mov)
         pkill -x mpvpaper 2>/dev/null
         setsid -f mpvpaper -o "no-audio loop panscan=1.0" '*' "$path" >/dev/null 2>&1
         static="$poster" ;;
     *)
+        awww_up || exit 1
         if [ "$mode" = preview ]; then
             awww img --transition-type fade --transition-duration 0.7 "$path" || exit 1
         else
             awww img --transition-type grow --transition-step 200 --transition-duration 1.2 \
                 --transition-fps 60 --transition-pos bottom "$path" || exit 1
         fi
-        # the still is up: now drop a live video layer above it
         pkill -x mpvpaper 2>/dev/null
         static="$path" ;;
 esac

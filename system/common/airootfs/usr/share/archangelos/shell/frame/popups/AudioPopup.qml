@@ -27,11 +27,12 @@ Item {
 
     property real localScale: 1.0
 
-    readonly property int popupHeight: Math.round(340 * root.localScale)
-    readonly property int maxWidth: Math.round(300 * root.localScale)
+    readonly property int popupHeight: Popups.audioPage === "devices"
+        ? Math.round(Math.max(130 * root.localScale, Math.min(360 * root.localScale, audioControl.devicesHeight + 20 * root.localScale)))
+        : Math.round(252 * root.localScale)
+    readonly property int maxWidth: Math.round(280 * root.localScale)
 
-        // Fixed width for the three-bar layout
-    property real targetWidth: Math.round(260 * root.localScale)
+    property real targetWidth: Math.round(({ volume: 184, display: 236, devices: 280 })[Popups.audioPage] * root.localScale) || maxWidth
 
     readonly property int popupWidth: targetWidth
 
@@ -48,24 +49,12 @@ Item {
         anchors.fill: parent
         clip: true
 
-        onOpacityChanged: {
-            if (opacity === 1 && !(SurfaceState.activeContent === "audio")) {
-                let opt = PrefsService.defaultAudioTab
-                if (opt === "Input") Popups.audioPage = "input"
-                else if (opt === "Mixers") Popups.audioPage = "mixer"
-                else Popups.audioPage = "output"
-            }
-        }
-
         AudioControl {
             id: audioControl
             localScale: root.localScale
             fullyOpen: (SurfaceState.activeContent === "audio") && root.opacity === 1
 
-            width: root.targetWidth - Math.round(16 * root.localScale)
-            height: root.popupHeight - Math.round(16 * root.localScale)
-            
-            anchors.centerIn: parent
+            anchors.fill: parent
         }
     }
 }

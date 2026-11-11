@@ -1,7 +1,3 @@
-// Vertical status bar (left edge): launcher, workspaces, active window, tray, clock, volume,
-// recording, brightness, kb layout, battery, network/bt/vpn, power. Hover-popouts grow out of it
-// with a concave "cove" join — every one, tray menu included, is a transparent PopupWindow whose
-// background is the Frame's SDF bulge (reportPopBox → PopoutState → modules/Frame.qml).
 pragma ComponentBehavior: Bound
 
 import QtQuick
@@ -26,7 +22,6 @@ PanelWindow {
     property bool barHovered: false
     property bool barExpanded: !Frame.ShellState.focusMode
 
-    // Thin hover strip at the extreme left edge for focus mode
     Item {
         id: barEdgeTrigger
         anchors.left: parent.left
@@ -38,19 +33,12 @@ PanelWindow {
         HoverHandler { id: barEdgeHover; onHoveredChanged: bar.barHovered = hovered }
     }
 
-    // One popout at a time, with a small close delay so the cursor can travel into it.
     property string popout: ""
     Timer { id: popHideTimer; interval: 180; onTriggered: bar.popout = "" }
-    // Clear the frame bulge only when SWITCHING popouts. Re-calling showPopout for the one
-    // already open (the cursor entering its body fires the HoverHandler) must not clear it:
-    // bar.popout wouldn't change, so nothing would re-report the box and the background would go.
-    // All bar popouts claim the bulge under one owner id, so closing one drops only its own — a
-    // tray menu fading out used to clear the box the Dashboard had just claimed.
     readonly property string bulgeOwner: "bar"
     function showPopout(name) { popHideTimer.stop(); if (bar.popout !== name) PopoutState.clear(bar.bulgeOwner); bar.popout = name; }
     function hidePopout() { popHideTimer.restart(); }
 
-    // Keyboard route in: `ipc call bar popout network`, kept in step both ways.
     Connections {
         target: Shell
         function onBarPopoutChanged() {
@@ -60,11 +48,6 @@ PanelWindow {
     }
     onPopoutChanged: if (bar.popout === "" && Shell.barPopout !== "") Shell.barPopout = ""
 
-    // Report an open popout's body rect (screen px) so the Frame bulges the bar into it. Quickshell
-    // centres the popup on its widget then clamps it on-screen; that clamp is replicated here so
-    // the bulge tracks tall popouts too. `anim` false lands the bulge in the same frame, for a
-    // popout that merely resized. `height` overrides popup.implicitHeight where that binding may
-    // still be stale at report time (the tray menu).
     readonly property real screenScale: Math.max(0.75, Math.min(1.5, (bar.screen ? bar.screen.height : 1080) / 1080))
     readonly property real screenTop: Frame.ShellState.focusMode
         ? Math.round(Frame.Theme.borderWidth * bar.screenScale) * 2
@@ -73,75 +56,50 @@ PanelWindow {
         const gcy = widget.mapToItem(null, 0, widget.height / 2).y + bar.screenTop;
         const tp0 = popup.topPad !== undefined ? popup.topPad : 0;
         const ph = height === undefined ? popup.implicitHeight - tp0 : height;
-        const bh = ph - Config.popFillet * 2;                         // body height (minus fillets)
+        const bh = ph - Config.popFillet * 2;
         const pf = Config.popFillet;
-        // Skirt under the body: normally a full fillet so the SDF cove has room to curve back
-        // into the bar. Where the screen edge already crowds the body — the power menu — that
-        // skirt is dead space between the menu and the edge, so trade it for the bar's own 12px
-        // margin and let the body reach down. The window height is unchanged; the padding just
-        // moves from under the body to above it, so the window still lands flush at the edge.
         const bp = gcy + bh / 2 + pf > bar.screenTop + bar.height ? 12 : pf;
         if (popup.botPad !== undefined) popup.botPad = bp;
         let top = gcy - bh / 2;
-        // ArchangelOS: the pane grows out of the main shell surface, whose top-left notch owns the
-        // corner above it — keep the body below that, padding the popup so its content follows.
         const reserve = Frame.Theme.borderWidth + Frame.Theme.notchHeight + Frame.Theme.cornerRadius * 2 + 6;
         let tp = 0;
         if (top < reserve) {
-            tp = 2 * (reserve - top);                                 // popup still centred on the widget
-            if (gcy - (bh + pf * 2 + tp) / 2 < 0) tp = reserve - pf;  // popup slid to the screen top
+            tp = 2 * (reserve - top);
+            if (gcy - (bh + pf * 2 + tp) / 2 < 0) tp = reserve - pf;
             top = reserve;
         }
         if (popup.topPad !== undefined && Math.abs(popup.topPad - tp) > 0.5) popup.topPad = tp;
         top = Math.max(pf, Math.min(top, bar.screenTop + bar.height - bh - bp));
-        // Where the bulge grows from and collapses back to, as a fraction of the box. Left edge
-        // (0) is the bar; the vertical share is the WIDGET's centre, not the box's — once the
-        // screen edge has clamped the body those differ, and the default (0,0) meant every popout
-        // retracted towards the top of itself instead of into the icon it flowed out of.
         const ay = bh > 0 ? Math.max(0, Math.min(1, (gcy - top) / bh)) : 0.5;
         PopoutState.setBox(bar.implicitWidth - 18, top, popup.implicitWidth + 12, bh,
                            bar.bulgeOwner, anim, 0, ay);
     }
 
-    // Which tray item's menu the shared tray-menu popout should show.
     property var trayMenuHandle: null
     property var hoverInfo: ({ title: "", lines: [], hint: "" })
     property Item hoverAnchor: null
     property Item trayMenuAnchor: null
 
-    // Session actions for the power popout; the verbs live in services/Session.qml.
     readonly property var sessionActions: Session.pick(["lock", "logout", "reboot", "poweroff", "suspend"])
-    // Out of `sessionActions` on purpose: that array is the Repeater's model, so a palette
-    // dependency there would rebuild all delegates per theme change. Indexed in parallel
-    // instead, so a switch only repaints them.
     readonly property var sessionTones: [Config.info, Config.warning, Config.success, Config.danger, Config.warning]
 
-    // Keep-awake: inhibits idle/sleep while Shell.keepAwake is on.
     IdleInhibitor { window: bar; enabled: Shell.keepAwake }
 
-    // Fullscreen on THIS output's current workspace, not anywhere in the session: a video going
-    // fullscreen on another workspace used to take this bar away and hand back its exclusive zone.
     readonly property bool fullscreenHere: Hypr.fullscreenOn(bar.modelData?.name ?? "")
 
     anchors { top: true; left: true; bottom: true }
     implicitWidth: 56
     color: "transparent"
-    // Never toggle `visible` on fullscreen: remapping the layer surface races with the Frame's own
-    // remap and the bar routinely fails to reappear (QML reports visible=true, surface unmapped).
-    // Keep it mapped — drop the exclusive zone, hide the content, empty the input region.
     visible: !Frame.ShellState.focusMode
     exclusiveZone: bar.fullscreenHere ? 0 : (Frame.ShellState.focusMode ? 0 : implicitWidth)
     mask: bar.fullscreenHere ? passthrough : null
-    Region { id: passthrough }   // empty region → input passes through under fullscreen
+    Region { id: passthrough }
 
-    // Background is drawn by the Frame (one continuous SDF surface); this stays transparent.
     Rectangle {
         anchors.fill: parent
         color: "transparent"
-        visible: !bar.fullscreenHere   // hide widgets under a fullscreen window
+        visible: !bar.fullscreenHere
 
-    // --- ArchangelOS mark now lives in the frame's top-left tab (frame/modules/Left) —
-    // level with the workspaces, per the notch layout. The dock starts with the meters. ---
     ColumnLayout {
         anchors.fill: parent
         anchors.topMargin: 14
@@ -157,7 +115,7 @@ PanelWindow {
                 id: healthPill
                 bar: bar
                 popout: "health"
-                icon: "monitor_heart"
+                icon: "add_to_queue"
                 tint: DockStatus.healthLevel === "bad" ? Config.danger
                     : DockStatus.healthLevel === "warn" ? Config.warning : Config.success
                 pulse: DockStatus.healthLevel === "bad"
@@ -178,7 +136,7 @@ PanelWindow {
                 bar: bar
                 popout: "updates"
                 visible: DockStatus.totalUpdates > 0
-                icon: "system_update_alt"
+                icon: "deployed_code_update"
                 tint: Config.accent
                 count: DockStatus.shortCount(DockStatus.totalUpdates)
                 onClicked: Frame.IpcManager._openDashboard("maint")
@@ -194,13 +152,11 @@ PanelWindow {
             }
         }
 
-        // --- Monitors (ArchangelOS): live readings; each cluster opens a dock pane ---
         ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 12
             Component.onCompleted: Sys.active = true
 
-            // Weather — hover opens the weather pane
             Item {
                 id: weatherWidget
                 Layout.alignment: Qt.AlignHCenter
@@ -225,7 +181,6 @@ PanelWindow {
                 FC.Tip { text: "Weather"; suppressed: bar.popout !== "" }
             }
 
-            // Network — wifi/eth status + rates; hover opens the network pane
             Item {
                 id: monNetWidget
                 Layout.alignment: Qt.AlignHCenter
@@ -277,7 +232,6 @@ PanelWindow {
                 FC.Tip { text: "Network traffic"; suppressed: bar.popout !== "" }
             }
 
-            // CPU / RAM / GPU / Storage / Battery — hover opens the system pane
             Item {
                 id: sysWidget
                 Layout.alignment: Qt.AlignHCenter
@@ -302,32 +256,28 @@ PanelWindow {
             }
         }
 
-        // --- Workspaces: fixed slots + sliding active indicator ---
         Item {
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barWorkspaces
             readonly property int slot: 28
             readonly property int gap: 6
             readonly property int pitch: slot + gap
-            readonly property int pill: 42          // match the network pill width
-            readonly property int padV: 7           // vertical padding inside the pill
+            readonly property int pill: 42
+            readonly property int padV: 7
             implicitWidth: Config.barWorkspaces ? pill : 0
             implicitHeight: Config.barWorkspaces ? Hypr.maxWs * slot + (Hypr.maxWs - 1) * gap + padV * 2 : 0
 
-            // Scroll over the workspaces to switch (up = previous, down = next).
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: e => HyprCtl.workspace(e.angleDelta.y > 0 ? "e-1" : "e+1")
             }
 
-            // Pill background grouping the whole workspace column (matches the network pill below).
             Rectangle {
                 anchors.fill: parent
                 radius: 16
                 color: Config.containerSoft
             }
 
-            // Sliding coral indicator behind the active workspace.
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.slot; height: parent.slot; radius: parent.slot / 2
@@ -350,7 +300,6 @@ PanelWindow {
                         readonly property var wins: Hypr.wsWindows(ws)
                         readonly property bool occupied: wins.length > 0 || Hypr.wsOccupied(ws)
                         readonly property bool urgent: !!Hypr.urgentWs[ws] && !active
-                        // Workspace number as a Roman numeral (I, II, III … up to ~X).
                         readonly property string roman: {
                             let n = ws, r = "";
                             const m = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
@@ -360,14 +309,12 @@ PanelWindow {
                         width: 28; height: 28; radius: 14
                         color: "transparent"
 
-                        // Roman numeral of the workspace number when occupied; a small dot when empty.
                         Text {
                             anchors.centerIn: parent
                             visible: wsSlot.occupied
                             text: wsSlot.roman
                             font.family: Config.textFont; font.pixelSize: 13; font.bold: true
                             color: wsSlot.active ? Config.accentText : (wsSlot.urgent ? Config.error : Config.fg)
-                            // Pulse while requesting attention.
                             SequentialAnimation on opacity {
                                 running: wsSlot.urgent; loops: Animation.Infinite
                                 NumberAnimation { to: 0.35; duration: 600; easing.type: Easing.InOutSine }
@@ -388,10 +335,8 @@ PanelWindow {
             }
         }
 
+        Item { Layout.fillHeight: true }
 
-        Item { Layout.fillHeight: true }  // spacer
-
-        // --- Active window (icon + vertical title) ---
         ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barWindow && Hypr.activeClass !== ""
@@ -416,7 +361,6 @@ PanelWindow {
                 }
             }
 
-            // Title written sideways (rotated 90°).
             Item {
                 Layout.alignment: Qt.AlignHCenter
                 implicitWidth: awTitle.contentHeight
@@ -427,9 +371,6 @@ PanelWindow {
                     anchors.centerIn: parent
                     rotation: -90
                     text: Hypr.activeTitle || Hypr.activeClass
-                    // A window title is set by the window — a web page picks its own through
-                    // <title>. AutoText would hand that to the rich-text engine, which resolves
-                    // remote <img> URLs; PlainText is the only safe reading of foreign text.
                     textFormat: Text.PlainText
                     color: Config.dim
                     font.family: Config.textFont; font.pixelSize: 12
@@ -437,9 +378,8 @@ PanelWindow {
             }
         }
 
-        Item { Layout.fillHeight: true }  // spacer
+        Item { Layout.fillHeight: true }
 
-        // --- System tray ---
         ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barTray
@@ -464,8 +404,6 @@ PanelWindow {
                     }
                     function openMenu() {
                         if (!trayItem.modelData.hasMenu) return;
-                        // Idempotent: reassigning the handle reloads the D-Bus menu, which briefly
-                        // empties it and thrashes the bulge.
                         if (bar.popout === "traymenu" && bar.trayMenuAnchor === trayIcon) {
                             bar.showPopout("traymenu");
                             return;
@@ -480,7 +418,6 @@ PanelWindow {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.RightButton | Qt.MiddleButton
-                        // Hover shows the app's menu; it closes on hover-out like every other popout.
                         onEntered: trayItem.openMenu()
                         onExited: bar.hidePopout()
                         onClicked: e => {
@@ -493,7 +430,6 @@ PanelWindow {
             }
         }
 
-        // --- Clock (vertical): day / date / time ---
         Item {
             id: clockWidget
             Layout.alignment: Qt.AlignHCenter
@@ -507,9 +443,6 @@ PanelWindow {
                 anchors.centerIn: parent
                 spacing: 0
                 property var now: new Date()
-                // Once a minute, aligned to :00 — the readout is day/date/hh/mm with no seconds
-                // anywhere, so a 1s tick relaid out and repainted the bar sixty times per visible
-                // change. See components/DesktopClock.qml for the same pattern.
                 Timer {
                     id: barMinuteTick
                     interval: 60000 - (Date.now() % 60000)
@@ -537,8 +470,6 @@ PanelWindow {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    // Qt reads "hh" as 00–23 unless an AP field is present, so 12-hour mode asks
-                    // for one and drops it into its own line below.
                     text: Config.barClock12h ? Qt.formatDateTime(clockCol.now, "hh AP").split(" ")[0]
                                              : Qt.formatDateTime(clockCol.now, "hh")
                     font.family: Config.textFont; font.pixelSize: 17; font.bold: true; color: Config.tertiary
@@ -557,8 +488,6 @@ PanelWindow {
             }
         }
 
-
-        // --- Volume (standalone: scroll to change, click to mute, hover for slider) ---
         Item {
             id: volWidget
             Layout.alignment: Qt.AlignHCenter
@@ -586,7 +515,6 @@ PanelWindow {
             FC.Tip { text: Audio.muted ? "Click to unmute · scroll to adjust" : "Click to mute · scroll to adjust"; suppressed: bar.popout !== "" }
         }
 
-        // --- Recording indicator (only while recording: elapsed time, hover for pause/stop) ---
         Item {
             id: recWidget
             Layout.alignment: Qt.AlignHCenter
@@ -598,14 +526,10 @@ PanelWindow {
                 id: recStat
                 label: "Recording"
                 anchors.horizontalCenter: parent.horizontalCenter
-                // Muxing after a stop is neither recording nor paused: a blinking red dot over a
-                // still-ticking clock would claim the capture is going when it is being written out.
                 icon: Capture.stopping ? "save" : (Capture.paused ? "pause_circle" : "fiber_manual_record")
                 value: Capture.elapsedText
                 tint: Capture.stopping ? Config.dim
                     : (recMa.containsMouse ? Config.accent : (Capture.paused ? Config.warning : Config.error))
-                // Pulse only while capturing, so a paused recording reads as held. The value source
-                // keeps the opacity it stopped on, so pausing must reset it to 1.
                 SequentialAnimation on opacity {
                     running: Capture.state === "recording" && !Capture.stopping; loops: Animation.Infinite
                     onRunningChanged: if (!running) recStat.opacity = 1
@@ -625,7 +549,6 @@ PanelWindow {
             FC.Tip { text: Capture.paused ? "Resume recording" : "Pause recording"; suppressed: bar.popout !== "" }
         }
 
-        // --- Game mode indicator (only shown while active; click to turn off) ---
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             visible: GameMode.enabled
@@ -642,7 +565,6 @@ PanelWindow {
             FC.Tip { text: "Turn off game mode"; suppressed: bar.popout !== "" }
         }
 
-        // --- Keyboard layout (standalone, click to switch) ---
         Item {
             id: kbWidget
             Layout.alignment: Qt.AlignHCenter
@@ -664,15 +586,12 @@ PanelWindow {
             FC.Tip { text: "Switch keyboard layout"; suppressed: bar.popout !== "" }
         }
 
-        // --- Controls pill: network / bluetooth / VPN ---
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             visible: Config.barControls
             implicitWidth: Config.barControls ? 42 : 0
             implicitHeight: Config.barControls ? ctrlCol.implicitHeight + 12 : 0
             radius: 16
-            // Fade the group background while its popout is open, so the coves blend into the
-            // plain bar instead of clipping the pill.
             readonly property bool popActive: bar.popout === "network" || bar.popout === "bluetooth" || bar.popout === "vpn"
             color: popActive ? "transparent" : Config.containerSoft
             Behavior on color { ColorAnim {} }
@@ -681,9 +600,6 @@ PanelWindow {
                 anchors.centerIn: parent
                 spacing: 8
 
-                // Network: one icon for whichever link actually carries traffic — wired when it
-                // owns the default route (or is the only one up), else the Wi-Fi signal. The
-                // popout below lists both when they are up together.
                 IconBtn {
                     id: netWidget
                     label: Net.netUp ? "Network, connected" : "Network, offline"
@@ -695,7 +611,6 @@ PanelWindow {
                     onHoverIn: { bar.showPopout("network"); Net.scan(); }
                     onHoverOut: bar.hidePopout()
                 }
-                // Bluetooth (click toggles power via bluetoothctl, hover for devices)
                 IconBtn {
                     id: btWidget
                     label: !Bt.enabled ? "Bluetooth, off" : (Bt.connected ? "Bluetooth, connected" : "Bluetooth, on")
@@ -706,7 +621,6 @@ PanelWindow {
                     onHoverIn: bar.showPopout("bluetooth")
                     onHoverOut: bar.hidePopout()
                 }
-                // VPN (hover for the profile list)
                 IconBtn {
                     id: vpnWidget
                     label: Net.vpnActive ? "VPN, connected" : "VPN"
@@ -721,7 +635,6 @@ PanelWindow {
             }
         }
 
-            // --- Bottom-left cluster: mop (top), battery (middle), gear (bottom) ---
     ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         Layout.bottomMargin: 12
@@ -768,7 +681,6 @@ PanelWindow {
             }
         }
 
-        // Cleaning mop icon — opens ArchangelOS settings cleaning page
         IconBtn {
             id: mopWidget
             icon: "cleaning_services"
@@ -779,7 +691,6 @@ PanelWindow {
             onClicked: Shell.openSettings("cleaning")
         }
 
-        // Horizontal battery icon — glyph and tint follow the charge level
         Item {
             id: batWidget
             Layout.alignment: Qt.AlignHCenter
@@ -829,7 +740,6 @@ PanelWindow {
             FC.Tip { text: "Battery & power"; above: true; suppressed: bar.popout !== "" }
         }
 
-        // Gear icon — opens ArchangelOS settings
         IconBtn {
             id: gearWidget
             icon: "settings"
@@ -840,11 +750,9 @@ PanelWindow {
         }
     }
 
-    // (ArchangelOS: power lives in the top-right panel.)
     }
     }
 
-    // --- Popouts ---
     StatusPopout {
         bar: bar; widget: bar.hoverAnchor; name: "dockdev"
         title: bar.hoverInfo.title ?? ""
@@ -887,8 +795,6 @@ PanelWindow {
         lines: [DockStatus.dockerRunning > 0 ? DockStatus.dockerRunning + " container" + (DockStatus.dockerRunning > 1 ? "s" : "") + " running" : "No containers running"]
         hint: "Click to open Dev"
     }
-    // Each anchors to its widget and shows while bar.popout names it (modules/bar/BarPopout.qml).
-    // ArchangelOS: the monitor panes
     SysPopout        { bar: bar; widget: sysWidget }
     CpuPopout        { bar: bar; widget: cpuMeter }
     RamPopout        { bar: bar; widget: ramMeter }
@@ -901,6 +807,5 @@ PanelWindow {
     BluetoothPopout  { bar: bar; widget: btWidget }
     VpnPopout        { bar: bar; widget: vpnWidget }
     BatteryPopout    { bar: bar; widget: batWidget }
-    // The anchor moves: whichever tray icon the cursor is on.
     TrayMenuPopout   { bar: bar; widget: bar.trayMenuAnchor }
 }

@@ -33,7 +33,6 @@ Item {
     required property bool screenRecording
     required property bool optionsExpanded
 
-
     required property bool isTopHovered
     required property bool isRightHovered
     required property bool isLeftCenterHovered
@@ -42,9 +41,8 @@ Item {
     required property bool isBottomRightHovered
     focus: SurfaceState.activeSurface !== "none" || (screenRecord && !screenRecording)
 
-    // --- INPUT & EVENT SHIELDING ---
-    readonly property bool hasActiveTextInput: parent && parent.activeFocusItem !== null && parent.activeFocusItem !== undefined && typeof parent.activeFocusItem.cursorPosition === "number"
-    readonly property bool isInputActive: Popups.isInputActive || hasActiveTextInput
+    readonly property bool hasActiveTextInput: !!Window.activeFocusItem && Window.activeFocusItem.visible && typeof Window.activeFocusItem.cursorPosition === "number"
+    readonly property bool isInputActive: Popups.tasksInteractionActive || Popups.colorPickerActive || hasActiveTextInput
 
     function pinActiveSurface() {
         if (SurfaceState.activeContent === "dashboard") Popups.dashboardPinned = true;
@@ -64,7 +62,6 @@ Item {
         }
     }
 
-    // --- GLOBAL HOVER MANAGER ---
     property bool _anyTriggerHovered: Popups.dashboardTriggerHovered || Popups.archMenuTriggerHovered || Popups.audioTriggerHovered || Popups.networkTriggerHovered || Popups.notificationsTriggerHovered || Popups.wallpaperTriggerHovered || Popups.quickTriggerHovered || Popups.clipboardTriggerHovered
     
     property bool _activeSurfaceHovered: {
@@ -132,7 +129,6 @@ Item {
         }
     }
 
-    // --- MASK PROXIES ---
     
     Item { 
         id: leftCenterNotchMask
@@ -160,8 +156,7 @@ Item {
     }
     Item { 
         id: rightCenterNotchMask
-        // Closed state keeps a 28px invisible hover zone at the right edge — 1px border was unhittable.
-        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(28, surfaceShape.frameThickness)
+        width: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnDepth : Math.max(1, surfaceShape.frameThickness)
         height: surfaceShape.rcnDepth > 1 ? surfaceShape.rcnHeight : Math.round(200 * inputManager.localScale)
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
@@ -250,8 +245,6 @@ Item {
         }
     }
 
-
-    // --- GLOBAL ESCAPE HANDLER ---
     Keys.onEscapePressed: {
         if (Popups.miniPlayerOpen) {
             Popups.miniPlayerOpen = false
@@ -265,7 +258,6 @@ Item {
         SurfaceState.close()
     }
 
-    // --- HYPRLAND EVENT DISMISS ---
     Connections {
         target: Hyprland
         function onRawEvent(event) {

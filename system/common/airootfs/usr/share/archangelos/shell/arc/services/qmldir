@@ -28,3 +28,4 @@ singleton Idle Idle.qml
 singleton Session Session.qml
 singleton Power Power.qml
 singleton Weather Weather.qml
+singleton DockStatus DockStatus.qml

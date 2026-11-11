@@ -30,6 +30,16 @@ QtObject {
 
     property string customAvatarPath: ""
     property bool bootFocusMode: false
+    property bool islandHoverExpand: true
+    property bool islandShowSeconds: true
+    property bool islandShowWeek: false
+    property string islandMotion: "Liquid"
+    property string islandIdleWidth: "small"
+    property string islandIdleClockSize: "small"
+    property bool islandIdleShowDate: false
+    property string islandClockSize: "normal"
+    property bool focusSilenceToasts: false
+    property bool focusAutoDnd: false
     property bool focusModeHoverExpand: true
     property string defaultDashboardTab: "Home"
     property string defaultAudioTab: "Output"
@@ -37,37 +47,33 @@ QtObject {
     property bool alwaysShowBatteryPercentage: false
     property bool alwaysShowVolumePercentage: false
 
-    // Anim
     property string animStyle: "slide"
     property real animSpeed: 1.0
     property string animCurve: "smooth"
 
-    // UpdateService
     property bool autoUpdate: true
 
-    // ScreenRecService
     property string screenrecCaptureTarget: "region"
     property bool screenrecAudioMic: false
     property bool screenrecAudioSystem: false
     property int screenrecFramerate: 30
-    property string screenrecBackend: "wf"   // wf | gsr | wlsr
+    property string screenrecBackend: "wf"
     property string screenrecSaveDir: Quickshell.env("HOME") + "/Videos/screen_recordings"
 
-    // Network (Hotspot)
     property string hotspotSsid: "ArcShell"
     property string hotspotPassword: "changeme1"
 
-    // Sizing & Borders
     property bool barEnabled: true
     property int borderWidth: 8          // matches arcshell's frame (ns/modules/Frame.qml)
     property int cornerRadius: 20
+    property int windowPadding: 16
+    property int windowRounding: 12
 
-    // Popup Behavior
     property bool globalHoverMode: true
     property bool hoverDashboard: false
     property bool hoverNetwork: false
-    property bool hoverAudio: false
-    property bool hoverQuick: true
+    property bool hoverAudio: true
+    property bool hoverQuick: false
     property bool hoverArchMenu: false
     property bool hoverNotifications: false
     property bool hoverClipboard: false
@@ -82,6 +88,31 @@ QtObject {
 
     property bool dynamicThemeOverride: true
     property bool darkMode: true
+    property var themePair: ({
+        dark:  { bg: "#080808", active: "#C24A52", text: "#ECEAE4", subtext: "#8a8884", border: "#2e2d2b" },
+        light: { bg: "#f3f1ec", active: "#b0343e", text: "#1c1b19", subtext: "#6b6964", border: "#d6d2ca" }
+    })
+
+    function applyThemeVariant(variant, dark) {
+        root.overrideBg       = variant.bg
+        root.overrideActive   = variant.active
+        root.overrideText     = variant.text
+        root.overrideSubtext  = variant.subtext
+        root.overrideBorder   = variant.border
+        root.overrideIcon     = variant.text
+        root.overrideIconFont = variant.active
+        root.darkMode         = dark
+        root.saveConfig()
+    }
+
+    function setDarkMode(dark) {
+        if (root.dynamicThemeOverride && root.themePair && root.themePair.dark && root.themePair.light) {
+            root.applyThemeVariant(dark ? root.themePair.dark : root.themePair.light, dark)
+            return
+        }
+        root.darkMode = dark
+        root.saveConfig()
+    }
     property real bgOpacity: 1.0
     property bool bgBlur: false
     onBgBlurChanged: updateHyprlandBlur()
@@ -92,7 +123,6 @@ QtObject {
         _initProcPrefs.running = true
     }
 
-    // Custom Theme Override Groups
     property string overrideBg: "#080808"
     property string overrideBorder: "#2e2d2b"
     property string overrideActive: "#C24A52"
@@ -121,6 +151,20 @@ QtObject {
             var o = JSON.parse(raw)
             if (o.customAvatarPath !== undefined) root.customAvatarPath = o.customAvatarPath
             if (o.bootFocusMode !== undefined) root.bootFocusMode = o.bootFocusMode
+            if (o.islandHoverExpand !== undefined) root.islandHoverExpand = o.islandHoverExpand
+            if (o.islandShowSeconds !== undefined) root.islandShowSeconds = o.islandShowSeconds
+            if (o.islandShowWeek !== undefined) root.islandShowWeek = o.islandShowWeek
+            if (o.islandIdleWidth !== undefined) root.islandIdleWidth = o.islandIdleWidth
+            if (o.islandIdleClockSize !== undefined) root.islandIdleClockSize = o.islandIdleClockSize
+            if (o.islandIdleShowDate !== undefined) root.islandIdleShowDate = o.islandIdleShowDate
+            if (o.islandClockSize !== undefined) root.islandClockSize = o.islandClockSize
+            if (o.islandIdleWidth !== undefined) root.islandIdleWidth = o.islandIdleWidth
+            if (o.islandIdleClockSize !== undefined) root.islandIdleClockSize = o.islandIdleClockSize
+            if (o.islandIdleShowDate !== undefined) root.islandIdleShowDate = o.islandIdleShowDate
+            if (o.islandClockSize !== undefined) root.islandClockSize = o.islandClockSize
+            if (o.islandMotion !== undefined) root.islandMotion = o.islandMotion
+            if (o.focusSilenceToasts !== undefined) root.focusSilenceToasts = o.focusSilenceToasts
+            if (o.focusAutoDnd !== undefined) root.focusAutoDnd = o.focusAutoDnd
             if (o.focusModeHoverExpand !== undefined) root.focusModeHoverExpand = o.focusModeHoverExpand
             if (o.defaultDashboardTab !== undefined) root.defaultDashboardTab = o.defaultDashboardTab
             if (o.defaultAudioTab !== undefined) root.defaultAudioTab = o.defaultAudioTab
@@ -144,6 +188,8 @@ QtObject {
             if (o.barEnabled !== undefined) root.barEnabled = o.barEnabled
             if (o.borderWidth !== undefined) root.borderWidth = o.borderWidth
             if (o.cornerRadius !== undefined) root.cornerRadius = o.cornerRadius
+            if (o.windowPadding !== undefined) root.windowPadding = o.windowPadding
+            if (o.windowRounding !== undefined) root.windowRounding = o.windowRounding
 
             if (o.globalHoverMode !== undefined) root.globalHoverMode = o.globalHoverMode
             if (o.hoverDashboard !== undefined) root.hoverDashboard = o.hoverDashboard
@@ -164,6 +210,7 @@ QtObject {
 
             if (o.dynamicThemeOverride !== undefined) root.dynamicThemeOverride = o.dynamicThemeOverride
             if (o.darkMode !== undefined) root.darkMode = o.darkMode
+            if (o.themePair !== undefined) root.themePair = o.themePair
             if (o.bgOpacity !== undefined) root.bgOpacity = o.bgOpacity
             if (o.bgBlur !== undefined) root.bgBlur = o.bgBlur
             if (o.overrideBg !== undefined) root.overrideBg = o.overrideBg
@@ -202,6 +249,8 @@ QtObject {
     onBarEnabledChanged: if (_loaded) saveConfig()
     onBorderWidthChanged: if (_loaded) saveConfig()
     onCornerRadiusChanged: if (_loaded) saveConfig()
+    onWindowPaddingChanged: { if (_loaded) saveConfig(); ShellState.applyWindowGaps() }
+    onWindowRoundingChanged: { if (_loaded) saveConfig(); ShellState.applyWindowRounding() }
     onGlobalHoverModeChanged: if (_loaded) saveConfig()
     onHoverDashboardChanged: if (_loaded) saveConfig()
     onHoverNetworkChanged: if (_loaded) saveConfig()
@@ -232,6 +281,20 @@ QtObject {
         var data = JSON.stringify({
             customAvatarPath: root.customAvatarPath,
             bootFocusMode: root.bootFocusMode,
+            islandHoverExpand: root.islandHoverExpand,
+            islandShowSeconds: root.islandShowSeconds,
+            islandShowWeek: root.islandShowWeek,
+            islandIdleWidth: root.islandIdleWidth,
+            islandIdleClockSize: root.islandIdleClockSize,
+            islandIdleShowDate: root.islandIdleShowDate,
+            islandClockSize: root.islandClockSize,
+            islandIdleWidth: root.islandIdleWidth,
+            islandIdleClockSize: root.islandIdleClockSize,
+            islandIdleShowDate: root.islandIdleShowDate,
+            islandClockSize: root.islandClockSize,
+            islandMotion: root.islandMotion,
+            focusSilenceToasts: root.focusSilenceToasts,
+            focusAutoDnd: root.focusAutoDnd,
             focusModeHoverExpand: root.focusModeHoverExpand,
             defaultDashboardTab: root.defaultDashboardTab,
             defaultAudioTab: root.defaultAudioTab,
@@ -253,6 +316,8 @@ QtObject {
             barEnabled: root.barEnabled,
             borderWidth: root.borderWidth,
             cornerRadius: root.cornerRadius,
+            windowPadding: root.windowPadding,
+            windowRounding: root.windowRounding,
             globalHoverMode: root.globalHoverMode,
             hoverDashboard: root.hoverDashboard,
             hoverNetwork: root.hoverNetwork,
@@ -269,6 +334,7 @@ QtObject {
             enableVisualiser: root.enableVisualiser,
             dynamicThemeOverride: root.dynamicThemeOverride,
             darkMode: root.darkMode,
+            themePair: root.themePair,
             bgOpacity: root.bgOpacity,
             bgBlur: root.bgBlur,
             overrideBg: root.overrideBg,
@@ -296,9 +362,7 @@ QtObject {
         _blurProc.running = true
     }
 
-
     property Process _initProcPrefs: Process {
-
 
         command: []
         running: false

@@ -21,6 +21,7 @@ import Quickshell.Io
 import "../"
 import "../components"
 import "network"
+import qs.arc.services as NSS
 
 Item {
     id: root
@@ -74,7 +75,6 @@ Item {
         }
     }
 
-    // List query — includes POWERED check
     Process {
         id: listProc
         command: [
@@ -92,7 +92,6 @@ Item {
         stdout: StdioCollector { onStreamFinished: root._parseDevices(text) }
     }
 
-    // Scan — pipe commands into interactive bluetoothctl
     Process {
         id: scanProc
         command: [
@@ -252,11 +251,9 @@ Item {
 
     Component.onCompleted: _loadDevices()
 
-    // ── Main layout ───────────────────────────────────────────────────────────
     Column {
         anchors.fill: parent; spacing: 0
 
-        // Header
         Item {
             width: parent.width; height: Math.round(40 * localScale)
 
@@ -269,7 +266,6 @@ Item {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 spacing: Math.round(8 * localScale)
 
-                // Power toggle
                 Rectangle {
                     width: Math.round(32 * localScale); height: Math.round(32 * localScale); radius: Math.round(8 * localScale)
                     color: pwrH.hovered
@@ -290,7 +286,6 @@ Item {
                     MouseArea { anchors.fill: parent; onClicked: root._setPower(!root._btPowered) }
                 }
 
-                // Settings — blueman-manager
                 Rectangle {
                     width: Math.round(32 * localScale); height: Math.round(32 * localScale); radius: Math.round(8 * localScale)
                     color: settH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.09) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.03)
@@ -305,10 +300,9 @@ Item {
                         Behavior on color { ColorAnimation { duration: Anim.fast } }
                     }
                     HoverHandler { id: settH; cursorShape: Qt.PointingHandCursor }
-                    MouseArea { anchors.fill: parent; onClicked: { bluemanProc.running = false; bluemanProc.running = true } }
+                    MouseArea { anchors.fill: parent; onClicked: { SurfaceState.close(); NSS.Shell.openSettings("bluetooth") } }
                 }
 
-                // Scan / Stop pill — disabled when adapter is off
                 Rectangle {
                     width: scanRow.implicitWidth + Math.round(20 * localScale)
                     height: Math.round(30 * localScale)
@@ -361,7 +355,6 @@ Item {
         Rectangle { width: parent.width; height: 1; color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.07) }
         Item      { width: parent.width; height: Math.round(8 * localScale) }
 
-        // Scan animation strip
         Item {
             width: parent.width; height: root._scanning ? Math.round(90 * localScale) : 0; clip: true
             Behavior on height { NumberAnimation { duration: Anim.mediumSlow; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod } }
@@ -489,7 +482,6 @@ Item {
                     }
                 }
 
-                // Empty state
                 Item {
                     width: parent.width; height: Math.round(120 * localScale)
                     visible: !root._scanning && root._allDevices.length === 0 && root._btPowered
@@ -506,7 +498,6 @@ Item {
         }
     }
 
-    // ── Bluetooth off overlay ─────────────────────────────────────────────────
     Item {
         anchors { fill: parent; topMargin: Math.round(49 * localScale) }
         visible: !root._btPowered

@@ -49,7 +49,6 @@ Item {
         }
         spacing: Math.round(8 * localScale)
 
-        // Speedometers
         Row {
             id:      speedoRow
             width:   parent.width
@@ -126,7 +125,6 @@ Item {
             width:   parent.width
             height:  Math.round(100 * localScale)
             spacing: Math.round(8 * localScale)
-            // Thermal strip
             StatCard {
                 localScale: root.localScale
                 width:   (parent.width-parent.spacing)/2
@@ -141,7 +139,6 @@ Item {
                 }
             }
             
-            // Fan control strip
             StatCard {
                 localScale: root.localScale
                 width:   (parent.width-parent.spacing)/2
@@ -155,13 +152,11 @@ Item {
                 }
             }
         }
-        // Net | Disk | Power
         Row {
             width:   parent.width
             height:  parent.height - speedoRow.height - Math.round(100 * localScale) - parent.spacing 
             spacing: Math.round(8 * localScale)
 
-            // Network — narrow, only 3 rows
             StatCard {
                 localScale: root.localScale
                 width:  Math.round(parent.width * 0.20)
@@ -173,7 +168,6 @@ Item {
                 }
             }
 
-            // Disks — moderate, horizontal bars stack vertically
             StatCard {
                 localScale: root.localScale
                 width:  Math.round(parent.width * 0.35)
@@ -185,7 +179,6 @@ Item {
                 }
             }
 
-            // Power — widest, two button rows need space
             StatCard {
                 localScale: root.localScale
                 width:  parent.width - Math.round(parent.width * 0.20) - Math.round(parent.width * 0.35) - parent.spacing * 2
@@ -193,7 +186,6 @@ Item {
                 PowerPanel {
                     anchors.fill:   parent
                     localScale:     root.localScale
-                    cpuFreqService: cpuFreq
                     envyService:    envy
                 }
             }

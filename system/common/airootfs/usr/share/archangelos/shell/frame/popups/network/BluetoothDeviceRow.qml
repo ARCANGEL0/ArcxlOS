@@ -115,7 +115,6 @@ Item {
             anchors { right: parent.right; rightMargin: Math.round(10 * localScale); verticalCenter: parent.verticalCenter }
             spacing: Math.round(6 * localScale)
 
-            // Spinner
             Text {
                 visible: dRow.inAction || dRow.inRemove
                 text: "○"
@@ -130,7 +129,6 @@ Item {
                 }
             }
 
-            // Paired: connect/disconnect pill
             Rectangle {
                 visible: dRow.isPaired && !dRow.inAction && !dRow.inRemove
                 anchors.verticalCenter: parent.verticalCenter
@@ -179,7 +177,6 @@ Item {
                 }
             }
 
-            // Paired: remove button
             Item {
                 visible: dRow.isPaired && !dRow.inAction && !dRow.inRemove
                 width: Math.round(28 * localScale)
@@ -197,7 +194,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "󰗼"
+                    text: "󰆴"
                     font.pixelSize: Math.round(13 * localScale)
                     color: (rmH.hovered || dRow.isRemovePending) ? Theme.error : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.25)
                     Behavior on color { ColorAnimation { duration: Anim.fast } }
@@ -210,7 +207,6 @@ Item {
                 }
             }
 
-            // Available: Pair + PIN icon
             Row {
                 visible: !dRow.isPaired && !dRow.inAction
                 anchors.verticalCenter: parent.verticalCenter
@@ -279,7 +275,6 @@ Item {
         }
     }
 
-    // Expandable
     Item {
         id: expandArea
         anchors { top: baseRow.bottom; left: parent.left; right: parent.right }
@@ -299,7 +294,6 @@ Item {
             }
         }
 
-        // Remove confirmation
         Item {
             id: removeRow
             anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: Math.round(8 * localScale) }
@@ -367,7 +361,6 @@ Item {
             }
         }
 
-        // PIN row
         Item {
             id: pinRow
             anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: Math.round(8 * localScale) }

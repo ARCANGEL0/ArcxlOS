@@ -24,18 +24,13 @@ QtObject {
     property bool _ignoreDefaultTab: false
     property var activeExpandedButton: null
 
-    // ── Per-popup open state ───────────────────────────────────────────────────
     readonly property bool audioOpen: SurfaceState.activeContent === "audio"
     onAudioOpenChanged: {
         if (!audioOpen) {
             _ignoreDefaultTab = false
+            return
         }
-        if (audioOpen && !_ignoreDefaultTab) {
-            let opt = PrefsService.defaultAudioTab
-            if (opt === "Input") audioPage = "input"
-            else if (opt === "Mixers") audioPage = "mixer"
-            else audioPage = "output"
-        }
+        if (!osdOpened && !_ignoreDefaultTab) audioPage = "volume"
     }
     
     readonly property bool networkOpen: SurfaceState.activeContent === "network"
@@ -56,7 +51,10 @@ QtObject {
             let opt = PrefsService.defaultDashboardTab
             if (opt === "System") dashboardPage = "stats"
             else if (opt === "Tasks") dashboardPage = "kanban"
-            else if (opt === "Apps") dashboardPage = "launcher"
+            else if (opt === "Media") dashboardPage = "media"
+            else if (opt === "Weather") dashboardPage = "weather"
+            else if (opt === "Dev") dashboardPage = "dev"
+            else if (opt === "Upkeep") dashboardPage = "maint"
             else if (opt === "Config") dashboardPage = "config"
             else dashboardPage = "home"
         }
@@ -69,7 +67,6 @@ QtObject {
     property bool colorPickerActive: false
     property bool miniPlayerOpen: false
     
-    // ── Per-popup pinned state (ignores hover-leave) ──────────────────────────
     property bool audioPinned:         false
     property bool networkPinned:       false
     property bool notificationsPinned: false
@@ -80,32 +77,29 @@ QtObject {
     property bool clipboardPinned:     false
     property bool powerPinned:          false
 
-    // ── Dashboard — per-page state ───────────────────────────────────────────
     property int    dashboardPageWidth: 900
     property string dashboardPage:      "home"
     property bool   tasksInteractionActive: false
 
-    // ── Input & Modal Interaction Shielding ───────────────────────────────────
     property bool   isInputFocused: false
     readonly property bool isInputActive: isInputFocused || tasksInteractionActive || colorPickerActive
 
-    // ── Audio popup — per-page state ─────────────────────────────────────────
-    property string audioPage: "output"
+    property string audioPage: "volume"
 
-    // ── Network popup — per-page content (string key) ─────────────────────────
     property string networkPage: "wifi"
 
-    // ── Per-popup trigger hover state ─────────────────────────────────────────
     property bool archMenuTriggerHovered:      false
     property bool audioTriggerHovered:         false
     property bool networkTriggerHovered:       false
     property bool notificationsTriggerHovered: false
     property bool wallpaperTriggerHovered:     false
     property bool quickTriggerHovered:         false
+    property bool rightCenterHovered:          false
+    property bool osdOpened:                   false
     property bool dashboardTriggerHovered:     false
     property bool clipboardTriggerHovered:     false
+    property bool bottomDockHovered:           false
 
-    // ── Hover allowance settings ──────────────────────────────────────────────
     property bool audioAllowHover:         PrefsService.globalHoverMode && PrefsService.hoverAudio
     property bool archMenuAllowHover:      PrefsService.globalHoverMode && PrefsService.hoverArchMenu
     property bool wallpaperAllowHover:     PrefsService.globalHoverMode && PrefsService.hoverWallpaper
@@ -115,12 +109,10 @@ QtObject {
     property bool dashboardAllowHover:     PrefsService.globalHoverMode && PrefsService.hoverDashboard
     property bool networkAllowHover:     PrefsService.globalHoverMode && PrefsService.hoverNetwork
 
-    // ── Universal popup behavior settings ─────────────────────────────────────
     property int  slideDuration:   Anim.transition
-    property int  hoverCloseDelay: PrefsService.hoverCloseDelay          // delay after hover leaves before closing
-    property int  hoverOpenDelay:  PrefsService.hoverOpenDelay           // delay before hover opens
+    property int  hoverCloseDelay: PrefsService.hoverCloseDelay
+    property int  hoverOpenDelay:  PrefsService.hoverOpenDelay
 
-    // ── Confirm dialog ────────────────────────────────────────────────────────
     property bool   confirmOpen:    false
     property string confirmTitle:   ""
     property string confirmMessage: ""
@@ -149,7 +141,6 @@ QtObject {
         confirmGfxMode = ""
     }
 
-    // ── Global state ──────────────────────────────────────────────────────────
     signal actionConfirmed(string action)
 
     readonly property bool anyOpen: audioOpen || networkOpen || batteryOpen
@@ -161,6 +152,7 @@ QtObject {
         SurfaceState.close()
         isInputFocused      = false
         miniPlayerOpen      = false
+        bottomDockHovered   = false
         audioPinned         = false
         networkPinned       = false
         notificationsPinned = false

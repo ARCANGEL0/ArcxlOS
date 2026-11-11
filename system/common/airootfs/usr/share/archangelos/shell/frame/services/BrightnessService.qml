@@ -26,6 +26,7 @@ QtObject {
     
     property int brightness: 0
     signal externalBrightnessChanged(int val)
+    property bool _known: false
     
     function setBrightness(v) {
         if (v < 10) v = 10   // never near-black: the UI can't be seen to recover from it
@@ -45,8 +46,9 @@ QtObject {
                     if (!isNaN(val)) {
                         if (root.brightness !== val) {
                             root.brightness = val
-                            root.externalBrightnessChanged(val)
+                            if (root._known) root.externalBrightnessChanged(val)
                         }
+                        root._known = true
                     }
                 }
             }

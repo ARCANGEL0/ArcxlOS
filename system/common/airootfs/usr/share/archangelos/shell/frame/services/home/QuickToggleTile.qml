@@ -62,15 +62,14 @@ Rectangle {
     }
 
     Column {
-        anchors {
-            left: parent.left
-            bottom: parent.bottom
-            margins: Math.round(9 * tileRoot.localScale)
-        }
+        anchors.centerIn: parent
+        width: tileRoot.width - Math.round(18 * tileRoot.localScale)
         spacing: Math.round(2 * tileRoot.localScale)
 
         Text {
             id: iconText
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
             text: tileRoot.icon
             font.pixelSize: Math.round(17 * tileRoot.localScale)
             color: tileRoot.on ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.40)
@@ -80,6 +79,9 @@ Rectangle {
 
         Text {
             id: labelText
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            elide: Text.ElideRight
             text: tileRoot.label
             font.pixelSize: Math.round(9 * tileRoot.localScale)
             font.weight: Font.Medium
@@ -95,7 +97,8 @@ Rectangle {
             font.pixelSize: Math.round(8 * tileRoot.localScale)
             font.family: "JetFrames Mono"
             color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.65)
-            width: tileRoot.width - Math.round(18 * tileRoot.localScale)
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
         }
     }

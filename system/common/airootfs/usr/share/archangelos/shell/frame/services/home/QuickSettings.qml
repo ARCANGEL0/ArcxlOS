@@ -25,8 +25,6 @@ import "../../components"
 import "../../components/sliders"
 import "../"
 
-// Right column — brightness slider + scrollable quick-settings grid.
-
 StatCard {
     id: root
     padding: 0
@@ -34,9 +32,6 @@ StatCard {
 
     property real localScale: 1.0
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Wi-Fi
-    // ─────────────────────────────────────────────────────────────────────────
     property bool   wifiOn:   false
     property string wifiSSID: ""
 
@@ -66,9 +61,6 @@ StatCard {
         wifiToggleProc.running = true
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Bluetooth
-    // ─────────────────────────────────────────────────────────────────────────
     property bool   btOn:     false
     property string btDevice: ""
 
@@ -111,9 +103,6 @@ StatCard {
         btToggleProc.running = true
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Night Light  (hyprsunset)
-    // ─────────────────────────────────────────────────────────────────────────
     property bool nightLightOn: false
 
     Process { id: nlCheck; command: ["bash", "-c", "pgrep -x hyprsunset"]; running: false
@@ -127,9 +116,6 @@ StatCard {
         } else { nlProc.running = true; root.nightLightOn = true }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Caffeine  (systemd-inhibit)
-    // ─────────────────────────────────────────────────────────────────────────
     property bool caffeineOn: false
 
     Process { id: caffeineCheck
@@ -149,16 +135,10 @@ StatCard {
         } else { caffeineProc.running = true; root.caffeineOn = true }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Do Not Disturb
-    // ─────────────────────────────────────────────────────────────────────────
     function _dndToggle() {
         ShellState.dnd = !ShellState.dnd
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Hotspot Manager Component
-    // ─────────────────────────────────────────────────────────────────────────
     QuickHotspotManager {
         id: hotspotManager
         wifiOn: root.wifiOn
@@ -169,9 +149,6 @@ StatCard {
         onRequestWifiPoll: root._wifiPoll()
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Airplane Mode  (rfkill)
-    // ─────────────────────────────────────────────────────────────────────────
     property bool airplaneOn: false
 
     Process { id: airplaneCheck
@@ -198,9 +175,6 @@ StatCard {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Focus Mode  (hyprctl gaps)
-    // ─────────────────────────────────────────────────────────────────────────
     property int _savedGapsIn: 5; property int _savedGapsOut: 10
 
     Process { id: readGapsIn
@@ -230,9 +204,6 @@ StatCard {
         } else { readGapsIn.running = false; readGapsIn.running = true }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Color Picker
-    // ─────────────────────────────────────────────────────────────────────────
     property string pickerFormat: "HEX"
     property var sysThemeProc: Process {}
 
@@ -270,9 +241,6 @@ StatCard {
         onExited: Popups.colorPickerActive = false
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Polling timer
-    // ─────────────────────────────────────────────────────────────────────────
     Timer {
         interval: 5000; running: Popups.dashboardOpen; repeat: true
         onTriggered: {
@@ -293,24 +261,9 @@ StatCard {
         hotspotManager.init()
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  UI
-    // ─────────────────────────────────────────────────────────────────────────
     Column {
         anchors { fill: parent; margins: Math.round(12 * localScale) }
         spacing: 0
-
-        // ── Integrated Brightness Slider ──────────────────────────────────────
-        QuickBrightnessSlider {
-            width: parent.width
-            localScale: root.localScale
-        }
-
-        Rectangle {
-            width: parent.width; height: 1
-            color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08)
-        }
-        Item { width: parent.width; height: Math.round(8 * localScale) }
 
         Text {
             id: qsLbl; width: parent.width
@@ -319,10 +272,9 @@ StatCard {
         }
         Item { width: parent.width; height: Math.round(8 * localScale) }
 
-        // ── Tile grid ─────────────────────────────────────────────────────────
         Item {
             width:  parent.width
-            height: root.height - Math.round(12 * localScale) - Math.round(52 * localScale) - 1 - Math.round(8 * localScale) - qsLbl.height - Math.round(8 * localScale)
+            height: root.height - Math.round(12 * localScale) - qsLbl.height - Math.round(8 * localScale)
 
             Flickable {
                 id: flick
@@ -386,7 +338,7 @@ StatCard {
                         width: tileGrid.btnW; height: tileGrid.btnH
                         localScale: root.localScale
                         on: ShellState.focusMode
-                        icon: ShellState.focusMode ? "󱃕" : "󰍻"; label: "Focus Mode"
+                        icon: ShellState.focusMode ? "󰻿" : "󰋲"; label: "Focus Mode"
                         onToggled: root._focusToggle()
                     }
                     QuickToggleTile {
@@ -457,7 +409,6 @@ StatCard {
         }
     }
 
-    // ── Floating Subcomponent Pickers ─────────────────────────────────────────
     QuickFilterPicker {
         id: filterPicker
         localScale: root.localScale
