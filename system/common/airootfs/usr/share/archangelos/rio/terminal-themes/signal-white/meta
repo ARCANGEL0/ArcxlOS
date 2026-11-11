@@ -1,0 +1,7 @@
+name=Signal White
+desc=Light technical sheet, graphite type and orange markers
+shader=signal-white.slangp
+opacity=1.0
+bg=#EFEFED
+fg=#2B2E31
+accent=#FF4D1C

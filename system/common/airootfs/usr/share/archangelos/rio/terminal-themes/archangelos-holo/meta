@@ -1,0 +1,6 @@
+name=Archangel Holo
+desc=Red neon frame, phosphor glow and the pixel logo
+shader=archangelos-holo.slangp
+bg=#050203
+fg=#FFE8EC
+accent=#FF2D55

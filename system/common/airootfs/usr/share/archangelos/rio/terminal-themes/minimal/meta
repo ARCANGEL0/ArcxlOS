@@ -1,0 +1,6 @@
+name=Minimal
+desc=Same colours, no effects, lightest on the GPU
+shader=
+bg=#050203
+fg=#FFE8EC
+accent=#FF2D55

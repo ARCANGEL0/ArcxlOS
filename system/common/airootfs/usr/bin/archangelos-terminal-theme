@@ -1,0 +1,128 @@
+#!/bin/sh
+set -eu
+
+sysDir=/usr/share/archangelos/rio/terminal-themes
+userDir=${XDG_DATA_HOME:-$HOME/.local/share}/archangelos/terminal-themes
+rioDir=${RIO_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/rio}
+conf=$rioDir/config.toml
+state=$rioDir/.archangelos-theme
+
+fail() { echo "$*" >&2; exit 1; }
+
+field() { sed -n "s/^$2=//p" "$1/meta" | head -n 1; }
+
+validId() {
+	case $1 in
+		''|*[!a-z0-9-]*) return 1 ;;
+	esac
+}
+
+findTheme() {
+	for dir in "$userDir/$1" "$sysDir/$1"; do
+		[ -f "$dir/meta" ] && [ -f "$dir/colors.toml" ] && { echo "$dir"; return 0; }
+	done
+	return 1
+}
+
+current() {
+	[ -f "$state" ] && cat "$state" && return
+	sed -n 's/^theme = "\(.*\)"/\1/p' "$conf" 2>/dev/null | head -n 1
+}
+
+listThemes() {
+	active=$(current)
+	seen=" "
+	for root in "$userDir" "$sysDir"; do
+		[ -d "$root" ] || continue
+		for dir in "$root"/*/; do
+			dir=${dir%/}
+			id=${dir##*/}
+			[ -f "$dir/meta" ] || continue
+			case $seen in *" $id "*) continue ;; esac
+			seen="$seen$id "
+			on=0
+			[ "$id" = "$active" ] && on=1
+			printf '%s|%s|%s|%s|%s|%s|%s\n' "$id" "$(field "$dir" name)" "$(field "$dir" desc)" \
+				"$(field "$dir" bg)" "$(field "$dir" fg)" "$(field "$dir" accent)" "$on"
+		done
+	done
+}
+
+setFilters() {
+	if grep -q '^filters = ' "$conf"; then
+		sed -i "s|^filters = .*|filters = [$1]|" "$conf"
+	elif grep -q '^\[renderer\]' "$conf"; then
+		sed -i "/^\[renderer\]/a filters = [$1]" "$conf"
+	else
+		printf '\n[renderer]\nfilters = [%s]\n' "$1" >> "$conf"
+	fi
+}
+
+setOpacity() {
+	if grep -q '^opacity = ' "$conf"; then
+		sed -i "s|^opacity = .*|opacity = $1|" "$conf"
+	elif grep -q '^\[window\]' "$conf"; then
+		sed -i "/^\[window\]/a opacity = $1" "$conf"
+	else
+		printf '\n[window]\nopacity = %s\n' "$1" >> "$conf"
+	fi
+}
+
+useTheme() {
+	validId "$1" || fail "bad theme id: $1"
+	dir=$(findTheme "$1") || fail "no such theme: $1"
+	mkdir -p "$rioDir/themes"
+	touch "$conf"
+	cp "$dir/colors.toml" "$rioDir/themes/$1.toml"
+	shader=$(field "$dir" shader)
+	filter=""
+	[ -n "$shader" ] && [ -f "$dir/$shader" ] && filter="\"$dir/$shader\""
+	if grep -q '^theme = ' "$conf"; then
+		sed -i "s|^theme = .*|theme = \"$1\"|" "$conf"
+	else
+		{ printf 'theme = "%s"\n' "$1"; cat "$conf"; } > "$conf.new" && mv "$conf.new" "$conf"
+	fi
+	setFilters "$filter"
+	opacity=$(field "$dir" opacity)
+	case $opacity in
+		''|*[!0-9.]*) opacity=0.0 ;;
+	esac
+	setOpacity "$opacity"
+	echo "$1" > "$state"
+}
+
+importTheme() {
+	[ -f "$1" ] || fail "not a file: $1"
+	tmp=$(mktemp -d)
+	trap 'rm -rf "$tmp"' EXIT
+	tar --no-same-owner --no-same-permissions -xzf "$1" -C "$tmp" || fail "not a theme archive"
+	[ -z "$(find "$tmp" -type l -o -type b -o -type c -o -type p)" ] || fail "archive contains links or devices"
+	meta=$(find "$tmp" -maxdepth 2 -name meta -type f | head -n 1)
+	[ -n "$meta" ] || fail "archive has no meta file"
+	src=${meta%/meta}
+	[ -f "$src/colors.toml" ] || fail "archive has no colors.toml"
+	id=$(field "$src" id)
+	[ -n "$id" ] || id=${src##*/}
+	id=$(printf '%s' "$id" | tr 'A-Z_ ' 'a-z--' | tr -cd 'a-z0-9-')
+	validId "$id" || fail "could not work out a theme id"
+	mkdir -p "$userDir"
+	rm -rf "${userDir:?}/$id"
+	cp -r "$src" "$userDir/$id"
+	echo "$id"
+}
+
+exportTheme() {
+	validId "$1" || fail "bad theme id: $1"
+	dir=$(findTheme "$1") || fail "no such theme: $1"
+	tar -czf "$2" -C "${dir%/*}" "$1"
+	echo "$2"
+}
+
+case ${1:-} in
+	list) listThemes ;;
+	current) current ;;
+	use) useTheme "${2:?theme id}" ;;
+	import) importTheme "${2:?archive}" ;;
+	export) exportTheme "${2:?theme id}" "${3:?destination}" ;;
+	*) fail "usage: archangelos-terminal-theme list | current | use <id> | import <file> | export <id> <file>" ;;
+esac

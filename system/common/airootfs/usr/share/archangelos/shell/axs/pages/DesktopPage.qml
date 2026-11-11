@@ -1,5 +1,3 @@
-// Desktop & Shell — which shell runs (ArcShell or any theme in ~/.config/hypr/themes, switched
-// with archangelos-shell), then ArcShell's own bar, island, hover panels, OSD and motion.
 import QtQuick
 import qs.axs
 import qs.axs.ui
@@ -24,16 +22,62 @@ PageScaffold {
         AxSwitch { checked: !!page.prefs[tg.key]; anchors.verticalCenter: parent.verticalCenter; onToggled: (on) => page.prefs[tg.key] = on }
     }
 
-    // ── shell picker ───────────────────────────────────────────────────────────
-    property var shells: []            // { id, name, desc, preview, keys, live, active }
+    property var shells: []
     property string chosen: ""
-    property string switched: ""       // picked, waiting for the next sign-in
+    property string switched: ""
     property string error: ""
     readonly property var current: shells.find(x => x.active) ?? null
     readonly property var sel: shells.find(x => x.id === page.chosen) ?? page.current
     readonly property bool arcActive: !page.current || page.current.id === "archangelos"
     readonly property string themesDir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/hypr/themes"
     Cmd { id: cmd }
+    property var termThemes: []
+    property string termError: ""
+    property string termNote: ""
+    readonly property var termActive: termThemes.find(x => x.active) ?? null
+    readonly property string termDir: (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/archangelos/terminal-themes"
+    function termRun(args, cb) {
+        cmd.run(["sh", "-c", 'PATH="$HOME/.local/bin:$PATH" exec archangelos-terminal-theme "$@"', "sh"].concat(args), cb);
+    }
+    function loadTerm() {
+        page.termRun(["list"], (c, o) => {
+            page.termThemes = o.split("\n").filter(l => l).map(l => { const f = l.split("|");
+                return { id: f[0], name: f[1], desc: f[2], bg: f[3], fg: f[4], accent: f[5], active: f[6] === "1" }; });
+        });
+    }
+    function useTerm(id) {
+        page.termError = ""; page.termNote = "";
+        page.termRun(["use", id], (c, o, e) => { if (c !== 0) page.termError = (e || o).trim(); page.loadTerm(); });
+    }
+    FilePick {
+        id: termImport
+        title: "Import a terminal theme"
+        filters: ["Terminal themes (*.tar.gz *.tgz)", "All files (*)"]
+        folder: Quickshell.env("HOME")
+        onPicked: (path) => {
+            page.termError = ""; page.termNote = "";
+            page.termRun(["import", path], (c, o, e) => {
+                if (c !== 0) page.termError = (e || o).trim();
+                else page.termNote = "Imported " + o.trim();
+                page.loadTerm();
+            });
+        }
+    }
+    FilePick {
+        id: termExport
+        title: "Export the terminal theme"
+        save: true
+        folder: Quickshell.env("HOME")
+        suggested: (page.termActive ? page.termActive.id : "theme") + ".tar.gz"
+        onPicked: (path) => {
+            if (!page.termActive) return;
+            page.termError = ""; page.termNote = "";
+            page.termRun(["export", page.termActive.id, path], (c, o, e) => {
+                if (c !== 0) page.termError = (e || o).trim();
+                else page.termNote = "Saved to " + o.trim();
+            });
+        }
+    }
     function load() {
         cmd.run(["archangelos-shell", "list"], (c, o) => {
             page.shells = o.split("\n").filter(l => l).map(l => { const f = l.split("|");
@@ -41,7 +85,7 @@ PageScaffold {
             if (!page.shells.some(x => x.id === page.chosen)) page.chosen = page.current ? page.current.id : "";
         });
     }
-    Component.onCompleted: load()
+    Component.onCompleted: { load(); loadTerm(); }
     function use(sh, now) {
         page.error = "";
         cmd.run(["archangelos-shell", "use", sh.id].concat(now ? ["--now"] : []), (c, o, e) => {
@@ -50,9 +94,6 @@ PageScaffold {
             page.load();
         });
     }
-    // Open a terminal and run CyberArch's own installer (clone → chmod → ./install.sh). It is
-    // interactive (asks before installing packages / changing the config), which is why it runs in
-    // a terminal rather than silently in the background.
     function installCyberArch() {
         const script = 'set -e; d="$(mktemp -d)"; '
             + 'echo "Cloning CyberArch-Shell…"; git clone --depth 1 https://github.com/ARCANGEL0/CyberArch-Shell.git "$d/CyberArch-Shell"; '
@@ -157,10 +198,6 @@ PageScaffold {
     }
     Label { visible: page.error !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.error; color: Ax.danger; font.pixelSize: Ax.fsSmall }
 
-    // CyberArch is big (AGS rice + its own installer that pulls many packages), so it isn't baked
-    // in — it's installed on demand by its upstream installer, running in a terminal because that
-    // installer is interactive. Once installed it lands in ~/.config/hypr/themes/cyberpunk and
-    // shows up in the picker above like any other shell.
     Section {
         visible: !page.shells.some(x => x.id === "cyberpunk")
         title: "Install more shells"
@@ -193,7 +230,6 @@ PageScaffold {
         title: "Open on hover"
         note: page.prefs.globalHoverMode ? "" : "click to open"
         Toggle { icon: "ads_click"; title: "Open panels by hovering"; desc: "Point at a panel's edge to open it, instead of clicking"; key: "globalHoverMode" }
-        // which panels open on hover, as one row of chips
         Item {
             property bool topDivider: false
             visible: page.prefs.globalHoverMode
@@ -240,6 +276,79 @@ PageScaffold {
                        onMoved: (v) => page.prefs.hoverCloseDelay = Math.round(v) }
         }
     }
+
+    Section {
+        title: "Terminal"
+        note: page.termThemes.length + (page.termThemes.length === 1 ? " theme" : " themes")
+        Item {
+            property bool topDivider: false
+            width: parent.width
+            height: termGrid.height + 32
+            Grid {
+                id: termGrid
+                x: Ax.pad; y: 16
+                width: parent.width - 2 * Ax.pad
+                columns: Math.max(2, Math.floor((width + 12) / 200))
+                spacing: 12
+                readonly property real cell: (width - (columns - 1) * spacing) / columns
+                Repeater {
+                    model: page.termThemes
+                    Rectangle {
+                        id: tcard
+                        required property var modelData
+                        width: termGrid.cell; height: 136
+                        radius: Ax.radiusSm
+                        color: Ax.raised
+                        border.width: modelData.active ? 2 : 1
+                        border.color: modelData.active ? Ax.accent : (tma.containsMouse ? Ax.alpha(Ax.text, 0.2) : Ax.border)
+                        clip: true
+                        Rectangle {
+                            id: tscreen
+                            x: 1; y: 1; width: parent.width - 2; height: 72
+                            color: tcard.modelData.bg || "#000000"
+                            Column {
+                                x: 12; y: 11; spacing: 4
+                                Text { text: "~ $ ls"; color: tcard.modelData.fg || "#ffffff"; font.family: Ax.mono; font.pixelSize: 11 }
+                                Text { text: "shaders  themes"; color: tcard.modelData.accent || "#ffffff"; font.family: Ax.mono; font.pixelSize: 11 }
+                                Text { text: "~ $ \u2588"; color: tcard.modelData.fg || "#ffffff"; font.family: Ax.mono; font.pixelSize: 11 }
+                            }
+                            Rectangle {
+                                anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10
+                                width: 8; height: 8; radius: 4
+                                color: tcard.modelData.accent || "#ffffff"
+                            }
+                        }
+                        Column {
+                            anchors.left: parent.left; anchors.right: parent.right; anchors.top: tscreen.bottom
+                            anchors.margins: 12; anchors.topMargin: 9
+                            spacing: 3
+                            Row {
+                                width: parent.width; spacing: 6
+                                Label { text: tcard.modelData.name || tcard.modelData.id; font.weight: Font.Medium; width: Math.min(implicitWidth, parent.width - tbadge.width - 6) }
+                                Badge { id: tbadge; visible: tcard.modelData.active; text: "active"; tone: "accent" }
+                            }
+                            Label { width: parent.width; text: tcard.modelData.desc || ""; color: Ax.muted; font.pixelSize: Ax.fsSmall }
+                        }
+                        MouseArea {
+                            id: tma
+                            anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onClicked: if (!tcard.modelData.active) page.useTerm(tcard.modelData.id)
+                        }
+                    }
+                }
+            }
+        }
+        SRow {
+            icon: "swap_vert"; title: "Import or export"
+            desc: "Themes are .tar.gz files with a meta file, colors.toml and an optional shader"
+            AxButton { icon: "folder_open"; anchors.verticalCenter: parent.verticalCenter
+                       onClicked: Quickshell.execDetached(["sh", "-c", 'mkdir -p "$1" && xdg-open "$1"', "sh", page.termDir]) }
+            AxButton { icon: "download"; text: "Import"; anchors.verticalCenter: parent.verticalCenter; onClicked: termImport.open() }
+            AxButton { icon: "upload"; text: "Export current"; enabled_: !!page.termActive; anchors.verticalCenter: parent.verticalCenter; onClicked: termExport.open() }
+        }
+    }
+    Label { visible: page.termError !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.termError; color: Ax.danger; font.pixelSize: Ax.fsSmall }
+    Label { visible: page.termNote !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.termNote; color: Ax.muted; font.pixelSize: Ax.fsSmall }
 
     Section {
         title: "On-screen display"

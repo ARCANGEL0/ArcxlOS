@@ -1,4 +1,4 @@
-theme = "gits-glass-red"
+theme = "archangelos-holo"
 
 draw-bold-text-with-light-colors = true
 
@@ -78,7 +78,7 @@ blinking-interval = 600
 [effects]
 trail-cursor = true
 custom-mouse-cursor = false
-trail-cursor-color = "#FF5E70"
+trail-cursor-color = "#F2536B"
 
 [navigation]
 mode = "Tab"
@@ -125,6 +125,6 @@ audio = true
 
 [renderer]
 backend = "Webgpu"
-filters = ["/usr/share/archangelos/rio/shaders/ghost-holo/ghost-holo.slangp"]
+filters = ["/usr/share/archangelos/rio/terminal-themes/archangelos-holo/archangelos-holo.slangp"]
 strategy = "events"
 disable-unfocused-render = false

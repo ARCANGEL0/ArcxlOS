@@ -1,0 +1,6 @@
+name=Phosphor Green
+desc=Old green CRT tube, curved glass and heavy scanlines
+shader=phosphor-green.slangp
+bg=#020A04
+fg=#3DFF7A
+accent=#9DFFB8

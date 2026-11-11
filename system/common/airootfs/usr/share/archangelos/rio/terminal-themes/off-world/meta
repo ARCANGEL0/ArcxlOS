@@ -1,0 +1,6 @@
+name=Off-World
+desc=Cyan police-terminal glass, film grain and steel trim
+shader=off-world.slangp
+bg=#061219
+fg=#BFF1FF
+accent=#39D5FF

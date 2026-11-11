@@ -1,0 +1,6 @@
+name=Amber Plasma
+desc=Orange gas-plasma panel from an eighties laptop
+shader=amber-plasma.slangp
+bg=#0D0600
+fg=#FFA51F
+accent=#FFC45C
