@@ -12,6 +12,7 @@ pacman_conf="pacman.conf"
 file_permissions=(
   ["/usr/bin/onionchat"]="0:0:0755"
   ["/usr/bin/archangelos-fastfetch-setup"]="0:0:0755"
+  ["/usr/bin/archangelos-wallpaper"]="0:0:0755"
   ["/usr/bin/archangelos-wallpaper-setup"]="0:0:0755"
   ["/usr/bin/archangelos-lock"]="0:0:0755"
   ["/usr/bin/archangelos-settings"]="0:0:0755"

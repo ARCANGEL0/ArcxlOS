@@ -130,3 +130,5 @@ system/*/airootfs/usr/share/archangelos/fastfetch.jsonc
 system/*/airootfs/usr/share/archangelos/logo.png
 system/*/airootfs/usr/share/archangelos/logo.txt
 system/*/airootfs/usr/share/archangelos/tool-aliases.conf
+!system/common/airootfs/usr/bin/archangelos-wallpaper
+!system/common/airootfs/usr/bin/archangelos-fastfetch-setup

@@ -72,7 +72,8 @@ hl.bind(mod .. " + SHIFT + down", hl.dsp.window.move({ direction = "down" }), { 
 
 for i = 1, 9 do
 	hl.bind(mod .. " + " .. i, hl.dsp.focus({ workspace = i }), { description = "Workspace " .. i })
-	hl.bind(mod .. " + ALT + " .. i, hl.dsp.window.move({ workspace = i, silent = true }), { description = "Send window to workspace " .. i })
+	hl.bind(mod .. " + ALT + " .. i, hl.dsp.window.move({ workspace = i, follow = false }), { description = "Send window to workspace " .. i })
+	hl.bind(mod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }), { description = "Move window to workspace " .. i })
 end
 hl.bind(mod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
 hl.bind(mod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }), { description = "Previous workspace" })
@@ -89,3 +90,13 @@ hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true, des
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"), { locked = true, repeating = true, description = "Brightness up" })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"), { locked = true, repeating = true, description = "Brightness down" })
+
+local superTimer = nil
+hl.bind(mod .. " + Super_L", function()
+	if superTimer then
+		superTimer = nil
+		hl.exec_cmd("qs -p /usr/share/archangelos/shell ipc call launcher toggle")
+	else
+		superTimer = hl.timer(function() superTimer = nil end, { timeout = 250, type = "oneshot" })
+	end
+end, { description = "Search apps (double tap)" })

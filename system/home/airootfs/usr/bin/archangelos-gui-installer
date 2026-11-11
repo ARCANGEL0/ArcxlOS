@@ -609,6 +609,11 @@ class InstallWorkerThread(QThread):
         self.progressChanged.emit(percent, msg)
         time.sleep(0.3)
 
+    def chpasswd(self, user, secret):
+        res = subprocess.run(["arch-chroot", "/mnt", "chpasswd"], input=f"{user}:{secret}\n", capture_output=True, text=True)
+        if res.returncode != 0:
+            raise Exception(f"Setting the password for {user} failed: {res.stderr or res.stdout}")
+
     def run_cmd(self, cmd):
         res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if res.returncode != 0:
@@ -770,8 +775,8 @@ class InstallWorkerThread(QThread):
             self.run_cmd("arch-chroot /mnt userdel -r liveuser 2>/dev/null || true")
             self.run_cmd(f"arch-chroot /mnt userdel -r '{user_name}' 2>/dev/null || true")
             self.run_cmd(f"arch-chroot /mnt useradd -m -g users -G wheel,power,audio,video,storage -s /bin/zsh '{user_name}'")
-            self.run_cmd(f"echo '{user_name}:{password}' | arch-chroot /mnt chpasswd")
-            self.run_cmd(f"echo 'root:{root_password}' | arch-chroot /mnt chpasswd")
+            self.chpasswd(user_name, password)
+            self.chpasswd("root", root_password)
 
             # Materialize the ArcShell desktop for the on-disk user. useradd built the
             # home from /etc/skel (hypr/systemd config only) and lacks the per-user
@@ -785,7 +790,21 @@ class InstallWorkerThread(QThread):
             os.chmod("/mnt/etc/sudoers.d/wheel", 0o440)
 
             self.log(85, "Regenerating initramfs images...")
-            self.run_cmd("arch-chroot /mnt mkinitcpio -P 2>/dev/null || true")
+            with open("/mnt/etc/mkinitcpio.conf", "w") as f:
+                f.write("MODULES=(amdgpu radeon nouveau i915)\n"
+                        "BINARIES=()\n"
+                        "FILES=()\n"
+                        "HOOKS=(base udev plymouth autodetect modconf kms block filesystems keyboard fsck)\n"
+                        "COMPRESSION=\"zstd\"\n")
+            os.makedirs("/mnt/etc/mkinitcpio.d", exist_ok=True)
+            with open("/mnt/etc/mkinitcpio.d/linux.preset", "w") as f:
+                f.write("PRESETS=('default' 'fallback')\n\n"
+                        "ALL_config=\"/etc/mkinitcpio.conf\"\n"
+                        "ALL_kver=\"/boot/vmlinuz-linux\"\n\n"
+                        "default_image=\"/boot/initramfs-linux.img\"\n"
+                        "fallback_image=\"/boot/initramfs-linux-fallback.img\"\n"
+                        "fallback_options=\"-S autodetect\"\n")
+            self.run_cmd("arch-chroot /mnt mkinitcpio -P")
 
             self.log(90, "Installing GRUB bootloader...")
             grub_default = """
@@ -1475,6 +1494,7 @@ class ArchangelOSInstallerWindow(QMainWindow):
         self.input_root_pass = QLineEdit()
         self.input_root_pass.setEchoMode(QLineEdit.EchoMode.Password)
         self.input_root_pass.setEnabled(False)
+        self.input_root_pass.setPlaceholderText("Optional, empty uses your password")
 
         fields = [
             ("FULL NAME", self.input_fullname, 0, 0, 1),
@@ -1640,7 +1660,7 @@ class ArchangelOSInstallerWindow(QMainWindow):
         hostname = self.input_hostname.text().strip() or "archangelos"
         timezone = self.selected_timezone()
         keymap = self.selected_keymap()
-        root_password = password if self.check_same_root.isChecked() else self.input_root_pass.text()
+        root_password = password if self.check_same_root.isChecked() else (self.input_root_pass.text() or password)
 
         config = {
             "disk": selected_disk,
@@ -1742,9 +1762,6 @@ class ArchangelOSInstallerWindow(QMainWindow):
                 return
             if p1 != p2:
                 QMessageBox.warning(self, "Password Mismatch", "Passwords do not match. Please enter matching passwords.")
-                return
-            if not self.check_same_root.isChecked() and not self.input_root_pass.text():
-                QMessageBox.warning(self, "Root Password Required", "Please enter a password for the root account.")
                 return
 
             self.populate_summary()

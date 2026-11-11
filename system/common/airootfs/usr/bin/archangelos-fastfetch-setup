@@ -1,0 +1,39 @@
+#!/bin/bash
+# Wire the ArchangelOS 'arcfetch' banner (real image logo via chafa) into
+# interactive shells. Replaces any older bare-fastfetch banner.
+set -u
+
+bash_banner() {
+  cat << 'FEOF'
+
+# ArchangelOS branded system info banner
+if [ -t 0 ] && command -v arcfetch >/dev/null 2>&1; then
+    arcfetch
+fi
+FEOF
+}
+
+fish_banner() {
+  cat << 'FISHFEOF'
+
+# ArchangelOS branded system info banner
+if status is-interactive && command -q arcfetch
+    arcfetch
+end
+FISHFEOF
+}
+
+for rc in /etc/skel/.bashrc /etc/skel/.zshrc; do
+  [ -f "$rc" ] || continue
+  sed -i '/fastfetch[[:space:]]*$/d; /archangelos\/fastfetch/d' "$rc"
+  grep -q 'arcfetch' "$rc" 2>/dev/null || bash_banner >> "$rc"
+done
+
+fish_rc=/etc/skel/.config/fish/config.fish
+if [ -d /etc/skel/.config/fish ]; then
+  [ -f "$fish_rc" ] || touch "$fish_rc"
+  sed -i '/fastfetch[[:space:]]*$/d; /archangelos\/fastfetch/d' "$fish_rc"
+  grep -q 'arcfetch' "$fish_rc" 2>/dev/null || fish_banner >> "$fish_rc"
+fi
+
+exit 0

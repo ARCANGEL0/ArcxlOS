@@ -4,6 +4,8 @@ hl.window_rule({ match = { title = "^archangelos-welcome$" },  float = true, cen
 hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true, center = true, size = "1040 700" })
 
 hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1020 548" })
+hl.config({ binds = { disable_keybind_grabbing = true } })
+hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
 local themes_dir = (os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")) .. "/hypr/themes"
 local active_theme = nil
@@ -43,7 +45,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("/usr/bin/archangelos-launcher")
     hl.exec_cmd([[bash -c '
         conf="${XDG_CONFIG_HOME:-$HOME/.config}/archangelos/appearance.conf"
-        CURSOR_THEME=Future-dark-cursors; ICON_THEME=Zafiro-Nord-Dark-Black; CURSOR_SIZE=24
+        CURSOR_THEME=Crystal; ICON_THEME=Arcanum; CURSOR_SIZE=24
         [ -f "$conf" ] && . "$conf" 2>/dev/null
         hyprctl setcursor "$CURSOR_THEME" "$CURSOR_SIZE"
         hyprctl keyword env XCURSOR_THEME,"$CURSOR_THEME"

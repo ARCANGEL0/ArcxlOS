@@ -13,10 +13,8 @@ BarPopout {
     implicitWidth: 320
     bodyHeight: batCol.implicitHeight + 24
 
-    PowerProfile { id: pp }
-    Component.onCompleted: pp.refresh()
-    onOpened: { pp.error = ""; pp.refresh(); }
-    Timer { interval: 4000; repeat: true; running: pop.shown; onTriggered: pp.refresh() }
+    onOpened: { PowerMode.error = ""; PowerMode.refresh(); }
+    Timer { interval: 4000; repeat: true; running: pop.shown; onTriggered: PowerMode.refresh() }
 
     ColumnLayout {
         id: batCol
@@ -70,7 +68,7 @@ BarPopout {
                       desc: "Best performance, uses more battery", tone: Config.warning },
                     { id: "balanced",    label: "NEUTRAL",     icon: "bolt",
                       desc: "Balances performance and battery life", tone: Config.success },
-                    { id: "power-saver", label: "POWER SAVING", icon: "eco",
+                    { id: "saver", label: "POWER SAVING", icon: "eco",
                       desc: "Saves battery, reduces performance", tone: Config.info }
                 ]
                 Item {
@@ -78,7 +76,7 @@ BarPopout {
                     Layout.fillWidth: true
                     implicitHeight: 52
                     required property var modelData
-                    readonly property bool active: pp.profile === modeRow.modelData.id
+                    readonly property bool active: PowerMode.mode === modeRow.modelData.id
 
                     Rectangle {
                         anchors.fill: parent
@@ -124,7 +122,7 @@ BarPopout {
                     StateLayer {
                         ovRadius: 10
                         tint: modeRow.active ? Config.accentText : Config.fg
-                        onTapped: pp.apply(modeRow.modelData.id)
+                        onTapped: PowerMode.apply(modeRow.modelData.id)
                     }
                 }
             }
@@ -133,10 +131,10 @@ BarPopout {
         Text {
             Layout.fillWidth: true
             visible: text !== ""
-            text: pp.pending !== "" ? "Switching power mode…" : pp.error
+            text: PowerMode.pending !== "" ? "Switching power mode…" : PowerMode.error
             textFormat: Text.PlainText
             wrapMode: Text.Wrap
-            color: pp.pending !== "" ? Config.dim : Config.error
+            color: PowerMode.pending !== "" ? Config.dim : Config.error
             font.family: Config.textFont
             font.pixelSize: 10
         }

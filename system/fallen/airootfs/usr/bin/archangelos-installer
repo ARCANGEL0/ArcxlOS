@@ -327,6 +327,19 @@ if [ "$NEW_PASSWORD" != "$NEW_PASSWORD_CONFIRM" ]; then
     cleanup_and_exit 1
 fi
 
+read -rsp "Root password (leave empty to use the same as $NEW_USER): " ROOT_PASSWORD
+echo ""
+if [ -n "$ROOT_PASSWORD" ]; then
+    read -rsp "Confirm root password: " ROOT_PASSWORD_CONFIRM
+    echo ""
+    if [ "$ROOT_PASSWORD" != "$ROOT_PASSWORD_CONFIRM" ]; then
+        log_error "Root passwords do not match."
+        cleanup_and_exit 1
+    fi
+else
+    ROOT_PASSWORD="$NEW_PASSWORD"
+fi
+
 log_info "Initializing base system with pacstrap..."
 if pacstrap -K /mnt base base-devel linux linux-firmware intel-ucode amd-ucode efibootmgr grub os-prober ntfs-3g networkmanager hyprland quickshell hyprpaper hyprlock hypridle xdg-desktop-portal-hyprland qt6-wayland pipewire pipewire-pulse pipewire-alsa wireplumber dolphin sddm qt6-svg qt6-5compat qt6-multimedia qt6-multimedia-ffmpeg qt6-declarative sudo zsh rsync yay reflector; then
     log_info "pacstrap completed successfully."
@@ -386,8 +399,8 @@ if arch-chroot /mnt id "liveuser" &>/dev/null; then
 fi
 
 run_cmd "arch-chroot /mnt useradd -m -g users -G wheel,power,audio,video,storage -s /bin/zsh \"$NEW_USER\""
-echo "$NEW_USER:$NEW_PASSWORD" | arch-chroot /mnt chpasswd
-echo "root:$NEW_PASSWORD" | arch-chroot /mnt chpasswd
+printf '%s:%s\n' "$NEW_USER" "$NEW_PASSWORD" | arch-chroot /mnt chpasswd
+printf 'root:%s\n' "$ROOT_PASSWORD" | arch-chroot /mnt chpasswd
 
 # Materialize the ArcShell desktop for the freshly-created on-disk user. useradd
 # built the home from /etc/skel, which carries the hypr/systemd config but NOT the
@@ -399,7 +412,9 @@ log_info "Baking the ArcShell desktop for $NEW_USER..."
 arch-chroot /mnt su - "$NEW_USER" -c /usr/bin/archangelos-engine-init \
     || log_warn "ArcShell desktop bake failed for $NEW_USER; the desktop may need manual setup on first login."
 
-echo "%wheel ALL=(ALL:ALL) ALL" >> /mnt/etc/sudoers
+mkdir -p /mnt/etc/sudoers.d
+printf '%%wheel ALL=(ALL:ALL) ALL\n' > /mnt/etc/sudoers.d/wheel
+chmod 0440 /mnt/etc/sudoers.d/wheel
 
 log_info "Configuring mkinitcpio.conf and linux.preset for the target system..."
 cat << 'EOF' > /mnt/etc/mkinitcpio.conf

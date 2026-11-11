@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONF="${ARCHANGELOS_WP_CONF:-/etc/archangelos/wallpaper.conf}"
+[ -f "$CONF" ] && . "$CONF"
+
+POOL_DIR="${POOL_DIR:-/usr/share/backgrounds/archangelos/wallpapers}"
+HOTLOAD_IMAGE="${HOTLOAD_IMAGE:-default.png}"
+DEFAULT_VIDEOS="${DEFAULT_VIDEOS:-}"
+RANDOM_VIDEO="${RANDOM_VIDEO:-0}"
+CACHE_DIR="${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}/archangelos"
+mkdir -p "$CACHE_DIR" 2>/dev/null || true
+VPN_PIDFILE="$CACHE_DIR/mpvpaper.pids"
+
+usage() {
+  cat <<EOF
+Usage: archangelos-wallpaper <command>
+
+Commands:
+  boot       Apply the hot-load image instantly, then start the default video
+             wallpaper (a random pick is made when RANDOM_VIDEO=1 and several
+             default videos are configured).
+  set <name> Set a specific wallpaper from the pool. Videos are played with
+             mpvpaper, images are set with awww (falling back to swaybg).
+  random     Pick and apply a random wallpaper from the pool.
+  stop       Stop any running video wallpaper and restore the hot-load image.
+  list       List the wallpapers available in the pool.
+  help       Show this help message.
+EOF
+}
+
+log() { printf '[archangelos-wallpaper] %s\n' "$*"; }
+
+outputs() {
+  local json=""
+  if command -v hyprctl &>/dev/null; then
+    json="$(hyprctl -j monitors 2>/dev/null | tr ',' '\n' | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p')"
+  elif command -v wlr-randr &>/dev/null; then
+    json="$(wlr-randr --json 2>/dev/null | tr ',' '\n' | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p')"
+  fi
+  printf '%s' "$json"
+}
+
+static_cmd() {
+  local img="$1"
+  if command -v awww &>/dev/null; then
+    command -v awww-daemon &>/dev/null && { pgrep -fx awww-daemon &>/dev/null || { awww-daemon & disown; sleep 1; }; }
+    awww img "$img" 2>/dev/null && return 0
+  fi
+  if command -v swaybg &>/dev/null; then
+    pkill -f 'swaybg' 2>/dev/null || true
+    nohup swaybg -i "$img" >/dev/null 2>&1 & disown
+    return 0
+  fi
+  if command -v hyprctl &>/dev/null; then
+    hyprctl hyprpaper preload "$img" >/dev/null 2>&1 || true
+    hyprctl hyprpaper wallpaper ", $img" >/dev/null 2>&1 || true
+  fi
+  return 0
+}
+
+stop_video() {
+  [ -f "$VPN_PIDFILE" ] || return 0
+  mapfile -t pids < "$VPN_PIDFILE" 2>/dev/null || return 0
+  for p in "${pids[@]}"; do
+    [ -n "$p" ] && kill "$p" 2>/dev/null || true
+  done
+  : > "$VPN_PIDFILE"
+}
+
+vid_name() { basename "$1"; }
+
+run_video() {
+  local video="$1" out pids_str=""
+  stop_video
+  pkill -f 'mpvpaper' 2>/dev/null || true
+  sleep 0.3
+  local outs
+  outs="$(outputs)"
+  if [ -n "$outs" ]; then
+    for out in $outs; do
+      [ -z "$out" ] && continue
+      mpvpaper -o 'loop' "$out" "$video" >/dev/null 2>&1 &
+      pids_str="$pids_str $!"
+    done
+  else
+    mpvpaper -o 'loop' eDP-1 "$video" >/dev/null 2>&1 &
+    pids_str=" $!"
+  fi
+  [ -n "$pids_str" ] && echo "$pids_str" | tr ' ' '\n' | sed '/^$/d' > "$VPN_PIDFILE"
+  log "video wallpaper: $(vid_name "$video")"
+}
+
+apply_one() {
+  local name="$1" resolved=""
+  case "$name" in
+    /*) resolved="$name" ;;
+    *)  resolved="$POOL_DIR/$name" ;;
+  esac
+  if [ ! -f "$resolved" ]; then
+    log "error: wallpaper not found: $resolved" >&2
+    return 1
+  fi
+  case "$resolved" in
+    *.mp4|*.webm|*.mkv|*.mov) run_video "$resolved" ;;
+    *) static_cmd "$resolved"; log "static wallpaper: $(basename "$resolved")" ;;
+  esac
+}
+
+cmd_boot() {
+  local picked="$HOTLOAD_IMAGE"
+  static_cmd "$POOL_DIR/$HOTLOAD_IMAGE" 2>/dev/null || true
+  if [ -n "$DEFAULT_VIDEOS" ]; then
+    if [ "$RANDOM_VIDEO" = "1" ]; then
+      picked="$(printf '%s\n' $DEFAULT_VIDEOS | shuf -n1 | head -1)"
+    else
+      picked="${DEFAULT_VIDEOS%% *}"
+    fi
+    apply_one "$picked"
+  fi
+}
+
+cmd_set() {
+  [ $# -ge 1 ] || { usage; return 1; }
+  apply_one "$1"
+}
+
+cmd_random() {
+  local pick
+  pick="$(find "$POOL_DIR" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \) 2>/dev/null | shuf -n1 | head -1)"
+  [ -n "$pick" ] || { log "error: pool is empty"; return 1; }
+  apply_one "$pick"
+}
+
+cmd_list() {
+  find "$POOL_DIR" -maxdepth 1 -type f 2>/dev/null | while read -r f; do
+    echo "  $(basename "$f")"
+  done
+}
+
+cmd="${1:-boot}"
+shift || true
+case "$cmd" in
+  boot)    cmd_boot ;;
+  set)     cmd_set "$@" ;;
+  random)  cmd_random ;;
+  stop)    stop_video; static_cmd "$POOL_DIR/$HOTLOAD_IMAGE" 2>/dev/null || true ;;
+  list)    cmd_list ;;
+  help|-h) usage ;;
+  *)       usage; exit 1 ;;
+esac

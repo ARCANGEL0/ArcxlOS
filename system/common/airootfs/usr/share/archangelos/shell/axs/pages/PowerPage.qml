@@ -1,5 +1,3 @@
-// Power & Battery — battery state and health, power profile, when the screen dims, turns off and
-// the machine sleeps, and the session buttons.
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
@@ -27,7 +25,6 @@ PageScaffold {
         return h > 0 ? h + " h " + m + " min" : m + " min";
     }
 
-    // ── battery card ───────────────────────────────────────────────────────────
     Rectangle {
         visible: page.hasBattery
         width: parent.width; height: 150
@@ -49,7 +46,6 @@ PageScaffold {
                         : !page.charging && page.dev && page.dev.timeToEmpty > 0 ? page.dur(page.dev.timeToEmpty) + " left"
                         : page.full ? "Ready to go" : "" }
         }
-        // a cell gauge, ten notches
         Row {
             anchors.right: parent.right; anchors.rightMargin: 32; anchors.verticalCenter: parent.verticalCenter
             spacing: 5
@@ -84,24 +80,16 @@ PageScaffold {
         }
     }
 
-    // power-profiles-daemon where it can, the CPU governor where it can't (see power-mode)
-    property var pm: ({ mode: "balanced", ppd: "0", native_perf: "0" })
-    property string pmBusy: ""
-    Cmd { id: pmCmd }
-    function readMode() {
-        pmCmd.run(["/usr/lib/archangelos/power-mode", "get"], (c, o) => {
-            const m = {}; for (const l of o.split("\n")) { const i = l.indexOf("="); if (i > 0) m[l.slice(0, i)] = l.slice(i + 1); }
-            if (m.mode) page.pm = m;
-        });
-    }
-    Component.onCompleted: readMode()
+    readonly property var pm: NSS.PowerMode
+    onVisibleChanged: if (visible) pm.refresh()
+    Timer { interval: 4000; repeat: true; running: page.visible; onTriggered: page.pm.refresh() }
     readonly property var modes: ["saver", "balanced", "performance"]
     Section {
         title: "Performance"
         SRow {
             icon: page.pm.mode === "performance" ? "rocket_launch" : page.pm.mode === "saver" ? "eco" : "bolt"
             title: "Power mode"
-            desc: page.pmBusy !== "" ? "Switching…"
+            desc: page.pm.pending !== "" ? "Switching…"
                 : page.pm.mode === "performance" ? "Maximum speed: the CPU runs flat out, using more power and running warmer"
                 : page.pm.mode === "saver" ? "Slower and quieter, stretches the battery"
                 : "A balance of speed and battery"
@@ -109,15 +97,11 @@ PageScaffold {
                 anchors.verticalCenter: parent.verticalCenter
                 options: ["Saver", "Balanced", "Performance"]
                 current: page.modes.indexOf(page.pm.mode)
-                onPicked: (i) => {
-                    page.pmBusy = page.modes[i];
-                    page.pm = Object.assign({}, page.pm, { mode: page.modes[i] });
-                    pmCmd.run(["/usr/lib/archangelos/power-mode", "set", page.modes[i]], () => { page.pmBusy = ""; page.readMode(); });
-                }
+                onPicked: (i) => page.pm.apply(page.modes[i])
             }
         }
         SRow {
-            visible: page.pm.mode === "performance" && page.pm.native_perf !== "1"
+            visible: page.pm.mode === "performance" && !page.pm.nativePerf
             icon: "info"; dim: true
             title: "Performance through the CPU governor"
             desc: "This machine's firmware has no performance profile of its own, so ArchangelOS sets the processor to full speed directly."

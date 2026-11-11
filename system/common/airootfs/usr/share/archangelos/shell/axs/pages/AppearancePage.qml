@@ -48,10 +48,10 @@ PageScaffold {
               + 'case "$n" in hicolor|default|locolor) continue;; esac; [ -f "${t}index.theme" ] || continue; [ -d "${t}cursors" ] && continue; '
               + 'echo "$n"; done; done | sort -u; '
               + 'echo "--current"; . "$1" 2>/dev/null; '
-              + 'echo "cursor=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d \"\\x27\" || echo "$CURSOR_THEME")"; '
-              + 'echo "icon=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d \"\\x27\" || echo "$ICON_THEME")"; '
+              + 'echo "cursor=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d \"\\047\" || echo "$CURSOR_THEME")"; '
+              + 'echo "icon=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d \"\\047\" || echo "$ICON_THEME")"; '
               + 'echo "size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null || echo "${CURSOR_SIZE:-24}")"; '
-              + 'echo "gtk=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "\\x27" || echo "$GTK_THEME")"; '
+              + 'echo "gtk=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "\\047" || echo "$GTK_THEME")"; '
               + 'echo "--gtk"; for d in /usr/share/themes "$HOME/.themes"; do [ -d "$d" ] || continue; for t in "$d"/*/; do { [ -d "${t}gtk-3.0" ] || [ -d "${t}gtk-4.0" ]; } && basename "$t"; done; done | sort -u', [page.conf], (c, o) => {
             const sec = (a, b) => { const i = o.indexOf(a), j = b ? o.indexOf(b) : o.length; return i < 0 ? "" : o.slice(i + a.length, j < 0 ? o.length : j); };
             page.cursorThemes = sec("--cursors", "--icons").split("\n").filter(l => l.trim());
