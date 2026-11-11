@@ -3,7 +3,7 @@ hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, cen
 hl.window_rule({ match = { title = "^archangelos-welcome$" },  float = true, center = true })
 hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true, center = true, size = "1040 700" })
 
-hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1000 640" })
+hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1020 548" })
 
 local themes_dir = (os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")) .. "/hypr/themes"
 local active_theme = nil
