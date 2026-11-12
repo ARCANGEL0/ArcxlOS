@@ -26,11 +26,11 @@ import "../."
 // Global shell state.
 //
 // WiFi / Bluetooth  — owned by QuickSettings (nmcli / bluetoothctl)
-// Night Light       — owned by QuickSettings (hyprsunset)
+// Night Light       — owned by ArchangelOS Settings (axs/NightLight); QuickSettings toggles it
 // Caffeine          — owned by QuickSettings (systemd-inhibit)
 // Hotspot           — owned by QuickSettings (nmcli hotspot)
 // Airplane Mode     — owned by QuickSettings (rfkill)
-// Focus Mode        — owned by QuickSettings; TopBar reacts to hide + zero gaps
+// Focus Mode        — owned by QuickSettings; TopBar reacts to hide + flatten gaps
 // DND               — read by NotificationService to suppress incoming notifications
 // VPN               — written by VPNTab; read by Network.qml for bar icon
 
@@ -43,9 +43,18 @@ QtObject {
 
     property bool focusMode:    false
     property bool dnd:          false
+    property bool _dndBeforeFocus: false
+    onFocusModeChanged: {
+        if (!PrefsService.focusAutoDnd) return
+        if (focusMode) { _dndBeforeFocus = dnd; dnd = true }
+        else dnd = _dndBeforeFocus
+    }
     property bool screenRecord: false
     property bool hotspot:      false
     property bool airplane:     false
+    property bool islandExpanded: false
+    property bool shellHidden: false
+    property bool booted: false
 
     // WiFi — false when radio is off OR hotspot is using the interface
     property bool wifiOn:       false
@@ -90,25 +99,41 @@ QtObject {
                     _saveConfigProc.command = ["bash", "-c", "mkdir -p \"$(dirname '" + p + "')\" && printf '%s' '" + jsonStr.replace(/'/g, "'\\''") + "' > '" + p + "'"]
                     _saveConfigProc.running = true
                 }
-                root.applyZeroGaps()
+                root.applyWindowGaps()
+                root.applyWindowRounding()
             }
         }
     }
 
-    property Process zeroGapsProcess: Process { command: [] }
-    property Timer zeroGapsTimer: Timer {
+    property Process gapsProcess: Process { command: [] }
+    property Timer gapsTimer: Timer {
         interval: 10
-        onTriggered: root.zeroGapsProcess.running = true
+        onTriggered: root.gapsProcess.running = true
     }
 
-    function applyZeroGaps() {
-        zeroGapsProcess.running = false
+    function applyWindowGaps() {
+        if (focusMode) return
+        var pad = Math.max(0, Math.round(PrefsService.windowPadding))
+        gapsProcess.running = false
         if (configProvider === "lua") {
-            zeroGapsProcess.command = ["bash", "-c", "hyprctl eval \"hl.config({ general = { gaps_out = 0 } })\""]
+            gapsProcess.command = ["bash", "-c", "hyprctl eval \"hl.config({ general = { gaps_out = " + pad + " } })\""]
         } else {
-            zeroGapsProcess.command = ["hyprctl", "keyword", "general:gaps_out", "0"]
+            gapsProcess.command = ["hyprctl", "keyword", "general:gaps_out", String(pad)]
         }
-        zeroGapsTimer.restart()
+        gapsTimer.restart()
+    }
+
+    property Process roundingProcess: Process { command: [] }
+
+    function applyWindowRounding() {
+        var r = Math.max(0, Math.round(PrefsService.windowRounding))
+        roundingProcess.running = false
+        if (configProvider === "lua") {
+            roundingProcess.command = ["bash", "-c", "hyprctl eval \"hl.config({ decoration = { rounding = " + r + " } })\""]
+        } else {
+            roundingProcess.command = ["hyprctl", "keyword", "decoration:rounding", String(r)]
+        }
+        roundingProcess.running = true
     }
 
     property Process _saveConfigProc: Process {

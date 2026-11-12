@@ -23,6 +23,9 @@ import Quickshell.Io
 import Quickshell.Services.Mpris
 import "../../"
 import "../Right/"
+import "../../components"
+import "../../components"
+import "../../components"
 
 // CenterContent — scrollable dynamic island carousel.
 //
@@ -51,12 +54,37 @@ Item {
 	readonly property bool mediaUp: MediaService.activePlayer !== null
 		&& (MediaService.activePlayer.playbackState === MprisPlaybackState.Playing
 		 || MediaService.activePlayer.playbackState === MprisPlaybackState.Paused)
-	// with a track the island keeps its idle size (clock over cava); hover expands it to the player
 	property bool notchHovered: false
 	readonly property bool showMedia: mediaUp && notchHovered
-	width:  Math.round(Theme.cNotchMinWidth * localScale)
-	implicitWidth: width
-	height: Math.round((showMedia ? 62 : (mediaUp ? 34 : 30)) * localScale)
+	readonly property bool onClock: (root._items[root._carouselIndex] ?? "clock") === "clock"
+	readonly property string mode: !onClock ? "carousel"
+		: mediaUp ? (expand ? "mediaHover" : "media")
+		: (expand ? "clockHover" : "clock")
+	readonly property bool expand: notchHovered && PrefsService.islandHoverExpand
+	readonly property int idleClockW: PrefsService.islandIdleClockSize === "small" ? 24 : PrefsService.islandIdleClockSize === "large" ? 40 : 30
+	readonly property int idleWidth: PrefsService.islandIdleWidth === "small" ? 156 : PrefsService.islandIdleWidth === "large" ? 240 : 200
+	readonly property int clockSize: PrefsService.islandClockSize === "small" ? 22 : PrefsService.islandClockSize === "large" ? 40 : 28
+	readonly property int islandWidth: Math.round(({ clock: idleWidth, clockHover: 300, media: 240, mediaHover: 450, carousel: Theme.cNotchMinWidth })[mode] * localScale)
+	readonly property int idleClockH: PrefsService.islandIdleClockSize === "small" ? 34 : PrefsService.islandIdleClockSize === "large" ? 52 : 44
+	readonly property int islandHeight: Math.round(({ clock: idleClockH, clockHover: 96, media: Theme.notchHeight, mediaHover: 148, carousel: Theme.notchHeight })[mode] * localScale)
+	width: islandWidth
+	implicitWidth: islandWidth
+	height: islandHeight
+	Behavior on width { Liquid {} }
+	Behavior on height { Liquid {} }
+
+	property var now: new Date()
+	Timer { interval: 1000; running: true; repeat: true; onTriggered: root.now = new Date() }
+	readonly property string timeFormat: PrefsService.use24HourTime ? "hh:mm" : "h:mm"
+	readonly property string timeText: Qt.formatDateTime(root.now, root.timeFormat)
+	readonly property int weekNumber: {
+		const d = new Date(Date.UTC(root.now.getFullYear(), root.now.getMonth(), root.now.getDate()))
+		const day = d.getUTCDay() || 7
+		d.setUTCDate(d.getUTCDate() + 4 - day)
+		const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+		return Math.ceil(((d - yearStart) / 86400000 + 1) / 7)
+	}
+	readonly property int dayOfYear: Math.floor((new Date(root.now.getFullYear(), root.now.getMonth(), root.now.getDate()) - new Date(root.now.getFullYear(), 0, 0)) / 86400000)
 
 	// feed the notch visualiser whenever media is on the island
 	Binding {
@@ -130,7 +158,6 @@ Item {
 	property var  _items:         ["clock"]
 	property int  _carouselIndex: 0
     on_CarouselIndexChanged: {
-        CavaService.notchMusicVisible = (_items.indexOf("music") >= 0 && _carouselIndex === _items.indexOf("music"))
     }
 	readonly property real _itemStride: Math.round(45 * localScale)  // 30px height + 15px spacing
 
@@ -164,8 +191,6 @@ Item {
 		root._carouselIndex = idx
 		statusList.contentY = idx * root._itemStride
 
-		// Signal CavaService whether music carousel is visible
-		CavaService.notchMusicVisible = (list.indexOf("music") >= 0 && root._carouselIndex === list.indexOf("music"))
 	}
 
 	// Force-scroll to a specific type regardless of where the user is
@@ -251,6 +276,48 @@ Item {
 	readonly property int _cavaBars: CavaService.barCount
 	readonly property var _bars:     CavaService.bars
 
+	component Liquid: SpringAnimation {
+		spring: PrefsService.islandMotion === "Snappy" ? 11 : PrefsService.islandMotion === "Calm" ? 3.5 : 7
+		damping: PrefsService.islandMotion === "Snappy" ? 0.75 : PrefsService.islandMotion === "Calm" ? 0.55 : 0.42
+		epsilon: 0.3
+	}
+
+	component Reveal: SequentialAnimation {
+		property bool shown: false
+		property int delay: 0
+		PauseAnimation { duration: shown ? delay : 0 }
+		NumberAnimation { duration: shown ? 200 : 90; easing.type: Easing.OutCubic }
+	}
+
+	component CavaStrip: Item {
+		id: strip
+		property int count: 32
+		readonly property real barWidth: Math.max(2, Math.min(Math.round(3 * root.localScale), strip.width / strip.count * 0.6))
+		Row {
+			anchors.fill: parent
+			spacing: Math.max(1, (strip.width - strip.count * strip.barWidth) / Math.max(1, strip.count - 1))
+			Repeater {
+				model: strip.count
+				delegate: Item {
+					required property int index
+					readonly property int amp: MediaService.isPlaying
+						? (root._bars[Math.floor(index * root._cavaBars / strip.count)] ?? 0)
+						: 0
+					width: strip.barWidth
+					height: strip.height
+					Rectangle {
+						anchors.centerIn: parent
+						width: strip.barWidth
+						height: Math.max(2, (parent.amp / 100.0) * strip.height)
+						radius: width / 2
+						color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, MediaService.isPlaying ? 0.35 + (parent.amp / 100.0) * 0.65 : 0.4)
+						Behavior on height { NumberAnimation { duration: 90 } }
+					}
+				}
+			}
+		}
+	}
+
 	// ── Carousel (clock by default; music / timer / recording scroll in) ───────
 	Item {
 		anchors.fill: parent
@@ -324,110 +391,257 @@ Item {
 				required property string modelData
 				required property int    index
 
-				width:  Math.round(Theme.cNotchMinWidth * localScale)
+				width:  statusList.width
 				height: statusList.height
 
-				// ── Clock + media (the island's resting face) ──────────────────
-				// idle: the time alone; with a track: a small clock riding over the cava strip;
-				// hovered: full date + time, the strip beneath, then the controls
-				Column {
+				Item {
+					id: face
+					anchors.fill: parent
 					visible: modelData === "clock"
-					anchors.centerIn: parent
-					spacing: Math.round((root.showMedia ? 4 : 1) * localScale)
 
-					Row {
-						anchors.horizontalCenter: parent.horizontalCenter
-						spacing: Math.round(6 * localScale)
-						Text {
-							id: dateText
-							anchors.verticalCenter: parent.verticalCenter
-							visible: root.showMedia
-							text: Qt.formatDateTime(new Date(), "dddd, d MMMM")
-							color: Theme.subtext
-							font.pixelSize: Math.round(12 * localScale)
-							font.bold: true
-							Timer { interval: 30000; running: root.showMedia; repeat: true; triggeredOnStart: true
-								onTriggered: dateText.text = Qt.formatDateTime(new Date(), "dddd, d MMMM") }
-						}
-						Text {
-							visible: root.showMedia
-							anchors.verticalCenter: parent.verticalCenter
-							text: "·"; color: Theme.subtext
-							font.pixelSize: Math.round(12 * localScale)
-						}
-						Item {
-							anchors.verticalCenter: parent.verticalCenter
-							width:  clk.implicitWidth * clk.scale
-							height: Math.round((root.mediaUp && !root.showMedia ? 15 : 20) * localScale)
-							Clock {
-								id: clk
-								localScale: root.localScale
-								anchors.centerIn: parent
-								scale: root.showMedia ? 0.8 : (root.mediaUp ? 0.72 : 1.0)
-								Behavior on scale { NumberAnimation { duration: Anim.mediumFast; easing.type: Anim.outCubic } }
-							}
-						}
-					}
+					readonly property real u: root.localScale
+					readonly property real tw: root.islandWidth
+					readonly property real th: root.islandHeight
 
-					// cava — spans the island corner to corner
 					Item {
-						id: cavaStrip
-						visible: root.mediaUp && PrefsService.enableVisualiser
-						width: Math.round((Theme.cNotchMinWidth - Theme.notchPadding * 2) * localScale)
-						height: Math.round((root.showMedia ? 14 : 10) * localScale)
-						Behavior on height { NumberAnimation { duration: Anim.mediumFast; easing.type: Anim.outCubic } }
-						readonly property int n: 44
-						readonly property real bw: Math.round(2 * localScale)
-						Row {
-							anchors.fill: parent
-							spacing: Math.max(1, (cavaStrip.width - cavaStrip.n * cavaStrip.bw) / (cavaStrip.n - 1))
-							Repeater {
-								model: cavaStrip.n
-								delegate: Item {
-									required property int index
-									readonly property int amp: root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] !== undefined ? root._bars[Math.floor(index * root._cavaBars / cavaStrip.n)] : 0
-									width: cavaStrip.bw
-									height: cavaStrip.height
-									Rectangle {
-										anchors.centerIn: parent
-										width: cavaStrip.bw
-										height: Math.max(2, (amp / 100.0) * cavaStrip.height)
-										radius: width / 2
-										color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.28 + (amp / 100.0) * 0.72)
-									}
-								}
-							}
+						id: plain
+						anchors.fill: parent
+						visible: !root.mediaUp
+						readonly property bool open: root.mode === "clockHover"
+						readonly property real idleScale: 0.7
+						readonly property real stackH: pTime.implicitHeight + pDate.implicitHeight + 3 * face.u + (PrefsService.islandShowWeek ? pWeek.implicitHeight + 3 * face.u : 0)
+						readonly property real topY: (face.th - stackH) / 2
+
+						Text {
+							id: pTime
+							text: root.timeText
+							color: Theme.text
+							font.pixelSize: plain.open ? Math.round(root.clockSize * face.u) : Math.round(root.idleClockW * face.u)
+							font.bold: true
+							transformOrigin: Item.TopLeft
+							scale: plain.open ? 1 : plain.idleScale
+							x: plain.open ? (face.tw - pTime.implicitWidth - (PrefsService.islandShowSeconds ? pSec.implicitWidth + 3 * face.u : 0)) / 2
+							              : (face.tw - pTime.implicitWidth * plain.idleScale) / 2
+							y: plain.open ? plain.topY : (face.th - pTime.implicitHeight * plain.idleScale) / 2
+							Behavior on x { Liquid {} }
+							Behavior on y { Liquid {} }
+							Behavior on scale { Liquid {} }
+						}
+						Text {
+							id: pSec
+							text: Qt.formatDateTime(root.now, ":ss") + (PrefsService.use24HourTime ? "" : Qt.formatDateTime(root.now, " AP"))
+							color: Theme.active
+							font.pixelSize: Math.round(14 * face.u)
+							font.bold: true
+							x: pTime.x + pTime.implicitWidth * pTime.scale + 3 * face.u
+							y: pTime.y + pTime.baselineOffset * pTime.scale - pSec.baselineOffset
+							opacity: plain.open && PrefsService.islandShowSeconds ? 1 : 0
+							Behavior on opacity { Reveal { shown: plain.open; delay: 40 } }
+						}
+						Text {
+							id: pDate
+							text: Qt.formatDateTime(root.now, "dddd, d MMMM yyyy")
+							color: Theme.subtext
+							font.pixelSize: Math.round(13 * face.u)
+							font.bold: true
+							x: (face.tw - implicitWidth) / 2
+							y: plain.topY + pTime.implicitHeight + 3 * face.u + (plain.open ? 0 : -10 * face.u)
+							opacity: plain.open ? 1 : (PrefsService.islandIdleShowDate ? 1 : 0)
+							Behavior on x { Liquid {} }
+							Behavior on y { Liquid {} }
+							Behavior on opacity { Reveal { shown: plain.open; delay: 60 } }
+						}
+						Text {
+							id: pWeek
+							text: "Week " + root.weekNumber + "  ·  Day " + root.dayOfYear
+							color: Qt.rgba(Theme.subtext.r, Theme.subtext.g, Theme.subtext.b, 0.6)
+							font.pixelSize: Math.round(11 * face.u)
+							x: (face.tw - implicitWidth) / 2
+							y: pDate.y + pDate.implicitHeight + 3 * face.u
+							opacity: plain.open && PrefsService.islandShowWeek ? 1 : 0
+							Behavior on x { Liquid {} }
+							Behavior on opacity { Reveal { shown: plain.open; delay: 40 } }
 						}
 					}
 
-					// controls — only while hovered
-					Row {
-						visible: root.showMedia
-						opacity: root.showMedia ? 1 : 0
-						Behavior on opacity { NumberAnimation { duration: Anim.transition } }
-						anchors.horizontalCenter: parent.horizontalCenter
-						spacing: Math.round(18 * localScale)
-						Repeater {
-							model: ["prev", "play", "next"]
-							delegate: Item {
-								required property string modelData
-								readonly property bool isPlay: modelData === "play"
-								width:  Math.round((isPlay ? 20 : 16) * localScale)
-								height: Math.round(16 * localScale)
-								anchors.verticalCenter: parent.verticalCenter
+					Item {
+						id: media
+						anchors.fill: parent
+						visible: root.mediaUp
+						readonly property bool open: root.mode === "mediaHover"
+						readonly property real idleScale: 0.5
+						readonly property real artSize: 116 * face.u
+						readonly property real pad: 16 * face.u
+						readonly property real colLeft: pad + artSize + 18 * face.u
+						readonly property real colWidth: face.tw - colLeft - 20 * face.u
+						readonly property real colCenter: colLeft + colWidth / 2
+						readonly property real barsOpenH: 24 * face.u
+						readonly property real ctrlH: 30 * face.u
+						readonly property real gap: 10 * face.u
+						readonly property real openTop: (face.th - (mTime.implicitHeight + barsOpenH + ctrlH + gap * 2)) / 2
+						readonly property real idleBarsH: 6 * face.u
+						readonly property real idleTop: (face.th - (mTime.implicitHeight * idleScale + 3 * face.u + idleBarsH)) / 2
+
+						Item {
+							id: art
+							x: media.pad
+							y: media.pad
+							width: media.artSize
+							height: media.artSize
+							transformOrigin: Item.TopLeft
+							scale: media.open ? 1 : 0.35
+							opacity: media.open ? 1 : 0
+							Behavior on scale { Liquid {} }
+							Behavior on opacity { Reveal { shown: media.open; delay: 40 } }
+
+							Rectangle {
+								anchors.fill: parent
+								radius: Math.round(16 * face.u)
+								color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.15)
+								visible: root.artUrl === ""
 								Text {
 									anchors.centerIn: parent
-									text: parent.isPlay ? (MediaService.isPlaying ? "󰏤" : "󰐊")
-									                    : (parent.modelData === "prev" ? "󰒫" : "󰒬")
-									color: ctrlMa.containsMouse ? Theme.active : Theme.text
-									font.pixelSize: Math.round((parent.isPlay ? 15 : 13) * localScale)
+									text: "♪"
+									font.pixelSize: Math.round(34 * face.u)
+									color: Theme.active
 								}
-								MouseArea {
-									id: ctrlMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-									onClicked: {
-										if (parent.modelData === "play") MediaService.toggle()
-										else if (parent.modelData === "prev") MediaService.prev()
-										else MediaService.next()
+							}
+							Rectangle {
+								id: artMaskBig
+								anchors.fill: parent
+								radius: Math.round(16 * face.u)
+								visible: false
+								layer.enabled: true
+							}
+							Image {
+								anchors.fill: parent
+								source: root.artUrl
+								sourceSize.width: Math.round(media.artSize * 2)
+								fillMode: Image.PreserveAspectCrop
+								smooth: true
+								cache: true
+								asynchronous: true
+								visible: root.artUrl !== ""
+								layer.enabled: true
+								layer.effect: MultiEffect {
+									maskEnabled: true
+									maskSource: artMaskBig
+									maskThresholdMin: 0.5
+									maskSpreadAtMin: 1.0
+								}
+							}
+							Rectangle {
+								anchors.fill: parent
+								radius: Math.round(16 * face.u)
+								color: "transparent"
+								border.width: 1
+								border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+							}
+						}
+
+						Text {
+							id: mTime
+							text: root.timeText
+							color: Theme.text
+							font.pixelSize: Math.round(24 * face.u)
+							font.bold: true
+							transformOrigin: Item.TopLeft
+							scale: media.open ? 1 : media.idleScale
+							x: media.open ? media.colCenter - (mTime.implicitWidth + 8 * face.u + mDate.implicitWidth) / 2
+							              : (face.tw - mTime.implicitWidth * media.idleScale) / 2
+							y: media.open ? media.openTop : media.idleTop
+							Behavior on x { Liquid {} }
+							Behavior on y { Liquid {} }
+							Behavior on scale { Liquid {} }
+						}
+						Text {
+							id: mDate
+							text: Qt.formatDateTime(root.now, "ddd, d MMMM")
+							color: Theme.subtext
+							font.pixelSize: Math.round(13 * face.u)
+							font.bold: true
+							x: mTime.x + mTime.implicitWidth * mTime.scale + 8 * face.u
+							y: mTime.y + mTime.baselineOffset * mTime.scale - mDate.baselineOffset
+							opacity: media.open ? 1 : 0
+							Behavior on opacity { Reveal { shown: media.open; delay: 50 } }
+						}
+
+						CavaStrip {
+							count: 40
+							x: media.open ? media.colLeft : (face.tw - 176 * face.u) / 2
+							y: media.open ? media.openTop + mTime.implicitHeight + media.gap
+							              : media.idleTop + mTime.implicitHeight * media.idleScale + 3 * face.u
+							width: media.open ? media.colWidth : 176 * face.u
+							height: media.open ? media.barsOpenH : media.idleBarsH
+							Behavior on x { Liquid {} }
+							Behavior on y { Liquid {} }
+							Behavior on width { Liquid {} }
+							Behavior on height { Liquid {} }
+						}
+
+						Row {
+							id: controls
+							x: media.colCenter - implicitWidth / 2
+							y: media.openTop + mTime.implicitHeight + media.barsOpenH + media.gap * 2 + (media.open ? 0 : 16 * face.u)
+							height: media.ctrlH
+							spacing: Math.round(26 * face.u)
+							opacity: media.open ? 1 : 0
+							visible: opacity > 0
+							Behavior on y { Liquid {} }
+							Behavior on opacity { Reveal { shown: media.open; delay: 80 } }
+							Repeater {
+								model: [
+									{ key: "prev", tip: "Previous track" },
+									{ key: "play", tip: "Play / pause" },
+									{ key: "next", tip: "Next track" }
+								]
+								delegate: Item {
+									required property var modelData
+									readonly property bool isPlay: modelData.key === "play"
+									width: Math.round((isPlay ? 30 : 22) * face.u)
+									height: Math.round(26 * face.u)
+									anchors.verticalCenter: parent.verticalCenter
+									Rectangle {
+										anchors.centerIn: parent
+										visible: parent.isPlay
+										width: parent.width + Math.round(4 * face.u)
+										height: width
+										radius: width / 2
+										color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, ctrlArea.containsMouse ? 0.32 : 0.18)
+										Behavior on color { ColorAnimation { duration: Anim.mediumFast } }
+									}
+									Text {
+										anchors.centerIn: parent
+										text: parent.isPlay ? (MediaService.isPlaying ? "󰏤" : "󰐊")
+										                    : (parent.modelData.key === "prev" ? "󰒮" : "󰒭")
+										color: ctrlArea.containsMouse ? Theme.active : Theme.text
+										font.pixelSize: Math.round((parent.isPlay ? 18 : 17) * face.u)
+										scale: ctrlArea.pressed ? 0.85 : 1
+										Behavior on scale { NumberAnimation { duration: 120 } }
+									}
+									MouseArea {
+										id: ctrlArea
+										anchors.fill: parent
+										anchors.margins: -Math.round(4 * face.u)
+										hoverEnabled: true
+										cursorShape: Qt.PointingHandCursor
+										onClicked: {
+											if (parent.modelData.key === "play") MediaService.toggle()
+											else if (parent.modelData.key === "prev") MediaService.prev()
+											else MediaService.next()
+										}
+									}
+									Tip {
+										text: parent.isPlay ? (MediaService.isPlaying ? "Pause" : "Play") : parent.modelData.tip
+										localScale: face.u
+									}
+									Tip {
+										text: parent.isPlay ? (MediaService.isPlaying ? "Pause" : "Play") : parent.modelData.tip
+										localScale: face.u
+									}
+									Tip {
+										text: parent.isPlay ? (MediaService.isPlaying ? "Pause" : "Play") : parent.modelData.tip
+										localScale: face.u
 									}
 								}
 							}
@@ -712,3 +926,4 @@ Item {
 		}
 	}
 }
+

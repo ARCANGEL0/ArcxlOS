@@ -32,6 +32,9 @@ Item {
     readonly property var _tabs: [
         { key: "general",    icon: "󰒓", label: "General"            },
         { key: "visuals",    icon: "󰏘", label: "Visuals & Behavior" },
+        { key: "island",     icon: "󰍹", label: "Island"             },
+        { key: "focus",      icon: "󰈈", label: "Focus Mode"         },
+        { key: "capture",    icon: "󰄀", label: "Capture"            },
         { key: "keybinds",   icon: "󰌌", label: "Keybinds",          hasSwitch: true },
         { key: "data",       icon: "󰋊", label: "Data & Storage"    },
         { key: "misc",       icon: "󰒓", label: "Misc"               },
@@ -130,7 +133,7 @@ Item {
                     margins: Math.round(12 * localScale)
                 }
 
-                property int pageIdx: Math.max(0, ["general", "visuals", "keybinds", "data", "misc"].indexOf(root._page))
+                property int pageIdx: Math.max(0, ["general", "visuals", "island", "focus", "capture", "keybinds", "data", "misc"].indexOf(root._page))
                 
                 property int oldIdx: pageIdx
                 property int newIdx: pageIdx
@@ -210,6 +213,18 @@ Item {
                 }
                 VerticalSlidePage {
                     myIdx: 2
+                    IslandPage { id: pageIsland; anchors.fill: parent; localScale: root.localScale }
+                }
+                VerticalSlidePage {
+                    myIdx: 3
+                    FocusPage { id: pageFocus; anchors.fill: parent; localScale: root.localScale }
+                }
+                VerticalSlidePage {
+                    myIdx: 4
+                    CapturePage { id: pageCapture; anchors.fill: parent; localScale: root.localScale }
+                }
+                VerticalSlidePage {
+                    myIdx: 5
                     KeybindsPage { 
                         id: pageKeybinds
                         anchors.fill: parent
@@ -218,11 +233,11 @@ Item {
                     }
                 }
                 VerticalSlidePage {
-                    myIdx: 3
+                    myIdx: 6
                     DataPage { id: pageData; anchors.fill: parent; localScale: root.localScale }
                 }
                 VerticalSlidePage {
-                    myIdx: 4
+                    myIdx: 7
                     MiscPage { id: pageMisc; anchors.fill: parent; localScale: root.localScale }
                 }
             }

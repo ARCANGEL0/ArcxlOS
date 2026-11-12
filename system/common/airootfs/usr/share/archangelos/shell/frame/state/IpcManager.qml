@@ -63,7 +63,7 @@ QtObject {
 
     property var dashboardLauncher: IpcHandler {
         target: "dashboard-launcher"
-        function toggle() { _openDashboard("launcher") }
+        function toggle() { Quickshell.execDetached(["qs", "-p", Paths.installDir, "ipc", "call", "launcher", "toggle"]) }
     }
 
     property var dashboardConfig: IpcHandler {

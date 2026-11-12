@@ -18,6 +18,7 @@
 
 import QtQuick
 import "../../components"
+import "../../../arc/services"
 import "../../"
 
 Row {
@@ -26,19 +27,40 @@ Row {
 	spacing: Math.round(5 * localScale)
 	// Note: Do NOT add anchors.centerIn: parent here. TopBar handles that.
 
-	// 1. ArchangelOS: the mark (menu trigger) heads arcshell's left bar now — see
-	//    arc/modules/Bar.qml — so this tab starts at the workspaces, right off the bar.
+	// 1. ArchangelOS mark — heads the tab, level with the workspaces, opens the launcher
+	Item {
+		id: markBtn
+		width: Math.round(26 * parent.localScale)
+		height: Math.round(20 * parent.localScale)
+		anchors.verticalCenter: parent.verticalCenter
+		Image {
+			anchors.centerIn: parent
+			source: "file:///usr/share/archangelos/logo-mark.svg"
+			sourceSize: Qt.size(56, 41)
+			width: 24; height: 18
+			smooth: true
+			opacity: markMa.containsMouse ? 1.0 : 0.82
+			scale: markMa.pressed ? 0.9 : 1.0
+			Behavior on opacity { NumberAnimation { duration: 140 } }
+			Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+		}
+		MouseArea {
+			id: markMa
+			anchors.fill: parent
+			hoverEnabled: true
+			cursorShape: Qt.PointingHandCursor
+			onClicked: Quickshell.execDetached(["/usr/bin/archangelos-launcher-toggle"])
+		}
+		Tip { text: "App launcher"; localScale: parent.localScale }
+		Tip { text: "App launcher"; localScale: parent.localScale }
+	}
 
 	// 2. Workspaces
-	Workspaces { 
-		localScale: parent.localScale
-		anchors.verticalCenter: parent.verticalCenter
-	} 
-	
-	//3. LayoutDisplay
-	LayoutDisplayer { 
+	Workspaces {
 		localScale: parent.localScale
 		anchors.verticalCenter: parent.verticalCenter
 	}
 
 }
+
+

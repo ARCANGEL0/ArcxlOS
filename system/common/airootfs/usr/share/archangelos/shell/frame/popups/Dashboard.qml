@@ -52,7 +52,10 @@ Item {
         "home":     900,
         "stats":    900,
         "kanban":   900,
-        "launcher": 560,
+        "media":    900,
+        "weather":  900,
+        "dev":      900,
+        "maint":    900,
         "config":   900
     })
 
@@ -123,7 +126,10 @@ Item {
                         { key: "home",     icon: "󰋜", label: "Home"   },
                         { key: "stats",    icon: "󰻠", label: "System" },
                         { key: "kanban",   icon: "󰄬", label: "Tasks"  },
-                        { key: "launcher", icon: "󱓞", label: "Apps"   },
+                        { key: "media",    icon: "󰝚", label: "Media"  },
+                        { key: "weather",  icon: "󰖐", label: "Weather" },
+                        { key: "dev",      icon: "󰅩", label: "Dev"    },
+                        { key: "maint",    icon: "󰖷", label: "Upkeep" },
                         { key: "config",   icon: "󰒓", label: "Config" },
                     ]
                     onPageChanged: function(key) { Popups.dashboardPage = key }
@@ -138,7 +144,7 @@ Item {
                     width:  parent.width
                     height: parent.height - tabBar.height
                     
-                    property int pageIdx: Math.max(0, ["home", "stats", "kanban", "launcher", "config"].indexOf(root.page))
+                    property int pageIdx: Math.max(0, ["home", "stats", "kanban", "media", "weather", "dev", "maint", "config"].indexOf(root.page))
                     
                     property int oldIdx: pageIdx
                     property int newIdx: pageIdx
@@ -237,14 +243,38 @@ Item {
 
                     SlidePage {
                         myIdx: 3
-                        AppLauncher { 
-                            anchors.fill: parent 
+                        MediaHub {
+                            anchors.fill: parent
                             localScale:   root.localScale
                         }
                     }
 
                     SlidePage {
                         myIdx: 4
+                        WeatherPage {
+                            anchors.fill: parent
+                            localScale:   root.localScale
+                        }
+                    }
+
+                    SlidePage {
+                        myIdx: 5
+                        DevHub {
+                            anchors.fill: parent
+                            localScale:   root.localScale
+                        }
+                    }
+
+                    SlidePage {
+                        myIdx: 6
+                        Maintenance {
+                            anchors.fill: parent
+                            localScale:   root.localScale
+                        }
+                    }
+
+                    SlidePage {
+                        myIdx: 7
                         ShellConfig { 
                             anchors.fill: parent 
                             localScale:   root.localScale

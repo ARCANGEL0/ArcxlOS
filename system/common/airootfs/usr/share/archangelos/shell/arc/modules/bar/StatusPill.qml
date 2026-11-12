@@ -26,8 +26,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: height / 2
-        color: ma.hovered ? Config.panelHover : Config.panel
-        border.width: 1; border.color: Config.border
+        color: ma.hovered ? Config.containerSoft : "transparent"
         Behavior on color { ColorAnim { } }
         Rectangle {
             anchors.centerIn: parent

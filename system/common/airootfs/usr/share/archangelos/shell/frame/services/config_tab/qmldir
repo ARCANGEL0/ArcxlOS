@@ -6,3 +6,6 @@ GeneralPage GeneralPage.qml
 DataPage DataPage.qml
 MiscPage MiscPage.qml
 VisualsBehaviorPage VisualsBehaviorPage.qml
+IslandPage IslandPage.qml
+FocusPage FocusPage.qml
+CapturePage CapturePage.qml

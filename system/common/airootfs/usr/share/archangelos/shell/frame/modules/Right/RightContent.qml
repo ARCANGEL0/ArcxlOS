@@ -44,30 +44,22 @@ Item {
         Behavior on opacity { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod} }
         Behavior on anchors.rightMargin { NumberAnimation { duration: Anim.transition; easing.type: Anim.outCubic; easing.overshoot: Anim.globalOvershoot; easing.amplitude: Anim.globalAmplitude; easing.period: Anim.globalPeriod} }
 
-        Network{ 
+        SysTray{
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter
         }
-        Audio{ 
+        Network{
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter
         }
-        Battery{ 
+        Notifications{
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter
         }
-        // (ArchangelOS: the clock lives in the top-centre island — Center/CenterContent.qml.)
-        SysTray{ 
-            localScale: root.localScale
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        Notifications{ 
-            localScale: root.localScale
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        Power{ 
+        Power{
             localScale: root.localScale
             anchors.verticalCenter: parent.verticalCenter
         }
     }
 }
+

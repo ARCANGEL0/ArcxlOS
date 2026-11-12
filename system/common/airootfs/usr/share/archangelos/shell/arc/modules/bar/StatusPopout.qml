@@ -40,7 +40,7 @@ BarPopout {
         }
         Text {
             visible: pop.hint !== ""
-            text: pop.hint; color: Config.faint
+            text: pop.hint; color: Config.dim
             font.family: Config.textFont; font.pixelSize: 11
             Layout.fillWidth: true; wrapMode: Text.Wrap
         }
