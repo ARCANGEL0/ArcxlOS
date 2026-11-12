@@ -1,5 +1,3 @@
-// A small status pill in the bar: icon (+ optional count) that opens its named popout on hover
-// and reports its info card to the shared dockdev popout.
 pragma ComponentBehavior: Bound
 
 import QtQuick
@@ -20,48 +18,73 @@ Item {
     property var info: ({ title: "", color: Config.accent, lines: [], hint: "", actions: [] })
     signal clicked()
 
-    implicitWidth: row.implicitWidth + 18
-    implicitHeight: 26
+    implicitWidth: 40
+    implicitHeight: col.implicitHeight + 6
 
-    Rectangle {
-        anchors.fill: parent
-        radius: height / 2
-        color: ma.hovered ? Config.containerSoft : "transparent"
-        Behavior on color { ColorAnim { } }
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width + 6; height: parent.height + 6
-            radius: parent.radius + 3
-            color: "transparent"
-            border.width: 2; border.color: pill.tint
-            opacity: pill.pulse ? pulseAnim.opacity : 0
-            SequentialAnimation on opacity {
-                id: pulseAnim
-                running: pill.pulse && pill.visible
-                loops: Animation.Infinite
-                NumberAnimation { from: 0.55; to: 0; duration: 1200 }
+    Column {
+        id: col
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 3
+        spacing: 1
+
+        Item {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 22
+            height: 22
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 32
+                height: 32
+                radius: 10
+                color: ma.containsMouse ? Config.containerSoft : "transparent"
+                Behavior on color { ColorAnim { } }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 34
+                height: 34
+                radius: 12
+                color: "transparent"
+                border.width: 2
+                border.color: pill.tint
+                opacity: pill.pulse ? pulseAnim.opacity : 0
+                SequentialAnimation on opacity {
+                    id: pulseAnim
+                    running: pill.pulse && pill.visible
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.55; to: 0; duration: 1200 }
+                }
+            }
+
+            MatIcon {
+                id: icon
+                anchors.centerIn: parent
+                visible: pill.icon !== ""
+                text: pill.icon
+                font.pixelSize: 18
+                color: pill.tint
+            }
+
+            Text {
+                anchors.centerIn: parent
+                visible: pill.icon === "" && pill.glyph !== ""
+                text: pill.glyph
+                font.family: "FiraCode Nerd Font"
+                font.pixelSize: 17
+                color: pill.tint
             }
         }
-    }
 
-    Row {
-        id: row
-        anchors.centerIn: parent
-        spacing: 5
-        MatIcon {
-            anchors.verticalCenter: parent.verticalCenter
-            text: pill.icon !== "" ? pill.icon : pill.glyph
-            font.pixelSize: 14
-            color: pill.tint
-        }
         Text {
+            anchors.horizontalCenter: parent.horizontalCenter
             visible: pill.count !== ""
-            anchors.verticalCenter: parent.verticalCenter
             text: pill.count
             color: pill.tint
             font.family: Config.textFont
-            font.pixelSize: 11
-            font.bold: true
+            font.pixelSize: 9
         }
     }
 
@@ -75,9 +98,7 @@ Item {
             pill.bar.hoverInfo = pill.info
             if (pill.popout !== "") pill.bar.showPopout(pill.popout)
         }
-        onClicked: {
-            pill.clicked()
-            if (pill.popout !== "") pill.bar.showPopout(pill.popout)
-        }
+        onExited: if (pill.popout !== "") pill.bar.hidePopout()
+        onClicked: pill.clicked()
     }
 }

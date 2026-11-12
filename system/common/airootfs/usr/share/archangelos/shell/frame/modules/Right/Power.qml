@@ -12,10 +12,10 @@ Item {
 
     Text {
         anchors.centerIn: parent
-        text: "⏻"
+        text: "󰐥"
         color: hover.hovered ? Qt.lighter(Theme.active, 1.25) : Theme.active
         Behavior on color { ColorAnimation { duration: Anim.color } }
-        font.pixelSize: Math.round(15 * root.localScale)
+        font.pixelSize: Math.round(16 * root.localScale)
         scale: tap.pressed ? 0.88 : 1.0
         Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
     }

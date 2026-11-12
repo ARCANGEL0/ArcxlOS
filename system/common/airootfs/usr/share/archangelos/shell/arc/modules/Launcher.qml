@@ -319,6 +319,9 @@ PanelWindow {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: launcher.shown ? 0 : (-height - 20)
         Behavior on anchors.bottomMargin { Anim { type: Anim.Spatial } }
+        opacity: launcher.shown ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        visible: opacity > 0
         height: inner.implicitHeight + pad + botPad
         Behavior on height { Anim { type: Anim.Spatial } }
         // Re-report on every geometry change: the slide, content growth and >theme all move the

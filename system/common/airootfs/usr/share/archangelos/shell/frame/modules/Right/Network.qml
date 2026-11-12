@@ -105,7 +105,7 @@ Item {
         Text {
             visible:        ShellState.vpnActive || ShellState.vpnConnecting
             text:           ShellState.vpnConnecting ? "󱦚" : "󰦝"
-            font.pixelSize: Math.round(14 * localScale)
+            font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
             opacity:        root._vpnOpacity
             color: ShellState.vpnActive ? Theme.active : (vpHov.hovered ? Theme.active : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.70))
@@ -128,7 +128,7 @@ Item {
         Text {
             visible:        ShellState.btPowered
             text:           ShellState.btConnected ? "󰂱" : "󰂯"
-            font.pixelSize: Math.round(14 * localScale)
+            font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
             color: ShellState.btConnected ? (btHov.hovered ? Theme.active : Theme.text) : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.32)
             Behavior on color { ColorAnimation { duration: Anim.normal} }
@@ -149,7 +149,7 @@ Item {
         Text {
             visible:        ShellState.hotspot
             text:           "󰀂"
-            font.pixelSize: Math.round(14 * localScale)
+            font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
             color:          hotspotHov.hovered ? Theme.active : Theme.text
             Behavior on color { ColorAnimation { duration: Anim.normal} }

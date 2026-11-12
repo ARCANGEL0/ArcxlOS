@@ -41,7 +41,7 @@ QtObject {
     property int cNotchMinWidth: 300
     property int cNotchMaxWidth: 440   // ArchangelOS: 360 + room for the clock
 
-    property int rNotchMinWidth: 180
+    property int rNotchMinWidth: 0
     property int rNotchMaxWidth: 360
 
     // -- Dashboard Dimensions --

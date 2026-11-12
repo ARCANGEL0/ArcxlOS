@@ -38,6 +38,27 @@ Item {
 
     property double lastRefresh: 0
 
+    property string osVersion: ""
+    property string osRemote: ""
+    readonly property bool osUpdate: osRemote !== "" && osRemote !== osVersion
+
+    FileView {
+        path: "/etc/archangelos/version"
+        onLoaded: root.osVersion = text().trim()
+    }
+
+    Process {
+        id: osProc
+        command: ["sh", "-c", "archangelos-update check 2>/dev/null; echo \"EXIT:$?\""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = /remote:\s*(\S+)/.exec(text)
+                const ex = /EXIT:(\d+)/.exec(text)
+                root.osRemote = m && ex && ex[1] === "3" ? m[1] : ""
+            }
+        }
+    }
+
     function inTerminal(script, args) {
         const tail = "; echo; read -r -n1 -p 'Done — press any key to close' _"
         Quickshell.execDetached(["rio", "-e", "bash", "-c", script + tail, "bash"].concat(args || []))
@@ -59,6 +80,7 @@ Item {
         root.aurDone = false
         repoProc.running = true
         aurProc.running = true
+        osProc.running = true
     }
     function finishUpdates() {
         if (!root.repoDone || !root.aurDone) return
@@ -397,9 +419,53 @@ Item {
             Item {
                 anchors.fill: parent
 
+                Item {
+                    id: osRow
+                    anchors { top: parent.top; left: parent.left; right: parent.right }
+                    height: Math.round(26 * root.localScale)
+
+                    Text {
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "ArchangelOS v" + (root.osVersion || "?") + (root.osUpdate ? "  →  v" + root.osRemote : "")
+                        font.pixelSize: Math.round(12 * root.localScale)
+                        font.bold: true
+                        color: root.osUpdate ? Theme.active : Theme.text
+                    }
+
+                    Rectangle {
+                        id: osBtn
+                        visible: root.osUpdate
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: osBtnText.implicitWidth + Math.round(16 * root.localScale)
+                        height: Math.round(22 * root.localScale)
+                        radius: height / 2
+                        color: osBtnMa.containsMouse ? Qt.lighter(Theme.active, 1.2) : Theme.active
+                        Behavior on color { ColorAnimation { duration: Anim.color } }
+
+                        Text {
+                            id: osBtnText
+                            anchors.centerIn: parent
+                            text: "Update"
+                            font.pixelSize: Math.round(11 * root.localScale)
+                            font.bold: true
+                            color: Theme.background
+                        }
+
+                        MouseArea {
+                            id: osBtnMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.inTerminal("pkexec archangelos-update update")
+                        }
+                    }
+                }
+
                 Row {
                     id: updSummary
-                    anchors { top: parent.top; left: parent.left; right: parent.right }
+                    anchors { top: osRow.bottom; left: parent.left; right: parent.right }
                     height: Math.round(20 * root.localScale)
                     spacing: Math.round(10 * root.localScale)
                     Text {
