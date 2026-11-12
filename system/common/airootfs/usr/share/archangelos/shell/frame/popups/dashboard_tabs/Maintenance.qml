@@ -40,7 +40,7 @@ Item {
 
     property string osVersion: ""
     property string osRemote: ""
-    readonly property bool osUpdate: osRemote !== "" && osRemote !== osVersion
+    readonly property bool osUpdate: osVersion !== "" && osRemote !== "" && osRemote !== osVersion
 
     FileView {
         path: "/etc/archangelos/version"
@@ -427,7 +427,7 @@ Item {
                     Text {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "ArchangelOS v" + (root.osVersion || "?") + (root.osUpdate ? "  →  v" + root.osRemote : "")
+                        text: root.osVersion === "" ? "ArchangelOS  ·  unversioned build" : "ArchangelOS v" + root.osVersion + (root.osUpdate ? "  →  v" + root.osRemote : "")
                         font.pixelSize: Math.round(12 * root.localScale)
                         font.bold: true
                         color: root.osUpdate ? Theme.active : Theme.text

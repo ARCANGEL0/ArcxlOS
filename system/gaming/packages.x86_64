@@ -298,10 +298,8 @@ gamescope
 corectrl
 
 ### preinstalled games
-supertuxkart
 luanti
 openttd
-supertux
 
 ### 32-bit gaming support (multilib)
 lib32-mesa
@@ -411,7 +409,6 @@ scribus
 scummvm
 shotcut
 skanlite
-stellarium
 syncthing
 telegram-desktop
 timeshift
@@ -420,7 +417,6 @@ tor
 tree
 tuned
 veracrypt
-wesnoth
 wget
 
 ### arcfetch banner deps

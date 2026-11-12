@@ -147,11 +147,6 @@
      "name": "Zotero",
      "exec": "zotero",
      "terminal": false
-    },
-    {
-     "name": "Pandoc",
-     "exec": "pandoc",
-     "terminal": true
     }
    ],
    "subcats": []

@@ -1,7 +1,4 @@
 #!/bin/sh
-# archangelos-update — git-based OS updater for ArchangelOS.
-# The installed system is stamped with /etc/archangelos/version (+ edition);
-# the remote VERSION on the repo branch is the source of truth.
 set -eu
 
 REPO_URL="https://github.com/ARCANGEL0/ArcxlOS.git"
@@ -17,6 +14,11 @@ LAST="$STATE_DIR/last-version"
 local_ver() { [ -f "$LOCAL_VERSION" ] && tr -d '[:space:]' < "$LOCAL_VERSION" || echo "0.0"; }
 edition()   { [ -f "$LOCAL_EDITION" ] && tr -d '[:space:]' < "$LOCAL_EDITION" || echo "home"; }
 remote_ver() { curl -fsSL --max-time 15 "$REMOTE_VERSION_URL" 2>/dev/null | tr -d '[:space:]' || true; }
+requireInstalled() {
+    [ -f "$LOCAL_VERSION" ] && return 0
+    echo "archangelos-update: $LOCAL_VERSION missing, not an installed ArchangelOS; refusing" >&2
+    exit 4
+}
 ver_gt() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -n1)" = "$1" ]; }
 
 ensure_repo() {
@@ -33,6 +35,7 @@ has_tag() { git -C "$REPO_DIR" cat-file -e "v$1" 2>/dev/null; }
 fetch_tag() { git -C "$REPO_DIR" fetch --depth 1 origin "tag v$1" --quiet 2>/dev/null || true; }
 
 cmd_check() {
+    requireInstalled
     lv="$(local_ver)"; rv="$(remote_ver)"
     if [ -z "$rv" ]; then echo "archangelos-update: could not reach $REMOTE_VERSION_URL" >&2; exit 2; fi
     echo "local:  $lv"
@@ -58,6 +61,7 @@ sync_tree() {
 
 cmd_update() {
     [ "$(id -u)" = "0" ] || { echo "run as root: pkexec archangelos-update update" >&2; exit 1; }
+    requireInstalled
     lv="$(local_ver)"; rv="$(remote_ver)"; ed="$(edition)"
     [ -n "$rv" ] || { echo "no remote VERSION reachable" >&2; exit 2; }
     ver_gt "$rv" "$lv" || { echo "already up to date ($lv)"; exit 0; }
@@ -100,6 +104,7 @@ cmd_update() {
 
 cmd_rollback() {
     [ "$(id -u)" = "0" ] || { echo "run as root: pkexec archangelos-update rollback" >&2; exit 1; }
+    requireInstalled
     [ -f "$LAST" ] || { echo "no previous version recorded" >&2; exit 1; }
     old="$(tr -d '[:space:]' < "$LAST")"; ed="$(edition)"
     ensure_repo; fetch_tag "$old"

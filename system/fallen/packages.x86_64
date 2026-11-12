@@ -503,7 +503,6 @@ obs-studio
 okular
 openssl
 packer
-pandoc-cli
 pavucontrol
 perl
 pipewire-jack
@@ -519,7 +518,7 @@ cups
 python
 python-pip
 qbittorrent
-qemu-full
+qemu-desktop
 ranger
 restic
 ripgrep

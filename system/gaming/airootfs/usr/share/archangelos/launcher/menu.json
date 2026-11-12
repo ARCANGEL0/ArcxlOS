@@ -361,23 +361,8 @@
      "terminal": false
     },
     {
-     "name": "SuperTuxKart",
-     "exec": "supertuxkart",
-     "terminal": true
-    },
-    {
-     "name": "SuperTux",
-     "exec": "supertux",
-     "terminal": true
-    },
-    {
      "name": "Hedgewars",
      "exec": "hedgewars",
-     "terminal": true
-    },
-    {
-     "name": "Battle for Wesnoth",
-     "exec": "battle-for-wesnoth",
      "terminal": true
     },
     {
@@ -541,11 +526,6 @@
    "name": "Education",
    "icon": "📚",
    "items": [
-    {
-     "name": "Stellarium",
-     "exec": "stellarium",
-     "terminal": false
-    },
     {
      "name": "KStars",
      "exec": "kstars",
