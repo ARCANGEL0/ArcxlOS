@@ -6,6 +6,7 @@ userDir=${XDG_DATA_HOME:-$HOME/.local/share}/archangelos/terminal-themes
 rioDir=${RIO_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/rio}
 conf=$rioDir/config.toml
 state=$rioDir/.archangelos-theme
+fontState=$rioDir/.archangelos-font
 
 fail() { echo "$*" >&2; exit 1; }
 
@@ -68,6 +69,39 @@ setOpacity() {
 	fi
 }
 
+fontValue() {
+	sed -n "/^\[fonts\]/,/^\[/ s/^$1 = \"\{0,1\}\([^\"]*\)\"\{0,1\}$/\1/p" "$conf" | head -n 1
+}
+
+setFontValue() {
+	if [ -n "$(fontValue "$1")" ]; then
+		sed -i "/^\[fonts\]/,/^\[/ s|^$1 = .*|$1 = $2|" "$conf"
+	elif grep -q '^\[fonts\]' "$conf"; then
+		sed -i "/^\[fonts\]/a $1 = $2" "$conf"
+	else
+		printf '\n[fonts]\n%s = %s\n' "$1" "$2" >> "$conf"
+	fi
+}
+
+setFont() {
+	family=$(field "$1" font)
+	size=$(field "$1" fontsize)
+	case $size in
+		*[!0-9]*) size="" ;;
+	esac
+	if [ -n "$family" ]; then
+		[ -f "$fontState" ] || printf '%s|%s\n' "$(fontValue family)" "$(fontValue size)" > "$fontState"
+		setFontValue family "\"$family\""
+		[ -n "$size" ] && setFontValue size "$size"
+	elif [ -f "$fontState" ]; then
+		baseFamily=$(cut -d'|' -f1 "$fontState")
+		baseSize=$(cut -d'|' -f2 "$fontState")
+		[ -n "$baseFamily" ] && setFontValue family "\"$baseFamily\""
+		[ -n "$baseSize" ] && setFontValue size "$baseSize"
+		rm -f "$fontState"
+	fi
+}
+
 useTheme() {
 	validId "$1" || fail "bad theme id: $1"
 	dir=$(findTheme "$1") || fail "no such theme: $1"
@@ -88,6 +122,7 @@ useTheme() {
 		''|*[!0-9.]*) opacity=0.0 ;;
 	esac
 	setOpacity "$opacity"
+	setFont "$dir"
 	echo "$1" > "$state"
 }
 

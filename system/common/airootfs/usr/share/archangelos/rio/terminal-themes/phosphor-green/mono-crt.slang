@@ -14,13 +14,13 @@ layout(push_constant) uniform Push
 	float crush;
 } params;
 
-#pragma parameter tintR "Phosphor Red" 0.24 0.0 1.0 0.01
+#pragma parameter tintR "Phosphor Red" 0.33 0.0 1.0 0.01
 #pragma parameter tintG "Phosphor Green" 1.0 0.0 1.0 0.01
-#pragma parameter tintB "Phosphor Blue" 0.46 0.0 1.0 0.01
+#pragma parameter tintB "Phosphor Blue" 0.50 0.0 1.0 0.01
 #pragma parameter glow "Glow" 1.0 0.0 3.0 0.05
 #pragma parameter curve "Tube Curve" 1.0 0.0 2.0 0.05
 #pragma parameter scan "Scanlines" 1.0 0.0 1.5 0.05
-#pragma parameter crush "Black Level" 0.07 0.0 0.3 0.01
+#pragma parameter crush "Black Level" 0.03 0.0 0.3 0.01
 
 layout(std140, set = 0, binding = 0) uniform UBO
 {
@@ -81,7 +81,7 @@ void main()
 	float t = float(params.FrameCount) / 60.0;
 	vec2 res = params.OutputSize.xy;
 	vec3 phos = vec3(params.tintR, params.tintG, params.tintB);
-	vec3 hot = mix(phos, vec3(1.0), 0.72);
+	vec3 hot = mix(phos, vec3(0.9, 1.0, 1.0), 0.35);
 
 	vec2 glass = res - 2.0 * INSET;
 	vec2 local = (vTexCoord * res - INSET) / glass;
@@ -102,9 +102,9 @@ void main()
 	float halo = max(bloom - params.crush * 0.6, 0.0);
 
 	vec3 col = phos * 0.006;
-	col += phos * (level * 1.35 + ghost * 0.08);
-	col += hot * pow(level, 2.0) * 0.6;
-	col += phos * (halo * 1.1 + halo * halo * 2.2) * params.glow;
+	col += phos * (level * 1.1 + ghost * 0.06);
+	col += hot * pow(level, 3.0) * 0.25;
+	col += phos * (halo * 0.9 + halo * halo * 1.0) * params.glow;
 
 	float lines = 0.5 + 0.5 * sin(px.y * 3.14159265);
 	col *= mix(1.0, 0.55 + 0.45 * pow(lines, 1.3), params.scan);
@@ -132,5 +132,6 @@ void main()
 	bezel += vec3(0.025) * smoothstep(INSET * 0.5, INSET, outer) * (1.0 - smoothstep(INSET, INSET + 4.0, outer)) * (1.0 - screen);
 
 	col = mix(bezel, clamp(col, 0.0, 1.0), screen);
-	FragColor = vec4(col, 1.0);
+	float lit = clamp(level + halo * 1.5, 0.0, 1.0);
+	FragColor = vec4(col, mix(0.93, 1.0, lit));
 }

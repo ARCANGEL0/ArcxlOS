@@ -26,10 +26,10 @@ acc_modulate = 0.18
 blur_x = 3.4
 blur_y = 3.4
 
-tintR = 0.24
+tintR = 0.33
 tintG = 1.0
-tintB = 0.46
-glow = 1.6
+tintB = 0.50
+glow = 1.8
 curve = 1.0
 scan = 1.0
-crush = 0.07
+crush = 0.03
