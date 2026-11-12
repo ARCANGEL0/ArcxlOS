@@ -87,20 +87,22 @@ PageScaffold {
 
     // ── OS update card ──────────────────────────────────────────────────────────
     Rectangle {
-        visible: page.osRemote !== "" && page.osRemote !== page.version
         width: parent.width; height: 86
         radius: Ax.radius + 2
         color: Ax.panel
-        border.width: 1; border.color: Ax.alpha(Ax.accent, 0.35)
+        border.width: 1; border.color: page.osRemote !== "" && page.osRemote !== page.version ? Ax.alpha(Ax.accent, 0.35) : Ax.border
         CornerTicks { len: 10; anchors.margins: 12 }
         Column {
             x: 28; anchors.verticalCenter: parent.verticalCenter
             spacing: 6
-            Label { caption: true; text: "ArchangelOS update available" }
+            Label { caption: true; text: "ArchangelOS" + (page.version ? "  ·  " + page.version : "") + "  ·  updates from git" }
             Label { font.pixelSize: 20; font.weight: Font.DemiBold
-                    text: (page.version || "?") + "  →  " + page.osRemote + "  ·  updates from git" }
+                    text: page.osRemote !== "" && page.osRemote !== page.version
+                        ? "Update available: " + (page.version || "?") + "  →  " + page.osRemote
+                        : "Up to date" }
         }
         AxButton {
+            visible: page.osRemote !== "" && page.osRemote !== page.version
             anchors.right: parent.right; anchors.rightMargin: 28; anchors.verticalCenter: parent.verticalCenter
             icon: "system_update_alt"; text: "Update ArchangelOS"; kind: "primary"; onClicked: page.updateOs()
         }

@@ -39,7 +39,7 @@ QtObject {
     property bool   osUpdateAvailable: false
     property string osUpdateVersion: ""
 
-    FileView {
+    property FileView _osFlag: FileView {
         path: "/var/lib/archangelos/update-available"
         onLoaded: {
             root.osUpdateVersion = text().trim()

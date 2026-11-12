@@ -2,6 +2,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qs.arc
 Rectangle {
@@ -12,6 +13,8 @@ Rectangle {
     property int iconSize: 16
     // What the button does, in words: a Rectangle plus a MouseArea names itself nowhere else.
     property string label: ""
+    property string tip: ""
+    property bool tipAbove: false
     signal clicked()
     signal hoverIn()
     signal hoverOut()
@@ -24,6 +27,15 @@ Rectangle {
     implicitWidth: 32; implicitHeight: 32; radius: 9
     color: active ? Config.accent : (btnMa.containsMouse ? Config.container : "transparent")
     Behavior on color { ColorAnim {} }
+    ToolTip {
+        id: tip
+        parent: btn
+        visible: btn.tip !== "" && btnMa.containsMouse
+        delay: 400
+        text: btn.tip
+        x: Math.max(0, (btn.width - tip.width) / 2)
+        y: btn.tipAbove ? -tip.height - 6 : btn.height + 4
+    }
     MatIcon {
         anchors.centerIn: parent
         text: btn.icon
