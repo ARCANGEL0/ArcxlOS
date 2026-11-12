@@ -161,7 +161,6 @@ iputils
 ipython
 irssi
 weechat
-konversation
 iw
 iwd
 jad
@@ -499,7 +498,6 @@ ninja
 nodejs
 npm
 nvtop
-obs-studio
 okular
 openssl
 packer

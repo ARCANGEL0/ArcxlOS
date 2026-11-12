@@ -107,10 +107,6 @@
      "terminal": true
     },
     {
-     "name": "Konversation",
-     "exec": "konversation",
-     "terminal": false
-    },
     {
      "name": "WeeChat",
      "exec": "weechat",
@@ -220,11 +216,6 @@
     {
      "name": "VLC",
      "exec": "vlc",
-     "terminal": false
-    },
-    {
-     "name": "OBS Studio",
-     "exec": "obs",
      "terminal": false
     },
     {
