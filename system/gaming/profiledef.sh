@@ -32,6 +32,7 @@ file_permissions=(
   ["/usr/bin/archangelos-rio-theme"]="0:0:0755"
   ["/usr/bin/archangelos-shell"]="0:0:0755"
   ["/usr/bin/archangelos-update"]="0:0:0755"
+  ["/usr/bin/archangelos-lang"]="0:0:0755"
   ["/usr/lib/archangelos/ghostwired"]="0:0:0755"
   ["/usr/lib/archangelos/ghostwired-exempt"]="0:0:0755"
   ["/usr/lib/archangelos/axs-admin"]="0:0:0755"

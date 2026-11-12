@@ -102,6 +102,41 @@ KEYBOARD_LAYOUTS = [
     ("Hindi (India)", "us"),
 ]
 
+LANGUAGES = [
+    ("English (US)", "en_US.UTF-8"),
+    ("English (UK)", "en_GB.UTF-8"),
+    ("Português (Brasil)", "pt_BR.UTF-8"),
+    ("Português (Portugal)", "pt_PT.UTF-8"),
+    ("Español", "es_ES.UTF-8"),
+    ("Español (México)", "es_MX.UTF-8"),
+    ("Français", "fr_FR.UTF-8"),
+    ("Deutsch", "de_DE.UTF-8"),
+    ("Italiano", "it_IT.UTF-8"),
+    ("Nederlands", "nl_NL.UTF-8"),
+    ("Polski", "pl_PL.UTF-8"),
+    ("Čeština", "cs_CZ.UTF-8"),
+    ("Magyar", "hu_HU.UTF-8"),
+    ("Română", "ro_RO.UTF-8"),
+    ("Svenska", "sv_SE.UTF-8"),
+    ("Norsk", "nb_NO.UTF-8"),
+    ("Dansk", "da_DK.UTF-8"),
+    ("Suomi", "fi_FI.UTF-8"),
+    ("Ελληνικά", "el_GR.UTF-8"),
+    ("Türkçe", "tr_TR.UTF-8"),
+    ("Русский", "ru_RU.UTF-8"),
+    ("Українська", "uk_UA.UTF-8"),
+    ("العربية", "ar_SA.UTF-8"),
+    ("עברית", "he_IL.UTF-8"),
+    ("हिन्दी", "hi_IN.UTF-8"),
+    ("Bahasa Indonesia", "id_ID.UTF-8"),
+    ("Tiếng Việt", "vi_VN.UTF-8"),
+    ("ไทย", "th_TH.UTF-8"),
+    ("日本語", "ja_JP.UTF-8"),
+    ("한국어", "ko_KR.UTF-8"),
+    ("简体中文", "zh_CN.UTF-8"),
+    ("繁體中文", "zh_TW.UTF-8"),
+]
+
 COUNTRIES = [
     ("Argentina", "America/Argentina/Buenos_Aires"),
     ("Australia", "Australia/Sydney"),
@@ -630,6 +665,7 @@ class InstallWorkerThread(QThread):
             hostname = self.config["hostname"]
             timezone = self.config["timezone"]
             keymap = self.config.get("keymap", "us")
+            lang = self.config.get("lang", "en_US.UTF-8")
             root_password = self.config.get("root_password") or password
 
             self.log(2, "Initializing offline system installer engine...")
@@ -757,7 +793,17 @@ class InstallWorkerThread(QThread):
                 f.write(f"KEYMAP={keymap}\n")
             self.run_cmd("arch-chroot /mnt hwclock --systohc 2>/dev/null || true")
             self.run_cmd("sed -i 's/#\\(en_US\\.UTF-8\\)/\\1/' /mnt/etc/locale.gen 2>/dev/null || true")
+            if lang != "en_US.UTF-8":
+                self.run_cmd(f"sed -i 's/^#\\({lang} UTF-8\\)/\\1/' /mnt/etc/locale.gen")
+                self.run_cmd(f"grep -q '^{lang} UTF-8' /mnt/etc/locale.gen || echo '{lang} UTF-8' >> /mnt/etc/locale.gen")
             self.run_cmd("arch-chroot /mnt locale-gen 2>/dev/null || true")
+            with open("/mnt/etc/locale.conf", "w") as f:
+                f.write(f"LANG={lang}\n")
+            if not lang.startswith("en"):
+                self.log(72, f"Downloading the {lang} language pack...")
+                out = self.run_cmd(f"arch-chroot /mnt /usr/bin/archangelos-lang install '{lang}' >/dev/null 2>&1 && echo LANGOK || echo LANGFAIL")
+                if "LANGOK" not in out:
+                    self.log(72, "Language pack not downloaded (offline?). Pick it again later in Settings > Language & Region.")
 
             with open("/mnt/etc/hostname", "w") as f:
                 f.write(f"{hostname}\n")
@@ -788,6 +834,12 @@ class InstallWorkerThread(QThread):
             with open("/mnt/etc/sudoers.d/wheel", "w") as f:
                 f.write("%wheel ALL=(ALL:ALL) ALL\n")
             os.chmod("/mnt/etc/sudoers.d/wheel", 0o440)
+
+            self.log(84, "Removing live-session leftovers...")
+            self.run_cmd("rm -rf /mnt/etc/systemd/system/getty@tty1.service.d")
+            self.run_cmd("rm -f /mnt/etc/polkit-1/rules.d/49-nopasswd_global.rules")
+            self.run_cmd("rm -f /mnt/root/customize_airootfs.sh /mnt/root/.automated_script.sh /mnt/root/.zlogin")
+            self.run_cmd("arch-chroot /mnt pacman -R --noconfirm mkinitcpio-archiso >/dev/null 2>&1 || true")
 
             self.log(85, "Regenerating initramfs images...")
             with open("/mnt/etc/mkinitcpio.conf", "w") as f:
@@ -1169,7 +1221,7 @@ class ArchangelOSInstallerWindow(QMainWindow):
         headers = [
             ("Home Edition", ""),
             ("Country", "Select your country"),
-            ("Keyboard", "Select your keyboard layout"),
+            ("Language & Keyboard", "Pick your language and keyboard layout"),
             ("Timezone", "Select your timezone"),
             ("Disks & Partitions", "Select where to install ArchangelOS"),
             ("Account Configuration", "Create your user account"),
@@ -1274,6 +1326,16 @@ class ArchangelOSInstallerWindow(QMainWindow):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(30, 20, 30, 20)
+
+        self.lang_combo = QComboBox()
+        for label, code in LANGUAGES:
+            self.lang_combo.addItem(label, code)
+        self.lang_combo.setCurrentIndex(0)
+        lang_label = QLabel("Language — English is always included; any other language is downloaded during install")
+        lang_label.setWordWrap(True)
+        layout.addWidget(lang_label)
+        layout.addWidget(self.lang_combo)
+        layout.addSpacing(10)
 
         self.keymap_search = QLineEdit()
         self.keymap_search.setPlaceholderText("Type to search your keyboard layout...")
@@ -1544,6 +1606,7 @@ class ArchangelOSInstallerWindow(QMainWindow):
         self.summary_rows = {}
         rows = [
             ("country", "Country"),
+            ("language", "Language"),
             ("keyboard", "Keyboard"),
             ("timezone", "Timezone"),
             ("disk", "Target disk"),
@@ -1597,6 +1660,7 @@ class ArchangelOSInstallerWindow(QMainWindow):
         kb_item = self.keymap_list.currentItem()
         values = {
             "country": self.selected_country(),
+            "language": self.lang_combo.currentText(),
             "keyboard": kb_item.text() if kb_item is not None else "",
             "timezone": self.selected_timezone(),
             "disk": disk_label,
@@ -1671,7 +1735,8 @@ class ArchangelOSInstallerWindow(QMainWindow):
             "root_password": root_password,
             "hostname": hostname,
             "timezone": timezone,
-            "keymap": keymap
+            "keymap": keymap,
+            "lang": self.lang_combo.currentData() or "en_US.UTF-8"
         }
 
         self.rotate_slideshow()

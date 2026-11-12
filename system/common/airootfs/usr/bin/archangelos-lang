@@ -1,0 +1,61 @@
+#!/bin/sh
+set -eu
+
+conf=/etc/pacman.conf
+mark=/var/lib/archangelos/langs
+
+fail() { echo "$*" >&2; exit 1; }
+
+baseOf() {
+	case $1 in
+		''|*[!A-Za-z_.@0-9-]*) fail "bad locale: $1" ;;
+	esac
+	printf '%s\n' "${1%%[_.@]*}"
+}
+
+stripped() {
+	grep -q '^NoExtract.*usr/share/locale/\*' "$conf" 2>/dev/null
+}
+
+owners() {
+	base=$(baseOf "$1")
+	pacman -Ql 2>/dev/null | awk -v b="$base" '
+		$2 ~ "^/usr/share/locale/" b "(_[^/]*)?(@[^/]*)?/" { print $1 }
+		$2 ~ "^/usr/share/qt6?/translations/.*_" b "(_[A-Za-z]+)?\\.qm$" { print $1 }
+	' | sort -u
+}
+
+isInstalled() {
+	base=$(baseOf "$1")
+	[ "$base" = en ] && return 0
+	stripped || return 0
+	[ -f "$mark/$base" ]
+}
+
+install() {
+	[ "$(id -u)" = 0 ] || fail "run as root"
+	base=$(baseOf "$1")
+	isInstalled "$1" && { echo "already installed"; return 0; }
+	if ! grep -q "^NoExtract = !usr/share/locale/$base/\*" "$conf"; then
+		printf 'NoExtract = !usr/share/locale/%s/* !usr/share/locale/%s_* !usr/share/locale/%s@* !usr/share/qt6/translations/*_%s.qm !usr/share/qt6/translations/*_%s_* !usr/share/qt/translations/*_%s.qm !usr/share/qt/translations/*_%s_*\n' \
+			"$base" "$base" "$base" "$base" "$base" "$base" "$base" > "$conf.lang"
+		lastLine=$(grep -n '^NoExtract' "$conf" | tail -n 1 | cut -d: -f1)
+		[ -n "$lastLine" ] || fail "no NoExtract rule in $conf"
+		sed -i "${lastLine}r $conf.lang" "$conf"
+		rm -f "$conf.lang"
+	fi
+	pkgs=$(owners "$1")
+	if [ -n "$pkgs" ]; then
+		echo "$pkgs" | pacman -S --noconfirm - || fail "download failed"
+	fi
+	mkdir -p "$mark"
+	touch "$mark/$base"
+	echo "installed $base"
+}
+
+case ${1:-} in
+	installed) isInstalled "${2:?locale}" ;;
+	count) owners "${2:?locale}" | grep -c . || true ;;
+	install) install "${2:?locale}" ;;
+	*) fail "usage: archangelos-lang installed|count|install LOCALE" ;;
+esac

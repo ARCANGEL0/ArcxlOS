@@ -23,6 +23,8 @@ PageScaffold {
     property string busy: ""
     property string error: ""
     property bool changed: false
+    property bool askPack: false
+    property int packCount: 0
     property var layoutNames: ({})     // "us" → "English (US)"
     property var variants: ({})        // "us" → [{ code, name }]
     readonly property date sample: new Date(2026, 9, 22, 14, 30, 5)
@@ -84,6 +86,25 @@ PageScaffold {
         page.pendingFmt = inLang || page.supported.find(l => page.cc(l) === c) || page.pendingFmt;
     }
     function apply() {
+        page.error = "";
+        cmd.run(["/usr/bin/archangelos-lang", "installed", page.pendingLang], (c) => {
+            if (c === 0) { page.setLocale(); return; }
+            cmd.run(["/usr/bin/archangelos-lang", "count", page.pendingLang], (c2, o) => {
+                page.packCount = parseInt(o) || 0;
+                page.askPack = true;
+            });
+        });
+    }
+    function downloadPack() {
+        page.askPack = false; page.busy = "download"; page.error = "";
+        cmd.run(["/usr/lib/archangelos/axs-admin", "lang-install", page.pendingLang], (c, o, e) => {
+            page.busy = "";
+            if (c === 126 || c === 127) page.error = "Cancelled.";
+            else if (c !== 0) page.error = (e || o).trim() || "Couldn't download the language pack.";
+            else page.setLocale();
+        });
+    }
+    function setLocale() {
         page.busy = "apply"; page.error = "";
         cmd.run(["/usr/lib/archangelos/axs-admin", "locale-set", page.pendingLang, page.pendingFmt], (c, o, e) => {
             page.busy = "";
@@ -142,10 +163,31 @@ PageScaffold {
         }
     }
 
+    Rectangle {
+        visible: page.askPack
+        width: parent.width; height: packCol.implicitHeight + 32
+        radius: Ax.radius + 2
+        color: Ax.panel
+        border.width: 1; border.color: Ax.alpha(Ax.accent, 0.35)
+        Column {
+            id: packCol
+            x: 20; y: 16; width: parent.width - 40
+            spacing: 10
+            Label { font.weight: Font.DemiBold; text: page.nameOf(page.pendingLang) + " needs a language pack" }
+            Label { color: Ax.subtext; font.pixelSize: Ax.fsSmall; width: parent.width; wrapMode: Text.Wrap
+                    text: "ArchangelOS ships in English. Translations for " + page.nameOf(page.pendingLang) + " come from " + page.packCount + " packages that will be downloaded and reinstalled. This needs an internet connection." }
+            Row {
+                spacing: 10
+                AxButton { icon: "download"; text: "Download and apply"; kind: "primary"; onClicked: page.downloadPack() }
+                AxButton { text: "Cancel"; onClicked: page.askPack = false }
+            }
+        }
+    }
+
     Row {
         visible: page.dirty || page.changed || page.error !== ""
         spacing: 10
-        AxButton { visible: page.dirty; text: page.busy === "apply" ? "Applying…" : "Apply language and formats"; kind: "primary"
+        AxButton { visible: page.dirty; text: page.busy === "download" ? "Downloading language pack…" : page.busy === "apply" ? "Applying…" : "Apply language and formats"; kind: "primary"
                    enabled_: page.busy === ""; onClicked: page.apply() }
         AxButton { visible: page.dirty; text: "Reset"; onClicked: { page.pendingLang = page.lang; page.pendingFmt = page.formats; } }
         Label { anchors.verticalCenter: parent.verticalCenter; font.pixelSize: Ax.fsSmall

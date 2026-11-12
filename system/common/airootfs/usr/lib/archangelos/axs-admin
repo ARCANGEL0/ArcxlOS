@@ -390,5 +390,10 @@ for d in json.load(sys.stdin).get("devices", []):
         [[ "${1:-}" =~ ^[A-Za-z0-9_-]+$ ]] || die "Bad printer name."
         if [ "${2:-1}" = 1 ]; then cupsenable "$1" && cupsaccept "$1"; else cupsdisable "$1"; fi
         echo ok ;;
+    lang-install)
+        [ $# -eq 1 ] || die "usage: lang-install LOCALE"
+        [[ "$1" =~ ^[A-Za-z_]+(\.UTF-8)?(@[a-z]+)?$ ]] || die "Bad locale: $1"
+        /usr/bin/archangelos-lang install "$1" || die "Couldn't download the language pack."
+        echo ok ;;
     *) die "unknown: $verb" ;;
 esac
