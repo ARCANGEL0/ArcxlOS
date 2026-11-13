@@ -171,7 +171,7 @@ StatCard {
                 }
                 Text {
                     text: root._uptime; font.pixelSize: Math.round(12 * localScale)
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)
                     anchors.verticalCenter: parent.verticalCenter
                 }

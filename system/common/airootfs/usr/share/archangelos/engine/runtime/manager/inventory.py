@@ -146,7 +146,7 @@ def discover_platform(os_release: dict[str, str] | None = None, which: Callable[
 
 DEPENDENCIES = {
     "mandatory-manager-base": ("python3", "bash", "hyprctl", "qs", "systemctl", "busctl", "loginctl", "udevadm", "jq"),
-    "default-feature-required": ("awww", "matugen", "kitty", "firefox", "thunar", "code", "/usr/lib/mate-polkit/polkit-mate-authentication-agent-1", "starship", "fastfetch", "hyprlock", "hypridle", "hyprpicker", "grim", "slurp", "wl-copy", "wl-paste", "cliphist", "gpu-screen-recorder", "brightnessctl", "curl", "ffmpeg", "lspci", "wpctl", "pgrep", "pidof", "nmcli", "bluetoothctl", "playerctl", "sensors", "notify-send", "fc-match", "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf", "/usr/share/fonts/TTF/JetFramesMonoNerdFont-Regular.ttf"),
+    "default-feature-required": ("awww", "matugen", "kitty", "firefox", "thunar", "code", "/usr/lib/mate-polkit/polkit-mate-authentication-agent-1", "starship", "fastfetch", "hyprlock", "hypridle", "hyprpicker", "grim", "slurp", "wl-copy", "wl-paste", "cliphist", "gpu-screen-recorder", "brightnessctl", "curl", "ffmpeg", "lspci", "wpctl", "pgrep", "pidof", "nmcli", "bluetoothctl", "playerctl", "sensors", "notify-send", "fc-match", "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf", "/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf"),
     "optional-enhancement": ("powerprofilesctl",),
     "optional-zsh": ("zsh", "git"),
     "development-only": ("qmllint", "qmltestrunner"),

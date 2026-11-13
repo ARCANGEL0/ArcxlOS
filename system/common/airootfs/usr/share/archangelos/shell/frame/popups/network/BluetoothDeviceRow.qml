@@ -408,7 +408,7 @@ Item {
                             verticalAlignment: TextInput.AlignVCenter
                             color: Theme.text
                             font.pixelSize: Math.round(12 * localScale)
-                            font.family: "JetFrames Mono"
+                            font.family: "JetBrains Mono"
                             inputMethodHints: Qt.ImhDigitsOnly
                             maximumLength: 8
                             selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)

@@ -31,7 +31,7 @@ Rectangle {
     property string currentFilter: ""
     property var    filterList:    []
 
-    property string shaderPaths: Paths.installDir + "/src/config/shaders ~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.local/src/ArcShell/src/config/shaders ~/.config/quickshell/src/config/shaders"
+    property string shaderPaths: Paths.installDir + "/frame/config/shaders ~/.config/hypr/shaders ~/.local/share/hypr/shaders /usr/share/hyprshade/shaders ~/.local/src/ArcShell/src/config/shaders ~/.config/quickshell/src/config/shaders"
 
     visible: isOpen
     z: 20

@@ -276,11 +276,6 @@ cat > /etc/sddm.conf.d/10-archangelos.conf << 'SDDMEOF'
 [Theme]
 Current=archangelos
 
-[Autologin]
-User=liveuser
-Session=hyprland.desktop
-Relogin=false
-
 [General]
 GreeterEnvironment=QT_QUICK_CONTROLS_STYLE=Basic
 SDDMEOF
@@ -292,17 +287,6 @@ if [ -d /usr/share/wayland-sessions ] && [ -f /usr/share/wayland-sessions/hyprla
   sed -i 's|^Name=.*|Name=ArchangelOS Fallen (Hyprland)|' /usr/share/wayland-sessions/hyprland.desktop
 fi
 
-if [ -d /etc/skel/.config/hypr ]; then
-  cat > /etc/skel/.config/hypr/99-archangelos-wheel.conf << 'HYPRWHEELEOF'
-bind = SUPER, Tab, exec, archangelos-wheel
-HYPRWHEELEOF
-fi
-if [ -f /home/liveuser/.config/hypr/hyprland.conf ]; then
-  grep -q 'archangelos-wheel' /home/liveuser/.config/hypr/hyprland.conf || \
-    echo "bind = SUPER, Tab, exec, archangelos-wheel" >> /home/liveuser/.config/hypr/hyprland.conf
-  grep -q '99-archangelos-wheel' /home/liveuser/.config/hypr/hyprland.conf || \
-    echo "source = ~/.config/hypr/99-archangelos-wheel.conf" >> /home/liveuser/.config/hypr/hyprland.conf
-fi
 if [ -f /usr/bin/archangelos-wheel ]; then
   ln -sf /usr/bin/archangelos-wheel /usr/bin/archangelos-radial 2>/dev/null || true
 fi

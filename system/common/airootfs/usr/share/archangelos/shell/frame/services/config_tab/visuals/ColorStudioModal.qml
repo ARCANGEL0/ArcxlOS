@@ -270,14 +270,14 @@ Rectangle {
                                     text: "#"
                                     color: Theme.text
                                     font.pixelSize: Math.round(13 * chartPopup.localScale)
-                                    font.family: "JetFrames Mono"
+                                    font.family: "JetBrains Mono"
                                     font.weight: Font.Bold
                                 }
                                 TextInput {
                                     id: hexInput
                                     color: Theme.text
                                     font.pixelSize: Math.round(13 * chartPopup.localScale)
-                                    font.family: "JetFrames Mono"
+                                    font.family: "JetBrains Mono"
                                     font.weight: Font.Bold
                                     maximumLength: 6
                                     selectByMouse: true
@@ -391,7 +391,7 @@ Rectangle {
                     Item {
                         width: parent.width; height: Math.round(14 * chartPopup.localScale)
                         Text { anchors.left: parent.left; text: "HUE"; color: Theme.subtext; font.pixelSize: Math.round(9 * chartPopup.localScale); font.weight: Font.Bold }
-                        Text { anchors.right: parent.right; text: Math.round(chartPopup.hue) + "°"; color: Theme.text; font.pixelSize: Math.round(10 * chartPopup.localScale); font.family: "JetFrames Mono"; font.weight: Font.Bold }
+                        Text { anchors.right: parent.right; text: Math.round(chartPopup.hue) + "°"; color: Theme.text; font.pixelSize: Math.round(10 * chartPopup.localScale); font.family: "JetBrains Mono"; font.weight: Font.Bold }
                     }
                     Rectangle {
                         width: parent.width; height: Math.round(14 * chartPopup.localScale); radius: height/2
@@ -425,7 +425,7 @@ Rectangle {
                     Item {
                         width: parent.width; height: Math.round(14 * chartPopup.localScale)
                         Text { anchors.left: parent.left; text: "LIGHTNESS"; color: Theme.subtext; font.pixelSize: Math.round(9 * chartPopup.localScale); font.weight: Font.Bold }
-                        Text { anchors.right: parent.right; text: Math.round(chartPopup.lit) + "%"; color: Theme.text; font.pixelSize: Math.round(10 * chartPopup.localScale); font.family: "JetFrames Mono"; font.weight: Font.Bold }
+                        Text { anchors.right: parent.right; text: Math.round(chartPopup.lit) + "%"; color: Theme.text; font.pixelSize: Math.round(10 * chartPopup.localScale); font.family: "JetBrains Mono"; font.weight: Font.Bold }
                     }
                     Rectangle {
                         width: parent.width; height: Math.round(14 * chartPopup.localScale); radius: height/2
@@ -455,7 +455,7 @@ Rectangle {
                     Item {
                         width: parent.width; height: Math.round(14 * chartPopup.localScale)
                         Text { anchors.left: parent.left; text: "SATURATION"; color: Theme.subtext; font.pixelSize: Math.round(9 * chartPopup.localScale); font.weight: Font.Bold }
-                        Text { anchors.right: parent.right; text: Math.round(chartPopup.sat) + "%"; color: Theme.text; font.pixelSize: Math.round(10 * chartPopup.localScale); font.family: "JetFrames Mono"; font.weight: Font.Bold }
+                        Text { anchors.right: parent.right; text: Math.round(chartPopup.sat) + "%"; color: Theme.text; font.pixelSize: Math.round(10 * chartPopup.localScale); font.family: "JetBrains Mono"; font.weight: Font.Bold }
                     }
                     Rectangle {
                         width: parent.width; height: Math.round(14 * chartPopup.localScale); radius: height/2

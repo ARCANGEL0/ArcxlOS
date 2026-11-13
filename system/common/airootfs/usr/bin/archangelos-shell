@@ -27,15 +27,28 @@ preview() {
 }
 ownkeys() { [ "$(jget "$1" keybinds)" = true ] || [ -f "$1/config/keybinds.lua" ] || [ -f "$1/keybinds.lua" ]; }
 
+SHELL_DIR=/usr/share/archangelos/shell
+SHELL_RE="^qs -p $SHELL_DIR(/shell\\.qml)?\$"
+
 stop_current() {
     local c; c="$(current)"
-    if [ "$c" = "$ARC" ]; then pkill -f "qs -p /usr/share/archangelos/shell" 2>/dev/null
+    if [ "$c" = "$ARC" ]; then pkill -f "$SHELL_RE" 2>/dev/null
     else local s; s="$(jget "$THEMES/$c" stop)"; [ -n "$s" ] && sh -c "$s" 2>/dev/null; fi
     true
 }
 
+startArc() {
+    pgrep -u "$(id -u)" -f "$SHELL_RE" >/dev/null 2>&1 && return 0
+    setsid -f qs -p "$SHELL_DIR" >/dev/null 2>&1
+}
+
 case "${1:-list}" in
     current) current ;;
+    start)
+        c="$(current)"
+        if [ "$c" = "$ARC" ]; then startArc
+        else s="$(jget "$THEMES/$c" start)"; [ -n "$s" ] && setsid -f sh -c "$s" >/dev/null 2>&1; fi
+        true ;;
     list)
         a="$(current)"
         echo "$ARC|ArcShell|ArchangelOS's own shell: bar, island and panels|/usr/share/archangelos/logo.png|0|1|$([ "$a" = $ARC ] && echo 1 || echo 0)"
@@ -58,9 +71,9 @@ case "${1:-list}" in
             # reload re-reads the config (binds, rules, the new theme.lua); its start hook doesn't
             # fire on a reload, so start the shell ourselves
             hyprctl reload >/dev/null 2>&1
-            if [ "$n" = "$ARC" ]; then setsid -f qs -p /usr/share/archangelos/shell >/dev/null 2>&1
+            if [ "$n" = "$ARC" ]; then setsid -f qs -p "$SHELL_DIR" >/dev/null 2>&1
             else s="$(jget "$THEMES/$n" start)"; [ -n "$s" ] && setsid -f sh -c "$s" >/dev/null 2>&1; fi
         fi
         echo ok ;;
-    *) echo "usage: archangelos-shell list | current | use NAME [--now]" >&2; exit 2 ;;
+    *) echo "usage: archangelos-shell list | current | start | use NAME [--now]" >&2; exit 2 ;;
 esac

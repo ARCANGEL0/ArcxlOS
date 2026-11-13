@@ -538,7 +538,7 @@ font_ok() {
 for cmd in qs hypridle hyprpicker matugen starship fastfetch nmcli bluetoothctl playerctl sensors notify-send; do check "Command · $cmd" has_command "$cmd"; done
 check 'Command · arcshell' arcshell_command_ok
 check 'Font · Adwaita Sans' font_ok 'Adwaita Sans' /usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf
-check 'Font · JetFramesMono Nerd Font' font_ok 'JetFramesMono Nerd Font' /usr/share/fonts/TTF/JetFramesMonoNerdFont-Regular.ttf
+check 'Font · JetBrainsMono Nerd Font' font_ok 'JetBrainsMono Nerd Font' /usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf
 if [[ $zsh_enabled == true ]]; then check 'Command · zsh' has_command zsh; fi
 check 'System service · NetworkManager' system_unit_ok NetworkManager
 check 'System service · Bluetooth' system_unit_ok bluetooth

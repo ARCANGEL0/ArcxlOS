@@ -515,7 +515,7 @@ Item {
                             Text {
                                 id: codeText; anchors.centerIn: parent
                                 text: "nmcli con import type wireguard file <conf>"
-                                font.pixelSize: Math.round(9 * localScale); font.family: "JetFrames Mono"
+                                font.pixelSize: Math.round(9 * localScale); font.family: "JetBrains Mono"
                                 color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
                             }
                         }

@@ -121,7 +121,7 @@ ax_stage() {
   ax_log "Staging wallpaper pool (assets/wallpapers)..."
   mkdir -p "${pool_dest}"
   rm -f "${pool_dest}"/* 2>/dev/null || true
-  if [ "${edition}" = "netinstall" ]; then
+  if [ "${edition}" = "netinstall" ] || [ "${edition}" = "fallen" ]; then
     find "${AX_ROOT}/assets/wallpapers" -maxdepth 1 -type f -name '*.png' \
       -exec cp -f {} "${pool_dest}/" \; 2>/dev/null || true
   else

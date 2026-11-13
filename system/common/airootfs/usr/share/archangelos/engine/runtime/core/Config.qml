@@ -18,7 +18,7 @@ QtObject {
                 ? candidate : "solid"
         }
         readonly property string fontFamily: "Adwaita Sans"
-        readonly property string monoFontFamily: "JetFramesMono Nerd Font"
+        readonly property string monoFontFamily: "JetBrainsMono Nerd Font"
         // Optional packaged default; user selection is persisted by IdentityService.
         readonly property url brandMarkSource: ""
         readonly property string stateRoot: {

@@ -11,7 +11,7 @@ FocusScope {
     property color checkingColor: "#9fcafd"
     property color failureColor: "#ffb4ab"
     property color capsLockColor: "#f4c46b"
-    property string fontFamily: "JetFramesMono Nerd Font"
+    property string fontFamily: "JetBrainsMono Nerd Font"
     property bool authenticating: false
     property bool failed: false
 

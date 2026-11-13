@@ -784,7 +784,7 @@ Item {
 						text:           ClockState.timerDisplay
 						font.pixelSize: Math.round(15 * localScale)
 						font.weight:    Font.Bold
-						font.family:    "JetFrames Mono"
+						font.family:    "JetBrains Mono"
 						horizontalAlignment: Text.AlignHCenter
 						color:          root.timerUrgent ? "#ff5555" : Theme.text
 						Behavior on color { ColorAnimation { duration: Anim.normal} }
@@ -867,7 +867,7 @@ Item {
 						text:           ClockState.swDisplay
 						font.pixelSize: Math.round(15 * localScale)
 						font.weight:    Font.Bold
-						font.family:    "JetFrames Mono"
+						font.family:    "JetBrains Mono"
 						horizontalAlignment: Text.AlignHCenter
 						color:          Theme.text
 					}

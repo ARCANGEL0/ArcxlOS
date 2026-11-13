@@ -95,7 +95,7 @@ Rectangle {
             visible: tileRoot.sublabel !== ""
             text: tileRoot.sublabel
             font.pixelSize: Math.round(8 * tileRoot.localScale)
-            font.family: "JetFrames Mono"
+            font.family: "JetBrains Mono"
             color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.65)
             width: parent.width
             horizontalAlignment: Text.AlignHCenter

@@ -18,5 +18,5 @@ QtObject {
         !== "false"
     readonly property string fontFamily: config.fontFamily || "Adwaita Sans"
     readonly property string monoFontFamily: config.monoFontFamily
-        || "JetFramesMono Nerd Font"
+        || "JetBrainsMono Nerd Font"
 }

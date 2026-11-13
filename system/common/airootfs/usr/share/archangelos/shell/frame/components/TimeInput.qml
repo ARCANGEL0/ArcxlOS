@@ -58,7 +58,7 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "HH"; font.pixelSize: Math.round(9 * localScale); font.weight: Font.Medium
-                font.family: "JetFrames Mono"
+                font.family: "JetBrains Mono"
                 color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
             }
 
@@ -79,7 +79,7 @@ Item {
                     anchors.centerIn: parent
                     text: root.zp(root.hVal)
                     font.pixelSize: Math.round(20 * localScale); font.weight: Font.Bold
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                 }
 
@@ -110,7 +110,7 @@ Item {
             anchors.verticalCenterOffset: Math.round(8 * localScale)
             text: ":"
             font.pixelSize: Math.round(22 * localScale); font.weight: Font.Bold
-            font.family: "JetFrames Mono"
+            font.family: "JetBrains Mono"
             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
         }
 
@@ -122,7 +122,7 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "MM"; font.pixelSize: Math.round(9 * localScale); font.weight: Font.Medium
-                font.family: "JetFrames Mono"
+                font.family: "JetBrains Mono"
                 color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
             }
 
@@ -143,7 +143,7 @@ Item {
                     anchors.centerIn: parent
                     text: root.zp(root.mVal)
                     font.pixelSize: Math.round(20 * localScale); font.weight: Font.Bold
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                 }
 

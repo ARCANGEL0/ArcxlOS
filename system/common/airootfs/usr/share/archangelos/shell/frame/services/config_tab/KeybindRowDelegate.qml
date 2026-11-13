@@ -323,7 +323,7 @@ Item {
                     id: _pillT
                     anchors.centerIn: parent
                     text:           br._pillText
-                    font.pixelSize: Math.round(10 * localScale); font.family: "JetFrames Mono"
+                    font.pixelSize: Math.round(10 * localScale); font.family: "JetBrains Mono"
                     font.italic:    br._isUnbound 
                     
                     color: br._isUnbound 
@@ -379,7 +379,7 @@ Item {
                     Text {
                         id: _capT
                         anchors.centerIn: parent
-                        font.pixelSize: Math.round(10 * localScale); font.family: "JetFrames Mono"
+                        font.pixelSize: Math.round(10 * localScale); font.family: "JetBrains Mono"
                         color: br._hasConflict
                             ? Theme.error
                             : br.capturedKey !== ""

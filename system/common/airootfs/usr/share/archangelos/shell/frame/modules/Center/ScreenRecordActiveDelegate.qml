@@ -63,7 +63,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text:           ScreenRecService.elapsedDisplay
             font.pixelSize: Math.round(13 * localScale); font.weight: Font.Bold
-            font.family:    "JetFrames Mono"
+            font.family:    "JetBrains Mono"
             color:          Theme.text
         }
     }

@@ -52,7 +52,7 @@ Item {
         }
         text: Math.round(sliderRoot.value * 100) + "%"
         font.pixelSize: Math.round(9 * sliderRoot.localScale)
-        font.family: "JetFrames Mono"
+        font.family: "JetBrains Mono"
         font.weight: Font.Bold
         color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7)
     }

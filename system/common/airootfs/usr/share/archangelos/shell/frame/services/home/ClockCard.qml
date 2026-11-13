@@ -359,7 +359,7 @@ StatCard {
                             anchors.top:  parent.top
                             text: root._hStr
                             font.pixelSize: Math.round(72 * localScale); font.weight: Font.Bold
-                            font.family: "JetFrames Mono"; font.letterSpacing: Math.round(-4 * localScale)
+                            font.family: "JetBrains Mono"; font.letterSpacing: Math.round(-4 * localScale)
                             color: Theme.text
                         }
                         Text {
@@ -370,7 +370,7 @@ StatCard {
                             anchors.topMargin: Math.round(-8 * localScale)
                             text: root._mStr
                             font.pixelSize: Math.round(72 * localScale); font.weight: Font.Bold
-                            font.family: "JetFrames Mono"; font.letterSpacing: Math.round(-4 * localScale)
+                            font.family: "JetBrains Mono"; font.letterSpacing: Math.round(-4 * localScale)
                             color: Theme.active
                         }
                     }
@@ -383,7 +383,7 @@ StatCard {
                         Text {
                             text: root._sec
                             font.pixelSize: Math.round(22 * localScale); font.weight: Font.Medium
-                            font.family: "JetFrames Mono"
+                            font.family: "JetBrains Mono"
                             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
                         }
                         
@@ -391,7 +391,7 @@ StatCard {
                             visible: !PrefsService.use24HourTime
                             text: root._amPm
                             font.pixelSize: Math.round(14 * localScale); font.weight: Font.Bold
-                            font.family: "JetFrames Mono"
+                            font.family: "JetBrains Mono"
                             color: Theme.active
                         }
                     }

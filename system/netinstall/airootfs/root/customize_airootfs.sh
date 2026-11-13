@@ -84,11 +84,6 @@ cat > /etc/sddm.conf.d/10-archangelos.conf << 'SDDMEOF'
 [Theme]
 Current=archangelos
 
-[Autologin]
-User=liveuser
-Session=hyprland.desktop
-Relogin=false
-
 [General]
 GreeterEnvironment=QT_QUICK_CONTROLS_STYLE=Basic
 SDDMEOF

@@ -95,7 +95,7 @@ Item {
             text: stopwatchView.swDisplay
             font.pixelSize: Math.round(52 * stopwatchView.localScale)
             font.weight: Font.Bold
-            font.family: "JetFrames Mono"
+            font.family: "JetBrains Mono"
             font.letterSpacing: Math.round(-1 * stopwatchView.localScale)
             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
         }

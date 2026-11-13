@@ -42,7 +42,7 @@ hl.config({
 				active = "0xff444444",
 				inactive = "0xA9A9A9",
 			},
-			font_family = "JetFramesMono Nerd Font",
+			font_family = "JetBrainsMono Nerd Font",
 			font_size = 10,
 			gradients = true,
 			keep_upper_gap = false,

@@ -59,7 +59,7 @@ cat >"$temporary" <<EOF
 source = $theme_file
 
 \$font = Adwaita Sans
-\$mono = JetFramesMono Nerd Font
+\$mono = JetBrainsMono Nerd Font
 \$status = arcshell lock-status
 \$power = arcshell lock-power
 

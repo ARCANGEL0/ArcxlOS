@@ -291,7 +291,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent
                                     text: KanbanService.zp2(root.pickerTimeH)
-                                    font.pixelSize: Math.round(13 * localScale); font.family: "JetFrames Mono"; font.weight: Font.Bold
+                                    font.pixelSize: Math.round(13 * localScale); font.family: "JetBrains Mono"; font.weight: Font.Bold
                                     color: Theme.active
                                 }
                             }
@@ -326,7 +326,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent
                                     text: KanbanService.zp2(root.pickerTimeM)
-                                    font.pixelSize: Math.round(13 * localScale); font.family: "JetFrames Mono"; font.weight: Font.Bold
+                                    font.pixelSize: Math.round(13 * localScale); font.family: "JetBrains Mono"; font.weight: Font.Bold
                                     color: Theme.active
                                 }
                             }

@@ -232,7 +232,7 @@ QtObject {
     }
 
     property var _screenshotProc: Process {
-        command: ["bash", Paths.installDir + "/src/scripts/screenshot.sh"]
+        command: ["bash", Paths.installDir + "/frame/scripts/screenshot.sh"]
         running: false
     }
 

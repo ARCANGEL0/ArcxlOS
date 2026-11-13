@@ -75,7 +75,7 @@ class DependencyTests(unittest.TestCase):
         )
         self.assertEqual(
             required["ttf-jetbrains-mono-nerd"].files,
-            ("/usr/share/fonts/TTF/JetFramesMonoNerdFont-Regular.ttf",),
+            ("/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf",),
         )
         self.assertIn("hyprpicker", required)
 

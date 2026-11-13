@@ -85,7 +85,7 @@ Column {
 
     function runDirect(action) {
         switch (action) {
-            case "lock":    runner.pendingCmd = ["loginctl", "lock-session"];    break
+            case "lock":    runner.pendingCmd = ["/usr/bin/archangelos-lock"];    break
             case "suspend": runner.pendingCmd = ["systemctl", "suspend"];        break
         }
         runner.running = true

@@ -39,7 +39,7 @@ local function first_of(...)
 end
 
 hl.bind(mod .. " + TAB", hl.dsp.exec_cmd("/usr/bin/archangelos-launcher-toggle"), { description = "App launcher" })
-hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd("bash -c 'command -v archangelos-wheel >/dev/null || exit 0; pkill -f \"/usr/bin/[a]rchangelos-wheel\" || exec archangelos-wheel'"), { description = "Red-team wheel (Fallen)" })
+hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd("bash -c '[ -x /usr/bin/archangelos-wheel ] && exec /usr/bin/archangelos-wheel'"), { description = "Red-team wheel (Fallen)" })
 hl.bind(mod .. " + L", hl.dsp.exec_cmd("/usr/bin/archangelos-lock"), { description = "Lock screen" })
 hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("/usr/bin/archangelos-screenshot"), { description = "Screenshot a region" })
 hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("/usr/bin/archangelos-screenrecord"), { description = "Record a region (press again to stop)" })

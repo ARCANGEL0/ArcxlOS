@@ -174,7 +174,7 @@ Item {
             id: icon
             anchors.centerIn: parent
             text: root.currentLayout !== "" ? layoutSymbol(root.currentLayout) : "…"
-            font.family: "JetFramesMono Nerd Font"
+            font.family: "JetBrainsMono Nerd Font"
             font.pixelSize: Math.round(14 * localScale)
             color: Theme.text
 

@@ -27,7 +27,7 @@ Item {
     id: root
 
     property string _flagPath: Paths.configDir + "/.v0.2.0_migrated"
-    property string _scriptPath: Paths.installDir + "/src/scripts/migrate_v0.2.0.sh"
+    property string _scriptPath: Paths.installDir + "/frame/scripts/migrate_v0.2.0.sh"
 
     property bool isMigrating: false
 

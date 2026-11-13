@@ -65,7 +65,7 @@ ARCH_PACKAGES = (
     Package("adwaita-fonts", "ui-font-required", (),
             ("/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf",)),
     Package("ttf-jetbrains-mono-nerd", "ui-font-required", (),
-            ("/usr/share/fonts/TTF/JetFramesMonoNerdFont-Regular.ttf",)),
+            ("/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf",)),
     Package("fontconfig", "ui-font-validation-required", ("fc-match",)),
 )
 

@@ -17,7 +17,7 @@ Singleton {
         enabled: Config.autoLock && !Lock.locked && !GameMode.enabled
         timeout: Config.autoLockTimeout
         respectInhibitors: true
-        onIsIdleChanged: if (isIdle && Config.autoLock) Lock.locked = true
+        onIsIdleChanged: if (isIdle && Config.autoLock) Session.lock()
     }
 
     // Blank the displays after Config.dpmsTimeout idle (0 = never), tuned apart from the lock.

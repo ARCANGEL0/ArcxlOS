@@ -19,7 +19,7 @@ blur = true
 decorations = "Enabled"
 
 [fonts]
-family = "JetFrames Mono"
+family = "JetBrains Mono"
 size = 16
 use-drawable-chars = true
 hinting = true
@@ -51,22 +51,22 @@ symbol-map = [
 ]
 
 [fonts.regular]
-family = "JetFrames Mono"
+family = "JetBrains Mono"
 style = "Bold"
 weight = 700
 
 [fonts.bold]
-family = "JetFrames Mono"
+family = "JetBrains Mono"
 style = "Bold"
 weight = 700
 
 [fonts.italic]
-family = "JetFrames Mono"
+family = "JetBrains Mono"
 style = "Bold Italic"
 weight = 700
 
 [fonts.bold-italic]
-family = "JetFrames Mono"
+family = "JetBrains Mono"
 style = "Bold Italic"
 weight = 700
 

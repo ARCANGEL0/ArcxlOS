@@ -182,7 +182,7 @@ Item {
                     text: timerView.timerDisplay
                     font.pixelSize: timerView.timerLeft >= 3600 ? Math.round(16 * timerView.localScale) : Math.round(22 * timerView.localScale)
                     font.weight: Font.Bold
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                 }
 
@@ -221,7 +221,7 @@ Item {
                         anchors.centerIn: parent
                         text: modelData < 60 ? modelData + "m" : "1h"
                         font.pixelSize: Math.round(9 * timerView.localScale)
-                        font.family: "JetFrames Mono"
+                        font.family: "JetBrains Mono"
                         font.weight: Font.Bold
                         color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
                     }

@@ -411,7 +411,7 @@ Item {
                     }
                     text: MediaService._fmt(MediaService._pos)
                     font.pixelSize: Math.round(9 * mediaWidgetRoot.localScale)
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
                 }
 
@@ -422,7 +422,7 @@ Item {
                     }
                     text: MediaService._fmt(MediaService.length)
                     font.pixelSize: Math.round(9 * mediaWidgetRoot.localScale)
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
                 }
             }

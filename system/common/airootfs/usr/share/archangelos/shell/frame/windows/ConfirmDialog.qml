@@ -91,8 +91,8 @@ PanelWindow {
 
     // ── Action dispatch ───────────────────────────────────────────────────────
     function confirm() {
-        const powerScript = Paths.installDir + "/src/scripts/PowerControl.sh"
-        const gfxScript   = Paths.installDir + "/src/scripts/GfxSwitch.sh"
+        const powerScript = Paths.installDir + "/frame/scripts/PowerControl.sh"
+        const gfxScript   = Paths.installDir + "/frame/scripts/GfxSwitch.sh"
         const restartQs = Paths.isNix
             ? "nohup bash -c 'sleep 0.3; if systemctl --user is-active arcshell.service &>/dev/null; then systemctl --user restart arcshell.service; else pkill -x quickshell 2>/dev/null; sleep 0.3; arcshell; fi' >/dev/null 2>&1 &"
             : "nohup bash -c 'sleep 0.3; pkill -x quickshell 2>/dev/null; pkill -x qs 2>/dev/null; sleep 0.3; if command -v qs &>/dev/null; then qs -p \"" + Paths.installDir + "\"; else quickshell -p \"" + Paths.installDir + "\"; fi' >/dev/null 2>&1 &"
@@ -117,7 +117,7 @@ PanelWindow {
                 break
             case "lock":
                 Popups.cancelConfirm()
-                proc.pendingCmd = ["loginctl", "lock-session"]
+                proc.pendingCmd = ["/usr/bin/archangelos-lock"]
                 proc.running = true
                 break
             case "suspend":

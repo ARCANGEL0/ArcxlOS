@@ -5,7 +5,6 @@ hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true
 
 hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1020 548" })
 hl.config({ binds = { disable_keybind_grabbing = true } })
-hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
 local themes_dir = (os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")) .. "/hypr/themes"
 local active_theme = nil
@@ -39,7 +38,7 @@ end
 
 hl.on("hyprland.start", function()
     if not active_theme then
-        hl.exec_cmd("bash -c 'pgrep -f \"[q]s -p /usr/share/archangelos/shell\" >/dev/null || exec qs -p /usr/share/archangelos/shell'")
+        hl.exec_cmd("/usr/bin/archangelos-shell start")
     end
     hl.exec_cmd("/usr/bin/archangelos-wallpaper boot")
     hl.exec_cmd("/usr/bin/archangelos-launcher")
@@ -72,5 +71,3 @@ do
         end
     end
 end
-
-hl.window_rule({ match = { class = "^archangelos-wheel$" }, float = true, center = true, size = "monitor_w monitor_h" })

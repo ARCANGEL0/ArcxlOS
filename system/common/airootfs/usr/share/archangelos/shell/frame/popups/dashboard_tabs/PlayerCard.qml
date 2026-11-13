@@ -267,14 +267,14 @@ Item {
                 Text {
                     anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                     text: root._fmt(root._pos)
-                    font.pixelSize: Math.round(9 * localScale); font.family: "JetFrames Mono"
+                    font.pixelSize: Math.round(9 * localScale); font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.4)
                 }
 
                 Text {
                     anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                     text: root._fmt(root.length)
-                    font.pixelSize: Math.round(9 * localScale); font.family: "JetFrames Mono"
+                    font.pixelSize: Math.round(9 * localScale); font.family: "JetBrains Mono"
                     color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.4)
                 }
             }

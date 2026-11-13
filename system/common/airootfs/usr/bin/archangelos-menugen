@@ -1,34 +1,54 @@
 #!/usr/bin/env python3
-# ArchangelOS — dynamic launcher catalog generator.
-#
-# Scans installed .desktop files (system + per-user) at RUN TIME and prints a
-# menu.json document on stdout in the schema the Quickshell launcher expects:
-#
-#   {"edition": "...", "categories": [ {"name": "...",
-#       "items": [ {"name","exec","icon","terminal","pkg"} , ... ]}, ... ]}
-#
-# Nothing is hardcoded: the launcher invokes this every time it opens, so the
-# menu always reflects what is actually installed. Apps whose Exec binary is not
-# on PATH, and NoDisplay/Hidden/Type!=Application entries, are dropped — which is
-# why CLI-only tools (git, gcc, make: no .desktop file) never appear, and why an
-# uninstalled Firefox/Thunderbird/GCompris can no longer show up as a dead node.
-#
-# The first category is always "Apps": the de-duplicated, alphabetically sorted
-# union of every installed app (this is what the launcher's grid view lists).
 import os
-import shutil
 import sys
 import json
+import shutil
+import subprocess
 
-# Search path per the freedesktop desktop-entry spec: $XDG_DATA_HOME and each
-# $XDG_DATA_DIRS entry, plus the usual system/user fallbacks.
+CATALOG = "/usr/share/archangelos/launcher/catalog.json"
+EDITION_DEFAULT = "ArchangelOS"
+
+APP_ORDER = ["Internet", "Development", "Media", "Music", "Graphics", "Games",
+             "Office", "Education", "Security", "System", "Utilities"]
+
+WHEEL_ORDER = ["Information Gathering", "Vulnerability Analysis", "Web Application",
+               "Database Assessment", "Password Attacks", "Wireless Attacks",
+               "Bluetooth & RF", "Exploitation", "Sniffing & Spoofing",
+               "Reverse Engineering", "Malware Analysis", "Forensics",
+               "Anonymity & Tunneling", "Defense & Hardening", "Fuzzing",
+               "Code & Supply Chain", "Automation & Utilities"]
+
+CAT_MAP = [
+    ("Internet", ("Network", "WebBrowser", "Email", "InstantMessaging", "Chat",
+                  "FileTransfer", "P2P", "News", "RemoteAccess", "Telephony")),
+    ("Development", ("Development", "IDE", "TextEditor", "Debugger", "GUIDesigner",
+                     "Building", "Profiling", "RevisionControl", "WebDevelopment")),
+    ("Media", ("AudioVideo", "Video", "Player", "TV", "Recorder", "DVD")),
+    ("Music", ("Audio", "Music", "Midi", "Mixer", "Sequencer", "Tuner")),
+    ("Graphics", ("Graphics", "Photography", "2DGraphics", "3DGraphics",
+                  "RasterGraphics", "VectorGraphics", "Viewer", "Scanning")),
+    ("Office", ("Office", "WordProcessor", "Spreadsheet", "Presentation",
+                "Calendar", "ContactManagement", "Finance", "Dictionary", "Publishing")),
+    ("Education", ("Education", "Science", "Math", "Astronomy", "Biology",
+                   "Chemistry", "Geology", "Physics", "Languages")),
+    ("Games", ("Game", "ActionGame", "ArcadeGame", "BoardGame", "StrategyGame",
+               "KidsGame", "LogicGame", "Emulator", "Simulation")),
+    ("System", ("System", "Settings", "Monitor", "HardwareSettings",
+                "PackageManager", "TerminalEmulator", "Filesystem")),
+    ("Utilities", ("Utility", "Accessories", "Archiving", "Compression",
+                   "FileTools", "FileManager", "Calculator", "Clock")),
+]
+
+SECURITY_CATS = ("Security", "Forensics", "Pentesting")
+
+
 def app_dirs():
     dirs = []
     home = os.path.expanduser("~")
-    xdg_data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local/share")
-    xdg_data_dirs = os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
+    dataHome = os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local/share")
+    dataDirs = os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
     seen = set()
-    for base in [xdg_data_home] + xdg_data_dirs.split(":"):
+    for base in [dataHome] + dataDirs.split(":"):
         base = base.strip()
         if not base:
             continue
@@ -36,106 +56,21 @@ def app_dirs():
         if d not in seen and os.path.isdir(d):
             seen.add(d)
             dirs.append(d)
-    # explicit fallbacks in case the environment is bare (e.g. launched by a hook)
-    for d in ("/usr/share/applications",
-              os.path.join(home, ".local/share/applications")):
+    for d in ("/usr/share/applications", os.path.join(home, ".local/share/applications")):
         if d not in seen and os.path.isdir(d):
             seen.add(d)
             dirs.append(d)
     return dirs
 
 
-# freedesktop main/additional Category -> launcher display category.
-# First match in this order wins; anything unmatched lands in "Utilities".
-CATEGORY_MAP = [
-    ("Internet",    ("Network", "WebBrowser", "Email", "InstantMessaging",
-                     "Chat", "FileTransfer", "P2P", "News", "RemoteAccess")),
-    ("Development", ("Development", "IDE", "TextEditor", "Debugger", "GUIDesigner",
-                     "Building", "Profiling", "RevisionControl", "WebDevelopment")),
-    ("Media",       ("AudioVideo", "Video", "Player", "TV", "Recorder", "DVD")),
-    ("Music",       ("Audio", "Music", "Midi", "Mixer", "Sequencer", "Tuner")),
-    ("Graphics",    ("Graphics", "Photography", "2DGraphics", "3DGraphics",
-                     "RasterGraphics", "VectorGraphics", "Viewer", "Scanning")),
-    ("Games",       ("Game", "Emulator", "ActionGame", "ArcadeGame",
-                     "BoardGame", "StrategyGame", "Simulation")),
-    ("Office",      ("Office", "WordProcessor", "Spreadsheet", "Presentation",
-                     "Calendar", "ContactManagement", "Finance", "Dictionary")),
-    ("Education",   ("Education", "Science", "Math", "Astronomy", "Biology",
-                     "Chemistry", "Geology", "Physics")),
-    ("System",      ("System", "Settings", "Security", "Monitor",
-                     "HardwareSettings", "PackageManager", "TerminalEmulator")),
-    ("Utilities",   ("Utility", "Accessories", "Archiving", "Compression",
-                     "FileTools", "FileManager", "Calculator", "Clock")),
-]
-
-EDITION_DEFAULT = "ArchangelOS"
-
-
-def parse_desktop(path):
-    """Parse the [Desktop Entry] group of a .desktop file into a dict.
-    Returns None if the entry should not appear in a launcher."""
-    entry = {}
-    try:
-        with open(path, "r", encoding="utf-8", errors="replace") as fh:
-            in_group = False
-            for raw in fh:
-                line = raw.rstrip("\n")
-                s = line.strip()
-                if s.startswith("[") and s.endswith("]"):
-                    # only the primary [Desktop Entry] group interests us
-                    in_group = (s == "[Desktop Entry]")
-                    continue
-                if not in_group or not s or s.startswith("#") or "=" not in s:
-                    continue
-                key, val = s.split("=", 1)
-                key = key.strip()
-                if key not in entry:            # first value wins (plain before localized)
-                    entry[key] = val.strip()
-    except OSError:
-        return None
-
-    if entry.get("Type", "Application") != "Application":
-        return None
-    if entry.get("NoDisplay", "").lower() == "true":
-        return None
-    if entry.get("Hidden", "").lower() == "true":
-        return None
-
-    name = entry.get("Name", "").strip()
-    exec_raw = entry.get("Exec", "").strip()
-    if not name or not exec_raw:
-        return None
-
-    exec_clean = strip_field_codes(exec_raw)
-    if not exec_clean:
-        return None
-
-    # must actually be installed: the launch binary has to be on PATH.
-    probe = entry.get("TryExec", "").strip() or exec_clean.split()[0]
-    probe = probe.strip('"')
-    if not binary_available(probe):
-        return None
-
-    return {
-        "name": name,
-        "exec": exec_clean,
-        "icon": entry.get("Icon", "").strip(),
-        "terminal": entry.get("Terminal", "").lower() == "true",
-        "categories": [c for c in entry.get("Categories", "").split(";") if c],
-    }
-
-
-def strip_field_codes(exec_str):
-    """Drop Exec field codes (%f %u %U %i %c %k …) and collapse whitespace."""
+def stripCodes(exe):
     out = []
     i = 0
-    while i < len(exec_str):
-        ch = exec_str[i]
-        if ch == "%" and i + 1 < len(exec_str):
-            nxt = exec_str[i + 1]
-            if nxt == "%":
+    while i < len(exe):
+        ch = exe[i]
+        if ch == "%" and i + 1 < len(exe):
+            if exe[i + 1] == "%":
                 out.append("%")
-            # any other %<letter> is a field code -> drop both chars
             i += 2
             continue
         out.append(ch)
@@ -143,24 +78,91 @@ def strip_field_codes(exec_str):
     return " ".join("".join(out).split())
 
 
-def binary_available(cmd):
+_pathBins = None
+
+
+def pathBins():
+    global _pathBins
+    if _pathBins is None:
+        _pathBins = set()
+        for d in (os.environ.get("PATH") or "/usr/bin").split(":"):
+            if not d:
+                continue
+            try:
+                _pathBins.update(os.listdir(d))
+            except OSError:
+                pass
+    return _pathBins
+
+
+def binAvail(cmd):
     if not cmd:
         return False
     if os.path.isabs(cmd):
         return os.path.isfile(cmd) and os.access(cmd, os.X_OK)
-    return shutil.which(cmd) is not None
+    return cmd in pathBins()
+
+
+def parseDesktop(path):
+    entry = {}
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            inGroup = False
+            for raw in fh:
+                s = raw.strip()
+                if s.startswith("[") and s.endswith("]"):
+                    inGroup = (s == "[Desktop Entry]")
+                    continue
+                if not inGroup or not s or s.startswith("#") or "=" not in s:
+                    continue
+                key, val = s.split("=", 1)
+                key = key.strip()
+                if key not in entry:
+                    entry[key] = val.strip()
+    except OSError:
+        return None
+    if entry.get("Type", "Application") != "Application":
+        return None
+    if entry.get("NoDisplay", "").lower() == "true":
+        return None
+    if entry.get("Hidden", "").lower() == "true":
+        return None
+    name = entry.get("Name", "").strip()
+    execRaw = entry.get("Exec", "").strip()
+    if not name or not execRaw:
+        return None
+    execClean = stripCodes(execRaw)
+    if not execClean:
+        return None
+    probe = entry.get("TryExec", "").strip() or execClean.split()[0]
+    probe = probe.strip('"')
+    if not binAvail(probe):
+        return None
+    return {
+        "name": name,
+        "exec": execClean,
+        "icon": entry.get("Icon", "").strip(),
+        "terminal": entry.get("Terminal", "").lower() == "true",
+        "categories": [c for c in entry.get("Categories", "").split(";") if c],
+    }
 
 
 def classify(categories):
     cats = set(categories)
-    for display, keys in CATEGORY_MAP:
+    for disp, keys in CAT_MAP:
         if cats.intersection(keys):
-            return display
+            if disp == "Games" and ("System" in cats or "Settings" in cats):
+                return "System"
+            return disp
     return "Utilities"
 
 
-def main():
-    apps = {}          # desktop-id (basename) -> item, for de-duplication
+def isSecurity(categories):
+    return bool(set(categories).intersection(SECURITY_CATS))
+
+
+def scanDesktops():
+    apps = {}
     for d in app_dirs():
         try:
             names = sorted(os.listdir(d))
@@ -169,64 +171,133 @@ def main():
         for fn in names:
             if not fn.endswith(".desktop"):
                 continue
-            item = parse_desktop(os.path.join(d, fn))
+            if fn.startswith("archangelos-"):
+                continue
+            item = parseDesktop(os.path.join(d, fn))
             if item is None:
                 continue
-            # per-user entries (scanned first) shadow system ones of the same id
             apps.setdefault(fn, item)
+    return list(apps.values())
 
-    items = list(apps.values())
-    items.sort(key=lambda it: it["name"].lower())
 
-    # bucket into display categories
-    buckets = {}
-    for it in items:
-        buckets.setdefault(classify(it["categories"]), []).append(it)
+def loadCatalog():
+    try:
+        with open(CATALOG, "r", encoding="utf-8") as fh:
+            return json.load(fh).get("entries", [])
+    except (OSError, ValueError):
+        return []
 
-    def item_out(it):
-        return {
-            "name": it["name"],
-            "exec": it["exec"],
-            "icon": it["icon"],
-            "terminal": it["terminal"],
-        }
 
-    categories = [{"name": "Apps", "items": [item_out(it) for it in items]}]
-    # emit the mapped categories in the CATEGORY_MAP display order, non-empty only
-    order = [d for d, _ in CATEGORY_MAP]
-    for display in order:
-        bucket = buckets.get(display)
-        if bucket:
-            categories.append({"name": display,
-                               "items": [item_out(it) for it in bucket]})
+def installedPkgs():
+    try:
+        out = subprocess.run(["pacman", "-Qq"], capture_output=True, text=True, timeout=20).stdout
+        return set(out.split())
+    except Exception:
+        return None
 
-    doc = {"edition": edition_name(), "categories": categories}
+
+def editionName():
+    env = os.environ.get("ARCHANGELOS_EDITION")
+    if env:
+        return env
+    for path in ("/etc/arch-release", "/etc/archangelos/edition"):
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                val = fh.read().strip()
+                if val:
+                    return val
+        except OSError:
+            pass
+    return EDITION_DEFAULT
+
+
+def emit(categories):
+    doc = {"edition": editionName(), "categories": categories}
     json.dump(doc, sys.stdout, ensure_ascii=False)
     sys.stdout.write("\n")
 
 
-def edition_name():
-    env = os.environ.get("ARCHANGELOS_EDITION")
-    if env:
-        return env
-    # customize_airootfs writes "ArchangelOS" here on every edition.
-    try:
-        with open("/etc/arch-release", "r", encoding="utf-8", errors="replace") as fh:
-            val = fh.read().strip()
-            if val:
-                return val
-    except OSError:
-        pass
-    try:
-        with open("/etc/os-release", "r", encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                if line.startswith("PRETTY_NAME=") or line.startswith("NAME="):
-                    val = line.split("=", 1)[1].strip().strip('"')
-                    if val:
-                        return val
-    except OSError:
-        pass
-    return EDITION_DEFAULT
+def catalogItems(redteam):
+    entries = loadCatalog()
+    pkgs = installedPkgs()
+    out = []
+    for e in entries:
+        pkg = e.get("pkg")
+        if pkgs is not None and pkg and pkg not in pkgs:
+            continue
+        exe = e.get("exec", "")
+        bin0 = exe.split(" ")[0]
+        if not e.get("gui") and not binAvail(bin0):
+            continue
+        if redteam and "wheel" not in e:
+            continue
+        out.append(e)
+    return out
+
+
+def buildRedteam():
+    items = catalogItems(True)
+    buckets = {}
+    for e in items:
+        buckets.setdefault(e["wheel"], []).append({
+            "name": e["name"], "exec": e["exec"],
+            "terminal": e.get("terminal", not e.get("gui", False)),
+            "icon": e.get("icon", ""), "pkg": e.get("pkg", ""),
+        })
+    cats = []
+    for name in WHEEL_ORDER:
+        b = buckets.get(name)
+        if b:
+            b.sort(key=lambda it: it["name"].lower())
+            cats.append({"name": name, "items": b})
+    for name in sorted(buckets):
+        if name not in WHEEL_ORDER:
+            b = buckets[name]
+            b.sort(key=lambda it: it["name"].lower())
+            cats.append({"name": name, "items": b})
+    emit(cats)
+
+
+def buildLauncher():
+    desktops = scanDesktops()
+    items = catalogItems(False)
+    allItems = []
+    seenExec = set()
+    buckets = {}
+
+    def add(name, item):
+        key = item["exec"].split(" ")[0] + "|" + item["name"].lower()
+        if key in seenExec:
+            return
+        seenExec.add(key)
+        buckets.setdefault(name, []).append(item)
+        allItems.append(item)
+
+    for it in desktops:
+        cat = "Security" if isSecurity(it["categories"]) else classify(it["categories"])
+        add(cat, {"name": it["name"], "exec": it["exec"],
+                  "icon": it["icon"], "terminal": it["terminal"]})
+    for e in items:
+        add(e["app"], {"name": e["name"], "exec": e["exec"],
+                       "icon": e.get("icon", ""),
+                       "terminal": e.get("terminal", not e.get("gui", False)),
+                       "pkg": e.get("pkg", "")})
+
+    allItems.sort(key=lambda it: it["name"].lower())
+    cats = [{"name": "Apps", "items": allItems}]
+    for name in APP_ORDER:
+        b = buckets.get(name)
+        if b:
+            b.sort(key=lambda it: it["name"].lower())
+            cats.append({"name": name, "items": b})
+    emit(cats)
+
+
+def main():
+    if "--redteam" in sys.argv[1:]:
+        buildRedteam()
+    else:
+        buildLauncher()
 
 
 if __name__ == "__main__":

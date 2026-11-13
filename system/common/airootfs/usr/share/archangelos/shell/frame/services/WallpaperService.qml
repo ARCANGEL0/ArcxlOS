@@ -66,7 +66,7 @@ QtObject {
     // Show without remembering it (the picker's live preview); apply() persists.
     function show(path) {
         if (!path) return
-        Quickshell.execDetached(["bash", Paths.installDir + "/src/scripts/show_wallpaper.sh", path, root.posterFor(path), "preview"])
+        Quickshell.execDetached(["bash", Paths.installDir + "/frame/scripts/show_wallpaper.sh", path, root.posterFor(path), "preview"])
     }
 
     function getThumbnail(filePath) {
@@ -79,7 +79,7 @@ QtObject {
         var dir = root.wallpaperDir.replace(/^~/, Quickshell.env("HOME"))
         thumbProc.command = [
             "bash",
-            Paths.installDir + "/src/scripts/generate_wallpaper_thumbnails.sh",
+            Paths.installDir + "/frame/scripts/generate_wallpaper_thumbnails.sh",
             dir,
             root.thumbCacheDir
         ]
@@ -103,7 +103,7 @@ QtObject {
     property var listProc: Process {
         // ArchangelOS: stills and videos from both folders; videos get a poster frame.
         command: [
-            "bash", Paths.installDir + "/src/scripts/list_wallpapers.sh", root.thumbCacheDir,
+            "bash", Paths.installDir + "/frame/scripts/list_wallpapers.sh", root.thumbCacheDir,
             root.wallpaperDir.replace(/^~/, Quickshell.env("HOME")), root.systemWallDir
         ]
         stdout: SplitParser {
@@ -200,9 +200,9 @@ QtObject {
             "bash", "-c",
             "bash \"$0\" \"$1\" \"$2\" apply " +
             (PrefsService.dynamicThemeOverride ? "" :
-            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -c \"" + Paths.installDir + "/src/config/matugen.toml\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme + " " +
+            "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -c \"" + Paths.installDir + "/frame/config/matugen.toml\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme + " " +
             "&& matugen image \"$(readlink -f ~/.curr_wall_static.jpg)\" -m " + (PrefsService.darkMode ? "dark" : "light") + " --source-color-index 0 --type scheme-" + root.scheme) + " || true",
-            Paths.installDir + "/src/scripts/show_wallpaper.sh", path, root.posterFor(path)
+            Paths.installDir + "/frame/scripts/show_wallpaper.sh", path, root.posterFor(path)
         ]
         applyProc.running = true
     }

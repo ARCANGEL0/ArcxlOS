@@ -267,7 +267,7 @@ Item {
                     text: alarmView._zp(modelData.hour) + ":" + alarmView._zp(modelData.minute)
                     font.pixelSize: Math.round(15 * alarmView.localScale)
                     font.weight: Font.Bold
-                    font.family: "JetFrames Mono"
+                    font.family: "JetBrains Mono"
                     color: modelData.enabled
                            ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.9)
                            : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)

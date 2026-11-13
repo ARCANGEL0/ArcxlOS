@@ -178,7 +178,7 @@ StatCard {
                         Behavior on color { ColorAnimation { duration: Anim.superFast} }
                         Text {
                             anchors.centerIn: parent; text: modelData.n
-                            font.pixelSize: Math.round(9 * localScale); font.family: "JetFrames Mono"
+                            font.pixelSize: Math.round(9 * localScale); font.family: "JetBrains Mono"
                             font.weight: isToday ? Font.Bold : Font.Normal
                             color: isToday ? Theme.active
                                    : modelData.cur ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.55)

@@ -69,7 +69,7 @@ QtObject {
     property var _hyprBinds: []
 
     property var _hyprBindsProc: Process {
-        command: ["python3", Paths.installDir + "/src/scripts/hypr_binds.py"]
+        command: ["python3", Paths.installDir + "/frame/scripts/hypr_binds.py"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {

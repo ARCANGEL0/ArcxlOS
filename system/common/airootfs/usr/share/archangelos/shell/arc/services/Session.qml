@@ -7,7 +7,7 @@ import Quickshell
 Singleton {
     id: root
 
-    function lock()     { Lock.locked = true; }
+    function lock()     { Quickshell.execDetached(["/usr/bin/archangelos-lock"]); }
     function logout()   { HyprCtl.exit(); }
     function suspend()  { Quickshell.execDetached(["systemctl", "suspend"]); }
     function reboot()   { Quickshell.execDetached(["systemctl", "reboot"]); }

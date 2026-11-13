@@ -468,7 +468,7 @@ Item {
                                 verticalAlignment: TextInput.AlignVCenter
                                 color:             Theme.text
                                 font.pixelSize:    Math.round(12 * root.localScale)
-                                font.family:       "JetFrames Mono"
+                                font.family:       "JetBrains Mono"
                                 selectionColor:    Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
                                 clip:              true
                                 Keys.onReturnPressed: {
