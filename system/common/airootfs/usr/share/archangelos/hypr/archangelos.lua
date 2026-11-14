@@ -3,6 +3,8 @@ hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, cen
 hl.window_rule({ match = { title = "^archangelos-welcome$" },  float = true, center = true })
 hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true, center = true, size = "1040 700" })
 
+hl.window_rule({ match = { class = "^archangelos-wheel$" }, float = true, no_anim = true, rounding = 0, pin = true, opacity = "1.0 1.0" })
+
 hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1020 548" })
 hl.config({ binds = { disable_keybind_grabbing = true } })
 

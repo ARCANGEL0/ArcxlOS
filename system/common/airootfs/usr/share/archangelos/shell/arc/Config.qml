@@ -342,7 +342,7 @@ Singleton {
     // Faces are bundled in assets/fonts, so the shell looks the same where none are installed
     // system-wide. The folder is scanned, not listed: dropping a .ttf/.otf in adds a text face.
     // The icon face never changes — no pixel icon set exists to swap in.
-    readonly property real popFillet: 30
+    readonly property real popFillet: 20
     readonly property real popCorner: 18
     readonly property string iconFile: "MaterialSymbolsRounded"
 

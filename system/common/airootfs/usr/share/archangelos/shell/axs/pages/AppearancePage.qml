@@ -102,7 +102,13 @@ PageScaffold {
         page.gtkSet("gtk-icon-theme-name", theme);
         Quickshell.execDetached(["sh", "-c",
             'gsettings set org.gnome.desktop.interface icon-theme "$1" 2>/dev/null; '
-            + 'mkdir -p "$HOME/.icons/default"; printf "[Icon Theme]\\nName=Default\\nInherits=%s\\n" "$1" > "$HOME/.icons/default/index.theme"; true', "sh", theme]);
+            + 'mkdir -p "$HOME/.icons/default"; printf "[Icon Theme]\\nName=Default\\nInherits=%s\\n" "$1" > "$HOME/.icons/default/index.theme"; '
+            + 'kwriteconfig6 --file kdeglobals --group Icons --key Theme "$1" 2>/dev/null '
+            + '|| kwriteconfig5 --file kdeglobals --group Icons --key Theme "$1" 2>/dev/null '
+            + '|| { f="$HOME/.config/kdeglobals"; mkdir -p "$HOME/.config"; touch "$f"; '
+            + 'grep -q "^\\[Icons\\]" "$f" || printf "\\n[Icons]\\nTheme=%s\\n" "$1" >> "$f"; '
+            + 'awk -v t="$1" \'BEGIN{s=0} /^\\[Icons\\]/{s=1} /^\\[/ && !/^\\[Icons\\]/{s=0} { if(s && /^Theme=/){print "Theme=" t; next} print }\' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; }; '
+            + 'dbus-send --session --type=signal /KGlobalSettings org.kde.KGlobalSettings.notifyChange int32 4 int32 0 2>/dev/null; true', "sh", theme]);
         page.flash("Icon theme changed.");
     }
     function flash(t) { page.notice = t; flashT.restart(); }

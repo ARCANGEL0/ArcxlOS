@@ -80,8 +80,10 @@ PageScaffold {
     }
     function load() {
         cmd.run(["archangelos-shell", "list"], (c, o) => {
-            page.shells = o.split("\n").filter(l => l).map(l => { const f = l.split("|");
+            let got = o.split("\n").filter(l => l).map(l => { const f = l.split("|");
                 return { id: f[0], name: f[1], desc: f[2], preview: f[3], keys: f[4] === "1", live: f[5] === "1", active: f[6] === "1" }; });
+            for (const ex of page.external) if (!got.some(x => x.id === ex.id)) got.push(ex);
+            page.shells = got;
             if (!page.shells.some(x => x.id === page.chosen)) page.chosen = page.current ? page.current.id : "";
         });
     }
@@ -94,15 +96,16 @@ PageScaffold {
             page.load();
         });
     }
-    function installCyberArch() {
-        const script = 'set -e; d="$(mktemp -d)"; '
-            + 'echo "Cloning CyberArch-Shell…"; git clone --depth 1 https://github.com/ARCANGEL0/CyberArch-Shell.git "$d/CyberArch-Shell"; '
-            + 'cd "$d/CyberArch-Shell"; chmod +x install.sh; ./install.sh; '
-            + 'echo; echo "— installer finished. Reopen Settings > Desktop & Shell and refresh —"; read -p "Press Enter to close… " _';
-        Quickshell.execDetached(["sh", "-c",
-            'for t in rio kitty foot alacritty konsole xterm; do command -v "$t" >/dev/null 2>&1 && exec "$t" -e bash -lc "$1"; done; '
-            + 'notify-send "No terminal found" "Install a terminal to run the CyberArch installer." 2>/dev/null',
-            "sh", script]);
+    readonly property var external: [
+        { id: "yorha", name: "YorHA", desc: "NieR:Automata Hyprland rice. Opens its GitHub to install.",
+          preview: "", external: true, url: "https://github.com/ARCANGEL0/yorha-dotfiles",
+          keys: false, live: false, active: false },
+        { id: "cyberarch", name: "CyberArch", desc: "Cyberpunk 2077 netrunner rice (AGS / Astal). Opens its GitHub to install.",
+          preview: "", external: true, url: "https://github.com/ARCANGEL0/CyberArch-Shell",
+          keys: false, live: false, active: false }
+    ]
+    function openRepo(url) {
+        Quickshell.execDetached(["sh", "-c", 'xdg-open "$1" >/dev/null 2>&1 &', "sh", url]);
     }
 
     header: Row {
@@ -114,7 +117,7 @@ PageScaffold {
 
     Section {
         title: "Shell"
-        note: page.shells.length + (page.shells.length === 1 ? " installed" : " installed")
+        note: page.shells.filter(x => !x.external).length + " installed"
         Item {
             property bool topDivider: false
             width: parent.width
@@ -170,7 +173,7 @@ PageScaffold {
             }
         }
         SRow {
-            visible: !!page.sel && !page.sel.active
+            visible: !!page.sel && !page.sel.active && !page.sel.external
             icon: "swap_horiz"
             title: page.sel ? "Switch to " + page.sel.name : ""
             desc: !page.sel ? "" : (page.sel.live ? "Can switch right away, or at your next sign-in" : "Takes over when you next sign in")
@@ -179,6 +182,13 @@ PageScaffold {
             AxButton { text: page.switched === (page.sel ? page.sel.id : "") ? "Chosen" : "Use at next sign-in"; kind: "primary"
                        enabled_: page.switched !== (page.sel ? page.sel.id : "")
                        anchors.verticalCenter: parent.verticalCenter; onClicked: page.use(page.sel, false) }
+        }
+        SRow {
+            visible: !!page.sel && !!page.sel.external
+            icon: "open_in_new"
+            title: page.sel ? "Get " + page.sel.name : ""
+            desc: "Opens its GitHub page in your browser. Follow the repo's steps to install it, then press refresh — it'll appear here as a shell you can switch to."
+            AxButton { text: "Open on GitHub"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.openRepo(page.sel.url) }
         }
         SRow {
             visible: page.switched !== ""
@@ -197,20 +207,6 @@ PageScaffold {
         }
     }
     Label { visible: page.error !== ""; width: parent.width; wrapMode: Text.WordWrap; text: page.error; color: Ax.danger; font.pixelSize: Ax.fsSmall }
-
-    Section {
-        visible: !page.shells.some(x => x.id === "cyberpunk")
-        title: "Install more shells"
-        SRow {
-            icon: "download"; title: "CyberArch"
-            desc: "A Cyberpunk 2077 netrunner rice (AGS / Astal). Its installer downloads the packages it needs and asks before changing anything — a few GB and some minutes."
-            AxButton { text: "Install…"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.installCyberArch() }
-        }
-        SRow {
-            icon: "info"; dim: true; title: "After it finishes"
-            desc: "Come back here and press refresh (top-right) — CyberArch will appear as a shell you can switch to."
-        }
-    }
 
     Label {
         width: parent.width; topPadding: 6

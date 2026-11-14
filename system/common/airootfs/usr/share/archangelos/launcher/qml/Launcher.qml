@@ -251,18 +251,20 @@ Item {
     }
     Component.onCompleted: { menuGen.running = true; shown = active }
 
+    function shq(s) { return "'" + String(s).split("'").join("'\\''") + "'" }
     function launchItem(item) {
         if (!item || !item.exec) return
         var exe = item.exec
         var bin = exe.split(" ")[0]
         var pkg = item.pkg ? item.pkg : bin
-        var findTerm = "for t in rio konsole alacritty foot kitty wezterm xterm; do command -v $t >/dev/null 2>&1 && { TERM_EMU=$t; break; }; done"
-        var run = item.terminal ? ("$TERM_EMU -e " + exe) : ("setsid " + exe + " >/dev/null 2>&1 &")
-        var script = findTerm + "\n"
-            + "if command -v " + bin + " >/dev/null 2>&1; then\n" + run + "\nelse\n"
-            + "$TERM_EMU -e bash -lc '"
-            + "archangelos-install-tool " + pkg + "; "
-            + "command -v " + bin + " >/dev/null 2>&1 && " + run + "'\nfi"
+        var tflag = item.terminal ? "1" : ""
+        var script =
+            "EXE=" + shq(exe) + "; BIN=" + shq(bin) + "; PKG=" + shq(pkg) + "; TERMINAL=" + shq(tflag) + "; TERM_EMU=;\n"
+            + "export EXE BIN PKG TERMINAL TERM_EMU;\n"
+            + "for t in rio konsole alacritty foot kitty wezterm xterm; do command -v \"$t\" >/dev/null 2>&1 && { TERM_EMU=$t; break; }; done;\n"
+            + "runapp() { if [ -n \"$TERMINAL\" ]; then setsid \"$TERM_EMU\" -e bash -c 'exec $EXE' >/dev/null 2>&1 & else setsid bash -c 'exec $EXE' >/dev/null 2>&1 & fi; };\n"
+            + "if command -v \"$BIN\" >/dev/null 2>&1; then runapp;\n"
+            + "else \"$TERM_EMU\" -e bash -c 'archangelos-install-tool \"$PKG\"; command -v \"$BIN\" >/dev/null 2>&1 || exit; if [ -n \"$TERMINAL\" ]; then exec $EXE; else setsid bash -c \"exec \\$EXE\" >/dev/null 2>&1 & fi'; fi"
         Quickshell.execDetached(["sh", "-lc", script])
         root.dismiss()
     }

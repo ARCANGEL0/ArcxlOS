@@ -428,6 +428,7 @@ wireplumber
 sddm
 qt6-svg
 qt6-5compat
+python-pyqt6
 ghidra
 jdk-openjdk
 zenmap

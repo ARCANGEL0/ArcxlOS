@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=ArcLight
+Comment=ArchangelOS window theme
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=ArcLight
+MetacityTheme=ArcLight
+IconTheme=Arcanum
+CursorTheme=Crystal
+ButtonLayout=:minimize,maximize,close

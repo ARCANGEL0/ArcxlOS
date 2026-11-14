@@ -1,7 +1,3 @@
-// Tool rack (Fallen) — the security tools installed on this machine, grouped by what they're for,
-// searchable, each able to launch. It's the same catalogue the desktop wheel (Super+Space) draws
-// from: /usr/lib/archangelos/axs-tools reads the installed .desktop files. It launches only; it
-// installs nothing.
 import QtQuick
 import Quickshell
 import qs.axs
@@ -14,7 +10,7 @@ PageScaffold {
     title: "Tool rack"
     desc: "Every security tool on this machine, sorted by what it does."
 
-    property var cats: []              // { group, tools: [{name, exec, comment, terminal}] }
+    property var cats: []
     property int total: 0
     property bool loaded: false
     property string query: ""
@@ -22,26 +18,52 @@ PageScaffold {
 
     Cmd { id: cmd }
     function load() {
-        cmd.run(["/usr/lib/archangelos/axs-tools"], (c, o) => {
-            try { const d = JSON.parse(o); page.cats = d.categories || []; page.total = d.total || 0; }
-            catch (e) { page.cats = []; }
+        cmd.run(["/usr/bin/archangelos-menugen", "--redteam"], (c, o) => {
+            try {
+                const d = JSON.parse(o);
+                const src = d.categories || [];
+                let out = [];
+                let n = 0;
+                for (const cat of src) {
+                    const items = cat.items || [];
+                    if (!items.length) continue;
+                    const tools = items.map(it => ({
+                        name: it.name, exec: it.exec,
+                        comment: it.pkg || "",
+                        terminal: it.terminal !== undefined ? it.terminal : !it.gui
+                    }));
+                    out.push({ group: cat.name, tools: tools });
+                    n += tools.length;
+                }
+                page.cats = out;
+                page.total = n;
+            } catch (e) { page.cats = []; page.total = 0; }
             page.loaded = true;
         });
     }
     Component.onCompleted: load()
 
+    function shq(s) { return "'" + String(s).split("'").join("'\\''") + "'"; }
     function launch(t) {
-        if (t.terminal) Quickshell.execDetached(["sh", "-c", "for term in rio foot kitty alacritty xterm; do command -v $term >/dev/null && exec $term -e sh -c '" + t.exec.replace(/'/g, "'\\''") + "; exec $SHELL'; done"]);
-        else Quickshell.execDetached(["sh", "-c", t.exec + " >/dev/null 2>&1 &"]);
+        const q = page.shq(t.exec);
+        let script;
+        if (t.terminal) {
+            script = "AXEXE=" + q + "; export AXEXE; TERM_EMU=;"
+                   + "for term in rio konsole alacritty foot kitty wezterm xterm; do command -v \"$term\" >/dev/null 2>&1 && { TERM_EMU=$term; break; }; done;"
+                   + "setsid \"$TERM_EMU\" -e bash -c 'exec $AXEXE' >/dev/null 2>&1 &";
+        } else {
+            script = "AXEXE=" + q + "; export AXEXE; setsid bash -c 'exec $AXEXE' >/dev/null 2>&1 &";
+        }
+        Quickshell.execDetached(["sh", "-c", script]);
     }
 
     readonly property var glyphs: ({
-        "Information Gathering": "travel_explore", "Vulnerability Analysis": "bug_report", "Web Applications": "language",
-        "Exploitation": "gps_fixed", "Passwords": "password", "Wireless": "wifi", "Bluetooth & RF": "bluetooth",
+        "Information Gathering": "travel_explore", "Vulnerability Analysis": "bug_report", "Web Application": "language",
+        "Exploitation": "gps_fixed", "Password Attacks": "password", "Wireless Attacks": "wifi", "Bluetooth & RF": "bluetooth",
         "Sniffing & Spoofing": "network_check", "Reverse Engineering": "memory", "Forensics": "fingerprint",
-        "Anonymity": "visibility_off", "Blue Team & Defense": "verified_user", "Databases": "database",
-        "Malware Analysis": "coronavirus", "Hardware & RF": "cable", "Cryptography": "enhanced_encryption",
-        "Mobile": "smartphone", "VoIP": "call", "Social Engineering": "groups", "Utilities": "build"
+        "Anonymity & Tunneling": "visibility_off", "Defense & Hardening": "verified_user", "Database Assessment": "database",
+        "Malware Analysis": "coronavirus", "Fuzzing": "shuffle", "Code & Supply Chain": "code",
+        "Automation & Utilities": "build"
     })
     function glyph(g) { return page.glyphs[g] || "terminal"; }
 

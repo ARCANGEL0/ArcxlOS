@@ -280,7 +280,7 @@ PanelWindow {
                         // implicit height doubles as the layout minimum and feeds the tab's own
                         // implicit height, which is what sizes the panel.
                         implicitHeight: mediaRow.implicitHeight + 32
-                        radius: 22; color: Config.containerSoft
+                        radius: 20; color: Config.containerSoft
                         clip: true
 
                         // Request the audio spectrum only while this tab is on-screen and something plays.
@@ -532,7 +532,7 @@ PanelWindow {
                         Rectangle {
                             Layout.fillWidth: true
                             implicitHeight: clockCol.implicitHeight + 22
-                            radius: 22; color: Config.containerSoft
+                            radius: 20; color: Config.containerSoft
                             Elevation { anchors.fill: parent; radius: parent.radius; z: -1; level: 1 }
                             ColumnLayout {
                                 id: clockCol
@@ -547,7 +547,7 @@ PanelWindow {
                         Rectangle {
                             Layout.fillWidth: true; Layout.fillHeight: true
                             implicitHeight: dashCalendar.implicitHeight + 24
-                            radius: 22; color: Config.containerSoft
+                            radius: 20; color: Config.containerSoft
                             Elevation { anchors.fill: parent; radius: parent.radius; z: -1; level: 1 }
                             Calendar {
                                 id: dashCalendar
