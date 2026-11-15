@@ -7,7 +7,7 @@
 # the per-user GTK + Qt/KDE bits so the whole desktop comes up dark-grey.
 set -u
 
-GTK_THEME="Adwaita-dark"
+GTK_THEME="ArcDark"
 ICON_THEME="Arcanum"
 CURSOR_THEME="Crystal"
 CURSOR_SIZE=24

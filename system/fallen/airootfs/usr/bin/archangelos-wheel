@@ -1105,14 +1105,65 @@ class WheelWindow(QWidget):
             self.close()
 
 
+WHEEL_RUNTIME = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "archangelos-wheel.pid")
+
+
+def _wheel_running():
+    """Return True if a wheel instance is alive, else clean up stale state."""
+    try:
+        with open(WHEEL_RUNTIME, "r") as f:
+            pid = int(f.read().strip())
+    except Exception:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        try:
+            os.remove(WHEEL_RUNTIME)
+        except OSError:
+            pass
+        return False
+
+
+def _toggle_wheel():
+    """Single-instance toggle: close existing wheel, or launch a new one."""
+    if _wheel_running():
+        try:
+            with open(WHEEL_RUNTIME, "r") as f:
+                pid = int(f.read().strip())
+            os.kill(pid, 15)  # SIGTERM — the QWidget closes on this
+        except OSError:
+            pass
+        try:
+            os.remove(WHEEL_RUNTIME)
+        except OSError:
+            pass
+        return False
+    return True
+
+
 def main():
     app = QApplication(sys.argv)
     QGuiApplication.setDesktopFileName("archangelos-wheel")
-    gpos = cursor_position(sys.argv)
-    screen = QGuiApplication.screenAt(gpos.toPoint()) or QGuiApplication.primaryScreen()
-    window = WheelWindow(screen, gpos)
-    window.show()
-    sys.exit(app.exec())
+    if not _toggle_wheel():
+        return 0  # another instance was open; toggle closed it
+    try:
+        with open(WHEEL_RUNTIME, "w") as f:
+            f.write(str(os.getpid()))
+    except OSError:
+        pass
+    try:
+        gpos = cursor_position(sys.argv)
+        screen = QGuiApplication.screenAt(gpos.toPoint()) or QGuiApplication.primaryScreen()
+        window = WheelWindow(screen, gpos)
+        window.show()
+        sys.exit(app.exec())
+    finally:
+        try:
+            os.remove(WHEEL_RUNTIME)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":
