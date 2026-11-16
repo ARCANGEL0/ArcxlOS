@@ -48,14 +48,14 @@ Item {
 
             Rectangle {
                 id: bubble
-                width: label.implicitWidth + Math.round(18 * tip.localScale)
-                height: label.implicitHeight + Math.round(10 * tip.localScale)
-                radius: Math.round(7 * tip.localScale)
-                color: Qt.rgba(Theme.background.r, Theme.background.g, Theme.background.b, 0.96)
+                width: label.implicitWidth + Math.round(20 * tip.localScale)
+                height: label.implicitHeight + Math.round(12 * tip.localScale)
+                radius: Math.round(8 * tip.localScale)
+                color: Theme.background
                 border.width: 1
-                border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
+                border.color: Theme.border
                 opacity: 0
-                scale: 0.92
+                scale: 0.95
                 Component.onCompleted: { opacity = 1; scale = 1 }
                 Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
                 Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }

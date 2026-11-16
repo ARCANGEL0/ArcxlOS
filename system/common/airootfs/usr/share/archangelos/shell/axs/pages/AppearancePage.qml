@@ -24,6 +24,7 @@ PageScaffold {
     property string curCursor: ""
     property string curIcon: ""
     property string curGtk: ""
+    property string themeMode: "ArcDark"
     readonly property var colorSlots: [
         { key: "Bg",      label: "Background" },
         { key: "Border",  label: "Border" },
@@ -337,6 +338,12 @@ PageScaffold {
             AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: page.gtkThemes
                        current: Math.max(0, page.gtkThemes.indexOf(page.curGtk))
                        onPicked: (i) => page.applyGtk(page.gtkThemes[i]) }
+        }
+        SRow {
+            icon: "palette"; title: "Theme Mode"; desc: "ArcLight or ArcDark — system-wide dark/light mode"
+            AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: ["ArcDark", "ArcLight"]
+                       current: page.themeMode === "ArcLight" ? 1 : 0
+                       onPicked: (i) => page.themeMode = i === 0 ? "ArcDark" : "ArcLight" }
         }
         SRow {
             icon: "apps"; title: "Icon theme"; desc: "Icons for apps, files and folders (GTK applications)"

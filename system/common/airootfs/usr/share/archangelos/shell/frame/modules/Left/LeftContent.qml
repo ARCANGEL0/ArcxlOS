@@ -52,7 +52,6 @@ Row {
 			onClicked: Quickshell.execDetached(["/usr/bin/archangelos-launcher-toggle"])
 		}
 		Tip { text: "App launcher"; localScale: parent.localScale }
-		Tip { text: "App launcher"; localScale: parent.localScale }
 	}
 
 	// 2. Workspaces

@@ -28,7 +28,10 @@ Text {
     Behavior on color { ColorAnimation { duration: Anim.color} }
     font.bold: true
     anchors.verticalCenter: parent.verticalCenter
-    font.pixelSize: Math.round(16 * localScale)
+    font.pixelSize: Math.round(24 * localScale)
+    font.family: Theme.clockFont ?? "monospace"
+    style: Text.Raised
+    styleColor: "#000000"
 
     property int formatMode: 0
 
@@ -79,8 +82,8 @@ Text {
 
     function updateText() {
         let now = new Date()
-        let tf = PrefsService.use24HourTime ? "hh:mm" : "h:mm ap"
-        let tfs = PrefsService.use24HourTime ? "hh:mm:ss" : "h:mm:ss ap"
+        let tf = PrefsService.use24HourTime ? "HH:mm" : "h:mm AP"
+        let tfs = PrefsService.use24HourTime ? "HH:mm:ss" : "h:mm:ss AP"
         switch(formatMode) {
             case 0:
                 text = Qt.formatDateTime(now, tf)
@@ -93,7 +96,7 @@ Text {
                 break
         }
     }
-    
+
     Connections {
         target: PrefsService
         function onUse24HourTimeChanged() { updateText() }

@@ -121,6 +121,7 @@ BarPopout {
                     StateLayer {
                         ovRadius: 15; tint: netItem.modelData.active ? Config.accentText : Config.fg
                         onTapped: netItem.modelData.active ? Net.disconnectWifi(netItem.modelData.ssid) : Net.connectWifi(netItem.modelData.ssid)
+                        onDoubleTapped: netItem.modelData.active ? Net.disconnectWifi(netItem.modelData.ssid) : Net.connectWifi(netItem.modelData.ssid)
                     }
                 }
             }

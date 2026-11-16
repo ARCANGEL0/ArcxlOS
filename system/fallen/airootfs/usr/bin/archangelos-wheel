@@ -572,13 +572,10 @@ class WheelView(QWidget):
         rows_cap = max(1, int((max_span_d - support) // row_floor) + 1)
         lanes_cap = max(1, int((avail_p - lane_foot) // lane_floor) + 1)
         per_page = rows_cap * lanes_cap
-        pages = max(1, -(-len(apps) // (per_page - 1))) if len(apps) > per_page else 1
+        pages = max(1, -(-len(apps) // per_page)) if len(apps) > per_page else 1
         page = self.page_num.get(index, 0) % pages
-        if len(apps) > per_page:
-            start = page * (per_page - 1)
-            apps = apps[start:start + per_page - 1]
-            if start + per_page - 1 < len(self.catalog[self.categories[index]]):
-                apps = apps + [("+%d more" % (len(self.catalog[self.categories[index]]) - start - (per_page - 1)), None, None)]
+        start = page * per_page
+        apps = apps[start:start + per_page]
         N = len(apps)
         rand = _rand_seq(index * 131 + 7 + page * 977)
         rows, lanes = N, 1
