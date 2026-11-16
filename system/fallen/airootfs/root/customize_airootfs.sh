@@ -293,7 +293,7 @@ fi
 
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
-AUR_PKGS="cliamp mpvpaper geogebra gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app subtitleeditor vagrant warpinator zotero-bin aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
+AUR_PKGS="cliamp mpvpaper geogebra gpu-viewer i7z lact mission-center proton-mail-bin proton-pass-bin proton-vpn-gtk-app vagrant warpinator zotero-bin aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
 if [ -d /home/liveuser ]; then
   h=yay; command -v yay >/dev/null 2>&1 || h=paru
   if command -v "$h" >/dev/null 2>&1; then

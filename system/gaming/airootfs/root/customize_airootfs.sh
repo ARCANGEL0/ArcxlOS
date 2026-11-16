@@ -210,7 +210,7 @@ fi
 # restore the file so installed systems keep normal pacman behaviour.
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
-AUR_PKGS="anki cliamp mpvpaper aseprite bottles duckstation dxvk-bin frozen-bubble geogebra gpu-viewer hedgewars heroic-games-launcher-bin jupyterlab lact lbreakout2 legendary mission-center pcsx2 playonlinux proton-mail-bin proton-pass-bin proton-vpn-gtk-app protonplus protonup-qt steamcmd streamlink-twitch-gui-bin subtitleeditor umu-launcher vkbasalt vkd3d-proton-bin warpinator wps-office zotero-bin game-devices-udev aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
+AUR_PKGS="anki cliamp mpvpaper aseprite bottles duckstation dxvk-bin frozen-bubble geogebra gpu-viewer hedgewars heroic-games-launcher-bin jupyterlab lact lbreakout2 legendary mission-center pcsx2 playonlinux proton-mail-bin proton-pass-bin proton-vpn-gtk-app protonplus protonup-qt steamcmd streamlink-twitch-gui-bin umu-launcher vkbasalt vkd3d-proton-bin warpinator wps-office zotero-bin game-devices-udev aylurs-gtk-shell libastal-gjs libastal-wireplumber libastal-notifd libastal-network libastal-hyprland libastal-bluetooth libastal-mpris"
 if [ -d /home/liveuser ]; then
   h=yay; command -v yay >/dev/null 2>&1 || h=paru
   if command -v "$h" >/dev/null 2>&1; then
