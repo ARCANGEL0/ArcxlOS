@@ -1,5 +1,5 @@
 
-hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, center = true, size = "1120 720", no_anim = true, rounding = 0, border = false })
+hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, center = true, size = "1120 720", no_anim = true, rounding = 0, noborder = true })
 hl.window_rule({ match = { title = "^archangelos-welcome$" },  float = true, center = true })
 hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true, center = true, size = "1040 700" })
 
