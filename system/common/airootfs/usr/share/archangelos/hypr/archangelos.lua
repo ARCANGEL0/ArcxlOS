@@ -44,6 +44,7 @@ hl.on("hyprland.start", function()
     end
     hl.exec_cmd("/usr/bin/archangelos-wallpaper boot")
     hl.exec_cmd("/usr/bin/archangelos-launcher")
+    hl.exec_cmd("/usr/bin/archangelos-gui-installer")
     hl.exec_cmd([[bash -c '
         conf="${XDG_CONFIG_HOME:-$HOME/.config}/archangelos/appearance.conf"
         CURSOR_THEME=Crystal; ICON_THEME=Arcanum; CURSOR_SIZE=24

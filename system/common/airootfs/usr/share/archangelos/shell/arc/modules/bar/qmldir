@@ -1,0 +1,20 @@
+module qs.arc.modules.bar
+
+BarPopout BarPopout.qml
+BatteryPopout BatteryPopout.qml
+BluetoothPopout BluetoothPopout.qml
+BrightnessPopout BrightnessPopout.qml
+CpuPopout CpuPopout.qml
+DiskPopout DiskPopout.qml
+NetInfoPopout NetInfoPopout.qml
+NetworkPopout NetworkPopout.qml
+PowerPopout PowerPopout.qml
+RamPopout RamPopout.qml
+RecordingPopout RecordingPopout.qml
+StatusPill StatusPill.qml
+StatusPopout StatusPopout.qml
+SysPopout SysPopout.qml
+TrayMenuPopout TrayMenuPopout.qml
+VolumePopout VolumePopout.qml
+VpnPopout VpnPopout.qml
+WeatherPopout WeatherPopout.qml
