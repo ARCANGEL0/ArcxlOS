@@ -3,9 +3,6 @@ Window.SetBackgroundBottomColor(0.0392, 0.0392, 0.0353);
 
 status = "normal";
 t = 0;
-lastm = 0;
-lastlm = 0;
-wasdip = 0;
 W = Window.GetWidth();
 H = Window.GetHeight();
 sy = H / 1080;
@@ -14,15 +11,23 @@ hor = H * 0.78;
 esc = H * 0.56 / 813;
 ew = Math.Int(824 * esc);
 eh = Math.Int(813 * esc);
-cy = H * 0.58;
+cy = Math.Int(H * 0.58);
 ex = W / 2 - ew / 2;
 ey = cy - eh / 2;
-lw = Math.Int(146.4 * H / 270.0);
-lh = Math.Int(78 * H / 270.0);
+npad = Math.Int(64 * esc);
+nw = Math.Int(952 * esc);
+nh = Math.Int(941 * esc);
+nx = ex - npad;
+lw = Math.Int(998 * H / 1620.0);
+lh = Math.Int(588 * H / 1620.0);
 lx = W / 2 - lw / 2;
-ly = (H - lh) / 2 - H * 0.34;
-revh = Math.Int(56 * ew / 613.0);
-rev2h = Math.Int(48 * (lw + 8) / 594.0);
+ly = H * 0.16 - lh / 2;
+ltop = lh * 105 / 588.0;
+lspan = lh * 378 / 588.0;
+revh = Math.Int(72 * nw / 1066.0);
+rev2h = Math.Int(60 * lw / 998.0);
+strip = 4;
+lstrip = 3;
 
 zp[0] = 0;
 zp[1] = 0.158114;
@@ -635,10 +640,6 @@ dkf[956] = 0.370434;
 dkf[957] = 0.379167;
 dkf[958] = 0.379167;
 
-bg.image = Image("bg.png").Scale(W, H);
-bg.sprite = Sprite(bg.image);
-bg.sprite.SetPosition(0, 0, -100);
-
 for (i = 0; i < 40; i++) {
   stars[i].sprite = Sprite(Image("star.png").Scale(Math.Int(6 * sy), Math.Int(6 * sy)));
   stars[i].sprite.SetX(stx[i] * W);
@@ -670,75 +671,81 @@ for (i = 0; i < 11; i++) {
   hlines[i].frac = i / 11.0;
 }
 
-body.image = Image("emblem.png").Scale(ew, eh);
+body.image = Image("emblem.png").Scale(nw, nh);
 body.sprite = Sprite(body.image);
-body.sprite.SetPosition(ex, ey, 20);
+body.sprite.SetPosition(nx, ey - npad, 20);
 body.sprite.SetOpacity(0.9);
 
-for (i = 0; i < 271; i++) {
-  slices[i].image = Image("neon_slice_" + i + ".png").Scale(ew, Math.Int((i + 1) * 3 * esc) - Math.Int(i * 3 * esc));
-  slices[i].sprite = Sprite(slices[i].image);
-  slices[i].sprite.SetX(ex);
-  slices[i].sprite.SetY(ey + Math.Int(i * 3 * esc));
-  slices[i].sprite.SetZ(21);
-  slices[i].sprite.SetOpacity(0);
-}
-
-neon.image = Image("neon_full.png").Scale(ew, eh);
+neon.image = Image("neon_full.png").Scale(nw, nh);
 neon.sprite = Sprite(neon.image);
-neon.sprite.SetX(ex);
-neon.sprite.SetY(ey);
-neon.sprite.SetZ(21);
+neon.sprite.SetPosition(nx, ey - npad, 21);
 neon.sprite.SetOpacity(0);
 
-rev.image = Image("reveal.png").Scale(ew, revh);
+ncount = Math.Int((nh + strip - 1) / strip);
+for (i = 0; i < ncount; i++) {
+  y0 = i * strip;
+  strips[i].sprite = Sprite(neon.image.Crop(0, y0, nw, Math.Min(strip, nh - y0)));
+  strips[i].sprite.SetPosition(nx, ey - npad + y0, 21);
+  strips[i].sprite.SetOpacity(0);
+}
+shown = ncount;
+
+rev.image = Image("reveal.png").Scale(nw, revh);
 rev.sprite = Sprite(rev.image);
-rev.sprite.SetX(ex);
+rev.sprite.SetX(nx);
 rev.sprite.SetZ(22);
 rev.sprite.SetOpacity(0);
 
-for (i = 0; i < 245; i++) {
-  lslices[i].image = Image("logo_slice_" + i + ".png").Scale(lw, Math.Int((i + 1) * lh / 245.0) - Math.Int(i * lh / 245.0));
-  lslices[i].sprite = Sprite(lslices[i].image);
-  lslices[i].sprite.SetX(lx);
-  lslices[i].sprite.SetY(ly + Math.Int(i * lh / 245.0));
-  lslices[i].sprite.SetZ(30);
-  lslices[i].sprite.SetOpacity(0);
-}
-
 lgo.image = Image("logo.png").Scale(lw, lh);
 lgo.sprite = Sprite(lgo.image);
-lgo.sprite.SetX(lx);
-lgo.sprite.SetY(ly);
-lgo.sprite.SetZ(30);
+lgo.sprite.SetPosition(lx, ly, 30);
 lgo.sprite.SetOpacity(0);
+
+lcount = Math.Int((lh + lstrip - 1) / lstrip);
+for (i = 0; i < lcount; i++) {
+  y0 = i * lstrip;
+  lstrips[i].sprite = Sprite(lgo.image.Crop(0, y0, lw, Math.Min(lstrip, lh - y0)));
+  lstrips[i].sprite.SetPosition(lx, ly + y0, 30);
+  lstrips[i].sprite.SetOpacity(0);
+}
+lshown = lcount;
+
+rev2.image = Image("reveal2.png").Scale(lw, rev2h);
+rev2.sprite = Sprite(rev2.image);
+rev2.sprite.SetX(lx);
+rev2.sprite.SetZ(32);
+rev2.sprite.SetOpacity(0);
+
+hum.image = Image("logo_hum.png").Scale(lw, lh);
+hum.sprite = Sprite(hum.image);
+hum.sprite.SetPosition(lx, ly, 29);
+hum.sprite.SetOpacity(0);
 
 bloom.image = Image("logo_glow.png").Scale(lw, lh);
 bloom.sprite = Sprite(bloom.image);
-bloom.sprite.SetX(lx);
-bloom.sprite.SetY(ly);
-bloom.sprite.SetZ(31);
+bloom.sprite.SetPosition(lx, ly, 31);
 bloom.sprite.SetOpacity(0);
 
+gx = Math.Int(Math.Min(lx, nx));
+gy = Math.Int(Math.Max(0, ly));
+gw = Math.Int(Math.Max(lx + lw, nx + nw)) - gx;
+gh = Math.Int(ey - npad + nh) - gy;
+
 for (i = 0; i < 10; i++) {
-  bands[i].image = Image("band_" + i + ".png").Scale(W, Math.Int((i + 1) * H / 10) - Math.Int(i * H / 10));
+  bh = Math.Int((i + 1) * H / 10) - Math.Int(i * H / 10);
+  bands[i].image = Image("band_" + i + ".png").Scale(W, bh).Crop(gx, 0, gw, bh);
   bands[i].sprite = Sprite(bands[i].image);
-  bands[i].sprite.SetX(0);
+  bands[i].sprite.SetX(gx);
   bands[i].sprite.SetY(Math.Int(i * H / 10));
   bands[i].sprite.SetZ(50 + i);
   bands[i].sprite.SetOpacity(0);
 }
 
-curtain.image = Image("bg.png").Scale(W, H);
-curtain.sprite = Sprite(curtain.image);
-curtain.sprite.SetPosition(0, 0, 49);
-curtain.sprite.SetOpacity(0);
-
-scene.image = Image("scene.png").Scale(W, H);
+scene.image = Image("scene.png").Scale(W, H).Crop(gx, gy, gw, gh);
 ghost.a = Sprite(scene.image);
 ghost.b = Sprite(scene.image);
-ghost.a.SetPosition(0, 0, 60);
-ghost.b.SetPosition(0, 0, 61);
+ghost.a.SetPosition(gx, gy, 60);
+ghost.b.SetPosition(gx, gy, 61);
 ghost.a.SetOpacity(0);
 ghost.b.SetOpacity(0);
 
@@ -747,105 +754,222 @@ dark.sprite = Sprite(dark.image);
 dark.sprite.SetPosition(0, 0, 999);
 dark.sprite.SetOpacity(0);
 
-fun place_emblem (ncy)
+glowq = -1;
+dawnq = -1;
+humq = -1;
+glitching = 0;
+gtick = 0;
+darkq = 0;
+for (k = 930; k < 960; k++) {
+  gt[0][k] = g0[k];
+  gt[1][k] = g1[k];
+  gt[2][k] = g2[k];
+  gt[3][k] = g3[k];
+  gt[4][k] = g4[k];
+  gt[5][k] = g5[k];
+  gt[6][k] = g6[k];
+  gt[7][k] = g7[k];
+  gt[8][k] = g8[k];
+  gt[9][k] = g9[k];
+}
+outro = 0;
+ot = 0;
+fading = 0;
+ft = 0;
+
+fun showStrips (row)
   {
-    ny = ncy - eh / 2;
-    body.sprite.SetY(ny);
-    neon.sprite.SetY(ny);
-    for (i = 0; i < 271; i++)
-      slices[i].sprite.SetY(ny + Math.Int(i * 3 * esc));
-    glow.sprite.SetY(ncy - glow.image.GetHeight() / 2);
+    first = Math.Clamp(Math.Int(row / strip), 0, ncount);
+    for (i = first; i < shown; i++)
+      strips[i].sprite.SetOpacity(1);
+    if (first < shown)
+      shown = first;
   }
 
-fun hide_slices ()
+fun hideStrips ()
   {
-    for (i = 0; i < 271; i++)
-      slices[i].sprite.SetOpacity(0);
+    for (i = shown; i < ncount; i++)
+      strips[i].sprite.SetOpacity(0);
+    shown = ncount;
   }
 
-fun hide_logo_slices ()
+fun showLogoStrips (row)
   {
-    for (i = 0; i < 245; i++)
-      lslices[i].sprite.SetOpacity(0);
+    first = Math.Clamp(Math.Int(row / lstrip), 0, lcount);
+    for (i = first; i < lshown; i++)
+      lstrips[i].sprite.SetOpacity(1);
+    if (first < lshown)
+      lshown = first;
   }
 
-fun reset_glitch ()
+fun hideLogoStrips ()
   {
-    for (i = 0; i < 10; i++)
+    for (i = lshown; i < lcount; i++)
+      lstrips[i].sprite.SetOpacity(0);
+    lshown = lcount;
+  }
+
+fun resetGlitch ()
+  {
+    if (!glitching)
+      return;
+    for (i = 0; i < 10; i++) {
       bands[i].sprite.SetOpacity(0);
-    curtain.sprite.SetOpacity(0);
+      bands[i].sprite.SetX(gx);
+    }
+    gtick = 0;
     ghost.a.SetOpacity(0);
     ghost.b.SetOpacity(0);
     dark.sprite.SetOpacity(0);
+    darkq = 0;
+    body.sprite.SetOpacity(0.9);
+    glitching = 0;
+  }
+
+fun glitchFrame (k, g, dk)
+  {
+    if (!glitching)
+      {
+        glitching = 1;
+        neon.sprite.SetOpacity(0);
+        lgo.sprite.SetOpacity(0);
+        hum.sprite.SetOpacity(0);
+        humq = -1;
+        body.sprite.SetOpacity(0);
+        for (i = 0; i < 10; i++)
+          bands[i].sprite.SetOpacity(1);
+      }
+    gtick++;
+    j = gtick % 10;
+    bands[j].sprite.SetX(gx + gt[j][k] * g * gscale);
+    j = (gtick * 7 + 3) % 10;
+    bands[j].sprite.SetX(gx + gt[j][k] * g * gscale);
+    if (gtick % 6 == 1)
+      {
+        ghost.a.SetOpacity(0.30 * g);
+        ghost.b.SetOpacity(0.22 * g);
+        ghost.a.SetX(gx - 3 * g * gscale);
+        ghost.b.SetX(gx + 3 * g * gscale);
+      }
+    dq = Math.Int(dk * 6 + 0.5);
+    if (dq != darkq)
+      {
+        darkq = dq;
+        dark.sprite.SetOpacity(dq / 6.0);
+      }
+  }
+
+fun loopGlitch ()
+  {
+    g = (t - 912) / 48.0;
+    k = 930 + Math.Int((t - 912) * 30 / 48);
+    dk = 0;
+    if (dkf[k])
+      dk = dkf[k] * g;
+    glitchFrame(k, g, dk);
+  }
+
+fun outroFrame ()
+  {
+    if (fading && ft > 18)
+      return;
+    ot++;
+    rev.sprite.SetOpacity(0);
+    rev2.sprite.SetOpacity(0);
+    bloom.sprite.SetOpacity(0);
+    hideStrips();
+    hideLogoStrips();
+    k = 930 + ot % 30;
+    g = Math.Min(1, 0.35 + ot / 40.0);
+    dk = 0;
+    if (fading)
+      {
+        ft++;
+        dk = Math.Min(1, ft / 18.0);
+      }
+    else if (dkf[k])
+      dk = dkf[k] * g * 0.6;
+    glitchFrame(k, g, dk);
+  }
+
+fun update_status_callback (text)
+  {
+    if (text == "nero-outro" && !outro)
+      {
+        outro = 1;
+        ot = 0;
+      }
+    if (text == "nero-fade" && !fading)
+      {
+        outro = 1;
+        fading = 1;
+        ft = 0;
+      }
   }
 
 fun refresh_callback ()
   {
     if (status != "normal")
       return;
+    if (outro)
+      {
+        outroFrame();
+        return;
+      }
     t++;
     if (t >= 960)
       t = 0;
     if (t == 0)
       {
-        lastm = 0;
-        lastlm = 0;
-        hide_slices();
-        hide_logo_slices();
-        reset_glitch();
+        hideStrips();
+        hideLogoStrips();
+        resetGlitch();
       }
-    if (t == 300)
+    if (t >= 912)
       {
-        hide_slices();
-        lastm = 0;
-      }
-    if (t == 372)
-      {
-        hide_logo_slices();
-        lastlm = 0;
+        loopGlitch();
+        return;
       }
     prog = t / 960.0;
     for (i = 0; i < 40; i++)
-      stars[i].sprite.SetOpacity((0.25 + 0.55 * Math.Abs(Math.Sin(t * 0.04 + stp[i]))) * 0.5);
+      stars[i].sprite.SetOpacity(Math.Int((0.25 + 0.55 * Math.Abs(Math.Sin(t * 0.04 + stp[i]))) * 16) / 32.0);
     for (i = 0; i < 11; i++) {
       z = hlines[i].frac + t * 0.0013833;
       z = z - Math.Int(z);
-      hlines[i].sprite.SetY(hor + z * z * zp[Math.Int(z * 40)] * (H - hor));
-      hlines[i].sprite.SetOpacity(0.16 * Math.Min(1, z * 7));
+      ly2 = Math.Int(hor + z * z * zp[Math.Int(z * 40)] * (H - hor));
+      if (ly2 != hlines[i].y)
+        {
+          hlines[i].y = ly2;
+          hlines[i].sprite.SetY(ly2);
+          hlines[i].sprite.SetOpacity(0.16 * Math.Min(1, z * 7));
+        }
     }
-    dawn.sprite.SetOpacity((0.10 + 0.14 * prog) / 0.24);
-    bobv = Math.Clamp((t - 402) / 120.0, 0, 1);
-    ncy = H * 0.58 + H * 0.006 * Math.Sin(t * 0.02) * bobv;
-    place_emblem(ncy);
-    kl = Math.Min(t / 300, 1);
-    glow.sprite.SetOpacity((0.03 + 0.04 * kl + 0.02 * prog) / 0.25);
+    q = Math.Int((0.10 + 0.14 * prog) / 0.24 * 40);
+    if (q != dawnq)
+      {
+        dawnq = q;
+        dawn.sprite.SetOpacity(q / 40.0);
+      }
+    kl = Math.Min(t / 180, 1);
+    q = Math.Int((0.03 + 0.04 * kl + 0.02 * prog) / 0.25 * 40);
+    if (q != glowq)
+      {
+        glowq = q;
+        glow.sprite.SetOpacity(q / 40.0);
+      }
     dip = 1;
     if (dipf[t])
       dip = 0.72;
-    if (t < 300)
+    if (t < 180)
       {
-        k = t / 300.0;
-        m = Math.Int(k * 271);
-        if (m > lastm)
+        k = t / 180.0;
+        e = 1 - (1 - k) * (1 - k);
+        row = npad + eh * (1 - e);
+        if (k > 0)
           {
-            for (i = 271 - m; i < 271 - lastm; i++)
-              slices[i].sprite.SetOpacity(dip);
-            lastm = m;
-          }
-        if (dip < 1 || wasdip == 1)
-          {
-            for (i = 271 - m; i < 271; i++)
-              slices[i].sprite.SetOpacity(dip);
-          }
-        if (dip < 1)
-          wasdip = 1;
-        else
-          wasdip = 0;
-        fy = ey + eh * (1 - k);
-        if (k > 0 && k < 1)
-          {
-            rev.sprite.SetOpacity(0.8 * dip);
-            rev.sprite.SetY(fy - revh / 2);
+            showStrips(row);
+            rev.sprite.SetOpacity(0.9);
+            rev.sprite.SetY(ey - npad + row - revh / 2);
           }
         else
           rev.sprite.SetOpacity(0);
@@ -854,117 +978,66 @@ fun refresh_callback ()
         lgo.sprite.SetOpacity(0);
         bloom.sprite.SetOpacity(0);
         hum.sprite.SetOpacity(0);
-        reset_glitch();
+        resetGlitch();
       }
-    else if (t < 372)
+    else if (t < 234)
       {
-        neon.sprite.SetOpacity(dip);
-        lk = (t - 300) / 72.0;
+        hideStrips();
+        rev.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(1);
+        lk = (t - 180) / 54.0;
         e = 1 - (1 - lk) * (1 - lk) * (1 - lk);
-        lm = Math.Int(lk * 245);
-        if (lm > lastlm)
-          {
-            for (i = 245 - lm; i < 245 - lastlm; i++)
-              lslices[i].sprite.SetOpacity(dip);
-            lastlm = lm;
-          }
-        if (dip < 1 || wasdip == 1)
-          {
-            for (i = 245 - lm; i < 245; i++)
-              lslices[i].sprite.SetOpacity(dip);
-          }
-        if (dip < 1)
-          wasdip = 1;
-        else
-          wasdip = 0;
-        lgo.sprite.SetOpacity(0);
-        fy = ly + lh * (1 - e);
-        if (lk < 1)
-          {
-            rev2.sprite.SetOpacity(0.85 * dip);
-            rev2.sprite.SetY(fy - rev2h / 2);
-          }
-        else
-          rev2.sprite.SetOpacity(0);
-        rev.sprite.SetOpacity(0);
-        bloom.sprite.SetOpacity(0);
-        hum.sprite.SetOpacity(0);
-        reset_glitch();
-      }
-    else if (t < 402)
-      {
-        rev.sprite.SetOpacity(0);
-        rev2.sprite.SetOpacity(0);
-        neon.sprite.SetOpacity(dip);
-        lgo.sprite.SetOpacity(dip);
-        bp = (t - 372) / 30.0;
-        bloom.sprite.SetOpacity((1 - bp) * 0.45);
-        hum.sprite.SetOpacity(0);
-        reset_glitch();
-      }
-    else if (t < 930)
-      {
-        rev.sprite.SetOpacity(0);
-        rev2.sprite.SetOpacity(0);
-        neon.sprite.SetOpacity(dip);
-        lgo.sprite.SetOpacity(dip);
-        bloom.sprite.SetOpacity(0);
-        hum.sprite.SetOpacity(0.10 + 0.10 * Math.Sin(t * 0.028333));
-        reset_glitch();
-      }
-    else
-      {
-        g = (t - 930) / 30.0;
-        rev.sprite.SetOpacity(0);
-        rev2.sprite.SetOpacity(0);
-        neon.sprite.SetOpacity(0);
+        fy = ltop + lspan * (1 - e);
+        showLogoStrips(fy);
+        rev2.sprite.SetOpacity(0.95);
+        rev2.sprite.SetY(ly + fy - rev2h / 2);
         lgo.sprite.SetOpacity(0);
         bloom.sprite.SetOpacity(0);
         hum.sprite.SetOpacity(0);
-        bands[0].sprite.SetX(g0[t] * g * gscale);
-        bands[0].sprite.SetOpacity(1);
-        bands[1].sprite.SetX(g1[t] * g * gscale);
-        bands[1].sprite.SetOpacity(1);
-        bands[2].sprite.SetX(g2[t] * g * gscale);
-        bands[2].sprite.SetOpacity(1);
-        bands[3].sprite.SetX(g3[t] * g * gscale);
-        bands[3].sprite.SetOpacity(1);
-        bands[4].sprite.SetX(g4[t] * g * gscale);
-        bands[4].sprite.SetOpacity(1);
-        bands[5].sprite.SetX(g5[t] * g * gscale);
-        bands[5].sprite.SetOpacity(1);
-        bands[6].sprite.SetX(g6[t] * g * gscale);
-        bands[6].sprite.SetOpacity(1);
-        bands[7].sprite.SetX(g7[t] * g * gscale);
-        bands[7].sprite.SetOpacity(1);
-        bands[8].sprite.SetX(g8[t] * g * gscale);
-        bands[8].sprite.SetOpacity(1);
-        bands[9].sprite.SetX(g9[t] * g * gscale);
-        bands[9].sprite.SetOpacity(1);
-        ghost.a.SetOpacity(0.30 * g);
-        ghost.b.SetOpacity(0.22 * g);
-        ghost.a.SetX(-3 * g * gscale);
-        ghost.b.SetX(3 * g * gscale);
-        if (dkf[t])
-          dark.sprite.SetOpacity(dkf[t] * g);
-        else
-          dark.sprite.SetOpacity(0);
+        resetGlitch();
+      }
+    else if (t < 264)
+      {
+        hideLogoStrips();
+        rev.sprite.SetOpacity(0);
+        rev2.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(1);
+        lgo.sprite.SetOpacity(1);
+        bp = (t - 234) / 30.0;
+        bloom.sprite.SetOpacity((1 - bp) * (1 - bp) * 0.6);
+        hum.sprite.SetOpacity(0.12 * bp);
+        humq = -1;
+        resetGlitch();
+      }
+    else if (t < 912)
+      {
+        bloom.sprite.SetOpacity(0);
+        neon.sprite.SetOpacity(dip);
+        lgo.sprite.SetOpacity(dip);
+        q = Math.Int((0.12 + 0.08 * Math.Sin((t - 264) * 0.028333)) * 100);
+        if (q != humq)
+          {
+            humq = q;
+            hum.sprite.SetOpacity(q / 100.0);
+          }
+        resetGlitch();
       }
   }
 
 fun quit_callback ()
   {
-    hide_slices();
-    hide_logo_slices();
-    lastm = 0;
-    lastlm = 0;
+    if (outro)
+      return;
+    hideStrips();
+    hideLogoStrips();
     rev.sprite.SetOpacity(0);
     rev2.sprite.SetOpacity(0);
     neon.sprite.SetOpacity(1);
     lgo.sprite.SetOpacity(1);
     bloom.sprite.SetOpacity(0);
     hum.sprite.SetOpacity(0);
-    reset_glitch();
+    glitching = 1;
+    resetGlitch();
   }
 
 fun dialog_setup ()
@@ -1031,9 +1104,9 @@ fun hide_message_callback ()
 
 Plymouth.SetRefreshFunction(refresh_callback);
 Plymouth.SetQuitFunction(quit_callback);
+Plymouth.SetUpdateStatusFunction(update_status_callback);
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
 Plymouth.SetDisplayMessageFunction(display_message_callback);
 Plymouth.SetHideMessageFunction(hide_message_callback);
 Plymouth.SetRefreshRate(60);
-

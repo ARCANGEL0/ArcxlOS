@@ -1,0 +1,12 @@
+[Unit]
+Description=ArchangelOS boot splash outro
+After=plymouth-start.service systemd-user-sessions.service
+Before=plymouth-quit.service plymouth-quit-wait.service display-manager.service sddm.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'plymouth --ping && plymouth update --status=nero-outro && sleep 2.4 && plymouth update --status=nero-fade && sleep 0.6; exit 0'
+TimeoutStartSec=10
+
+[Install]
+WantedBy=multi-user.target

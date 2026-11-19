@@ -1,9 +1,9 @@
 
-hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, center = true, size = "1120 720", no_anim = true, rounding = 0, noborder = true })
+hl.window_rule({ match = { title = "^archangelos-launcher$" }, float = true, center = true, size = "1120 720", no_anim = true, rounding = 0, border_size = 0 })
 hl.window_rule({ match = { title = "^archangelos-welcome$" },  float = true, center = true })
 hl.window_rule({ match = { class = "^archangelos-gui-installer$" }, float = true, center = true, size = "1040 700" })
 
-hl.window_rule({ match = { class = "^archangelos-wheel$" }, float = true, no_anim = true, rounding = 0, pin = true, opacity = "1.0 1.0" })
+hl.window_rule({ match = { class = "^archangelos-wheel$" }, float = true, no_anim = true, rounding = 0, pin = true, opacity = "1.0 1.0", border_size = 0, no_shadow = true })
 
 hl.window_rule({ match = { class = "^[Rr]io$" }, float = true, center = true, size = "1020 548" })
 hl.config({ binds = { disable_keybind_grabbing = true } })
@@ -44,7 +44,6 @@ hl.on("hyprland.start", function()
     end
     hl.exec_cmd("/usr/bin/archangelos-wallpaper boot")
     hl.exec_cmd("/usr/bin/archangelos-launcher")
-    hl.exec_cmd("/usr/bin/archangelos-gui-installer")
     hl.exec_cmd([[bash -c '
         conf="${XDG_CONFIG_HOME:-$HOME/.config}/archangelos/appearance.conf"
         CURSOR_THEME=Crystal; ICON_THEME=Arcanum; CURSOR_SIZE=24
