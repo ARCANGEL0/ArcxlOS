@@ -374,6 +374,19 @@ if grep -q '^wireshark:' /etc/group; then
   fi
 fi
 
+ghostWork=$(mktemp -d)
+if command -v go >/dev/null 2>&1 && git clone --depth 1 https://github.com/ARCANGEL0/Ghost "$ghostWork/src" >/dev/null 2>&1; then
+  ( cd "$ghostWork/src" \
+    && GOPATH="$ghostWork/go" GOCACHE="$ghostWork/cache" GOFLAGS=-trimpath CGO_ENABLED=0 \
+       go build -ldflags "-s -w" -o /usr/local/bin/ghost . ) \
+    && chmod 755 /usr/local/bin/ghost \
+    || echo "  [warn] ghost build failed" >&2
+else
+  echo "  [warn] ghost source unavailable" >&2
+fi
+chmod -R u+w "$ghostWork" 2>/dev/null || true
+rm -rf "$ghostWork"
+
 cp -rf /etc/skel/. /home/liveuser/
 lhl=/home/liveuser/.config/hypr/hyprland.lua
 if [ -f "$lhl" ]; then

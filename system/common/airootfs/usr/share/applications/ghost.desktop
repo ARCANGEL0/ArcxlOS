@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Ghost Terminal
+GenericName=AI Coding Assistant
+Comment=Agentic coding assistant in the terminal, with free model providers
+Exec=/usr/local/bin/ghost
+TryExec=/usr/local/bin/ghost
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;Utility;
+Keywords=ai;assistant;coding;agent;ghost;

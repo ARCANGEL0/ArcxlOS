@@ -288,6 +288,19 @@ for h in /home/liveuser /root; do
 done
 rm -rf /tmp/* /var/tmp/* 2>/dev/null || true
 
+ghostWork=$(mktemp -d)
+if command -v go >/dev/null 2>&1 && git clone --depth 1 https://github.com/ARCANGEL0/Ghost "$ghostWork/src" >/dev/null 2>&1; then
+  ( cd "$ghostWork/src" \
+    && GOPATH="$ghostWork/go" GOCACHE="$ghostWork/cache" GOFLAGS=-trimpath CGO_ENABLED=0 \
+       go build -ldflags "-s -w" -o /usr/local/bin/ghost . ) \
+    && chmod 755 /usr/local/bin/ghost \
+    || echo "  [warn] ghost build failed" >&2
+else
+  echo "  [warn] ghost source unavailable" >&2
+fi
+chmod -R u+w "$ghostWork" 2>/dev/null || true
+rm -rf "$ghostWork"
+
 cp -rf /etc/skel/. /home/liveuser/
 # The skel copy above overwrites liveuser's hyprland.lua, dropping the welcome
 # require that archangelos-wallpaper-setup added (skel never gets it — welcome is
