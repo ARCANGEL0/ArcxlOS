@@ -29,7 +29,7 @@ Row {
     // [glyph, tooltip, action]
     readonly property var launches: [
         // the constellation launcher (archangelos-launcher, SUPER+TAB) …
-        ["apps",      "Apps",      () => Quickshell.execDetached(["archangelos-launcher-toggle"])],
+        ["apps",      "Apps",      () => Quickshell.execDetached(["sh", "-c", "hyprctl eval 'hl.exec_cmd(\"/usr/bin/archangelos-launcher-toggle\")' >/dev/null 2>&1 || /usr/bin/archangelos-launcher-toggle"])],
         // … and arcshell's palette: apps, >commands, #clipboard, =calc, $run, :emoji
         ["search",    "Search",    () => NSS.Shell.launcherVisible = true],
         ["terminal",  "Terminal",  () => Quickshell.execDetached(["rio"])],

@@ -49,7 +49,7 @@ Row {
 			anchors.fill: parent
 			hoverEnabled: true
 			cursorShape: Qt.PointingHandCursor
-			onClicked: Quickshell.execDetached(["/usr/bin/archangelos-launcher-toggle"])
+			onClicked: Quickshell.execDetached(["sh", "-c", "hyprctl eval 'hl.exec_cmd(\"/usr/bin/archangelos-launcher-toggle\")' >/dev/null 2>&1 || /usr/bin/archangelos-launcher-toggle"])
 		}
 		Tip { text: "App launcher"; localScale: parent.localScale }
 	}

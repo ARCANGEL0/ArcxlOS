@@ -18,7 +18,7 @@ Item {
     property bool activated: false
     property bool loading: false
     property string error: ""
-    property var data: null
+    property var forecast: null
     property var air: null
     property string place: ""
     property real lat: NaN
@@ -28,10 +28,10 @@ Item {
     property var now: new Date()
 
     readonly property string city: ArcS.Weather.city || "London"
-    readonly property bool ready: data !== null
-    readonly property var current: ready ? data.current : ({})
-    readonly property var daily: ready ? data.daily : ({})
-    readonly property var hourly: ready ? data.hourly : ({})
+    property bool ready: false
+    readonly property var current: forecast ? forecast.current : ({})
+    readonly property var daily: forecast ? forecast.daily : ({})
+    readonly property var hourly: forecast ? forecast.hourly : ({})
 
     onVisibleChanged: if (visible) activated = true
     Component.onCompleted: if (visible) activated = true
@@ -41,6 +41,13 @@ Item {
     Timer {
         interval: 15 * 60 * 1000
         running: root.activated
+        repeat: true
+        onTriggered: root.refresh()
+    }
+
+    Timer {
+        interval: 60 * 1000
+        running: root.activated && root.error !== ""
         repeat: true
         onTriggered: root.refresh()
     }
@@ -100,7 +107,8 @@ Item {
                 root.place = res.name || root.city
                 root.geocodedFor = root.city
                 root.air = res.aq && res.aq.current ? res.aq.current : null
-                root.data = res.fc
+                root.forecast = res.fc
+                root.ready = true
                 root.updatedAt = new Date()
             } catch (e) {
                 root.error = "Unexpected response from the weather service"

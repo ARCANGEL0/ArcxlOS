@@ -34,7 +34,9 @@ QtObject {
     property var masterPoll: Process {
         command: [
             "bash", "-c",
-            "wifi=$(awk 'NR>2 {print int($3*100/70); exit}' /proc/net/wireless 2>/dev/null); " +
+            "wifi=$(nmcli -t -f ACTIVE,SIGNAL dev wifi list --rescan no 2>/dev/null | awk -F: '$1==\"yes\" {print $2; exit}'); " +
+            "[ -n \"$wifi\" ] || wifi=$(awk 'NR>2 {print int($3*100/70); exit}' /proc/net/wireless 2>/dev/null); " +
+            "if [ \"${wifi:-0}\" -le 0 ] 2>/dev/null && nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -q '^wifi:connected'; then wifi=1; fi; " +
             "eth=$(nmcli -t -f TYPE,STATE,CONNECTION dev 2>/dev/null | grep -i 'ethernet:connected' | head -1 | cut -d: -f3-); " +
             "conn=$(nmcli -t -f CONNECTIVITY general 2>/dev/null | head -1); " +
             "bt_pow=$(bluetoothctl show 2>/dev/null | grep -i 'Powered: yes' >/dev/null && echo 'yes' || echo 'no'); " +
