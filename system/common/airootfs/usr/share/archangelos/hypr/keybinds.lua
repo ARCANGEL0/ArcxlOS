@@ -54,7 +54,7 @@ hl.bind(mod .. " + V", hl.dsp.exec_cmd("code"), { description = "Visual Studio C
 
 hl.bind(mod .. " + Q", hl.dsp.window.close(), { description = "Close window" })
 hl.bind(mod .. " + F", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating / tiled" })
-hl.bind(mod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximize / unmaximize" })
+hl.bind(mod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 0 }), { description = "Fullscreen" })
 
 hl.bind("CTRL + SHIFT + left", hl.dsp.window.resize({ x = -40, y = 0 }), { repeating = true, description = "Narrower" })
 hl.bind("CTRL + SHIFT + right", hl.dsp.window.resize({ x = 40, y = 0 }), { repeating = true, description = "Wider" })
