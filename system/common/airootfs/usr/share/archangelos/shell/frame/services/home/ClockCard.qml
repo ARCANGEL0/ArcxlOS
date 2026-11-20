@@ -342,57 +342,89 @@ StatCard {
                 visible: isCurrent || wasCurrent
 
                 Row {
+                    id: lcd
                     anchors.centerIn: parent
-                    spacing: Math.round(10 * localScale)
+                    spacing: Math.round(8 * localScale)
+                    readonly property real u: localScale
+                    readonly property bool tick: (parseInt(root._sec) || 0) % 2 === 0
 
-                    // HH stacked above MM with diagonal offset
-                    Item {
-                        anchors.verticalCenter: parent.verticalCenter
-                        // Width fits both texts plus the one-char offset
-                        readonly property int charOffset: Math.round(40 * localScale)
-                        width:  hhText.implicitWidth + charOffset
-                        height: hhText.implicitHeight + mmText.implicitHeight - Math.round(8 * localScale)
-
-                        Text {
-                            id: hhText
-                            anchors.left: parent.left
-                            anchors.top:  parent.top
-                            text: root._hStr
-                            font.pixelSize: Math.round(72 * localScale); font.weight: Font.Bold
-                            font.family: "JetBrains Mono"; font.letterSpacing: Math.round(-4 * localScale)
-                            color: Theme.text
-                        }
-                        Text {
-                            id: mmText
-                            anchors.left: parent.left
-                            anchors.leftMargin: parent.charOffset
-                            anchors.top:  hhText.bottom
-                            anchors.topMargin: Math.round(-8 * localScale)
-                            text: root._mStr
-                            font.pixelSize: Math.round(72 * localScale); font.weight: Font.Bold
-                            font.family: "JetBrains Mono"; font.letterSpacing: Math.round(-4 * localScale)
-                            color: Theme.active
+                    component Seg: Item {
+                        id: seg
+                        property string value: "8"
+                        property color lit: Theme.active
+                        property real dw: 34
+                        property real dh: 64
+                        readonly property real t: Math.max(3, Math.round(dw * 0.18))
+                        readonly property var masks: ({ "0": "abcdef", "1": "bc", "2": "abged", "3": "abgcd",
+                                                        "4": "fgbc", "5": "afgcd", "6": "afgedc", "7": "abc",
+                                                        "8": "abcdefg", "9": "abcdfg" })
+                        readonly property string on: masks[value] || ""
+                        width: dw
+                        height: dh
+                        transform: Matrix4x4 { matrix: Qt.matrix4x4(1, -0.1, 0, seg.dh * 0.05, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
+                        Repeater {
+                            model: [
+                                { k: "a", x: 1, y: 0, w: 2, h: 0 }, { k: "b", x: 3, y: 1, w: 0, h: 1 },
+                                { k: "c", x: 3, y: 2, w: 0, h: 1 }, { k: "d", x: 1, y: 3, w: 2, h: 0 },
+                                { k: "e", x: 0, y: 2, w: 0, h: 1 }, { k: "f", x: 0, y: 1, w: 0, h: 1 },
+                                { k: "g", x: 1, y: 4, w: 2, h: 0 }
+                            ]
+                            Rectangle {
+                                required property var modelData
+                                readonly property bool active: seg.on.indexOf(modelData.k) >= 0
+                                readonly property real half: (seg.dh - seg.t) / 2
+                                x: modelData.x === 0 ? 0 : modelData.x === 3 ? seg.dw - seg.t : seg.t + 1
+                                y: modelData.y === 0 ? 0 : modelData.y === 1 ? seg.t / 2 + 1 : modelData.y === 2 ? half + seg.t / 2 + 1
+                                   : modelData.y === 3 ? seg.dh - seg.t : half
+                                width: modelData.w === 2 ? seg.dw - 2 * seg.t - 2 : seg.t
+                                height: modelData.h === 1 ? half - seg.t / 2 - 2 : seg.t
+                                radius: seg.t / 2
+                                color: active ? seg.lit : Qt.rgba(seg.lit.r, seg.lit.g, seg.lit.b, 0.07)
+                                Behavior on color { ColorAnimation { duration: 120 } }
+                            }
                         }
                     }
 
-                    // Seconds and AM/PM
+                    Repeater {
+                        model: [root._hStr.charAt(0), root._hStr.charAt(1)]
+                        Seg { required property var modelData; value: modelData; lit: Theme.text
+                              dw: Math.round(38 * lcd.u); dh: Math.round(72 * lcd.u); anchors.verticalCenter: parent.verticalCenter }
+                    }
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: Math.round(4 * localScale)
-                        
-                        Text {
-                            text: root._sec
-                            font.pixelSize: Math.round(22 * localScale); font.weight: Font.Medium
-                            font.family: "JetBrains Mono"
-                            color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.45)
+                        spacing: Math.round(16 * lcd.u)
+                        Repeater {
+                            model: 2
+                            Rectangle {
+                                width: Math.round(8 * lcd.u); height: width; radius: 2
+                                color: lcd.tick ? Theme.active : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.12)
+                                Behavior on color { ColorAnimation { duration: 160 } }
+                            }
                         }
-                        
+                    }
+                    Repeater {
+                        model: [root._mStr.charAt(0), root._mStr.charAt(1)]
+                        Seg { required property var modelData; value: modelData; lit: Theme.active
+                              dw: Math.round(38 * lcd.u); dh: Math.round(72 * lcd.u); anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    Column {
+                        anchors.bottom: parent.bottom
+                        spacing: Math.round(6 * lcd.u)
                         Text {
                             visible: !PrefsService.use24HourTime
                             text: root._amPm
-                            font.pixelSize: Math.round(14 * localScale); font.weight: Font.Bold
-                            font.family: "JetBrains Mono"
+                            font.pixelSize: Math.round(12 * lcd.u); font.weight: Font.Bold
+                            font.family: "JetBrains Mono"; font.letterSpacing: 2
                             color: Theme.active
+                        }
+                        Row {
+                            spacing: Math.round(4 * lcd.u)
+                            Repeater {
+                                model: [root._sec.charAt(0), root._sec.charAt(1)]
+                                Seg { required property var modelData; value: modelData
+                                      lit: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.6)
+                                      dw: Math.round(14 * lcd.u); dh: Math.round(26 * lcd.u) }
+                            }
                         }
                     }
                 }

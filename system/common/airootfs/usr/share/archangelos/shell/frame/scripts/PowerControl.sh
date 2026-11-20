@@ -6,7 +6,7 @@ case "$1" in
     reboot)
         (setsid bash -c 'systemctl reboot' &>/dev/null &);;
     logout)
-        (setsid bash -c 'loginctl terminate-user $USER' &>/dev/null &);;
+        (setsid bash -c 'hyprctl dispatch "hl.dsp.exit()" >/dev/null 2>&1 || loginctl terminate-session "${XDG_SESSION_ID:-self}"' &>/dev/null &);;
     *)
         exit 1
         ;;

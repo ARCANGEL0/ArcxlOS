@@ -165,6 +165,7 @@ Item {
 						Text {
 							id: hIcon
 							text:           modelData.icon
+							font.family:    "Symbols Nerd Font"
 							font.pixelSize: Math.round(14 * localScale)
 							anchors.verticalCenter: parent.verticalCenter
 							color: hTab.isActive
@@ -284,6 +285,7 @@ Item {
 							visible:          !vContainer.hasLabels
 							anchors.centerIn: parent
 							text:             modelData.icon
+							font.family:    "Symbols Nerd Font"
 							font.pixelSize:   Math.round(16 * localScale)
 							color: vTab.isActive ? Qt.rgba(Theme.background.r, Theme.background.g, Theme.background.b, 1.0) : Theme.text
 							Behavior on color { ColorAnimation { duration: Anim.color} }
@@ -340,6 +342,7 @@ Item {
 		
 							Text {
 								text:           modelData.icon
+								font.family:    "Symbols Nerd Font"
 								font.pixelSize: Math.round(15 * localScale)
 								anchors.verticalCenter: parent.verticalCenter
 								color: vTab.isActive
