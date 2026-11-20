@@ -1794,10 +1794,47 @@ class ArchangelOSInstallerWindow(QMainWindow):
             self.update_step_indicator(new_idx)
 
 
+def sessionSocket():
+    display = os.environ.get("WAYLAND_DISPLAY", "")
+    runtime = os.environ.get("XDG_RUNTIME_DIR", "")
+    if display:
+        path = display if os.path.isabs(display) else os.path.join(runtime, display)
+        if os.path.exists(path):
+            return path
+    uid = os.environ.get("SUDO_UID") or os.environ.get("PKEXEC_UID")
+    dirs = [f"/run/user/{uid}"] if uid else sorted(glob.glob("/run/user/[0-9]*"))
+    for d in dirs:
+        socks = sorted(s for s in glob.glob(os.path.join(d, "wayland-*")) if os.path.basename(s)[8:].isdigit())
+        if socks:
+            return socks[0]
+    return ""
+
+
+def elevate():
+    args = ["sudo", "env"]
+    sock = sessionSocket()
+    if sock:
+        args += ["QT_QPA_PLATFORM=wayland", f"WAYLAND_DISPLAY={sock}"]
+    for key in ("DISPLAY", "XAUTHORITY"):
+        if os.environ.get(key):
+            args.append(f"{key}={os.environ[key]}")
+    args += [sys.executable, os.path.abspath(sys.argv[0])] + sys.argv[1:]
+    os.execvp("sudo", args)
+
+
 def main():
     if os.geteuid() != 0:
+        try:
+            elevate()
+        except OSError:
+            pass
         print("[!] Error: ArchangelOS Installer must be run as root (sudo archangelos-gui-installer).")
         sys.exit(1)
+
+    sock = sessionSocket()
+    if sock and not os.environ.get("QT_QPA_PLATFORM"):
+        os.environ["WAYLAND_DISPLAY"] = sock
+        os.environ["QT_QPA_PLATFORM"] = "wayland"
 
     app = QApplication(sys.argv)
     window = ArchangelOSInstallerWindow()

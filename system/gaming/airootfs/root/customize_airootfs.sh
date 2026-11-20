@@ -284,6 +284,14 @@ if grep -q '^wireshark:' /etc/group; then
 fi
 
 cp -rf /etc/skel/. /home/liveuser/
+lhl=/home/liveuser/.config/hypr/hyprland.lua
+if [ -f "$lhl" ]; then
+  mkdir -p /home/liveuser/.config/hypr/config
+  cp -f /usr/share/archangelos/hypr/archangelos-welcome.lua \
+    /home/liveuser/.config/hypr/config/archangelos-welcome.lua 2>/dev/null || true
+  grep -q 'require("config.archangelos-welcome")' "$lhl" 2>/dev/null || \
+    printf '\nrequire("config.archangelos-welcome")\n' >> "$lhl"
+fi
 cp -rf /etc/skel/. /root/
 chown -R liveuser:users /home/liveuser
 chown -R root:root /root
