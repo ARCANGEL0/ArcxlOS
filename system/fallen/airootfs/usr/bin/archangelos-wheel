@@ -366,7 +366,7 @@ def launch_tool(exec_cmd):
         script = ("TERM_EMU=;"
                   "for t in rio konsole alacritty foot kitty wezterm xterm; do "
                   "command -v \"$t\" >/dev/null 2>&1 && { TERM_EMU=$t; break; }; done;"
-                  "setsid \"$TERM_EMU\" -e bash -c 'exec $AXEXE' >/dev/null 2>&1 &")
+                  "setsid \"$TERM_EMU\" -e bash -c '$AXEXE; exec \"${SHELL:-bash}\"' >/dev/null 2>&1 &")
     else:
         script = "setsid bash -c 'exec $AXEXE' >/dev/null 2>&1 &"
     try:
@@ -540,6 +540,30 @@ class WheelView(QWidget):
                 self.parent_window.close()
 
     def _compute_layout(self, index):
+        W, H = self.width(), self.height()
+        bounds = QRectF(0, 0, W, H)
+        lay = None
+        last = None
+        for scale in (1.0, 0.92, 0.85, 0.78, 0.72, 0.66, 0.6, 0.55, 0.5, 0.45, 0.4):
+            lay = self._layoutAt(index, scale)
+            if not lay:
+                continue
+            last = lay
+            if self._layoutFits(lay, bounds):
+                return lay
+        return last or self._layoutAt(index, 0.4, True)
+
+    def _layoutFits(self, lay, bounds):
+        rects = [c["rect"] for c in lay["chips"]]
+        if not all(bounds.contains(r) for r in rects):
+            return False
+        for i, a in enumerate(rects):
+            for b in rects[i + 1:]:
+                if a.adjusted(1, 1, -1, -1).intersects(b):
+                    return False
+        return True
+
+    def _layoutAt(self, index, scale, force=False):
         O = QPointF(self.center) if self.center is not None \
             else QPointF(self.width() / 2, self.height() / 2)
         R, r = self.outer, self.inner
@@ -556,10 +580,12 @@ class WheelView(QWidget):
                          wheel_to.y() + dy * (pop + back + R))
 
         apps = self.catalog[self.categories[index]]
-        CW, CH, GAP = 198, 34, 9
+        N = len(apps)
         W, H = self.width(), self.height()
         max_span_d = min(W, H) - 460
         ax, ay = abs(dx), abs(dy)
+        avail_p = (W if ay >= ax else H) - 140
+        CW, CH, GAP = 198 * scale, 34 * scale, 9 * scale
         support = CW * ax + CH * ay
         if ax > 1e-6 and ay > 1e-6:
             row_floor = min(CW / ax, CH / ay) + GAP
@@ -567,16 +593,12 @@ class WheelView(QWidget):
         else:
             row_floor = (CW if ax > ay else CH) + GAP
             lane_floor = (CH if ax > ay else CW) + GAP
-        avail_p = (W if ay >= ax else H) - 140
         lane_foot = CW if ay >= ax else CH
         rows_cap = max(1, int((max_span_d - support) // row_floor) + 1)
         lanes_cap = max(1, int((avail_p - lane_foot) // lane_floor) + 1)
-        per_page = rows_cap * lanes_cap
-        pages = max(1, -(-len(apps) // per_page)) if len(apps) > per_page else 1
-        page = self.page_num.get(index, 0) % pages
-        start = page * per_page
-        apps = apps[start:start + per_page]
-        N = len(apps)
+        if rows_cap * lanes_cap < N and not force:
+            return None
+        pages, page = 1, 0
         rand = _rand_seq(index * 131 + 7 + page * 977)
         rows, lanes = N, 1
         for r in range(3, N + 1):
@@ -603,7 +625,7 @@ class WheelView(QWidget):
             cxj = O.x() + dx * ddist + (-dy) * poff
             cyj = O.y() + dy * ddist + dx * poff
             chips.append({"rect": QRectF(cxj - CW / 2, cyj - CH / 2, CW, CH),
-                          "name": name, "exec": exe})
+                          "name": name, "exec": exe, "scale": scale})
 
         def _fit_shift():
             xs = [wheel_to.x() - R, wheel_to.x() + R, btn_to.x() - 60, btn_to.x() + 60]
@@ -654,7 +676,7 @@ class WheelView(QWidget):
                 c["node"] = QPointF(c["rect"].right(), cen.y())
         return {"index": index, "d": (dx, dy), "btn_from": btn_from,
                 "btn_to": btn_to, "wheel_to": wheel_to, "chips": chips,
-                "page": page, "pages": pages}
+                "page": page, "pages": pages, "scale": scale}
 
     # --- input -------------------------------------------------------------
     def enterEvent(self, event):
@@ -813,19 +835,24 @@ class WheelView(QWidget):
         btn = QPointF(wc.x() + dx * (outer_s + pop), wc.y() + dy * (outer_s + pop))
 
         # traces first, so the nodes sit on top
+        count = len(lay["chips"])
         for j, c in enumerate(lay["chips"]):
-            ca = _clamp01((self.anim - (0.40 + j * 0.05)) / 0.25)
-            self._draw_trace(p, btn, c["node"], min(reveal, 0.4 + ca * 0.6))
+            ca = self._chipAlpha(j, count)
+            self._draw_trace(p, btn, c["node"], min(reveal, ca))
 
         # app nodes
         for j, c in enumerate(lay["chips"]):
-            ca = _clamp01((self.anim - (0.42 + j * 0.05)) / 0.22)
+            ca = self._chipAlpha(j, count)
             if ca <= 0:
                 continue
             self._draw_chip(p, c, ca, j == self.app_sel)
 
         # the selected spoke itself, kept in its wheel-wedge shape, slid out and lit
         self._draw_popped_segment(p, wc, scale, lay["index"], dx, dy, pop)
+
+    def _chipAlpha(self, j, count):
+        step = min(0.05, 0.36 / max(1, count))
+        return _clamp01((self.anim - (0.42 + j * step)) / 0.22)
 
     def _draw_popped_segment(self, p, wc, scale, index, dx, dy, pop):
         """Draw the selected category as its own wheel wedge, slid out by `pop`
@@ -886,9 +913,10 @@ class WheelView(QWidget):
         p.drawRect(QRectF(node.x() - 1.2, node.y() - 1.2, 2.4, 2.4))
         # name
         p.setPen(self._a(TEXT if selected else STEEL, a))
-        p.setFont(QFont(self.mono, 10))
-        left = rect.left() + 16 if node.x() <= rect.center().x() else rect.left() + 12
-        p.drawText(QRectF(left, rect.top(), rect.width() - 24, rect.height()),
+        k = c.get("scale", 1.0)
+        p.setFont(QFont(self.mono, max(7, round(10 * k))))
+        left = rect.left() + 16 * k if node.x() <= rect.center().x() else rect.left() + 12 * k
+        p.drawText(QRectF(left, rect.top(), rect.width() - 24 * k, rect.height()),
                    Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
                    "▸ " + c["name"])
 
