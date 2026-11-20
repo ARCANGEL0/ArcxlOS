@@ -322,6 +322,10 @@ if [ -x "$shell_rel/scripts/host-configctl.sh" ]; then
     || log "host-configctl reported non-zero (expected: no user systemd in chroot)"
   enable_user_unit hypridle.service
 fi
+fishrc="$config_root/fish/config.fish"
+if [ -f "$fishrc" ]; then
+  sed -i '/^# BEGIN ARCSHELL STARSHIP$/,/^# END ARCSHELL STARSHIP$/d; /^starship init fish | source$/d' "$fishrc"
+fi
 
 # (No managed-shortcut block: it binds SUPER+V / SUPER+SPACE / SUPER+A to the
 # engine's IPC, which would stack on top of the ArchangelOS key map.)

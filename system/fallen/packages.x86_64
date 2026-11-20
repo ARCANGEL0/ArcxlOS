@@ -400,6 +400,7 @@ xdg-desktop-portal-hyprland
 qt6-wayland
 qt5-wayland
 dolphin
+plasma-integration
 breeze
 kitty
 fastfetch
