@@ -72,7 +72,7 @@ Item {
                 anchors.centerIn: parent
                 visible: pill.icon === "" && pill.glyph !== ""
                 text: pill.glyph
-                font.family: "FiraCode Nerd Font"
+                font.family: "Symbols Nerd Font"
                 font.pixelSize: 17
                 color: pill.tint
             }
