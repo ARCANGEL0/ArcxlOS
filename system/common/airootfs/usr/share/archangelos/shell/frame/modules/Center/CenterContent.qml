@@ -612,6 +612,7 @@ Item {
 									}
 									Text {
 										anchors.centerIn: parent
+										font.family: "Symbols Nerd Font"
 										text: parent.isPlay ? (MediaService.isPlaying ? "󰏤" : "󰐊")
 										                    : (parent.modelData.key === "prev" ? "󰒮" : "󰒭")
 										color: ctrlArea.containsMouse ? Theme.active : Theme.text
@@ -766,6 +767,7 @@ Item {
 							leftMargin:     root.fw
 							verticalCenter: parent.verticalCenter
 						}
+						font.family: "Symbols Nerd Font"
 						text:           "󰔟"
 						font.pixelSize: Math.round(16 * localScale)
 						color:          root.timerUrgent ? "#ff5555" : Theme.active
@@ -815,6 +817,7 @@ Item {
 
 						Text {
 							anchors.verticalCenter: parent.verticalCenter
+							font.family: "Symbols Nerd Font"
 							text:           ClockState.timerRunning ? "󱫟" : "󱫡"
 							font.pixelSize: Math.round(16 * localScale)
 							color:          _timerPauseHov.hovered ? Theme.active : Theme.text
@@ -827,6 +830,7 @@ Item {
 						}
 						Text {
 							anchors.verticalCenter: parent.verticalCenter
+							font.family: "Symbols Nerd Font"
 							text:           "󱫥"
 							font.pixelSize: Math.round(16 * localScale)
 							color:          _timerResetHov.hovered ? Theme.active : Theme.text
@@ -882,6 +886,7 @@ Item {
 						
 						Text {
 							anchors.verticalCenter: parent.verticalCenter
+							font.family: "Symbols Nerd Font"
 							text:           ClockState.swRunning ? "󱫟" : "󱫡"
 							font.pixelSize: Math.round(16 * localScale)
 							color:          _pauseHov.hovered ? Theme.active : Theme.text
@@ -894,6 +899,7 @@ Item {
 						}
 						Text {
 							anchors.verticalCenter: parent.verticalCenter
+							font.family: "Symbols Nerd Font"
 							text:           "󱫥"
 							font.pixelSize: Math.round(16 * localScale)
 							color:          _notchResetHov.hovered ? Theme.active : Theme.text

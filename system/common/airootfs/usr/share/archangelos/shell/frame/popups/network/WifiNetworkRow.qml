@@ -52,6 +52,14 @@ Item {
     signal cancelExpand()
     signal advancedClicked()
 
+    function requestConnect() {
+        if (netRow.isCurrent || netRow.isConnecting) return
+        if (netRow.isExpanded && passInput.text !== "")
+            netRow.connectClicked(netRow.net.ssid, passInput.text)
+        else
+            netRow.connectClicked(netRow.net.ssid, "")
+    }
+
     width: parent ? parent.width : 0
     height: baseRow.height + expandArea.height
 
@@ -116,6 +124,12 @@ Item {
         anchors { top: parent.top; left: parent.left; right: parent.right }
         height: Math.round(48 * localScale)
 
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: netRow.isCurrent ? Qt.ArrowCursor : Qt.PointingHandCursor
+            onClicked: netRow.requestConnect()
+        }
+
         Column {
             anchors { left: parent.left; leftMargin: Math.round(12 * localScale); verticalCenter: parent.verticalCenter }
             spacing: Math.round(3 * localScale)
@@ -154,6 +168,7 @@ Item {
 
             Text {
                 visible: netRow.net ? (netRow.net.secured && !netRow.isCurrent) : false
+                font.family: "Symbols Nerd Font"
                 text: "󰌾"
                 font.pixelSize: Math.round(11 * localScale)
                 color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.28)
@@ -174,6 +189,7 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
+                    font.family: "Symbols Nerd Font"
                     text: ""
                     font.pixelSize: Math.round(13 * localScale)
                     color: advH.hovered ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
@@ -205,6 +221,7 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
+                    font.family: "Symbols Nerd Font"
                     text: ""
                     font.pixelSize: Math.round(12 * localScale)
                     color: (fH.hovered || netRow.isForgetPending) ? Theme.error : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.3)
@@ -302,12 +319,7 @@ Item {
                 HoverHandler { id: conH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        if (netRow.isExpanded && passInput.text !== "")
-                            netRow.connectClicked(netRow.net.ssid, passInput.text)
-                        else
-                            netRow.connectClicked(netRow.net.ssid, "")
-                    }
+                    onClicked: netRow.requestConnect()
                 }
             }
         }
@@ -466,6 +478,7 @@ Item {
                         }
                         Text {
                             anchors.centerIn: parent
+                            font.family: "Symbols Nerd Font"
                             text: netRow._showPass ? "" : ""
                             font.pixelSize: Math.round(13 * localScale)
                             color: netRow._showPass ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.28)

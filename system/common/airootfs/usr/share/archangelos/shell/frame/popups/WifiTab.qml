@@ -301,6 +301,7 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
+                    font.family: "Symbols Nerd Font"
                     text: ""
                     font.pixelSize: Math.round(14 * localScale)
                     color: backH.hovered ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
@@ -355,6 +356,7 @@ Item {
                     Behavior on color { ColorAnimation { duration: Anim.fast } }
                     Text {
                         anchors.centerIn: parent
+                        font.family: "Symbols Nerd Font"
                         text: "󰒓"
                         font.pixelSize: Math.round(14 * localScale)
                         color: settH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.75) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.30)
@@ -375,6 +377,7 @@ Item {
                     Text {
                         id: rfIcon
                         anchors.centerIn: parent
+                        font.family: "Symbols Nerd Font"
                         text: "󰑐"
                         font.pixelSize: Math.round(15 * localScale)
                         color: root._scanning ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.4) : (root._wifiEnabled ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.18))
@@ -445,6 +448,7 @@ Item {
                                 spacing: Math.round(10 * localScale)
 
                                 Text {
+                                    font.family: "Symbols Nerd Font"
                                     text: ""
                                     font.pixelSize: Math.round(18 * localScale)
                                     color: Theme.active
@@ -558,8 +562,16 @@ Item {
 
                         onConnectClicked: function(ssid, password) {
                             root._forgetSsid = ""
-                            if (password !== "") root._connectWithPassword(ssid, password)
-                            else root._connectFirst(ssid)
+                            if (password !== "") {
+                                root._connectWithPassword(ssid, password)
+                            } else if (modelData.secured) {
+                                root._expandSsid = ssid
+                                var needs = Object.assign({}, root._needsPassword)
+                                needs[ssid] = true
+                                root._needsPassword = needs
+                            } else {
+                                root._connectFirst(ssid)
+                            }
                         }
                         onDisconnectClicked: root._disconnect()
                         onToggleForget: function(ssid) {
@@ -579,7 +591,7 @@ Item {
                     Column {
                         anchors.centerIn: parent
                         spacing: Math.round(10 * localScale)
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "󰤭"; font.pixelSize: Math.round(34 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08) }
+                        Text { font.family: "Symbols Nerd Font"; anchors.horizontalCenter: parent.horizontalCenter; text: "󰤭"; font.pixelSize: Math.round(34 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08) }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "No networks found"; font.pixelSize: Math.round(12 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.2) }
                     }
                 }
@@ -617,6 +629,7 @@ Item {
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
+                            font.family: "Symbols Nerd Font"
                             text: "󰤭"
                             font.pixelSize: Math.round(42 * localScale)
                             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.12)
@@ -649,6 +662,7 @@ Item {
 
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
+                                    font.family: "Symbols Nerd Font"
                                     text: "󰤨"
                                     font.pixelSize: Math.round(14 * localScale)
                                     color: Theme.active

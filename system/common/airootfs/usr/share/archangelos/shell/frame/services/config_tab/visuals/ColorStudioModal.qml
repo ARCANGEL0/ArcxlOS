@@ -225,6 +225,7 @@ Rectangle {
 
                     Text {
                         anchors.bottom: parent.bottom; anchors.bottomMargin: Math.round(6 * chartPopup.localScale); anchors.horizontalCenter: parent.horizontalCenter
+                        font.family: "Symbols Nerd Font"
                         text: "󰆏 COPY"
                         color: chartPopup.lit > 65 ? "#000000" : "#ffffff"
                         font.pixelSize: Math.round(9 * chartPopup.localScale); font.weight: Font.Bold
@@ -329,6 +330,7 @@ Rectangle {
                             }
                             Text {
                                 anchors.centerIn: parent
+                                font.family: "Symbols Nerd Font"
                                 text: chartPopup.copiedToast ? "✓" : "󰆏"
                                 color: chartPopup.copiedToast ? "#000000" : Theme.text
                                 font.pixelSize: Math.round(13 * chartPopup.localScale)
@@ -349,6 +351,7 @@ Rectangle {
                             }
                             Text {
                                 anchors.centerIn: parent
+                                font.family: "Symbols Nerd Font"
                                 text: "󰈊"
                                 color: Theme.text
                                 font.pixelSize: Math.round(14 * chartPopup.localScale)

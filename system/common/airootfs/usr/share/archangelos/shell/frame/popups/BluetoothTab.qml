@@ -294,6 +294,7 @@ Item {
                     Behavior on color { ColorAnimation { duration: Anim.fast } }
                     Text {
                         anchors.centerIn: parent
+                        font.family: "Symbols Nerd Font"
                         text: "󰒓"
                         font.pixelSize: Math.round(14 * localScale)
                         color: settH.hovered ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.75) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.30)
@@ -487,7 +488,7 @@ Item {
                     visible: !root._scanning && root._allDevices.length === 0 && root._btPowered
                     Column {
                         anchors.centerIn: parent; spacing: Math.round(10 * localScale)
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "󰂯"; font.pixelSize: Math.round(32 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08) }
+                        Text { font.family: "Symbols Nerd Font"; anchors.horizontalCenter: parent.horizontalCenter; text: "󰂯"; font.pixelSize: Math.round(32 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08) }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "No devices found"; font.pixelSize: Math.round(12 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.2) }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Tap Scan to discover nearby devices"; font.pixelSize: Math.round(10 * localScale); color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.14) }
                     }
@@ -514,6 +515,7 @@ Item {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
+                font.family: "Symbols Nerd Font"
                 text: "󰂲"
                 font.pixelSize: Math.round(42 * localScale)
                 color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.12)
@@ -546,6 +548,7 @@ Item {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
+                        font.family: "Symbols Nerd Font"
                         text: "󰂯"
                         font.pixelSize: Math.round(14 * localScale)
                         color: Theme.active

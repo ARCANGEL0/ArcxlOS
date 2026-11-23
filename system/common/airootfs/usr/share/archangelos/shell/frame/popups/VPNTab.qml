@@ -401,6 +401,7 @@ Item {
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
+                            font.family: "Symbols Nerd Font"
                             text: "󰒃"; font.pixelSize: Math.round(13 * localScale)
                             color: root._killSwitch ? Theme.active : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.40)
                             Behavior on color { ColorAnimation { duration: Anim.color} }
@@ -426,6 +427,7 @@ Item {
                     Behavior on color { ColorAnimation { duration: Anim.color} }
 
                     Text {
+                        font.family: "Symbols Nerd Font"
                         id: rfIcon; anchors.centerIn: parent; text: "󰑐"; font.pixelSize: Math.round(15 * localScale)
                         color: root._loading
                             ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.4)
@@ -505,7 +507,7 @@ Item {
                     visible: !root._loading && root._connections.length === 0
                     Column {
                         anchors.centerIn: parent; spacing: Math.round(12 * localScale)
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "󰦝"; font.pixelSize: Math.round(36 * localScale); color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.08) }
+                        Text { font.family: "Symbols Nerd Font"; anchors.horizontalCenter: parent.horizontalCenter; text: "󰦝"; font.pixelSize: Math.round(36 * localScale); color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.08) }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "No WireGuard connections"; font.pixelSize: Math.round(13 * localScale); color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.2) }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Import a config to get started:"; font.pixelSize: Math.round(10 * localScale); color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.14); horizontalAlignment: Text.AlignHCenter }
                         Rectangle {
@@ -586,6 +588,7 @@ Item {
             // Shield glyph
             Text {
                 anchors.verticalCenter: parent.verticalCenter
+                font.family: "Symbols Nerd Font"
                 text: "󰦝"; font.pixelSize: Math.round(20 * localScale)
                 color: vRow.con.active
                     ? Theme.active

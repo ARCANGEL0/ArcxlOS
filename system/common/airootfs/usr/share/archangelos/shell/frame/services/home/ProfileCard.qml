@@ -132,6 +132,7 @@ StatCard {
 
             Text {
                 anchors.centerIn: parent
+                font.family: "Symbols Nerd Font"
                 text:           "󰀄"
                 font.pixelSize: Math.round(28 * localScale)
                 color:          Theme.active
@@ -153,6 +154,7 @@ StatCard {
             Row {
                 spacing: Math.round(8 * localScale)
                 Text {
+                    font.family: "Symbols Nerd Font"
                     text: "󰣇"; font.pixelSize: Math.round(12 * localScale); color: Theme.active
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -166,6 +168,7 @@ StatCard {
             Row {
                 spacing: Math.round(8 * localScale)
                 Text {
+                    font.family: "Symbols Nerd Font"
                     text: "󰔚"; font.pixelSize: Math.round(12 * localScale); color: Theme.active
                     anchors.verticalCenter: parent.verticalCenter
                 }

@@ -70,6 +70,7 @@ Item {
         Text {
             id: minIcon
             anchors.verticalCenter: parent.verticalCenter
+            font.family: "Symbols Nerd Font"
             text: "󰃞"
             font.pixelSize: Math.round(13 * sliderRoot.localScale)
             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
@@ -159,6 +160,7 @@ Item {
         Text {
             id: maxIcon
             anchors.verticalCenter: parent.verticalCenter
+            font.family: "Symbols Nerd Font"
             text: "󰃠"
             font.pixelSize: Math.round(13 * sliderRoot.localScale)
             color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.75)

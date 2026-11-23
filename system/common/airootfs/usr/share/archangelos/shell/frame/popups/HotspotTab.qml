@@ -80,7 +80,7 @@ Item {
                         id: infoCol;
                         anchors { left: parent.left; right: parent.right; top: parent.top; margins: Math.round(12 * localScale) }
                         spacing: Math.round(4 * localScale)
-                        Text { width: parent.width; text: "󰀃  Toggle hotspot from the Quick Settings panel."; font.pixelSize: Math.round(11 * localScale); color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7); wrapMode: Text.WordWrap }
+                        Text { font.family: "Symbols Nerd Font"; width: parent.width; text: "󰀃  Toggle hotspot from the Quick Settings panel."; font.pixelSize: Math.round(11 * localScale); color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7); wrapMode: Text.WordWrap }
                         Text { width: parent.width; text: "Requires an ethernet connection. Shares the same WiFi channel as your current connection."; font.pixelSize: Math.round(10 * localScale); color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.30); wrapMode: Text.WordWrap; lineHeight: 1.4 }
                     }
                 }
@@ -154,7 +154,7 @@ Item {
                                 verticalCenter: parent.verticalCenter }
                                 width: Math.round(28 * localScale); height: Math.round(28 * localScale)
                                 Rectangle { anchors.fill: parent; radius: Math.round(6 * localScale); color: eyeH.hovered ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.08) : "transparent" }
-                                Text { anchors.centerIn: parent; text: root._showPass ? "" : ""; font.pixelSize: Math.round(13 * localScale); color: root._showPass ? Theme.active : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.28) }
+                                Text { font.family: "Symbols Nerd Font"; anchors.centerIn: parent; text: root._showPass ? "" : ""; font.pixelSize: Math.round(13 * localScale); color: root._showPass ? Theme.active : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.28) }
                                 HoverHandler { id: eyeH; cursorShape: Qt.PointingHandCursor }
                                 MouseArea { anchors.fill: parent; onClicked: root._showPass = !root._showPass }
                             }

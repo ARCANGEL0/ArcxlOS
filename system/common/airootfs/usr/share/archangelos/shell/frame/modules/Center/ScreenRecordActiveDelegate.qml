@@ -126,6 +126,7 @@ Item {
             Behavior on color { ColorAnimation { duration: Anim.fast} }
             Text {
                 anchors.centerIn: parent
+                font.family: "Symbols Nerd Font"
                 text:           "󰩺"
                 font.pixelSize: Math.round(11 * localScale)
                 color:          recDiscardH.hovered

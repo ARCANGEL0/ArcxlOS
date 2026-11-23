@@ -264,7 +264,7 @@ Item {
                 width: Math.round(22 * localScale); height: Math.round(22 * localScale); radius: Math.round(6 * localScale)
                 color: _clrH.hovered ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.09) : "transparent"
                 Behavior on color { ColorAnimation { duration: Anim.fast} }
-                Text { anchors.centerIn: parent; text: "󰩺"; font.pixelSize: Math.round(11 * localScale)
+                Text { font.family: "Symbols Nerd Font"; anchors.centerIn: parent; text: "󰩺"; font.pixelSize: Math.round(11 * localScale)
                     color: _clrH.hovered ? "#ff4444" : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.28) }
                 HoverHandler { id: _clrH; cursorShape: Qt.PointingHandCursor }
                 MouseArea {

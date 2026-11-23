@@ -36,7 +36,7 @@ Rectangle {
     Text {
         anchors.centerIn: parent
         text: root.text
-        
+        font.family: "Symbols Nerd Font"
         color: hover.hovered ? Theme.background : root.textColor
         
         font.pixelSize: root.fontSize

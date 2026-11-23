@@ -97,6 +97,7 @@ Item {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
+                    font.family: "Symbols Nerd Font"
                     text: "󰣪"; font.pixelSize: Math.round(32 * localScale)
                     color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.3)
 
@@ -123,6 +124,7 @@ Item {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
+                    font.family: "Symbols Nerd Font"
                     text:           root.query !== "" ? "󰩄" : "󱗃"
                     font.pixelSize: Math.round(28 * localScale)
                     color:          Theme.subtext
@@ -229,6 +231,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
+                                    font.family: "Symbols Nerd Font"
                                     text: "󰀻" // Generic Nerd Font App Grid Icon
                                     font.pixelSize: Math.round(16 * localScale)
                                     color: Theme.active
@@ -277,6 +280,7 @@ Item {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
+                    font.family: "Symbols Nerd Font"
                     text: "󰍉"; font.pixelSize: Math.round(16 * localScale)
                     color: searchInput.activeFocus
                            ? Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.7)

@@ -194,6 +194,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent
+                    font.family: "Symbols Nerd Font"
                     text: "󰆴"
                     font.pixelSize: Math.round(13 * localScale)
                     color: (rmH.hovered || dRow.isRemovePending) ? Theme.error : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.25)
@@ -257,6 +258,7 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
+                        font.family: "Symbols Nerd Font"
                         text: "󰌾"
                         font.pixelSize: Math.round(12 * localScale)
                         color: dRow.isPairingOpen

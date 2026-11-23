@@ -104,6 +104,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: Math.round(5 * localScale)
                     Text {
+                        font.family: "Symbols Nerd Font"
                         text: "󰩺"; font.pixelSize: Math.round(12 * localScale)
                         color: Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.80)
                         anchors.verticalCenter: parent.verticalCenter
@@ -156,6 +157,7 @@ Item {
                          && root.pinned.length  === 0
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
+                    font.family: "Symbols Nerd Font"
                     text: "󰅍"; font.pixelSize: 32; color: Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.08)
                 }
                 Text {
@@ -412,6 +414,7 @@ component ClipRow: Item {
                 Text {
                     visible: !row.isImage
                     anchors.verticalCenter: parent.verticalCenter
+                    font.family: "Symbols Nerd Font"
                     text:           "󰅍"
                     font.pixelSize: 12
                     color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.22)
@@ -494,6 +497,7 @@ component ClipRow: Item {
 
             Text {
                 anchors.centerIn: parent
+                font.family: "Symbols Nerd Font"
                 text: " 󰐃"; font.pixelSize: 8; font.weight: Font.Bold
                 color: Qt.rgba(0, 0, 0, 0.65)
             }

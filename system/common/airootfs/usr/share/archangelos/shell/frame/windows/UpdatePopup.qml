@@ -158,6 +158,7 @@ PanelWindow {
                     id: headerIcon
                     anchors.verticalCenter: parent.verticalCenter
                     font.pixelSize: Math.round(18 * localScale)
+                    font.family: "Symbols Nerd Font"
                     text: UpdateService.updating || UpdateService.checking ? "󰑐"
                         : UpdateService.updateSuccess                      ? "󰄬"
                         : UpdateService.hasConflict                        ? "󰙨"

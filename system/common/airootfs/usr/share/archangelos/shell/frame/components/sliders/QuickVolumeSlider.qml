@@ -209,6 +209,7 @@ Item {
         Text {
             id: maxIcon
             anchors.verticalCenter: parent.verticalCenter
+            font.family: "Symbols Nerd Font"
             text: "󰕾"
             font.pixelSize: Math.round(13 * sliderRoot.localScale)
             color: sliderRoot.muted ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35) : Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.75)

@@ -71,6 +71,7 @@ Rectangle {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             text: tileRoot.icon
+            font.family: "Symbols Nerd Font"
             font.pixelSize: Math.round(17 * tileRoot.localScale)
             color: tileRoot.on ? Theme.active : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.40)
 

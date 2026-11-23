@@ -12,6 +12,7 @@ Item {
 
     Text {
         anchors.centerIn: parent
+        font.family: "Symbols Nerd Font"
         text: "󰐥"
         color: hover.hovered ? Qt.lighter(Theme.active, 1.25) : Theme.active
         Behavior on color { ColorAnimation { duration: Anim.color } }

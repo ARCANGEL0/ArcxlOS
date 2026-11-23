@@ -204,6 +204,7 @@ Rectangle {
         
         Text {
             anchors.centerIn: parent
+            font.family: "Symbols Nerd Font"
             text: "" 
             color: Theme.text
             font.pixelSize: Math.round(14 * localScale)

@@ -241,6 +241,7 @@ Item {
     component Spinner: Text {
         property bool running: false
         visible: running
+        font.family: "Symbols Nerd Font"
         text: "󰑐"
         color: Theme.active
         font.pixelSize: Math.round(13 * root.localScale)
@@ -750,6 +751,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             visible: bigList.count === 0
+                            font.family: "Symbols Nerd Font"
                             text: root.bigBusy ? "Scanning home folder…" : "Use 󰍉 to find the biggest folders"
                             font.pixelSize: Math.round(10 * root.localScale)
                             color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)

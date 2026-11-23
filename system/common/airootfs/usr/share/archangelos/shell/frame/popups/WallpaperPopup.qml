@@ -330,6 +330,7 @@ Item {
                         Behavior on color        { ColorAnimation { duration: Anim.fast} }
                         Behavior on border.color { ColorAnimation { duration: Anim.fast} }
                         Text {
+                            font.family: "Symbols Nerd Font"
                             anchors.centerIn: parent; text: "󰉋"; font.pixelSize: Math.round(15 * root.localScale)
                             color: (content.folderMode || folderBtnMA.containsMouse) ? Theme.active : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.5)
                             Behavior on color { ColorAnimation { duration: Anim.fast} }
@@ -506,6 +507,7 @@ Item {
                         Row {
                             id:                 schemeBtnRow; anchors.centerIn: parent; spacing: Math.round(7 * localScale)
                             Text {
+                                font.family: "Symbols Nerd Font"
                                 text:                   "󰏘"
                                 font.pixelSize:         Math.round(14 * localScale)
                                 color:                  (content.schemePopupOpen || schemeBtnMA.containsMouse) ? Theme.active : Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.55)

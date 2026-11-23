@@ -248,6 +248,7 @@ Item {
                     border.color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.25)
                     Text {
                         anchors.centerIn: parent
+                        font.family: "Symbols Nerd Font"
                         text: "󰝚"
                         font.pixelSize: Math.round(64 * root.u)
                         color: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.5)
@@ -403,6 +404,7 @@ Item {
                     visible: root.player?.volumeSupported ?? false
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
+                        font.family: "Symbols Nerd Font"
                         text: "󰕾"
                         color: Theme.subtext
                         font.pixelSize: Math.round(13 * root.u)
@@ -610,6 +612,7 @@ Item {
             spacing: Math.round(8 * root.u)
             Text {
                 anchors.verticalCenter: parent.verticalCenter
+                font.family: "Symbols Nerd Font"
                 text: dev.isOutput ? "󰓃" : "󰍬"
                 color: dev.current ? Theme.active : Theme.subtext
                 font.pixelSize: Math.round(13 * root.u)

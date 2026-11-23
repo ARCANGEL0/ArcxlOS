@@ -84,6 +84,7 @@ Item {
         Text {
             id: netIcon
             text:           root._netIcon
+            font.family:    "Symbols Nerd Font"
             color:          wifiHov.hovered ? Theme.active : root._netColor
             font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
@@ -104,6 +105,7 @@ Item {
         // VPN shield — opens to vpn tab
         Text {
             visible:        ShellState.vpnActive || ShellState.vpnConnecting
+            font.family: "Symbols Nerd Font"
             text:           ShellState.vpnConnecting ? "󱦚" : "󰦝"
             font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
@@ -127,6 +129,7 @@ Item {
         // Bluetooth — opens to bluetooth tab
         Text {
             visible:        ShellState.btPowered
+            font.family: "Symbols Nerd Font"
             text:           ShellState.btConnected ? "󰂱" : "󰂯"
             font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
@@ -148,6 +151,7 @@ Item {
         // Hotspot — opens to hotspot tab
         Text {
             visible:        ShellState.hotspot
+            font.family: "Symbols Nerd Font"
             text:           "󰀂"
             font.pixelSize: Math.round(16 * localScale)
             anchors.verticalCenter: parent.verticalCenter
