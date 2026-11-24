@@ -103,6 +103,7 @@ ax_stage() {
            "${airootfs}/usr/lib/archangelos/power-mode" \
            "${airootfs}/usr/bin/archangelos-fastfetch-setup" \
            "${airootfs}/usr/bin/archangelos-theme-setup" \
+           "${airootfs}/usr/bin/archangelos-update" \
            "${airootfs}/usr/bin/archangelos-region" \
            "${airootfs}/usr/bin/archangelos-screenshot" \
            "${airootfs}/usr/bin/archangelos-screenrecord" \

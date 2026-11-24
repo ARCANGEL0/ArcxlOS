@@ -49,7 +49,7 @@ Item {
 
     Process {
         id: osProc
-        command: ["sh", "-c", "archangelos-update check 2>/dev/null; echo \"EXIT:$?\""]
+        command: ["sh", "-c", "sh /usr/bin/archangelos-update check 2>&1; echo \"EXIT:$?\""]
         stdout: StdioCollector {
             onStreamFinished: {
                 const m = /remote:\s*(\S+)/.exec(text)
@@ -459,7 +459,7 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.inTerminal("pkexec archangelos-update update")
+                            onClicked: root.inTerminal("pkexec /bin/sh /usr/bin/archangelos-update update")
                         }
                     }
                 }

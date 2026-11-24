@@ -50,14 +50,16 @@ PageScaffold {
             page.lastCheck = Qt.formatTime(new Date(), "HH:mm");
             page.checking = false; page.checked = true;
         });
-        cmd.sh('archangelos-update check 2>/dev/null; echo "EXIT:$?"', [], (c, out) => {
+        cmd.sh('sh /usr/bin/archangelos-update check 2>&1; echo "EXIT:$?"', [], (c, out) => {
             const m = /remote:\s*(\S+)/.exec(out || "");
             const ex = /EXIT:(\d+)/.exec(out || "");
             page.osRemote = (m && ex && ex[1] === "3") ? m[1] : "";
+            if (!ex || (ex[1] !== "0" && ex[1] !== "3"))
+                page.note = "ArchangelOS update check failed: " + (out || "updater unavailable").trim();
         });
     }
     function updateOs() {
-        const script = 'pkexec archangelos-update update; echo; read -rp "Finished. Press Enter to close. " _';
+        const script = 'pkexec /bin/sh /usr/bin/archangelos-update update; echo; read -rp "Finished. Press Enter to close. " _';
         Quickshell.execDetached(["sh", "-c",
             'for t in rio kitty foot alacritty; do command -v $t >/dev/null || continue; '
           + 'case $t in rio) exec rio -e bash -c "$1";; *) exec $t bash -c "$1";; esac; done', "sh", script]);
