@@ -1,4 +1,4 @@
-// ArchangelOS Settings — design tokens.
+// ArchangelOS Settings - design tokens.
 //
 // Everything derives from the live shell palette (ArcShell's Theme: the AMOLED overrides or the
 // matugen palette), so the settings window always matches the desktop and follows the accent the

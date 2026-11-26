@@ -1,5 +1,5 @@
 // Notifications: when a toast is allowed to appear, how long it stays, and which apps never
-// get one. Nothing here stops a notification being *tracked* — the dashboard's list always
+// get one. Nothing here stops a notification being *tracked* - the dashboard's list always
 // receives everything; these rules only govern the transient popup.
 pragma ComponentBehavior: Bound
 

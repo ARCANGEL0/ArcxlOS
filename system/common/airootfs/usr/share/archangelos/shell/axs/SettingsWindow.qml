@@ -1,4 +1,4 @@
-// ArchangelOS Settings window — a regular toplevel the compositor tiles, floats and lists.
+// ArchangelOS Settings window - a regular toplevel the compositor tiles, floats and lists.
 // Opened with `archangelos-settings [page]` (shell IPC: settings open <page>) or the launcher's
 // Settings entry. Only the visible page is loaded, so closed settings cost nothing.
 pragma ComponentBehavior: Bound

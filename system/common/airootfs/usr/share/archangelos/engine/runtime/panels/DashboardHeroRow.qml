@@ -115,7 +115,7 @@ RowLayout {
                     spacing: 0
                     Text {
                         text: WeatherService.available
-                            ? WeatherService.temperatureLabel : "—"
+                            ? WeatherService.temperatureLabel : "-"
                         color: Theme.surfaceText
                         font.family: Config.appearance.monoFontFamily
                         font.pixelSize: Config.island.expandedPixelSize(28, false)

@@ -21,11 +21,11 @@ import Quickshell.Io
 
 // Reads /proc/meminfo every 2s via cat (FileView can't read virtual fs).
 // Exposes:
-//   real usagePercent   — 0.0 to 100.0
+//   real usagePercent   - 0.0 to 100.0
 //   real usedGb
 //   real totalGb
-//   string usedStr      — e.g. "11.2 GB"
-//   string totalStr     — e.g. "16.0 GB"
+//   string usedStr      - e.g. "11.2 GB"
+//   string totalStr     - e.g. "16.0 GB"
 
 QtObject {
     id: root
@@ -34,8 +34,8 @@ QtObject {
     property real usagePercent: 0.0
     property real usedGb:       0.0
     property real totalGb:      0.0
-    property string usedStr:    "—"
-    property string totalStr:   "—"
+    property string usedStr:    "-"
+    property string totalStr:   "-"
 
     property var _proc: Process {
         command: ["cat", "/proc/meminfo"]

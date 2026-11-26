@@ -460,7 +460,7 @@ component ClipRow: Item {
                     }
                 }
 
-                // Pin / Unpin  (hidden for image entries — images can't be pinned)
+                // Pin / Unpin  (hidden for image entries - images can't be pinned)
                 ActionBtn {
                     icon:    row.isPinned ? "󰐄" : "󰐃"
                     active:  row.isPinned

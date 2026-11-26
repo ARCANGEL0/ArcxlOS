@@ -1,5 +1,5 @@
 -- ################################################################################
--- # config/look_and_feel.lua — Visuals, layouts, and misc
+-- # config/look_and_feel.lua - Visuals, layouts, and misc
 -- # See https://wiki.hypr.land/Configuring/Basics/Variables/
 -- ################################################################################
 
@@ -94,7 +94,7 @@ hl.config({
 ---------------------------------
 -- GTK theming (exec on every reload, equivalent to `exec` in hyprlang)
 ---------------------------------
--- GTK4 — dark (overridden to light below, kept for reference)
+-- GTK4 - dark (overridden to light below, kept for reference)
 --hl.exec_cmd([[gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"]])
 -- GTK3
 hl.exec_cmd([[gsettings set org.gnome.desktop.interface gtk-theme "adw-gtk3-dark"]])

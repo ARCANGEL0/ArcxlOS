@@ -36,7 +36,7 @@ PanelWindow {
         anchors.fill: parent
         anchors.margins: osdWin.pad
         radius: 18
-        // Matches MediaOsd / the Frame fill — the two OSDs stack and must read as one family.
+        // Matches MediaOsd / the Frame fill - the two OSDs stack and must read as one family.
         color: Config.bg
         border.width: 1; border.color: Config.outline
 

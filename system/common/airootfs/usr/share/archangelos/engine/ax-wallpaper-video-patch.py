@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ArchangelOS — teach the ArcShell engine's wallpaper picker about video wallpapers.
+"""ArchangelOS - teach the ArcShell engine's wallpaper picker about video wallpapers.
 
 The engine's stock wallpaper pipeline is image-only: the picker lists png/jpg/webp,
 and every selection is pushed through the transactional awww (swww fork) renderer

@@ -1,12 +1,12 @@
 #!/bin/bash
-# archangelos-shell — pick which desktop shell Hyprland runs.
+# archangelos-shell - pick which desktop shell Hyprland runs.
 #
 # Shells live in ~/.config/hypr/themes/<name>/ and are loaded through their theme.lua; ArcShell
 # (ArchangelOS's own) is built in as "archangelos". Only the active one is loaded, so two shells
 # never run at once. A theme may carry a theme.json:
 #   { "name": "…", "description": "…", "preview": "preview.png",
-#     "keybinds": true,             — it brings its own keybinds (ArchangelOS's are then skipped)
-#     "start": "cmd", "stop": "cmd" — lets it be switched to without logging out }
+#     "keybinds": true,             - it brings its own keybinds (ArchangelOS's are then skipped)
+#     "start": "cmd", "stop": "cmd" - lets it be switched to without logging out }
 #
 #   archangelos-shell list          id|name|description|preview|own keybinds|live|active
 #   archangelos-shell current

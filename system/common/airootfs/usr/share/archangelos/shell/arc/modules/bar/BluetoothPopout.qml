@@ -74,7 +74,7 @@ BarPopout {
                 objectProp: "address"
                 values: Bt.enabled ? [...Bt.devices].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || (a.name ?? "").localeCompare(b.name ?? "")).slice(0, 6) : []
             }
-            // No per-row entrance animation — see the Wi-Fi list.
+            // No per-row entrance animation - see the Wi-Fi list.
             RowLayout {
                 id: btItem
                 required property var modelData

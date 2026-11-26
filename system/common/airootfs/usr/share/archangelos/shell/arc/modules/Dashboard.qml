@@ -30,22 +30,22 @@ PanelWindow {
         // Clear the IPC flag on the way out, so the keybind can reopen it.
         else Shell.dashboardVisible = false;
         // The configured tab is restored once the panel is off-screen (see dashPanel.onYChanged),
-        // not here: switching on the way out made the dashboard flip tabs in your face — and now
-        // that its height follows the tab, resize itself — before it had finished leaving.
+        // not here: switching on the way out made the dashboard flip tabs in your face - and now
+        // that its height follows the tab, resize itself - before it had finished leaving.
         reportBox();
     }
     // Report the body rect so the Frame bulges the top border down into it: sides inset to match
     // the content padding, 18px above the body so the bulge fuses with the border.
     //
     // Driven off the panel's LIVE y with anim=false, so the bulge rides the slide 1:1. Reporting
-    // the resting rect and letting the Frame ease it grew the box out of its top-LEFT corner —
+    // the resting rect and letting the Frame ease it grew the box out of its top-LEFT corner -
     // the width unrolled rightward, which read as opening sideways.
     function reportBox() {
         // The panel keeps sliding for a moment after closing; by then a bottom popout may already
         // own the shared slot, so stop reporting once it is not ours.
         if (!dashOpen && PopoutState.owner !== "dashboard") return;
         // Inset LESS than the content margin (40), so a ring of background frames the content
-        // on every side — the same 40/16 pair the launcher uses.
+        // on every side - the same 40/16 pair the launcher uses.
         const inset = 16;
         const x = dashWin.width / 2 - dashPanel.width / 2 + inset;
         // Fully back above the screen: the bulge has retracted into the top border, so drop it.
@@ -57,7 +57,7 @@ PanelWindow {
     // A bottom "flows-out" popout takes over the shared bulge slot, so close and yield to it, then
     // re-evaluate hover on its close so the Dashboard reopens under a resting cursor. Only the
     // launcher and capture panel qualify: Settings is a FloatingWindow with its own background and
-    // never claims the slot — listing it here killed the Dashboard for as long as it existed.
+    // never claims the slot - listing it here killed the Dashboard for as long as it existed.
     readonly property bool blocked: Shell.launcherVisible || Shell.captureVisible
     onBlockedChanged: dashUpdate()
     // Two hover trackers: the panel is an opaque sibling occluding the hot-zone's handler, so keep
@@ -87,7 +87,7 @@ PanelWindow {
         property string name: ""            // apps show one; the fixed rows are named by their icon
         property real value: 0
         property color tint: Config.accent
-        property bool off: false            // muted — icon, fill and percentage all dim together
+        property bool off: false            // muted - icon, fill and percentage all dim together
         signal moved(real v)
         signal toggled()
         Layout.fillWidth: true
@@ -164,7 +164,7 @@ PanelWindow {
         readonly property Item curTab: tab === 1 ? perfTab : tab === 2 ? notifTab : homeTab
         readonly property int chrome: 20 + 18 + 32 + 14
         height: dashPanel.chrome + Math.max(280, curTab.implicitHeight)
-        // Eased so switching tabs slides the bottom edge instead of snapping it — but only while
+        // Eased so switching tabs slides the bottom edge instead of snapping it - but only while
         // the panel is up. Closed, the tab reset changes this height too, and easing it there is
         // what let the panel grow back down past the screen edge for a frame.
         Behavior on height { enabled: dashWin.dashOpen; Spatial {} }
@@ -172,7 +172,7 @@ PanelWindow {
         onHeightChanged: dashWin.reportBox()
 
         // Background is drawn by the Frame's SDF (it bulges the top border down into this
-        // panel via PopoutState — one continuous surface, same as the bar popouts).
+        // panel via PopoutState - one continuous surface, same as the bar popouts).
 
         property int tab: Config.dashTab
         // Gate the (relatively expensive) system-stats sampler on the Performance tab (index 1).
@@ -186,7 +186,7 @@ PanelWindow {
         // The bulge IS this panel's background, so it re-reports on every move.
         onYChanged: {
             dashWin.reportBox();
-            // Parked far enough up that even the tallest tab stays hidden — only then does the tab
+            // Parked far enough up that even the tallest tab stays hidden - only then does the tab
             // go back to the configured one. Resetting at close time showed the switch on the way
             // out; resetting at its own height showed the next tab's extra height.
             if (!dashWin.dashOpen && y + dashWin.implicitHeight <= 0) tab = Config.dashTab;
@@ -200,7 +200,7 @@ PanelWindow {
 
         property var now: new Date()
         property real mediaPos: 0   // polled media position (Mpris doesn't tick on its own)
-        // Only tick while the dashboard is open — the clock/progress it drives aren't visible otherwise.
+        // Only tick while the dashboard is open - the clock/progress it drives aren't visible otherwise.
         Timer {
             interval: 1000; running: dashWin.dashOpen; repeat: true; triggeredOnStart: true
             onTriggered: { dashPanel.now = new Date(); dashPanel.mediaPos = Media.player?.position ?? 0; }
@@ -275,7 +275,7 @@ PanelWindow {
                     Rectangle {
                         Layout.fillWidth: true; Layout.fillHeight: true
                         // The player gives up its slack to the mixer below, but only down to what
-                        // its own content needs — it clips, so without this floor a couple of app
+                        // its own content needs - it clips, so without this floor a couple of app
                         // rows would saw the cover art and the transport off the bottom. An
                         // implicit height doubles as the layout minimum and feeds the tab's own
                         // implicit height, which is what sizes the panel.
@@ -387,7 +387,7 @@ PanelWindow {
                                       leftMargin: 12; rightMargin: 12 }
                             spacing: 6
 
-                            // Brightness is DDC/CI over i2c — hidden entirely when no monitor answers.
+                            // Brightness is DDC/CI over i2c - hidden entirely when no monitor answers.
                             RowLayout {
                                 Layout.fillWidth: true; spacing: 8
                                 visible: Brightness.available
@@ -522,7 +522,7 @@ PanelWindow {
                     }   // end left column
 
                     // Right column: clock and calendar as separate cards. fillWidth must be spelled
-                    // out — nested layouts default it to TRUE (plain Items to false), which would
+                    // out - nested layouts default it to TRUE (plain Items to false), which would
                     // stretch this column and push the player one off the panel.
                     ColumnLayout {
                         Layout.fillWidth: false
@@ -586,7 +586,7 @@ PanelWindow {
 
                     Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Config.outline; opacity: 0.6 }
 
-                    // The figures each ring is derived from — the ring says "how full", these say
+                    // The figures each ring is derived from - the ring says "how full", these say
                     // "out of what". Rows drop out of the grid when their source is missing.
                     GridLayout {
                         Layout.fillWidth: true
@@ -652,7 +652,7 @@ PanelWindow {
                     }
                     Flickable {
                         Layout.fillWidth: true; Layout.fillHeight: true
-                        // Grows with the list up to a ceiling, then scrolls — the panel sizes
+                        // Grows with the list up to a ceiling, then scrolls - the panel sizes
                         // itself off this tab, so an unbounded list would drag it down the screen.
                         implicitHeight: Math.min(dnlist.implicitHeight, 260)
                         contentHeight: dnlist.implicitHeight
@@ -734,7 +734,7 @@ PanelWindow {
                                                     Layout.fillWidth: true
                                                     spacing: 2
                                                     // PlainText: an app's own strings must never reach
-                                                    // the rich-text engine — see Toasts.qml.
+                                                    // the rich-text engine - see Toasts.qml.
                                                     Text { text: notifItem.modelData.summary; textFormat: Text.PlainText; color: Config.fg; font.family: Config.textFont; font.pixelSize: 14; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
                                                     Text { visible: (notifItem.modelData.body ?? "").length > 0; text: notifItem.modelData.body; textFormat: Text.PlainText; color: Config.dim; font.family: Config.textFont; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.WordWrap; maximumLineCount: 2; elide: Text.ElideRight }
                                                 }

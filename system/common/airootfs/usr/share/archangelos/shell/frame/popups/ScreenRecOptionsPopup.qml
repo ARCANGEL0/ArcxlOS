@@ -235,7 +235,7 @@ Item {
                 }
             }
 
-            // FPS / backend tiles — margins keep the label clear of the status
+            // FPS / backend tiles - margins keep the label clear of the status
             // dot in the top-right corner, which longer names used to run under.
             Text {
                 visible: btn.icon === ""

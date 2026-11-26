@@ -1,4 +1,4 @@
-// Keyboard shortcuts — every bind of the shell that is running. ArcShell's own map is read from
+// Keyboard shortcuts - every bind of the shell that is running. ArcShell's own map is read from
 // keybinds.lua; changing keys, turning a bind off or adding a new one is saved to
 // ~/.config/archangelos/hypr/keys.lua (keybinds.lua and archangelos.lua load it), then Hyprland
 // reloads. A theme that brings its own keybinds is shown as it is, read from `hyprctl binds`.
@@ -12,7 +12,7 @@ PageScaffold {
     property var meta
     group: "System"
     title: "Keyboard shortcuts"
-    desc: "Every shortcut on this desktop — change the keys, turn one off, or add your own."
+    desc: "Every shortcut on this desktop - change the keys, turn one off, or add your own."
 
     readonly property string cfg: Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")
     readonly property string dir: cfg + "/archangelos/hypr"
@@ -125,7 +125,7 @@ PageScaffold {
              + '{ command -v hyprctl >/dev/null && hyprctl reload >/dev/null 2>&1; true; }',
                [page.dir, L.join("\n"), JSON.stringify({ remap: remap, custom: custom }, null, 1)], (c, o, e) => {
             if (c !== 0) page.error = (e || o).trim() || "Couldn't save the shortcuts.";
-            else { page.notice = "Saved — the new keys work now."; noticeT.restart(); }
+            else { page.notice = "Saved - the new keys work now."; noticeT.restart(); }
         });
     }
     Timer { id: noticeT; interval: 3500; onTriggered: page.notice = "" }
@@ -226,15 +226,15 @@ PageScaffold {
             }
             Row {
                 visible: ed.isNew; spacing: 10
-                AxField { id: nDesc; width: 220; placeholder: "Name — e.g. Open notes" }
-                AxField { id: nCmd; width: 300; placeholder: "Command — e.g. obsidian"; icon: "terminal" }
+                AxField { id: nDesc; width: 220; placeholder: "Name - e.g. Open notes" }
+                AxField { id: nCmd; width: 300; placeholder: "Command - e.g. obsidian"; icon: "terminal" }
             }
             Label {
                 width: parent.width; wrapMode: Text.WordWrap; font.pixelSize: Ax.fsSmall
                 visible: text !== ""
                 color: ed.others.length ? Ax.danger : Ax.muted
                 text: ed.keys !== "" && !page.valid(ed.keys) ? "That isn't a key combination Hyprland understands."
-                    : ed.others.length ? "Already used by: " + ed.others.map(o => o.desc).join(", ") + ". Both would run — change or turn that one off."
+                    : ed.others.length ? "Already used by: " + ed.others.map(o => o.desc).join(", ") + ". Both would run - change or turn that one off."
                     : ed.row && ed.row.flags.indexOf("mouse") >= 0 ? "Mouse binds take a mouse button, like SUPER + mouse:272." : ""
             }
             Row {
@@ -276,7 +276,7 @@ PageScaffold {
                 Label { font.pixelSize: Ax.fsSmall; color: Ax.muted
                         text: page.notice !== "" ? page.notice
                             : page.own ? page.rows.filter(r => !r.off).length + " shortcuts" + (page.changes ? "  ·  " + page.changes + " changed by you" : "")
-                            : "This theme brings its own shortcuts — they're listed as it defines them. Shortcuts you add here work in every shell." }
+                            : "This theme brings its own shortcuts - they're listed as it defines them. Shortcuts you add here work in every shell." }
             }
         }
         Row {
@@ -318,7 +318,7 @@ PageScaffold {
                     SRow {
                         dim: cell.r.off
                         title: cell.r.desc
-                        desc: cell.r.off ? "Off — " + cell.r.action : cell.r.action
+                        desc: cell.r.off ? "Off - " + cell.r.action : cell.r.action
                         Badge { visible: cell.r.changed; text: "changed"; tone: "accent"; anchors.verticalCenter: parent.verticalCenter }
                         Badge { visible: cell.r.kind !== "custom" && !cell.r.off && page.clash(cell.r.now, cell.tag).length > 0; text: "conflict"; tone: "danger"; anchors.verticalCenter: parent.verticalCenter }
                         Keycaps { keys: cell.r.now || cell.r.keys; off: cell.r.off; anchors.verticalCenter: parent.verticalCenter }
@@ -338,6 +338,6 @@ PageScaffold {
 
     Label {
         width: parent.width; wrapMode: Text.WordWrap; font.pixelSize: Ax.fsSmall; color: Ax.faint
-        text: "Shortcuts the desktop already uses can't be pressed into the box — type them instead. Changes are saved to " + page.dir.replace(Quickshell.env("HOME"), "~") + "/keys.lua."
+        text: "Shortcuts the desktop already uses can't be pressed into the box - type them instead. Changes are saved to " + page.dir.replace(Quickshell.env("HOME"), "~") + "/keys.lua."
     }
 }

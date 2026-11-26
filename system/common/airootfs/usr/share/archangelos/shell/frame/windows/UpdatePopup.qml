@@ -21,17 +21,17 @@ import Quickshell
 import Quickshell.Wayland
 import "../"
 
-// UpdatePopup — centered overlay popup for shell update notifications.
+// UpdatePopup - centered overlay popup for shell update notifications.
 // Same structural pattern as ConfirmDialog: PanelWindow Overlay, dim background,
 // centered fixed-size card. Instantiated per-screen in shell.qml.
 //
 // States:
-//   checking      — spinner in header, no body (checking is brief, usually invisible)
-//   available     — commit list + Update / Skip / Disable buttons
-//   updating      — spinner, please wait text
-//   conflict      — pull failed due to local changes: Stash & Update / Cancel
-//   success       — Reload Shell / Dismiss, auto-dismiss after 10s
-//   error         — generic error text + Retry / Close
+//   checking      - spinner in header, no body (checking is brief, usually invisible)
+//   available     - commit list + Update / Skip / Disable buttons
+//   updating      - spinner, please wait text
+//   conflict      - pull failed due to local changes: Stash & Update / Cancel
+//   success       - Reload Shell / Dismiss, auto-dismiss after 10s
+//   error         - generic error text + Retry / Close
 
 PanelWindow {
     id: root
@@ -82,10 +82,10 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.50)
-        // Pass through clicks in the dim area — update is non-blocking
+        // Pass through clicks in the dim area - update is non-blocking
         MouseArea {
             anchors.fill: parent
-            // Intentionally no action — user must use the card buttons
+            // Intentionally no action - user must use the card buttons
         }
     }
 
@@ -105,7 +105,7 @@ PanelWindow {
         // Prevent clicks from hitting the dim MouseArea
         MouseArea { anchors.fill: parent }
 
-        // Left accent bar — color reflects state
+        // Left accent bar - color reflects state
         Rectangle {
             anchors {
                 left:        parent.left

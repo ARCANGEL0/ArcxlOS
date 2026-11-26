@@ -1,4 +1,4 @@
-// Accessibility — make the desktop easier to see and use: bigger text and pointer, less motion,
+// Accessibility - make the desktop easier to see and use: bigger text and pointer, less motion,
 // colour filters for colour-blindness and contrast, a screen reader and an on-screen keyboard.
 // Visual changes apply live; the colour filter and motion setting are saved to
 // ~/.config/archangelos/hypr/a11y.lua, text and pointer to the session environment.
@@ -89,7 +89,7 @@ PageScaffold {
     Section {
         title: "Seeing"
         SRow {
-            icon: "format_size"; title: "Text size"; desc: "Scales text in apps — " + Math.round(page.s.textScale * 100) + "% (sign out and in to apply everywhere)"
+            icon: "format_size"; title: "Text size"; desc: "Scales text in apps - " + Math.round(page.s.textScale * 100) + "% (sign out and in to apply everywhere)"
             AxSlider { width: 220; from: 1; to: 2; stepSize: 0.25; valueScale: 100; suffix: "%"; value: page.s.textScale; anchors.verticalCenter: parent.verticalCenter
                        onReleased: (v) => page.setText(Math.round(v * 4) / 4) }
         }
@@ -120,13 +120,13 @@ PageScaffold {
         title: "Reading & typing"
         SRow {
             icon: "record_voice_over"; title: "Screen reader"
-            desc: page.have.orca ? "Orca reads the screen aloud and describes what you focus" : "Not installed — add  orca  to read the screen aloud"
+            desc: page.have.orca ? "Orca reads the screen aloud and describes what you focus" : "Not installed - add  orca  to read the screen aloud"
             AxSwitch { visible: !!page.have.orca; checked: page.orcaOn; anchors.verticalCenter: parent.verticalCenter; onToggled: (on) => page.toggleOrca(on) }
             Badge { visible: !page.have.orca; text: "not installed"; tone: "neutral"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
             icon: "keyboard"; title: "On-screen keyboard"
-            desc: (page.have["wvkbd-mobintl"] || page.have.wvkbd || page.have.onboard) ? "Type with a pointer or touchscreen" : "Not installed — add  wvkbd  (or  onboard ) for a touch keyboard"
+            desc: (page.have["wvkbd-mobintl"] || page.have.wvkbd || page.have.onboard) ? "Type with a pointer or touchscreen" : "Not installed - add  wvkbd  (or  onboard ) for a touch keyboard"
             AxButton { visible: !!(page.have["wvkbd-mobintl"] || page.have.wvkbd || page.have.onboard); text: "Show"; anchors.verticalCenter: parent.verticalCenter
                        onClicked: Quickshell.execDetached(["sh", "-c", (page.have["wvkbd-mobintl"] ? "wvkbd-mobintl" : page.have.wvkbd ? "wvkbd" : "onboard") + " >/dev/null 2>&1 &"]) }
             Badge { visible: !(page.have["wvkbd-mobintl"] || page.have.wvkbd || page.have.onboard); text: "not installed"; tone: "neutral"; anchors.verticalCenter: parent.verticalCenter }

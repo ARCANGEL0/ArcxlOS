@@ -1,5 +1,5 @@
 #!/bin/bash
-# ArchangelOS screen recorder — toggle. First invocation picks a region with the
+# ArchangelOS screen recorder - toggle. First invocation picks a region with the
 # animated selector and starts recording it with wf-recorder; invoking it again
 # while a recording is running stops it (the file is finalized cleanly).
 # Saves under ~/Videos/Recordings. Bound to SUPER+SHIFT+R.

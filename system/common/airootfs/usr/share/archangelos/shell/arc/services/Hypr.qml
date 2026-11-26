@@ -45,7 +45,7 @@ Singleton {
 
     // --- Window verbs (the overview panel drives these) ---
     // Dispatch selectors want `address:0x…`, but the two sources disagree: HyprlandToplevel.address
-    // is bare hex while lastIpcObject.address carries the prefix. Normalise in one place — a
+    // is bare hex while lastIpcObject.address carries the prefix. Normalise in one place - a
     // malformed selector is a silent no-op, not an error.
     function addrOf(tl) {
         const a = tl?.address ? String(tl.address) : (tl?.lastIpcObject?.address ?? "");
@@ -74,7 +74,7 @@ Singleton {
     // A workspace id mid-swap (0 = idle), so its row can refuse a second drag while it settles.
     property int wsBusy: 0
 
-    // Hyprland has no single-monitor workspace swap — `swapactiveworkspaces` takes two MONITORS.
+    // Hyprland has no single-monitor workspace swap - `swapactiveworkspaces` takes two MONITORS.
     // Address every window instead, with both lists snapshotted before anything is sent.
     // One ordered request (HyprCtl.dispatchAll): here order decides which workspace a window ends
     // up on.
@@ -110,9 +110,9 @@ Singleton {
         return fallback;
     }
 
-    // Keyboard layout — live via Hyprland's "activelayout" event (see onRawEvent below).
+    // Keyboard layout - live via Hyprland's "activelayout" event (see onRawEvent below).
     // hyprctl is used only for the device name (needed to switch) and the initial value.
-    property string kbLayout: "—"
+    property string kbLayout: "-"
     property string kbDevice: ""
     function setKbLayout(km) {
         if (!km) return;
@@ -150,8 +150,8 @@ Singleton {
 
     // --- Fullscreen, per monitor ---
     // Hyprland's `fullscreen` event names no window and carries only 1/0, so one global flag meant
-    // a window going fullscreen ANYWHERE — a video on a workspace nobody was looking at, on any
-    // output — hid the bar and dropped its exclusive zone on every screen at once. The
+    // a window going fullscreen ANYWHERE - a video on a workspace nobody was looking at, on any
+    // output - hid the bar and dropped its exclusive zone on every screen at once. The
     // authoritative reading is per workspace (`hasfullscreen` in its ipc object), taken for
     // whichever workspace each monitor is currently showing.
     //
@@ -167,7 +167,7 @@ Singleton {
     function fullscreenOn(name) { return root.fsByMonitor[name] === true; }
 
     // The event lands a few hundred milliseconds before the refresh it triggers, and the bar must
-    // not lag behind the window it is getting out of the way of — so the focused monitor is set
+    // not lag behind the window it is getting out of the way of - so the focused monitor is set
     // from the event at once and the recompute below confirms or corrects it.
     function setFullscreenNow(on) {
         const name = Hyprland.focusedMonitor?.name ?? "";
@@ -181,7 +181,7 @@ Singleton {
     // showing a fullscreen window. Per-screen consumers call fullscreenOn() with their own output.
     readonly property bool fullscreenActive: root.fullscreenOn(Hyprland.focusedMonitor?.name ?? "")
 
-    // Active (focused) window — instant, via Hyprland's raw event stream ("activewindow>>class,title").
+    // Active (focused) window - instant, via Hyprland's raw event stream ("activewindow>>class,title").
     property string activeClass: ""
     property string activeTitle: ""
     readonly property var activeEntry: activeClass ? DesktopEntries.byId(activeClass) : null

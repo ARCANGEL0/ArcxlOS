@@ -1,4 +1,4 @@
-// Night light — warms the screen on a schedule. "on" keeps it warm all the time; "auto" turns it
+// Night light - warms the screen on a schedule. "on" keeps it warm all the time; "auto" turns it
 // warm from sunset to sunrise, worked out from the region's coordinates (the same ones Date & Time
 // uses), so it needs no location service. The warming itself is done by hyprsunset; this singleton
 // just decides when it should run and at what temperature. Kept alive by SettingsWindow, so it
@@ -15,7 +15,7 @@ Singleton {
     property bool haveTool: true
 
     // Sunrise/sunset for today at the region's lat/lon, in local minutes-after-midnight.
-    // Standard low-precision sunrise equation (NOAA), good to a minute or two — plenty here.
+    // Standard low-precision sunrise equation (NOAA), good to a minute or two - plenty here.
     function sunTimes() {
         const z = Geo.zone;
         if (!z || z.lat === undefined || z.lon === undefined) return null;

@@ -9,7 +9,7 @@ import qs.arc
 Singleton {
     id: root
 
-    // True while the outputs are blanked — nothing on screen has a viewer.
+    // True while the outputs are blanked - nothing on screen has a viewer.
     property bool displaysOff: false
 
     // Lock after Config.autoLockTimeout idle; keep-awake and game mode suppress it.

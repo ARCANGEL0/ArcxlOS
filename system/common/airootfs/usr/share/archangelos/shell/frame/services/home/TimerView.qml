@@ -102,7 +102,7 @@ Item {
 
     visible: isCurrent || wasCurrent
 
-    // "+" / "x" toggle — top-right corner
+    // "+" / "x" toggle - top-right corner
     Item {
         id: addTimerBtn
         anchors {
@@ -142,7 +142,7 @@ Item {
         anchors.centerIn: parent
         spacing: Math.round(10 * timerView.localScale)
 
-        // ── Ring — hidden while add-timer panel is open ────────────────
+        // ── Ring - hidden while add-timer panel is open ────────────────
         Item {
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.round(100 * timerView.localScale)
@@ -195,7 +195,7 @@ Item {
             }
         }
 
-        // ── Presets — hidden while add-timer panel is open ─────────────
+        // ── Presets - hidden while add-timer panel is open ─────────────
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: Math.round(5 * timerView.localScale)
@@ -234,7 +234,7 @@ Item {
             }
         }
 
-        // ── Custom duration — visible only when add-timer panel is open
+        // ── Custom duration - visible only when add-timer panel is open
         Item {
             anchors.horizontalCenter: parent.horizontalCenter
             visible: timerView.addTimerOpen

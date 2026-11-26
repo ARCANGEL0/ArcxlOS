@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-#  ArchangelOS :: HYPER-DL — High-Performance Real Downloader
+#  ArchangelOS :: HYPER-DL - High-Performance Real Downloader
 # ============================================================
 
 set -euo pipefail
@@ -95,7 +95,7 @@ transfer_banner() {
   if [ -z "$domain" ]; then domain="mirror.archangelos.io"; fi
 
   echo -e "${DIM}${CYAN}┌──────────────────────────────────────────────────┐${RESET}"
-  echo -e "${CYAN}│ ${GOLD}ARCHANGELOS${RESET}${CYAN} :: STREAM ACQUIRED — INITIATING XFER      │${RESET}"
+  echo -e "${CYAN}│ ${GOLD}ARCHANGELOS${RESET}${CYAN} :: STREAM ACQUIRED - INITIATING XFER      │${RESET}"
   echo -e "${DIM}${CYAN}└──────────────────────────────────────────────────┘${RESET}"
   echo -e "${WHITE}  HOST   ${DIM}→${RESET} ${domain}"
   echo -e "${WHITE}  CIPHER ${DIM}→${RESET} AES-256-GCM"

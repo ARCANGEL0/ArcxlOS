@@ -1,4 +1,4 @@
-// Lock Screen — when the screen locks by itself, locking before sleep, and locking now.
+// Lock Screen - when the screen locks by itself, locking before sleep, and locking now.
 import QtQuick
 import Quickshell
 import qs.axs

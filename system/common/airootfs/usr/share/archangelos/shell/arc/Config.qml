@@ -17,7 +17,7 @@ Singleton {
     // --- Persisted state (settings.json, next to this file) ---
     // The JSON file IS the store: every alias points straight at a JsonAdapter property, so any
     // value set in the shell lands on disk and can be hand-edited while it runs. PersistentProperties
-    // only survives a hot-reload — restarting quickshell reverted theme, font and capture defaults.
+    // only survives a hot-reload - restarting quickshell reverted theme, font and capture defaults.
     //
     // It lives under $XDG_CONFIG_HOME/arcshell, not beside this file: the tree may be installed
     // read-only (the Nix store) and an update must not overwrite what the user set. See Paths.qml.
@@ -150,7 +150,7 @@ Singleton {
             property string recQuality: "very_high"
             property bool recCursor: true
             property bool recCopyPath: false
-            // Empty means "wherever XDG says videos go", resolved in Capture — a machine whose
+            // Empty means "wherever XDG says videos go", resolved in Capture - a machine whose
             // user directories are not English, or not under $HOME, should not need a settings edit.
             property string recDir: ""
             property bool shotCopy: true
@@ -169,7 +169,7 @@ Singleton {
         path: Paths.themeFile
         watchChanges: true
         // Absent until matugen has run at least once, which for anyone who never turns on auto
-        // colours is forever — a first start should not open with a read error for a file the
+        // colours is forever - a first start should not open with a read error for a file the
         // shell only optionally wants.
         printErrors: false
         onLoaded: root.reloadTheme()
@@ -237,7 +237,7 @@ Singleton {
     readonly property color info:      rawPal.info     ?? CU.hueAt(root.accent, 0.58, 0.48)
     // Text and icons on an accent fill. An anchor, not a pure derivation: daybreak's accent
     // formally prefers the dark surfaceText, but a filled button there wants white.
-    // NOT named onAccent — QML silently drops the binding of any "on"+capital property (it
+    // NOT named onAccent - QML silently drops the binding of any "on"+capital property (it
     // collides with signal-handler syntax); it declares fine and reads back as transparent
     // black, so the failure is invisible until something renders. The JSON key stays
     // `onPrimary`, a plain dict key, matching what matugen emits.
@@ -280,7 +280,7 @@ Singleton {
     readonly property color outlineStrong:  CU.mix(root.outline, root.fg, 0.28)
     readonly property color focusRing:      root.accent
     // The frame's raised edge and its only depth cue (see modules/Frame.qml). Dark themes get a
-    // lit rim; light ones have no headroom to brighten into — a highlight measures ~1.05:1 — so
+    // lit rim; light ones have no headroom to brighten into - a highlight measures ~1.05:1 - so
     // they take a darker contact line the way print does. Both land near 2.4:1 and 4.3:1.
     readonly property color bevel: lightMode ? CU.mix(root.outline, root.fg, 0.45)
                                              : root.outlineStrong
@@ -341,12 +341,12 @@ Singleton {
     // --- Fonts and shared constants ---
     // Faces are bundled in assets/fonts, so the shell looks the same where none are installed
     // system-wide. The folder is scanned, not listed: dropping a .ttf/.otf in adds a text face.
-    // The icon face never changes — no pixel icon set exists to swap in.
+    // The icon face never changes - no pixel icon set exists to swap in.
     readonly property real popFillet: 20
     readonly property real popCorner: 18
     readonly property string iconFile: "MaterialSymbolsRounded"
 
-    // [{ file, key, label }] — key is the filename without extension, label a readable form.
+    // [{ file, key, label }] - key is the filename without extension, label a readable form.
     // fontAll is everything loaded; fontFiles is what the settings page and launcher offer.
     // Companion faces (an -Italic sibling) stay out of the second list: they must be loaded for
     // italics to render, but picking one as the base face would slant the whole shell.
@@ -354,7 +354,7 @@ Singleton {
     readonly property var fontFiles: fontAll.filter(f => !/-(italic|oblique)$/i.test(f.key))
     // key -> resolved family name, filled in as each FontLoader reports Ready.
     property var fontNames: ({})
-    // The old presets were short names — keep `ipc call font set inter` and pre-scan
+    // The old presets were short names - keep `ipc call font set inter` and pre-scan
     // settings.json files resolving.
     readonly property var fontAliases: ({ inter: "InterVariable", departure: "DepartureMono-Regular" })
     readonly property string fontKey: fontAliases[fontPreset] ?? fontPreset

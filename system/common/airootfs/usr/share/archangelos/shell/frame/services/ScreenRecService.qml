@@ -23,7 +23,7 @@ import Quickshell.Io
 import Quickshell.Hyprland   // focusedMonitor for fullscreen capture
 import "../"
 
-// ScreenRecService — owns all screen recording state.
+// ScreenRecService - owns all screen recording state.
 //
 // Audio routing (fixed):
 //   none        → no -a flag; launch directly
@@ -163,7 +163,7 @@ QtObject {
         onTriggered: root.elapsed++
     }
 
-    // ── Audio bars — 6 bars, always active during recording ───────────────────
+    // ── Audio bars - 6 bars, always active during recording ───────────────────
     property var audioBars: [0, 0, 0, 0, 0, 0]
 
 
@@ -225,7 +225,7 @@ QtObject {
 
     // ── Audio resolution ──────────────────────────────────────────────────────
     //
-    // none:        call _launch() immediately — no audio device, no null sink.
+    // none:        call _launch() immediately - no audio device, no null sink.
     // mic only:    get default PulseAudio source; pass straight to wf-recorder.
     // system only: create ArcShellMixer null sink, route sink.monitor into it.
     // both:        create ArcShellMixer null sink, route sink.monitor AND
@@ -236,13 +236,13 @@ QtObject {
         root._usingNullSink       = false
 
         if (!PrefsService.screenrecAudioMic && !PrefsService.screenrecAudioSystem) {
-            // No audio — skip device resolution entirely
+            // No audio - skip device resolution entirely
             root._launch()
             return
         }
 
         if (PrefsService.screenrecAudioMic && !PrefsService.screenrecAudioSystem) {
-            // Mic only — use the default source directly; no null sink needed
+            // Mic only - use the default source directly; no null sink needed
             _audioDeviceProc.command = ["bash", "-c",
                 "printf '%s\\n' \"$(pactl get-default-source)\""]
             _audioDeviceProc.running = false
@@ -250,7 +250,7 @@ QtObject {
             return
         }
 
-        // System audio (alone or combined with mic) — needs ArcShellMixer
+        // System audio (alone or combined with mic) - needs ArcShellMixer
         root._usingNullSink = true
 
         var script =
@@ -279,7 +279,7 @@ QtObject {
         _audioDeviceProc.running = true
     }
 
-    // ── Null-sink teardown — run after every recording ends ───────────────────
+    // ── Null-sink teardown - run after every recording ends ───────────────────
     property var _cleanupAudioProc: Process { command: []; running: false }
 
     function _teardownNullSink() {
@@ -327,7 +327,7 @@ QtObject {
                 _notifyProc.running = true
                 root._discarding = false
             } else if (!root._discarding && savedFile !== "") {
-                // The backend exiting is not proof it worked — a missing binary
+                // The backend exiting is not proof it worked - a missing binary
                 // or an unsupported codec dies immediately and writes nothing.
                 // Check the file actually landed before claiming "Saved".
                 // FILE/"$FILE" expands $HOME correctly inside bash.
@@ -502,7 +502,7 @@ QtObject {
     }
 
 
-    // ── Cava — runs during recording, source mirrors wf-recorder's audio ──────
+    // ── Cava - runs during recording, source mirrors wf-recorder's audio ──────
     property var _cavaRecProc: Process {
         command: []
         running: false

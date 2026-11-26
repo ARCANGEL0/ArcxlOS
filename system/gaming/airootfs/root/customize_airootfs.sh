@@ -109,7 +109,7 @@ if { ! command -v yay >/dev/null 2>&1 || ! command -v paru >/dev/null 2>&1; } &&
     rm -rf "/tmp/$helper"
   done
   command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 \
-    || echo "  [warn] no AUR helper — AUR packages (yorha's astal deps included) will be missing" >&2
+    || echo "  [warn] no AUR helper - AUR packages (yorha's astal deps included) will be missing" >&2
 fi
 pacman-key --init || true
 pacman-key --populate archlinux || true
@@ -118,10 +118,10 @@ updatedb || true
 sync
 
 # ArcShell engine runtime ships vendored in the image
-# (/usr/share/archangelos/engine/runtime) — no network clone. Patch it as root so
+# (/usr/share/archangelos/engine/runtime) - no network clone. Patch it as root so
 # the shipped tree carries the ArchangelOS patches, then bake the per-user desktop
-# as liveuser (the engine's own installer self-destructs in a headless chroot —
-# its bootstrap health gate needs a live systemd user session + running shell —
+# as liveuser (the engine's own installer self-destructs in a headless chroot -
+# its bootstrap health gate needs a live systemd user session + running shell -
 # so archangelos-engine-init reproduces the managed install directly).
 chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
 /usr/bin/archangelos-engine-init --patch-only || echo "  [warn] arcshell engine patch failed" >&2
@@ -206,7 +206,7 @@ fi
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
 # AX slim: the AUR step installs through the live /etc/pacman.conf, which (unlike the
-# build's own pacman.conf) has no NoExtract — skip docs/help/translations for it too, then
+# build's own pacman.conf) has no NoExtract - skip docs/help/translations for it too, then
 # restore the file so installed systems keep normal pacman behaviour.
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
@@ -231,7 +231,7 @@ if [ -d /home/liveuser ]; then
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
 # AX slim: drop the toolchain caches the AUR source builds leave behind (cargo, rustup,
-# go, npm, NuGet, cabal, gradle, pip) — otherwise they ship inside the ISO.
+# go, npm, NuGet, cabal, gradle, pip) - otherwise they ship inside the ISO.
 for h in /home/liveuser /root; do
   rm -rf "$h"/.cache/* "$h"/.cargo "$h"/.rustup "$h"/go "$h"/.npm "$h"/.nuget \
          "$h"/.cabal "$h"/.ghcup "$h"/.stack "$h"/.gradle "$h"/.m2 "$h"/.dotnet \

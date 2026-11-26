@@ -377,7 +377,7 @@ Item {
 
                 Text {
                     width: parent.width
-                    text: "Legacy PIN pairing — enter the PIN shown on your device"
+                    text: "Legacy PIN pairing - enter the PIN shown on your device"
                     font.pixelSize: Math.round(10 * localScale)
                     color: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.30)
                     wrapMode: Text.WordWrap

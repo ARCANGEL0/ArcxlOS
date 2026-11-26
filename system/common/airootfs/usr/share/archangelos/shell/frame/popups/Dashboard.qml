@@ -24,7 +24,7 @@ import "dashboard_tabs/stats"
 import '../services/'
 import "../"
 
-// Dashboard — PanelWindow required for TextInput keyboard focus on Wayland.
+// Dashboard - PanelWindow required for TextInput keyboard focus on Wayland.
 // Uses WlrKeyboardFocus.Exclusive so TextInputs inside pages receive key events.
 //
 // Positioning mirrors the original PopupWindow behaviour: the sizer's top sits
@@ -75,7 +75,7 @@ Item {
 
     // ── Sizer ─────────────────────────────────────────────────────────────────
     // topMargin: Theme.notchHeight places the sizer top exactly at the notch
-    // bottom — identical to where PopupWindow put it. No fh subtraction, which
+    // bottom - identical to where PopupWindow put it. No fh subtraction, which
     // was the source of the vertical offset in the text-working variant.
     Item {
         id: hoverContainer

@@ -1,5 +1,5 @@
 -- ################################################################################
--- # config/binds.lua — All keybindings
+-- # config/binds.lua - All keybindings
 -- # See https://wiki.hypr.land/Configuring/Basics/Binds/
 -- # See https://wiki.hypr.land/Configuring/Basics/Dispatchers/
 -- ################################################################################

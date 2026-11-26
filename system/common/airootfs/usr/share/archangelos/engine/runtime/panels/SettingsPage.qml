@@ -987,7 +987,7 @@ Item {
                                 title: "Weather location"
                                 detail: WeatherService.configured
                                     ? "Saved locally for Open-Meteo forecasts"
-                                    : "Unconfigured — no forecast request is made"
+                                    : "Unconfigured - no forecast request is made"
                                 contentHeight: 70
                                 ColumnLayout {
                                     anchors.fill: parent

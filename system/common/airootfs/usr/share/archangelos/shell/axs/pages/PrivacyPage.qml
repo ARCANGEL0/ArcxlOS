@@ -1,4 +1,4 @@
-// Privacy & history — the traces the desktop keeps (recent files, clipboard, thumbnails, shell
+// Privacy & history - the traces the desktop keeps (recent files, clipboard, thumbnails, shell
 // history, trash): clear them now, or at every sign-in.
 import QtQuick
 import Quickshell

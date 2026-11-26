@@ -1,4 +1,4 @@
-// Updates — what's waiting from the Arch repositories, the AUR and Flatpak, and a way to install it.
+// Updates - what's waiting from the Arch repositories, the AUR and Flatpak, and a way to install it.
 // Checking uses checkupdates (a private copy of the sync database), so it never leaves the system
 // half-updated; installing runs in a terminal so pacman's questions can be answered.
 import QtQuick

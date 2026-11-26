@@ -28,7 +28,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     mask: Region { Region { x: 0; y: 0; width: 1; height: 1 } }   // clicks pass through; the bar window handles bar input
 
-    // One popout slot as a plain plate — the flat frame's answer to a bulge.
+    // One popout slot as a plain plate - the flat frame's answer to a bulge.
     component Plate: Rectangle {
         id: plate
         required property vector4d box
@@ -75,7 +75,7 @@ PanelWindow {
             property real r: frame.holeR
             property real k: 26       // cove size (smin)
             property real popK: 34    // popout bulge smoothing
-            // Open popout body in screen px. Only the SIZE animates — a snapping position keeps
+            // Open popout body in screen px. Only the SIZE animates - a snapping position keeps
             // a switch to a neighbouring widget from flying the bulge across the bar.
             // ArchangelOS: the dock's own panes ("bar") are drawn by the main shell surface instead
             readonly property bool dockPane: PopoutState.owner === "bar"
@@ -104,7 +104,7 @@ PanelWindow {
                 PopoutState.box.y + (PopoutState.box.w - bh) * PopoutState.anchor.y,
                 bw, bh)
 
-            // Second bulge (toast) — same treatment.
+            // Second bulge (toast) - same treatment.
             property real bw2: PopoutState.box2.z
             property real bh2: PopoutState.box2.w
             Behavior on bw2 { NumberAnimation { duration: Motion.spatialDur; easing.type: Easing.BezierSpline; easing.bezierCurve: Motion.spatialCurve } }
@@ -132,7 +132,7 @@ PanelWindow {
     Component {
         id: flatSurface
 
-        // The same surface as rectangles. No coves, no bevel, no rounded recess — no GPU pass.
+        // The same surface as rectangles. No coves, no bevel, no rounded recess - no GPU pass.
         Item {
             Rectangle {
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }

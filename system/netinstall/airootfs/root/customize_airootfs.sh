@@ -35,10 +35,10 @@ useradd -D -s /bin/fish
 passwd -d liveuser
 
 # ArcShell engine runtime ships vendored in the image
-# (/usr/share/archangelos/engine/runtime) — no network clone. Patch it as root so
+# (/usr/share/archangelos/engine/runtime) - no network clone. Patch it as root so
 # the shipped tree carries the ArchangelOS patches, then bake the per-user desktop
-# as liveuser (the engine's own installer self-destructs in a headless chroot —
-# its bootstrap health gate needs a live systemd user session + running shell —
+# as liveuser (the engine's own installer self-destructs in a headless chroot -
+# its bootstrap health gate needs a live systemd user session + running shell -
 # so archangelos-engine-init reproduces the managed install directly).
 chmod +x /usr/bin/archangelos-engine-init 2>/dev/null || true
 /usr/bin/archangelos-engine-init --patch-only || echo "  [warn] arcshell engine patch failed" >&2

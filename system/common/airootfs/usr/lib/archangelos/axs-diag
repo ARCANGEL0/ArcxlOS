@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# axs-diag — the measuring half of Settings > Diagnostics. Runs as the person (no root); every
+# axs-diag - the measuring half of Settings > Diagnostics. Runs as the person (no root); every
 # verb prints JSON. The root-only readings (SMART, memtester, DMI tables) are axs-admin verbs.
 #
 #   watch [SECONDS]           one JSON line per tick: CPU, memory, disk and network I/O,
@@ -317,7 +317,7 @@ def ping(host, count):
     if host == "gateway":
         host = gateway()
         if not host:
-            return {"error": "No default gateway — not connected?"}
+            return {"error": "No default gateway - not connected?"}
     try:
         p = subprocess.run(["ping", "-n", "-c", str(count), "-i", "0.2", "-W", "2", host], capture_output=True, text=True, timeout=count + 8)
         o = p.stdout

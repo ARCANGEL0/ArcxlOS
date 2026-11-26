@@ -1,4 +1,4 @@
-// Cleaning — a deep clean for ArchangelOS: scan for throwaway junk across the whole system
+// Cleaning - a deep clean for ArchangelOS: scan for throwaway junk across the whole system
 // (caches, trash, thumbnails, crash dumps, the package cache, the journal, core dumps), pick what
 // to sweep, and see the heaviest files, folders and apps so you know where the space went.
 // User junk is removed by /usr/lib/archangelos/axs-clean (as you); system junk by axs-admin.
@@ -195,6 +195,6 @@ PageScaffold {
     EmptyState {
         visible: !page.scanned && !page.scanning
         icon: "cleaning_services"; title: "Give it a scan"
-        desc: "ArchangelOS will look through caches, trash, logs and crash dumps — and show the heaviest files, folders and apps — without removing anything until you say so."
+        desc: "ArchangelOS will look through caches, trash, logs and crash dumps - and show the heaviest files, folders and apps - without removing anything until you say so."
     }
 }

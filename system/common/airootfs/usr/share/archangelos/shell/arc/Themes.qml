@@ -6,14 +6,14 @@ pragma Singleton
 //   Accent:     primary / secondary, plus onPrimary for text on a primary fill
 //   Semantic:   success / warning / info / error
 //   Depth:      shadow, the tone every drop shadow and scrim is built from
-// Only the structural six are required — Config rotates the semantics off the primary, picks
+// Only the structural six are required - Config rotates the semantics off the primary, picks
 // onPrimary by contrast and derives shadow from the background. They are spelled out anyway:
 // a hue taken from the theme's own palette or wallpaper beats a rotation.
 import QtQuick
 import Quickshell
 
 Singleton {
-    // Resolved from this file, not from the running shell root — the greeter imports this tree
+    // Resolved from this file, not from the running shell root - the greeter imports this tree
     // from its own root and must still find the clips here. Paths would be a cycle.
     readonly property string dir: Qt.resolvedUrl("assets/wallpapers").toString().replace("file://", "") + "/"
 
@@ -22,7 +22,7 @@ Singleton {
                                   "sakura", "cyberpunk", "emerald", "glacier", "mocha", "nightfall"]
 
     readonly property var map: ({
-        // ArchangelOS — sumi-e ink: near-black surfaces, silver text, one blade of red.
+        // ArchangelOS - sumi-e ink: near-black surfaces, silver text, one blade of red.
         // No video of its own: the desktop wallpaper is ArchangelOS's (awww).
         "archangelos": {
             title: "ArchangelOS",
@@ -37,7 +37,7 @@ Singleton {
                 shadow: "#000000"
             }
         },
-        // pixel-hollowknight — near-black void, warm amber glow, one cold white flare.
+        // pixel-hollowknight - near-black void, warm amber glow, one cold white flare.
         // The pale blue is that flare; the amber the wallpaper is soaked in is the secondary.
         "hallownest": {
             title: "Hallownest",
@@ -52,7 +52,7 @@ Singleton {
                 shadow: "#05070a"
             }
         },
-        // last-of-us — golden sunset through a window, green ivy, dark interior.
+        // last-of-us - golden sunset through a window, green ivy, dark interior.
         // Gruvbox-rooted, but the dominant light in frame is gold, not lime.
         "overgrowth": {
             title: "Overgrowth",
@@ -67,7 +67,7 @@ Singleton {
                 shadow: "#0c0c0a"
             }
         },
-        // pixel-munchlax — bright daylight: saturated sky, grass, a yellow flower.
+        // pixel-munchlax - bright daylight: saturated sky, grass, a yellow flower.
         // A light theme: semantics darkened for near-white, shadow a deep slate (black reads as
         // dirt here).
         "daybreak": {
@@ -83,7 +83,7 @@ Singleton {
                 shadow: "#2a3340"
             }
         },
-        // pixel-rainyroom — tokyo night. dim is lifted off the upstream comment colour,
+        // pixel-rainyroom - tokyo night. dim is lifted off the upstream comment colour,
         // which is tuned for syntax highlighting and too faint for secondary UI text.
         "downpour": {
             title: "Downpour",
@@ -98,7 +98,7 @@ Singleton {
                 shadow: "#0a0b12"
             }
         },
-        // pixel-sakura — pale misty sky, slate-blue city, cherry blossom, a red sun.
+        // pixel-sakura - pale misty sky, slate-blue city, cherry blossom, a red sun.
         // Light because the wallpaper is; a dark panel fought the image. The blossom pink is
         // deepened until it carries white.
         "sakura": {
@@ -114,7 +114,7 @@ Singleton {
                 shadow: "#3a4155"
             }
         },
-        // pixel-cyberpunk — cyan neon and magenta on a navy-teal industrial deck.
+        // pixel-cyberpunk - cyan neon and magenta on a navy-teal industrial deck.
         // Semantics hand-picked: rotating off this cyan gives a poisonous green and returns the
         // primary itself as info.
         "cyberpunk": {
@@ -130,7 +130,7 @@ Singleton {
                 shadow: "#00060c"
             }
         },
-        // pixel-emerald — bright scene: grass, cyan water, warm sand, open sky.
+        // pixel-emerald - bright scene: grass, cyan water, warm sand, open sky.
         // Dark chrome over a bright wallpaper, hues from the frame. success sits clear of the
         // green primary: both land in the ring ramp and match at equal lightness.
         "emerald": {
@@ -146,7 +146,7 @@ Singleton {
                 shadow: "#060d0a"
             }
         },
-        // winter — nord, misty snow over dark pines. dim is lifted off nord3, which is a
+        // winter - nord, misty snow over dark pines. dim is lifted off nord3, which is a
         // comment grey and does not carry secondary text on the raised containers.
         "glacier": {
             title: "Glacier",
@@ -161,8 +161,8 @@ Singleton {
                 shadow: "#161b22"
             }
         },
-        // pixel-coffee — catppuccin mocha: violet brick, amber lantern.
-        // Surface order restored to mantle < base < surface0 — its surface sat darker than its
+        // pixel-coffee - catppuccin mocha: violet brick, amber lantern.
+        // Surface order restored to mantle < base < surface0 - its surface sat darker than its
         // background, inverting every derived depth tier.
         "mocha": {
             title: "Mocha",
@@ -177,7 +177,7 @@ Singleton {
                 shadow: "#11111b"
             }
         },
-        // pixel-night-city — violet night skyline, magenta and pink neon.
+        // pixel-night-city - violet night skyline, magenta and pink neon.
         "nightfall": {
             title: "Nightfall",
             light: false,

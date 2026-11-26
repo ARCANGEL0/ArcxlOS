@@ -455,9 +455,9 @@ Item {
                         selectionColor: Qt.rgba(Theme.active.r, Theme.active.g, Theme.active.b, 0.35)
                         clip: true
                         onActiveFocusChanged: Popups.isInputFocused = activeFocus
-                        Keys.onReturnPressed: {
+                        onAccepted: {
                             if (text.length > 0)
-                                netRow.connectClicked(netRow.net.ssid, text)
+                                netRow.requestConnect()
                         }
                         Keys.onEscapePressed: function(event) {
                             event.accepted = true

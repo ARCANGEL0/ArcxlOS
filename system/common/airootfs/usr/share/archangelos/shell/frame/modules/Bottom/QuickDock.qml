@@ -1,5 +1,5 @@
 /*
- * ArchangelOS shell — the bottom-centre resting notch: quick launches and small things.
+ * ArchangelOS shell - the bottom-centre resting notch: quick launches and small things.
  * Part of the ArcShell / arcshell mesh; AGPL-3.0 (see LICENSE).
  *
  * It rests in ArcShell's bottom-centre notch; the panels it calls rise out of the same edge

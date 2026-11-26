@@ -110,7 +110,7 @@ if { ! command -v yay >/dev/null 2>&1 || ! command -v paru >/dev/null 2>&1; } &&
     rm -rf "/tmp/$helper"
   done
   command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 \
-    || echo "  [warn] no AUR helper — AUR packages (yorha's astal deps included) will be missing" >&2
+    || echo "  [warn] no AUR helper - AUR packages (yorha's astal deps included) will be missing" >&2
 fi
 pacman-key --init || true
 pacman-key --populate archlinux || true
@@ -119,7 +119,7 @@ updatedb || true
 sync
 
 # ArcShell engine runtime ships vendored in the image
-# (/usr/share/archangelos/engine/runtime) — no network clone. The desktop bake
+# (/usr/share/archangelos/engine/runtime) - no network clone. The desktop bake
 # (archangelos-engine-init) runs as liveuser; the ArchangelOS patches (Rio
 # terminal, AMOLED dark surfaces, the video wallpaper patch) are applied to the
 # vendored tree as root first via --patch-only, so the shipped tree carries them
@@ -184,7 +184,7 @@ for target in /home/liveuser/.config/mimeapps.list /root/.config/mimeapps.list /
   grep -q '^\[Default Applications\]' "$target" 2>/dev/null || printf '[Default Applications]\n' >> "$target"
   grep -q '^inode/directory=' "$target" 2>/dev/null || \
     sed -i '/^\[Default Applications\]/a inode/directory=org.kde.dolphin.desktop' "$target"
-  # LibreWolf is the sole browser — make it the default web handler.
+  # LibreWolf is the sole browser - make it the default web handler.
   for h in x-scheme-handler/http x-scheme-handler/https text/html x-scheme-handler/about x-scheme-handler/unknown; do
     grep -q "^${h}=" "$target" 2>/dev/null || \
       sed -i "/^\[Default Applications\]/a ${h}=librewolf.desktop" "$target"
@@ -260,7 +260,7 @@ fi
 
 # ArchangelOS: install curated apps (prebuilt from chaotic-aur, fallback to AUR build)
 # AX slim: the AUR step installs through the live /etc/pacman.conf, which (unlike the
-# build's own pacman.conf) has no NoExtract — skip docs/help/translations for it too, then
+# build's own pacman.conf) has no NoExtract - skip docs/help/translations for it too, then
 # restore the file so installed systems keep normal pacman behaviour.
 cp -f /etc/pacman.conf /etc/pacman.conf.ax-orig
 sed -i '/^\[options\]/a NoExtract = usr/share/doc/* usr/share/gtk-doc/* usr/share/help/* usr/share/man/* usr/share/info/*\nNoExtract = usr/share/locale/* !usr/share/locale/en_US/* !usr/share/locale/locale.alias' /etc/pacman.conf
@@ -280,7 +280,7 @@ if [ -d /home/liveuser ]; then
 fi
 mv -f /etc/pacman.conf.ax-orig /etc/pacman.conf
 # AX slim: drop the toolchain caches the AUR source builds leave behind (cargo, rustup,
-# go, npm, NuGet, cabal, gradle, pip) — otherwise they ship inside the ISO.
+# go, npm, NuGet, cabal, gradle, pip) - otherwise they ship inside the ISO.
 for h in /home/liveuser /root; do
   rm -rf "$h"/.cache/* "$h"/.cargo "$h"/.rustup "$h"/go "$h"/.npm "$h"/.nuget \
          "$h"/.cabal "$h"/.ghcup "$h"/.stack "$h"/.gradle "$h"/.m2 "$h"/.dotnet \
@@ -303,7 +303,7 @@ rm -rf "$ghostWork"
 
 cp -rf /etc/skel/. /home/liveuser/
 # The skel copy above overwrites liveuser's hyprland.lua, dropping the welcome
-# require that archangelos-wallpaper-setup added (skel never gets it — welcome is
+# require that archangelos-wallpaper-setup added (skel never gets it - welcome is
 # live-session only). Re-assert it here so the welcome window loads at first login.
 lhl=/home/liveuser/.config/hypr/hyprland.lua
 if [ -f "$lhl" ]; then

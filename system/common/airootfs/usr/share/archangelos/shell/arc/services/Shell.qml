@@ -44,7 +44,7 @@ Singleton {
         const m = Math.floor(s / 60), sec = Math.floor(s % 60);
         return m + ":" + (sec < 10 ? "0" : "") + sec;
     }
-    // "6.4 / 15.5 GB" — the absolute pair behind a percentage gauge. Empty when the total is
+    // "6.4 / 15.5 GB" - the absolute pair behind a percentage gauge. Empty when the total is
     // unknown, so a gauge without figures shows nothing.
     function fmtPair(used, total, unit, digits) {
         if (!total || total <= 0) return "";

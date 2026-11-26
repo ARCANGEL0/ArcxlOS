@@ -125,7 +125,7 @@ Item {
         onRunningChanged: if (!running) root._scanning = false
     }
 
-    // First attempt — captures stderr to detect secret requirement
+    // First attempt - captures stderr to detect secret requirement
     Process {
         id: connectProc
         command: []

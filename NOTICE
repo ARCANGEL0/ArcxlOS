@@ -12,48 +12,48 @@ ownership or endorsement by the upstreams.
 ================================================================================
 Base system & tooling
 ================================================================================
-- Arch Linux and pacman — https://archlinux.org
+- Arch Linux and pacman - https://archlinux.org
   Package sets are pulled from the official core/extra/multilib repositories.
-- archiso (ISO build framework) — https://gitlab.archlinux.org/archlinux/archiso
-- Linux kernel — https://kernel.org (GPL-2.0)
+- archiso (ISO build framework) - https://gitlab.archlinux.org/archlinux/archiso
+- Linux kernel - https://kernel.org (GPL-2.0)
 
 ================================================================================
 Additional package repositories
 ================================================================================
-- BlackArch Linux — https://blackarch.org
+- BlackArch Linux - https://blackarch.org
   The Fallen (RedTeam) edition enables the [blackarch] repository and installs
   BlackArch tool groups. BlackArch is bootstrapped via strap.sh and mirrored
   from the public BlackArch mirror network, including:
     ftp.halifax.rwth-aachen.de, mirrors.ocf.berkeley.edu, mirror.yandex.ru,
     mirrors.tuna.tsinghua.edu.cn, mirror.team-cymru.com, www.blackarch.org
   All BlackArch tools retain their individual upstream licenses.
-- Chaotic-AUR — https://aur.chaotic.cx
+- Chaotic-AUR - https://aur.chaotic.cx
   Prebuilt AUR binaries used to install applications that are not in the
   official repositories. Served from cdn-mirror.chaotic.cx and
   builds.garudalinux.org.
-- Arch User Repository (AUR) — https://aur.archlinux.org
+- Arch User Repository (AUR) - https://aur.archlinux.org
   Some applications are built at image-build time via an AUR helper.
 
 ================================================================================
 Desktop shell & environment
 ================================================================================
-- ArcShell (Quickshell-based Hyprland desktop shell) — sud0-L
+- ArcShell (Quickshell-based Hyprland desktop shell) - sud0-L
   https://github.com/sud0-L/arcshell
   Cloned and installed at build time; provides the shell/launcher experience
   layered under ArchangelOS.
-- Hyprland (Wayland compositor) — https://github.com/hyprwm/Hyprland
-- Quickshell — https://github.com/quickshell-mirror/quickshell
-- SDDM (display manager) — https://github.com/sddm/sddm
-- Qylock (Quickshell lockscreen) — Darkkal44
+- Hyprland (Wayland compositor) - https://github.com/hyprwm/Hyprland
+- Quickshell - https://github.com/quickshell-mirror/quickshell
+- SDDM (display manager) - https://github.com/sddm/sddm
+- Qylock (Quickshell lockscreen) - Darkkal44
   https://github.com/Darkkal44/qylock
   The ArchangelOS lockscreen reuses the SDDM theme under Qylock's shim.
-- Rio terminal — https://github.com/raphamorim/rio
+- Rio terminal - https://github.com/raphamorim/rio
 
 ================================================================================
 Fonts
 ================================================================================
-- Quantico — SIL Open Font License 1.1
-- Shippori Mincho — SIL Open Font License 1.1
+- Quantico - SIL Open Font License 1.1
+- Shippori Mincho - SIL Open Font License 1.1
   Bundled under /usr/share/fonts/archangelos for the installer, launcher,
   welcome window and system theme.
 

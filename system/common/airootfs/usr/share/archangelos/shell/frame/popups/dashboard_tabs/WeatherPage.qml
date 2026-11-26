@@ -129,7 +129,7 @@ Item {
         if (code >= 80 && code <= 82) return { icon: "rainy", text: "Rain showers" }
         if (code === 85 || code === 86) return { icon: "weather_snowy", text: "Snow showers" }
         if (code >= 95) return { icon: "thunderstorm", text: "Thunderstorm" }
-        return { icon: "cloud", text: "—" }
+        return { icon: "cloud", text: "-" }
     }
 
     function uvLabel(v) {
@@ -501,7 +501,7 @@ Item {
                     readonly property var aq: root.air ? root.aqiInfo(root.air.european_aqi) : null
                     icon: "eco"; label: "AIR QUALITY"
                     accent: aq ? aq.color : Theme.active
-                    value: root.air ? Math.round(root.air.european_aqi) : "—"
+                    value: root.air ? Math.round(root.air.european_aqi) : "-"
                     sub: aq ? aq.text + " · PM2.5 " + Math.round(root.air.pm2_5) : "Unavailable"
                 }
                 Tile {

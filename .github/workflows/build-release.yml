@@ -198,7 +198,7 @@ jobs:
           done
           rm -f ~/.ssh/sf
           if [ "$ok" != 1 ]; then
-            echo "::error::all 4 upload attempts failed — ${ASSET} did NOT reach SourceForge"
+            echo "::error::all 4 upload attempts failed - ${ASSET} did NOT reach SourceForge"
             exit 1
           fi
           echo "UPLOAD OK: ${ASSET} -> frs.sourceforge.net:${dest}/"

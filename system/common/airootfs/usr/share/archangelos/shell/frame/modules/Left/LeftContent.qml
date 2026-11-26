@@ -27,7 +27,7 @@ Row {
 	spacing: Math.round(5 * localScale)
 	// Note: Do NOT add anchors.centerIn: parent here. TopBar handles that.
 
-	// 1. ArchangelOS mark — heads the tab, level with the workspaces, opens the launcher
+	// 1. ArchangelOS mark - heads the tab, level with the workspaces, opens the launcher
 	Item {
 		id: markBtn
 		width: Math.round(26 * parent.localScale)

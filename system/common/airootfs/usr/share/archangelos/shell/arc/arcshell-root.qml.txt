@@ -1,5 +1,5 @@
 //@ pragma UseQApplication
-// Custom shell (v2) — vertical left bar + hover dashboard, launcher and panels.
+// Custom shell (v2) - vertical left bar + hover dashboard, launcher and panels.
 // Target: quickshell 0.3.0 (stable), Hyprland. Run: qs -c arcshell
 // UseQApplication is required for native system-tray context menus.
 import QtQuick
@@ -72,7 +72,7 @@ ShellRoot {
         function toggle(): void { Shell.settingsVisible = !Shell.settingsVisible }
         function open(page: string): void { Shell.openSettings(page) }
     }
-    // `qs -c arcshell ipc call clipboard clear` — handy for a "panic" keybind.
+    // `qs -c arcshell ipc call clipboard clear` - handy for a "panic" keybind.
     IpcHandler {
         target: "clipboard"
         function count(): int { return Clip.entries.length }
@@ -113,7 +113,7 @@ ShellRoot {
     //
     // A layer-shell window whose size binding throws once (a ReferenceError in a `height:` is
     // enough) can stay unmapped for the rest of the process: it vanishes from `hyprctl layers`
-    // and no amount of hot-reloading brings it back, while its QML keeps running — so a popout's
+    // and no amount of hot-reloading brings it back, while its QML keeps running - so a popout's
     // bulge still draws and only the content is missing. Fix the binding, then restart the shell;
     // hot-reload alone will look like the fix did nothing.
     Variants {

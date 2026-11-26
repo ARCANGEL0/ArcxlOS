@@ -1,12 +1,12 @@
 //@ pragma UseQApplication
 
 /*
- * ArcShell — the ArchangelOS desktop shell, run as one process:
+ * ArcShell - the ArchangelOS desktop shell, run as one process:
  *
- *   frame/ — the morphing surface: top-centre island, top-right panel,
+ *   frame/ - the morphing surface: top-centre island, top-right panel,
  *            side and bottom notches (wallpaper picker, clipboard).
- *   arc/   — the vertical left bar, its popouts and the launcher.
- *   axs/   — ArchangelOS settings pages.
+ *   arc/   - the vertical left bar, its popouts and the launcher.
+ *   axs/   - ArchangelOS settings pages.
  *
  * Copyright (C) 2026 arcxlo (ArchangelOS). Distributed under the GNU
  * Affero General Public License v3 or later; see LICENSE.
@@ -24,8 +24,8 @@ import "axs" as AXS
 
 ShellRoot {
     // arc/'s frame layer stacks first, underneath: the morphing surface (which
-    // also covers the bar's column) draws the one silhouette — bar, workspace
-    // tab, island, notches — over it, and only arc/'s bulges (launcher, bar
+    // also covers the bar's column) draws the one silhouette - bar, workspace
+    // tab, island, notches - over it, and only arc/'s bulges (launcher, bar
     // popouts) show through.
     Variants { model: Quickshell.screens; NS.Frame {} }
 
@@ -40,7 +40,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; NS.KillOverlay {} }
     // arc/: the freeze-frame still shown while a region pick is in progress.
     Variants { model: Quickshell.screens; NS.FreezeFrame {} }
-    // arc/: the animated region-picker overlay (instant — no second qs process).
+    // arc/: the animated region-picker overlay (instant - no second qs process).
     Variants { model: Quickshell.screens; NS.RegionSelector {} }
     // arc/: instant fullscreen flash on immediate (screen) capture.
     Variants { model: Quickshell.screens; Component {
@@ -61,7 +61,7 @@ ShellRoot {
         } }
     }
 
-    // ArchangelOS Settings — one window, opened by `archangelos-settings [page]` or the launcher.
+    // ArchangelOS Settings - one window, opened by `archangelos-settings [page]` or the launcher.
     AXS.SettingsWindow {}
     AXS.PolkitPrompt {}
 

@@ -4,11 +4,11 @@ pragma Singleton
 // is { name, desc, icon, keywords, kind, arg } and `run` is the only place that knows the kinds.
 //
 // Kinds:
-//   settings  — open the settings window on a page id (see modules/settings/PageRegistry.qml)
-//   mode      — switch the launcher into a live-preview carousel; the launcher stays open
-//   prefix    — rewrite the query as a plain prefix mode ("#"…); the launcher stays open
-//   toggle    — flip a shell/system switch; the launcher stays open so the row updates in place
-//   exec      — do something and get out of the way
+//   settings  - open the settings window on a page id (see modules/settings/PageRegistry.qml)
+//   mode      - switch the launcher into a live-preview carousel; the launcher stays open
+//   prefix    - rewrite the query as a plain prefix mode ("#"…); the launcher stays open
+//   toggle    - flip a shell/system switch; the launcher stays open so the row updates in place
+//   exec      - do something and get out of the way
 import QtQuick
 import Quickshell
 import qs.arc
@@ -28,7 +28,7 @@ Singleton {
               keywords: "typeface text typography", kind: "mode", arg: "font" },
             // No live entry count here: the whole array is one binding, so reading Clip.entries
             // would rebuild ~35 objects per copy. "#" itself shows the count for free.
-            { name: "Clipboard history", desc: "Search and re-copy what you copied — Enter copies, Delete drops",
+            { name: "Clipboard history", desc: "Search and re-copy what you copied - Enter copies, Delete drops",
               icon: "content_paste", keywords: "paste copy buffer история буфер",
               kind: "prefix", arg: "#" },
 
@@ -59,30 +59,30 @@ Singleton {
               keywords: "version system info", kind: "settings", arg: "about" },
 
             // --- Toggles ---
-            { name: Config.autoColors ? "Auto colours — on" : "Auto colours — off",
+            { name: Config.autoColors ? "Auto colours - on" : "Auto colours - off",
               desc: "Derive the palette from the wallpaper", icon: "auto_awesome",
               keywords: "material you dynamic", kind: "toggle", arg: "autoColors" },
-            { name: Config.lightMode ? "Light mode — on" : "Light mode — off",
+            { name: Config.lightMode ? "Light mode - on" : "Light mode - off",
               desc: Config.autoColors ? "Light or dark generated palette"
                                       : "Only available with auto colours",
               icon: Config.lightMode ? "light_mode" : "dark_mode",
               keywords: "dark theme brightness", kind: "toggle", arg: "light" },
-            { name: Net.wifiOn ? "Wi-Fi — on" : "Wi-Fi — off",
+            { name: Net.wifiOn ? "Wi-Fi - on" : "Wi-Fi - off",
               desc: Net.wifiOn ? (Net.wifiSsid || "Not connected") : "Radio off", icon: "wifi",
               keywords: "wireless wlan network", kind: "toggle", arg: "wifi" },
-            { name: Bt.enabled ? "Bluetooth — on" : "Bluetooth — off",
+            { name: Bt.enabled ? "Bluetooth - on" : "Bluetooth - off",
               desc: "Bluetooth adapter power", icon: "bluetooth",
               keywords: "device pair", kind: "toggle", arg: "bt" },
-            { name: Config.dnd ? "Do not disturb — on" : "Do not disturb — off",
+            { name: Config.dnd ? "Do not disturb - on" : "Do not disturb - off",
               desc: "Silence notification toasts", icon: "notifications_off",
               keywords: "silence mute notification", kind: "toggle", arg: "dnd" },
-            { name: Shell.keepAwake ? "Keep awake — on" : "Keep awake — off",
+            { name: Shell.keepAwake ? "Keep awake - on" : "Keep awake - off",
               desc: "Inhibit idling and the screen lock", icon: "local_cafe",
               keywords: "caffeine idle inhibit sleep", kind: "toggle", arg: "keepAwake" },
-            { name: GameMode.enabled ? "Game mode — on" : "Game mode — off",
+            { name: GameMode.enabled ? "Game mode - on" : "Game mode - off",
               desc: "Drop animations, blur and rounding", icon: "sports_esports",
               keywords: "performance fps gaming", kind: "toggle", arg: "gameMode" },
-            { name: Config.autoLock ? "Auto-lock — on" : "Auto-lock — off",
+            { name: Config.autoLock ? "Auto-lock - on" : "Auto-lock - off",
               desc: "Lock the screen after idling", icon: "lock_clock",
               keywords: "idle security", kind: "toggle", arg: "autoLock" },
 
@@ -95,7 +95,7 @@ Singleton {
             // array is one binding, and elapsedText ticks twice a second, so a running recording
             // rebuilt ~40 objects every 500ms whether or not the launcher was even open.
             { name: Capture.active ? "Stop recording" : "Record the screen",
-              desc: Capture.active ? "Recording — Enter stops it" : "Open the capture panel",
+              desc: Capture.active ? "Recording - Enter stops it" : "Open the capture panel",
               icon: "screen_record",
               keywords: "video capture gsr", kind: "exec", arg: "record" },
             { name: "Switch keyboard layout", desc: Input.activeKeymap || "Cycle to the next layout",
@@ -161,7 +161,7 @@ Singleton {
     function toggle(what) {
         switch (what) {
         case "autoColors": Config.autoColors = !Config.autoColors; break;
-        // Only auto mode has a light/dark switch — a curated preset carries its own.
+        // Only auto mode has a light/dark switch - a curated preset carries its own.
         case "light": if (Config.autoColors) Config.autoLight = !Config.autoLight; break;
         case "wifi": Net.toggleWifi(); break;
         case "bt": Bt.toggle(); break;

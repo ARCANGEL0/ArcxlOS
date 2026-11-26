@@ -65,7 +65,7 @@ Item {
         var id = card.taskData ? card.taskData.id : -1
         if (id < 0) return
         if (KanbanService.takeNewCard(id)) {
-            // No extra animation — draft open/close is the creation affordance
+            // No extra animation - draft open/close is the creation affordance
         } else {
             var dir = KanbanService.takeEntryDirection(id)
             if (dir !== 0) {

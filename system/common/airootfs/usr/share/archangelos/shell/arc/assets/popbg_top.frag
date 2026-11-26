@@ -2,7 +2,7 @@
 
 // Popout background (TOP-oriented): a top "wall" (top half-plane, the screen frame edge)
 // smoothly SDF-unioned (smin) with the popout body (rounded box hanging below). The smin
-// fillet is the concave "cove" where the panel melts into the top edge — same idea as the
+// fillet is the concave "cove" where the panel melts into the top edge - same idea as the
 // bar popouts (popbg.frag) but the wall is on top instead of the left.
 
 layout(location = 0) in vec2 qt_TexCoord0;

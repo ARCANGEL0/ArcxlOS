@@ -48,7 +48,7 @@ for name in "$@"; do
     echo "[+] $pkg installed from the AUR"
     continue
   fi
-  echo "[!] Could not install '$pkg' — check the tool name or your network connection"
+  echo "[!] Could not install '$pkg' - check the tool name or your network connection"
   rc=1
 done
 exit $rc

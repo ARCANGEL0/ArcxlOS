@@ -220,7 +220,7 @@ Item {
                                             ctx.closePath();
                                             ctx.clip();
 
-                                            // Dark variant — upper-left triangle
+                                            // Dark variant - upper-left triangle
                                             ctx.beginPath();
                                             ctx.moveTo(0, 0);
                                             ctx.lineTo(w, 0);
@@ -229,7 +229,7 @@ Item {
                                             ctx.fillStyle = darkBg;
                                             ctx.fill();
 
-                                            // Light variant — lower-right triangle
+                                            // Light variant - lower-right triangle
                                             ctx.beginPath();
                                             ctx.moveTo(w, 0);
                                             ctx.lineTo(w, h);

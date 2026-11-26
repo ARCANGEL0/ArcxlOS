@@ -1,4 +1,4 @@
-// Encryption › Checksums — fingerprint a file (or typed text) with any hash the system has, check
+// Encryption › Checksums - fingerprint a file (or typed text) with any hash the system has, check
 // it against a published value, or compute an HMAC. The hashing is done on this computer by
 // /usr/lib/archangelos/axs-crypto; nothing is uploaded.
 import QtQuick
@@ -12,7 +12,7 @@ PageScaffold {
     property var meta
     group: "Encryption"
     title: "Checksums"
-    desc: "Prove a download is exactly what its publisher released — it never leaves this computer."
+    desc: "Prove a download is exactly what its publisher released - it never leaves this computer."
 
     readonly property string tool: "/usr/lib/archangelos/axs-crypto"
     property var catalog: []                      // [{ key, title, note }]
@@ -59,7 +59,7 @@ PageScaffold {
             id: how
             x: 20; y: 18; width: parent.width - 40; spacing: 22
             Repeater {
-                model: [["1", "Choose the file you downloaded"], ["2", "Paste the hash from the download page — the right algorithm is picked automatically"], ["3", "A green match means the file is genuine and unmodified"]]
+                model: [["1", "Choose the file you downloaded"], ["2", "Paste the hash from the download page - the right algorithm is picked automatically"], ["3", "A green match means the file is genuine and unmodified"]]
                 Row {
                     required property var modelData
                     width: (how.width - 44) / 3; spacing: 10
@@ -88,7 +88,7 @@ PageScaffold {
                          onTextChanged: { page.text = text; page.compute(); } }
         }
         SRow {
-            icon: "vpn_key"; title: "HMAC key"; desc: "Optional — keyed hash, to prove a message is from someone who knows the key"
+            icon: "vpn_key"; title: "HMAC key"; desc: "Optional - keyed hash, to prove a message is from someone who knows the key"
             AxField { id: hmacF; width: 220; placeholder: "Leave empty for a plain hash"; anchors.verticalCenter: parent.verticalCenter
                       onTextChanged: { page.hmacKey = text; page.compute(); } }
         }
@@ -120,7 +120,7 @@ PageScaffold {
                 readonly property var a: page.catalog.find(x => x.key === modelData)
                 icon: page.match === modelData ? "verified" : "tag"
                 title: page.title(modelData) + (a && a.note ? "  ·  " + a.note : "")
-                desc: page.results[modelData] || (page.busy ? "…" : "—")
+                desc: page.results[modelData] || (page.busy ? "…" : "-")
                 Badge { visible: page.match === modelData; text: "match"; tone: "accent"; anchors.verticalCenter: parent.verticalCenter }
                 AxButton { icon: "content_copy"; anchors.verticalCenter: parent.verticalCenter; enabled_: !!page.results[modelData]
                            onClicked: Quickshell.execDetached(["wl-copy", "--", page.results[modelData]]) }
@@ -129,9 +129,9 @@ PageScaffold {
         SRow {
             visible: !page.hmacKey
             icon: "compare_arrows"; title: "Compare"
-            desc: page.want === "" ? "Paste a published hash — any algorithm, recognised by length"
-                : page.busy ? "Checking…" : page.match !== "" ? "Matches " + page.title(page.match) + " — genuine and unmodified"
-                : "No match — the file is damaged or not the one published"
+            desc: page.want === "" ? "Paste a published hash - any algorithm, recognised by length"
+                : page.busy ? "Checking…" : page.match !== "" ? "Matches " + page.title(page.match) + " - genuine and unmodified"
+                : "No match - the file is damaged or not the one published"
             AxField { id: compare; width: 340; placeholder: "Paste the published hash"; anchors.verticalCenter: parent.verticalCenter }
             Badge { visible: page.want !== ""; text: page.match !== "" ? "verified" : "mismatch"; tone: page.match !== "" ? "accent" : "danger"; anchors.verticalCenter: parent.verticalCenter }
         }

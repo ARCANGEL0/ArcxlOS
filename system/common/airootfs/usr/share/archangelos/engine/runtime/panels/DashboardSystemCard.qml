@@ -105,7 +105,7 @@ DashboardCard {
                     Layout.fillWidth: true
                     label: "STORAGE"
                     value: SystemService.storageAvailable
-                        ? SystemService.diskPercent + "%" : "—"
+                        ? SystemService.diskPercent + "%" : "-"
                     accent: SystemService.diskPercent >= 90
                         ? Theme.error : Theme.secondary
                 }
@@ -113,7 +113,7 @@ DashboardCard {
                     Layout.fillWidth: true
                     label: "CPU TEMP"
                     value: SystemService.temperatureAvailable
-                        ? SystemService.temperatureInt + "°C" : "—"
+                        ? SystemService.temperatureInt + "°C" : "-"
                     accent: SystemService.temperatureInt >= 90
                         ? Theme.error : Theme.warning
                 }
@@ -121,7 +121,7 @@ DashboardCard {
                     Layout.fillWidth: true
                     label: "GPU LOAD"
                     value: SystemService.gpuUsageAvailable
-                        ? SystemService.gpuPercent + "%" : "—"
+                        ? SystemService.gpuPercent + "%" : "-"
                     accent: SystemService.gpuPercent >= 90
                         ? Theme.error : Theme.secondary
                 }
@@ -129,7 +129,7 @@ DashboardCard {
                     Layout.fillWidth: true
                     label: "GPU TEMP"
                     value: SystemService.gpuTemperatureAvailable
-                        ? SystemService.gpuTemperatureInt + "°C" : "—"
+                        ? SystemService.gpuTemperatureInt + "°C" : "-"
                     accent: SystemService.gpuTemperatureInt >= 90
                         ? Theme.error : Theme.tertiary
                 }
@@ -149,7 +149,7 @@ DashboardCard {
     component MetricValue: RowLayout {
         id: metric
         property string label: ""
-        property string value: "—"
+        property string value: "-"
         property color accent: Theme.primary
         spacing: Theme.space1
 

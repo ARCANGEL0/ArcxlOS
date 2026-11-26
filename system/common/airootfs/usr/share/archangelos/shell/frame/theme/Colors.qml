@@ -24,14 +24,14 @@ import "."
 QtObject {
     id: root
 
-    // ── Color loader — watches matugen output and updates live ────────────────
+    // ── Color loader - watches matugen output and updates live ────────────────
     // Use a unique ID to avoid namespace collision with the 'Colors' singleton
     property var _loader: ColorLoader {
         id: internalLoader
         overrideMode: PrefsService.dynamicThemeOverride
     }
 
-    // ── Colors — bound to loader, update automatically when matugen runs ──────
+    // ── Colors - bound to loader, update automatically when matugen runs ──────
     property color background: Qt.rgba(internalLoader.background.r, internalLoader.background.g, internalLoader.background.b, PrefsService.bgOpacity)
     property color active:     internalLoader.active
     property color text:       internalLoader.text

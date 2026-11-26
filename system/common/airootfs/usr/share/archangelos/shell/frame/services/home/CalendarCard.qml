@@ -20,7 +20,7 @@ import QtQuick
 import "../../"
 import "../../components"
 
-// Calendar card — month grid with prev/next navigation.
+// Calendar card - month grid with prev/next navigation.
 // Self-contained: owns all calendar state.
 
 StatCard {

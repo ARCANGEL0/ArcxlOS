@@ -1,4 +1,4 @@
-// ArchangelOS: network pane — the current connection and its details, plus a
+// ArchangelOS: network pane - the current connection and its details, plus a
 // jump to the top-right Wi-Fi scanner. Grows out of the left dock.
 pragma ComponentBehavior: Bound
 
@@ -32,7 +32,7 @@ BarPopout {
         spacing: 8
         Text { text: parent.k; color: Config.dim; font.family: Config.textFont; font.pixelSize: 10 }
         Item { Layout.fillWidth: true }
-        Text { text: parent.v || "—"; color: Config.fg; font.family: Config.textFont; font.pixelSize: 10
+        Text { text: parent.v || "-"; color: Config.fg; font.family: Config.textFont; font.pixelSize: 10
                elide: Text.ElideLeft; Layout.maximumWidth: 150; horizontalAlignment: Text.AlignRight }
     }
 

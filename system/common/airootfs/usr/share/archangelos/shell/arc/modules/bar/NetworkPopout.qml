@@ -102,7 +102,7 @@ BarPopout {
                 Text {
                     Layout.fillWidth: true
                     text: netItem.modelData.ssid
-                    // An SSID is chosen by whoever runs the AP — never rich text.
+                    // An SSID is chosen by whoever runs the AP - never rich text.
                     textFormat: Text.PlainText
                     elide: Text.ElideRight
                     color: netItem.modelData.active ? Config.accent : Config.fg

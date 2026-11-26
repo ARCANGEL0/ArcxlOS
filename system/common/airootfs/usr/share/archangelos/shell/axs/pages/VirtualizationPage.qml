@@ -1,4 +1,4 @@
-// Virtualization — virtual machines (libvirt / QEMU) and containers (Docker, Podman): whether
+// Virtualization - virtual machines (libvirt / QEMU) and containers (Docker, Podman): whether
 // the services run, your access to them, the machines and containers themselves, and the tools to
 // manage them. Service and VM actions go through /usr/lib/archangelos/axs-admin.
 import QtQuick
@@ -85,14 +85,14 @@ PageScaffold {
         note: "libvirt / QEMU"
         SRow {
             icon: page.svc.libvirtd ? "dns" : "cloud_off"; title: "libvirt service"
-            desc: page.svc.libvirtd ? "Running — VMs can start" : "Stopped"
+            desc: page.svc.libvirtd ? "Running - VMs can start" : "Stopped"
             AxSwitch { checked: page.svc.libvirtd === true; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => page.run("libvirtd", ["svc", "libvirtd", on ? "1" : "0"], on ? "libvirt started." : "libvirt stopped.") }
         }
         SRow {
             visible: !page.inGroup.libvirt
-            icon: "group_add"; title: "Let me manage VMs without a password"; desc: "Adds you to the libvirt group — then VMs work without asking each time"
-            AxButton { text: "Add me"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: page.run("grp", ["group-add", page.me, "libvirt"], "Added — log out and back in to take effect.") }
+            icon: "group_add"; title: "Let me manage VMs without a password"; desc: "Adds you to the libvirt group - then VMs work without asking each time"
+            AxButton { text: "Add me"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: page.run("grp", ["group-add", page.me, "libvirt"], "Added - log out and back in to take effect.") }
         }
         Repeater {
             model: page.vms
@@ -126,7 +126,7 @@ PageScaffold {
         SRow {
             visible: !page.inGroup.docker
             icon: "group_add"; title: "Use Docker without sudo"; desc: "Adds you to the docker group (note: that grants root-equivalent access to the daemon)"
-            AxButton { text: "Add me"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: page.run("grp", ["group-add", page.me, "docker"], "Added — log out and back in.") }
+            AxButton { text: "Add me"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: page.run("grp", ["group-add", page.me, "docker"], "Added - log out and back in.") }
         }
     }
 
@@ -151,6 +151,6 @@ PageScaffold {
     Section {
         visible: !!page.have.podman && !page.have.docker
         title: "Podman"
-        SRow { icon: "deployed_code"; title: "Podman"; desc: "Rootless containers — no daemon needed. Run  podman run …  from a terminal." }
+        SRow { icon: "deployed_code"; title: "Podman"; desc: "Rootless containers - no daemon needed. Run  podman run …  from a terminal." }
     }
 }

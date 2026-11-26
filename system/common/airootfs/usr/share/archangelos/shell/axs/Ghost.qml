@@ -23,8 +23,8 @@ Singleton {
     readonly property bool ready: st.active === "active" && boot >= 100
     readonly property bool blocked: st.blocked === "1" && !running
     readonly property string phase: !loaded ? "Checking…"
-        : blocked ? "Tor stopped — every packet is held back until you turn the tunnel off"
-        : !running ? (st.armed === "1" ? "Lifting the rules…" : "Off — this computer connects directly")
+        : blocked ? "Tor stopped - every packet is held back until you turn the tunnel off"
+        : !running ? (st.armed === "1" ? "Lifting the rules…" : "Off - this computer connects directly")
         : ready ? "Every packet leaves through Tor. Anything else is rejected"
         : "Building circuits " + boot + "%" + (st.phase ? " · " + st.phase : "")
 

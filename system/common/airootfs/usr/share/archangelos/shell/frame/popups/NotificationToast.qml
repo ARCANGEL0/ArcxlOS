@@ -211,7 +211,7 @@ Item {
 				spacing: Math.round(2 * root.localScale)
 				bottomPadding: Math.round(10 * root.localScale)
 				y: 0 + Math.round(6 * root.localScale)
-				// No fixed height — sizes to content
+				// No fixed height - sizes to content
 
 				Row {
 					id:      headerRow

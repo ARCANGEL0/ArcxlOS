@@ -19,7 +19,7 @@
 import QtQuick
 import "../"
 
-// TimeInput — reusable HH:MM input
+// TimeInput - reusable HH:MM input
 // Props : hours (int, readonly), minutes (int, readonly), minuteStep (int, default 1)
 // Call  : initialize(h, m) to push values from outside
 

@@ -1,4 +1,4 @@
-// Printers & scanners — the printers CUPS knows about, with their queues; finding and adding a
+// Printers & scanners - the printers CUPS knows about, with their queues; finding and adding a
 // new one (driverless IPP, "print from anywhere"); the default; and a test page. Adding and
 // removing printers go through /usr/lib/archangelos/axs-admin, which asks for your password.
 import QtQuick
@@ -94,7 +94,7 @@ PageScaffold {
     Section {
         visible: page.installed && !page.running
         SRow {
-            icon: "print_disabled"; title: "Printing service is off"; desc: "CUPS isn't running — start it to add and use printers"
+            icon: "print_disabled"; title: "Printing service is off"; desc: "CUPS isn't running - start it to add and use printers"
             AxButton { text: page.busy === "svc" ? "Starting…" : "Turn on"; kind: "primary"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onClicked: page.run("svc", ["cups-on"], "Started.") }
         }
@@ -138,7 +138,7 @@ PageScaffold {
                 icon: /usb/.test(modelData.uri) ? "usb" : "lan"
                 title: modelData.name; desc: modelData.kind + "  ·  " + modelData.uri
                 AxButton { text: page.busy === "add" ? "Adding…" : "Add"; kind: "primary"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
-                           onClicked: page.run("add", ["printer-add", page.suggestName(modelData), modelData.uri, "-"], "Printer added — try a test page.") }
+                           onClicked: page.run("add", ["printer-add", page.suggestName(modelData), modelData.uri, "-"], "Printer added - try a test page.") }
             }
         }
         SRow {

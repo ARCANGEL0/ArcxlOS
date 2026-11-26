@@ -187,13 +187,13 @@ PageScaffold {
             visible: !!page.sel && !!page.sel.external
             icon: "open_in_new"
             title: page.sel ? "Get " + page.sel.name : ""
-            desc: "Opens its GitHub page in your browser. Follow the repo's steps to install it, then press refresh — it'll appear here as a shell you can switch to."
+            desc: "Opens its GitHub page in your browser. Follow the repo's steps to install it, then press refresh - it'll appear here as a shell you can switch to."
             AxButton { text: "Open on GitHub"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.openRepo(page.sel.url) }
         }
         SRow {
             visible: page.switched !== ""
             icon: "logout"; title: "Sign out to switch"
-            desc: "Save your work first — open apps close when you log out"
+            desc: "Save your work first - open apps close when you log out"
             AxButton { text: "Log out now"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: NSS.HyprCtl.exit() }
         }
         SRow {

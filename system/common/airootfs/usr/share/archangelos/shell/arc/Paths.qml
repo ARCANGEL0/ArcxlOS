@@ -4,10 +4,10 @@ pragma Singleton
 //
 // Two kinds live here and they are kept apart on purpose:
 //
-//   * things that SHIP — shaders, scripts, fonts, wallpapers. Resolved from this file's own
+//   * things that SHIP - shaders, scripts, fonts, wallpapers. Resolved from this file's own
 //     location, so the tree works wherever it is checked out, installed or symlinked, and under
 //     whatever name `qs -c <name>` was given.
-//   * things that BELONG TO THE USER — settings, the generated palette, the Hyprland fragments
+//   * things that BELONG TO THE USER - settings, the generated palette, the Hyprland fragments
 //     the settings window writes. These follow the XDG base directories and never land inside the
 //     tree, so a clone can be pulled over or thrown away without taking anyone's settings with it.
 //
@@ -22,7 +22,7 @@ Singleton {
     id: root
 
     // The name this desktop calls itself: the quickshell config name, the directories below, and
-    // anything it leaves elsewhere — so everything it owns is greppable by one word.
+    // anything it leaves elsewhere - so everything it owns is greppable by one word.
     readonly property string appName: "arcshell"
 
     // --- Shipped with the tree ------------------------------------------------------------
@@ -38,7 +38,7 @@ Singleton {
 
     // --- XDG base directories ---------------------------------------------------------------
     readonly property string home: Quickshell.env("HOME")
-    // The user's own media directories, which are not always under $HOME and not always English —
+    // The user's own media directories, which are not always under $HOME and not always English -
     // xdg-user-dirs exports these into the session.
     readonly property string pictures: Quickshell.env("XDG_PICTURES_DIR") || (root.home + "/Pictures")
     readonly property string videos: Quickshell.env("XDG_VIDEOS_DIR") || (root.home + "/Videos")
@@ -51,10 +51,10 @@ Singleton {
     // --- The user's own -----------------------------------------------------------------------
     readonly property string configDir: root.configHome + "/" + root.appName
     readonly property string stateDir: root.stateHome + "/" + root.appName
-    // The store. Hand-editable while the shell runs — it watches this file and applies changes live.
+    // The store. Hand-editable while the shell runs - it watches this file and applies changes live.
     readonly property string settingsFile: root.configDir + "/settings.json"
     // matugen's output. Generated, never authored, and reproducible from the wallpaper at any
-    // time — so it belongs in state, not among the things a person edits or backs up.
+    // time - so it belongs in state, not among the things a person edits or backs up.
     readonly property string themeFile: root.stateDir + "/theme.json"
     // Hyprland fragments the settings window regenerates in full (displays, keyboard layouts), in
     // whichever language the compositor's config is written. See hypr/arcshell.{conf,lua}.
@@ -66,7 +66,7 @@ Singleton {
     // Where the picked still is copied under a fixed name, for anything outside the shell that
     // wants to know what the wallpaper is.
     readonly property string currentWallpaper: root.pictures + "/wallpapers/static-wallpaper.png"
-    // stderr of the detached recorder — the one thing a failed launch can still report.
+    // stderr of the detached recorder - the one thing a failed launch can still report.
     readonly property string captureLog: root.runtimeDir + "/" + root.appName + "-capture.log"
 
     // The directories above have to exist before anything writes into them, and neither FileView

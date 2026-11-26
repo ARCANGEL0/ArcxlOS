@@ -1,4 +1,4 @@
-// Services & Ports — what's listening for connections right now and who owns it, and the
+// Services & Ports - what's listening for connections right now and who owns it, and the
 // background services worth knowing about (start, stop, run at boot).
 import QtQuick
 import Quickshell
@@ -92,7 +92,7 @@ PageScaffold {
         SRow {
             visible: !page.full && page.socks.some(s => !s.proc)
             icon: "info"; dim: true; title: "Some owners are hidden"
-            desc: "Programs run by the system only show up with your password — use Show all owners"
+            desc: "Programs run by the system only show up with your password - use Show all owners"
         }
     }
 

@@ -1,5 +1,5 @@
 -- ################################################################################
--- # config/rules.lua — Window rules and workspace rules
+-- # config/rules.lua - Window rules and workspace rules
 -- # See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 -- # See https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- ################################################################################

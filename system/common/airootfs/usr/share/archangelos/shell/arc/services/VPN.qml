@@ -78,7 +78,7 @@ Singleton {
     function buildProfile(type, values, existing) { return Schema.build(type, values, existing); }
     function clearKey(key) { return Schema.clearKey(key); }
 
-    // req: { uuid, name, service, data, secrets, cleared } — an empty uuid means "create".
+    // req: { uuid, name, service, data, secrets, cleared } - an empty uuid means "create".
     property var pending: null
     function saveProfile(req) {
         if (root.saving) return;
@@ -86,7 +86,7 @@ Singleton {
         root.lastError = "";
         root.pending = req;
         // vpn.data through argv: paths and usernames, nothing not already readable in the profile.
-        // `con modify` replaces the dict, which is what an edit needs — a cleared key must vanish.
+        // `con modify` replaces the dict, which is what an edit needs - a cleared key must vanish.
         const cmd = req.uuid
             ? ["nmcli", "con", "modify", "uuid", req.uuid, "connection.id", req.name]
             : ["nmcli", "con", "add", "type", "vpn", "con-name", req.name,
@@ -241,7 +241,7 @@ Singleton {
     }
     // The interface either has a sysfs entry or it does not, which is the whole test. Reading the
     // file directly replaces a `sh -c "test -d …"` that both spawned two processes every 5s and
-    // interpolated `iface` — a field typed by hand in Settings — straight into a shell script.
+    // interpolated `iface` - a field typed by hand in Settings - straight into a shell script.
     function checkStatus() {
         if (!active || !active.iface) { root.connected = false; return; }
         ifaceProbe.reload();

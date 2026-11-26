@@ -17,7 +17,7 @@ ax_editions_list() { printf '%s\n' "${AX_EDITIONS[@]}"; }
 
 ax_usage() {
   cat <<EOF
-ArchangelOS ISO builder — version ${AX_VERSION}
+ArchangelOS ISO builder - version ${AX_VERSION}
 
 Usage: sudo ./build.sh [edition] [options]
 
@@ -142,7 +142,7 @@ ax_build() {
   local out_dir="${build_base}/${edition}/out"
 
   echo "========================================================"
-  echo "    ArchangelOS ${edition} ISO Build  —  version ${AX_VERSION}"
+  echo "    ArchangelOS ${edition} ISO Build  -  version ${AX_VERSION}"
   echo "========================================================"
   echo "[+] Profile        : ${profile_dir}"
   echo "[+] Work directory : ${work_dir}"

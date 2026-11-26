@@ -1,4 +1,4 @@
-//  ArchangelOS — recording dim-mask overlay.
+//  ArchangelOS - recording dim-mask overlay.
 //  While wf-recorder is capturing a region, this paints a translucent scrim over
 //  everything EXCEPT the recorded rectangle, so the capture area stays visible as
 //  a live indicator. It is fully click-through (empty input mask) and sits on the

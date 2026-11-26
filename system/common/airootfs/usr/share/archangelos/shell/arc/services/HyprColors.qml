@@ -2,7 +2,7 @@ pragma Singleton
 
 // Pushes the shell's palette into Hyprland: window/group borders and the compositor's
 // own background colour follow the active theme. Applied live through HyprCtl and nothing
-// else — whatever colours your own config sets stay in the file untouched, and the
+// else - whatever colours your own config sets stay in the file untouched, and the
 // `configreloaded` event below re-applies the live theme on top of them.
 import QtQuick
 import Quickshell

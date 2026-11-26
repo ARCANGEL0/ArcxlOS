@@ -1,4 +1,4 @@
-// Settings — a regular xdg-toplevel, so the compositor moves, resizes and lists it. Opened from
+// Settings - a regular xdg-toplevel, so the compositor moves, resizes and lists it. Opened from
 // the launcher's Settings entry, a ">" command, or `ipc call settings open <page>`.
 //
 // Left nav pane (grouped, filterable) + one lazily-loaded page. The page list lives in
@@ -103,7 +103,7 @@ FloatingWindow {
                     Layout.bottomMargin: 2; Layout.leftMargin: 6
                 }
 
-                // Filter — the page list is long enough that scanning it beats scrolling it.
+                // Filter - the page list is long enough that scanning it beats scrolling it.
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 38
@@ -219,7 +219,7 @@ FloatingWindow {
                                             }
                                         }
                                     }
-                                    // Follows the pill, which grows rounder once selected — a fixed
+                                    // Follows the pill, which grows rounder once selected - a fixed
                                     // radius here made hover a different shape than the selection.
                                     StateLayer { ovRadius: navPill.radius; onTapped: win.page = navEntry.modelData.idx }
                                 }

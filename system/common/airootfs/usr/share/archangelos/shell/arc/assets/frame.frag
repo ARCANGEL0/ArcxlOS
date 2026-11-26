@@ -72,7 +72,7 @@ void main() {
     // arrives from somewhere. The SDF's gradient is the outward normal, so n.y says which way
     // an edge faces, and one overhead source then falls out of the geometry: the top lip of
     // the content recess is overhung and sits in shadow, while the bottom lip catches light,
-    // and the popout bulges — protrusions rather than recesses — shade the opposite way on
+    // and the popout bulges - protrusions rather than recesses - shade the opposite way on
     // their own. No special cases, just the normal.
     //
     // The shadowed side is floored rather than cut to zero. A pure directional term drops one
@@ -85,7 +85,7 @@ void main() {
     // The + is not a typo and the sign is not free to flip: dFdy is taken in window
     // coordinates, whose y direction is the viewport's, not qt_TexCoord0's. It comes out
     // inverted from what reading the math suggests, so check a screenshot after touching this
-    // rather than trusting the sign — light landing on the underside is the tell.
+    // rather than trusting the sign - light landing on the underside is the tell.
     vec2 g = vec2(dFdx(d), dFdy(d));
     float ny = dot(g, g) > 1e-12 ? normalize(g).y : 0.0;
     float lit = 0.4 + 0.6 * clamp(0.5 + 0.5 * ny * bevelDir, 0.0, 1.0);

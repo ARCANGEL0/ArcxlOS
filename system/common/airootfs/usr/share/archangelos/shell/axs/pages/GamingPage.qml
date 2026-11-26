@@ -1,4 +1,4 @@
-// Gaming — the things that matter when you play: game mode, your launchers, the performance
+// Gaming - the things that matter when you play: game mode, your launchers, the performance
 // overlay (MangoHud), Proton/Wine compatibility and controllers. Game mode goes through
 // ArcShell's own service; the overlay is written to ~/.config/MangoHud/MangoHud.conf.
 import QtQuick
@@ -84,7 +84,7 @@ PageScaffold {
         const lines = ["# Written by ArchangelOS Settings > Gaming. Overlay options for MangoHud."];
         for (const k of keys) lines.push(h[k] === true ? k : k + "=" + h[k]);
         cmd.sh('mkdir -p "$(dirname "$1")" && printf "%s\\n" "$2" > "$1"', [page.hudPath, lines.join("\n")], (c) => {
-            if (c === 0) { page.notice = "Overlay saved — add  mangohud  before a game, or turn it on per-launcher"; noticeT.restart(); }
+            if (c === 0) { page.notice = "Overlay saved - add  mangohud  before a game, or turn it on per-launcher"; noticeT.restart(); }
         });
     }
     readonly property var presets: ({
@@ -109,13 +109,13 @@ PageScaffold {
         title: "Game mode"
         SRow {
             icon: NSS.GameMode.enabled ? "rocket_launch" : "videogame_asset"
-            title: NSS.GameMode.enabled ? "On — nothing gets in the way" : "Off"
+            title: NSS.GameMode.enabled ? "On - nothing gets in the way" : "Off"
             desc: "Drops animations, blur, shadows, rounding and gaps, lets frames tear for lower latency, and holds back notifications and auto-lock while you play."
             AxSwitch { checked: NSS.GameMode.enabled; anchors.verticalCenter: parent.verticalCenter; onToggled: NSS.GameMode.toggle() }
         }
         SRow {
             icon: "memory"; title: "feral GameMode"
-            desc: page.have.gamemoded ? "Installed — games that support it get the CPU governor on performance automatically" : "Not installed — add  gamemode  for automatic CPU boosting in supported games"
+            desc: page.have.gamemoded ? "Installed - games that support it get the CPU governor on performance automatically" : "Not installed - add  gamemode  for automatic CPU boosting in supported games"
             Badge { text: page.have.gamemoded ? "installed" : "missing"; tone: page.have.gamemoded ? "ok" : "neutral"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
@@ -148,7 +148,7 @@ PageScaffold {
         SRow {
             icon: "insights"; title: "MangoHud"
             desc: page.have.mangohud ? "An overlay of frame rate and load on top of any Vulkan or OpenGL game"
-                                     : "Not installed — add  mangohud  (and  lib32-mangohud  for 32-bit games)"
+                                     : "Not installed - add  mangohud  (and  lib32-mangohud  for 32-bit games)"
             AxSegment { visible: !!page.have.mangohud; options: ["Off", "Light", "Full"]
                         current: page.hudCount === 0 ? 0 : page.hudCount <= 2 ? 1 : 2
                         onPicked: (i) => page.applyPreset(["off", "light", "full"][i]); anchors.verticalCenter: parent.verticalCenter }
@@ -173,15 +173,15 @@ PageScaffold {
     Section {
         title: "Windows games (Proton / Wine)"
         SRow {
-            icon: "cable"; title: "Wine"; desc: page.have.wine ? "Installed — runs Windows programs directly" : "Not installed — Steam's Proton works without it; add  wine  for Lutris and Bottles"
+            icon: "cable"; title: "Wine"; desc: page.have.wine ? "Installed - runs Windows programs directly" : "Not installed - Steam's Proton works without it; add  wine  for Lutris and Bottles"
             Badge { text: page.have.wine ? "installed" : "optional"; tone: page.have.wine ? "ok" : "neutral"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
-            icon: "filter_vintage"; title: "VkBasalt"; desc: page.have.vkbasalt ? "Installed — post-processing (sharpening, FXAA) for Vulkan games" : "Not installed — add  vkbasalt  for sharpening and colour filters"
+            icon: "filter_vintage"; title: "VkBasalt"; desc: page.have.vkbasalt ? "Installed - post-processing (sharpening, FXAA) for Vulkan games" : "Not installed - add  vkbasalt  for sharpening and colour filters"
             Badge { text: page.have.vkbasalt ? "installed" : "optional"; tone: page.have.vkbasalt ? "ok" : "neutral"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
-            icon: "crop_free"; title: "Gamescope"; desc: page.have.gamescope ? "Installed — a micro-compositor for upscaling and frame limiting. Wrap a game with  gamescope -W 2560 -H 1440 -- <game>" : "Not installed — add  gamescope  for resolution upscaling and a clean fullscreen"
+            icon: "crop_free"; title: "Gamescope"; desc: page.have.gamescope ? "Installed - a micro-compositor for upscaling and frame limiting. Wrap a game with  gamescope -W 2560 -H 1440 -- <game>" : "Not installed - add  gamescope  for resolution upscaling and a clean fullscreen"
             Badge { text: page.have.gamescope ? "installed" : "optional"; tone: page.have.gamescope ? "ok" : "neutral"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
@@ -194,7 +194,7 @@ PageScaffold {
     Section {
         title: "Controllers"
         note: page.pads.length ? page.pads.length + " connected" : ""
-        EmptyState { visible: page.pads.length === 0; icon: "sports_esports"; title: "No controllers connected"; desc: "Plug in a gamepad or pair one over Bluetooth — it'll show up here." }
+        EmptyState { visible: page.pads.length === 0; icon: "sports_esports"; title: "No controllers connected"; desc: "Plug in a gamepad or pair one over Bluetooth - it'll show up here." }
         Repeater {
             model: page.pads
             SRow {

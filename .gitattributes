@@ -25,7 +25,7 @@ NOTICE      text eol=lf
 airootfs/usr/bin/*      text eol=lf
 airootfs/usr/local/bin/* text eol=lf
 
-# Binary assets — never touch line endings, and skip diffing.
+# Binary assets - never touch line endings, and skip diffing.
 *.png    binary
 *.jpg    binary
 *.jpeg   binary

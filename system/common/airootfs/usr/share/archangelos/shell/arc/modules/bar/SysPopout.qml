@@ -1,4 +1,4 @@
-// ArchangelOS: system pane — CPU / RAM / GPU, a live history chart, and the top
+// ArchangelOS: system pane - CPU / RAM / GPU, a live history chart, and the top
 // processes with a kill button. Grows out of the left dock's monitors.
 pragma ComponentBehavior: Bound
 
@@ -86,7 +86,7 @@ BarPopout {
 
         Text { text: "SYSTEM"; color: Config.accent; font.family: Config.textFont; font.pixelSize: 11; font.bold: true; Layout.bottomMargin: 2 }
 
-        // CPU / RAM / GPU / Disk / Battery — GPU and Battery appear only when present
+        // CPU / RAM / GPU / Disk / Battery - GPU and Battery appear only when present
         Flow {
             Layout.fillWidth: true
             spacing: 4

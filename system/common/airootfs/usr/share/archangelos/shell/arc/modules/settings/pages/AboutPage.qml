@@ -1,5 +1,5 @@
 // About: what this machine and this shell actually are. Everything is collected by one shell
-// script on page load rather than by a poller — none of it changes while the page is open, and
+// script on page load rather than by a poller - none of it changes while the page is open, and
 // the page is destroyed the moment you navigate away.
 pragma ComponentBehavior: Bound
 
@@ -18,7 +18,7 @@ StackView {
 
     // key -> value, filled in by infoProc below.
     property var info: ({})
-    function get(k, fallback) { return stack.info[k] || (fallback ?? "—"); }
+    function get(k, fallback) { return stack.info[k] || (fallback ?? "-"); }
 
     Process {
         id: infoProc

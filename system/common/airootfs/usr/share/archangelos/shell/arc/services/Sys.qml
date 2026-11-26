@@ -1,7 +1,7 @@
 pragma Singleton
 
 // System stats (CPU/RAM/disk/temp/net/uptime). Only samples while `active` is true
-// (the dashboard Performance tab sets it) — no background polling otherwise.
+// (the dashboard Performance tab sets it) - no background polling otherwise.
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -129,7 +129,7 @@ Singleton {
             }
             root._prevNet = { rx: rx, tx: tx };
 
-            // Every 15th tick — 30s. df is the one figure here that still needs a process, and
+            // Every 15th tick - 30s. df is the one figure here that still needs a process, and
             // free space does not move in jumps worth a spawn every 10s.
             if (root._tick % 15 === 0) diskProc.running = true;
             root.readGpu();
@@ -197,7 +197,7 @@ Singleton {
     }
 
     // GPU busy%/temp/VRAM from sysfs. The paths carry glob'd card/hwmon numbers, so a shell resolves
-    // them — but ONCE, at first sample, not on every tick: the old version spawned `sh` plus four
+    // them - but ONCE, at first sample, not on every tick: the old version spawned `sh` plus four
     // `cat`s every 2 seconds for four files that never move. After this the sampling itself is
     // plain FileView reads, like the /proc ones above.
     property var gpuPaths: null
@@ -216,7 +216,7 @@ Singleton {
                     const i = line.indexOf(":");
                     if (i > 0) p[line.slice(0, i)] = line.slice(i + 1);
                 }
-                root.gpuPaths = p;    // {} when there is no such GPU — still "resolved", so no re-scan
+                root.gpuPaths = p;    // {} when there is no such GPU - still "resolved", so no re-scan
                 root.readGpu();
             }
         }

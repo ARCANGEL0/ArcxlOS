@@ -294,7 +294,7 @@ QtObject {
         reload()
     }
 
-    // Updates in-memory only — does NOT persist.
+    // Updates in-memory only - does NOT persist.
     // Callers responsible for invoking saveAndReload() when ready.
     function updateBinding(action, newMods, newKey) {
         var old = root.keybinds[action]
@@ -308,7 +308,7 @@ QtObject {
         root.keybinds = copy
     }
 
-    // Reset is always immediate — reverts to default and reloads right away
+    // Reset is always immediate - reverts to default and reloads right away
     function resetBinding(action) {
         var def = root._defaults[action]
         if (!def) return

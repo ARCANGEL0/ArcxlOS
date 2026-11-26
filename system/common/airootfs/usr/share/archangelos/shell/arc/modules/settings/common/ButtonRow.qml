@@ -1,5 +1,5 @@
 // Row that performs an action rather than holding a value (Apply, Forget, Reboot…). `destructive`
-// tints it with the danger role — the palette's "this will undo something" colour, distinct from
+// tints it with the danger role - the palette's "this will undo something" colour, distinct from
 // error, which reports that something already went wrong.
 pragma ComponentBehavior: Bound
 

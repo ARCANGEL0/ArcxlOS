@@ -23,7 +23,7 @@ import Quickshell.Io
 import "../"
 
 // ============================================================
-// WallpaperService — wallpaper list + apply pipeline
+// WallpaperService - wallpaper list + apply pipeline
 //
 // Flow:
 //   Component.onCompleted → readConfigProc (sets currentWall etc.)
@@ -35,7 +35,7 @@ import "../"
 QtObject {
     id: root
 
-    // ── Config path — src/user_data/wallpaper.json (relative to this file) ──────
+    // ── Config path - src/user_data/wallpaper.json (relative to this file) ──────
 	readonly property string configPath: ShellState.userDataDir + "/wallpaper.json"
 
     // ── State ─────────────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ QtObject {
         }
     }
 
-    // ── Config read — runs on startup, then calls refresh() ────────────ww──────
+    // ── Config read - runs on startup, then calls refresh() ────────────ww──────
     property string _cfgBuf: ""
     property var readConfigProc: Process {
         command: ["bash", "-c", "cat '" + root.configPath + "' 2>/dev/null"]
@@ -170,7 +170,7 @@ QtObject {
         }
     }
 
-    // ── Config write — called after a successful apply ────────────────────────
+    // ── Config write - called after a successful apply ────────────────────────
     function saveConfig() {
         var json = JSON.stringify({
             currentWall:  root.currentWall,
@@ -187,7 +187,7 @@ QtObject {
         saveConfigProc.running = true
     }
 
-    property var saveConfigProc: Process {}   // silent — no stdout/stderr needed
+    property var saveConfigProc: Process {}   // silent - no stdout/stderr needed
 
     // ── Apply pipeline ────────────────────────────────────────────────────────
     function apply(path) {

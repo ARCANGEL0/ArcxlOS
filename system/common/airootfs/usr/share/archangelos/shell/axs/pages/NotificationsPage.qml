@@ -1,4 +1,4 @@
-// Notifications — do not disturb, and what has arrived recently.
+// Notifications - do not disturb, and what has arrived recently.
 import QtQuick
 import Quickshell
 import qs.axs

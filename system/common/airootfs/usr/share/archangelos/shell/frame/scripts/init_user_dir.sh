@@ -135,7 +135,7 @@ source = ~/.config/ArcShell/ArcShell-hyprland.conf
 EOF
     fi
 elif [ ! -e "$HYPR_CONF" ] && [ ! -e "$HYPR_LUA" ]; then
-    # No Hyprland config found — seed ArcShell's curated Lua template.
+    # No Hyprland config found - seed ArcShell's curated Lua template.
     HYPR_TEMPLATE="$INSTALL_DIR/frame/config/hypr_template"
     if [ -d "$HYPR_TEMPLATE" ]; then
         mkdir -p "$HYPR_DIR" 2>/dev/null || true

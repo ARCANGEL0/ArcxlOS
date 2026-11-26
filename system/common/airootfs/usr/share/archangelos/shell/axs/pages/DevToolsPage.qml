@@ -1,4 +1,4 @@
-// Developer tools — the bits a developer sets once: the login shell, the default editor, your git
+// Developer tools - the bits a developer sets once: the login shell, the default editor, your git
 // identity, which toolchains are installed, and session environment variables. Git and the editor
 // are your own files; changing the login shell asks for your password.
 import QtQuick
@@ -63,7 +63,7 @@ PageScaffold {
 
     function setEditor(e) {
         page.editor = e;
-        cmd.sh('mkdir -p "$HOME/.config/environment.d" && printf "EDITOR=%s\\nVISUAL=%s\\n" "$1" "$1" > "$HOME/.config/environment.d/90-editor.conf"', [e], () => page.note("Default editor set — new terminals will use it."));
+        cmd.sh('mkdir -p "$HOME/.config/environment.d" && printf "EDITOR=%s\\nVISUAL=%s\\n" "$1" "$1" > "$HOME/.config/environment.d/90-editor.conf"', [e], () => page.note("Default editor set - new terminals will use it."));
     }
     function setGit(key, val) {
         cmd.sh('git config --global "$1" "$2"', [key, val], (c) => { if (c === 0) page.note("Saved."); });
@@ -72,7 +72,7 @@ PageScaffold {
         page.envVars = list;
         const body = "# Written by ArchangelOS Settings > Developer tools. Session-wide variables.\n"
                    + list.map(v => v.key + "=" + v.value).join("\n") + (list.length ? "\n" : "");
-        cmd.sh('mkdir -p "$HOME/.config/environment.d" && printf "%s" "$2" > "$HOME/.config/environment.d/50-archangelos.conf"', ["", body], () => page.note("Saved — applies to apps started after your next sign-in."));
+        cmd.sh('mkdir -p "$HOME/.config/environment.d" && printf "%s" "$2" > "$HOME/.config/environment.d/50-archangelos.conf"', ["", body], () => page.note("Saved - applies to apps started after your next sign-in."));
     }
     function setShell(s) {
         page.busy = "shell"; page.error = "";
@@ -80,7 +80,7 @@ PageScaffold {
             page.busy = "";
             if (c === 126) page.error = "Cancelled.";
             else if (c !== 0) page.error = (e || o).trim() || "Couldn't change the shell.";
-            else { page.shell = s; page.note("Login shell changed — opens next time you sign in."); }
+            else { page.shell = s; page.note("Login shell changed - opens next time you sign in."); }
         });
     }
     function shellName(p) { return (p || "").split("/").pop(); }
@@ -91,7 +91,7 @@ PageScaffold {
     Section {
         title: "Shell & editor"
         SRow {
-            icon: "terminal"; title: "Login shell"; desc: "The shell your terminals open with — now " + (page.shellName(page.shell) || "…")
+            icon: "terminal"; title: "Login shell"; desc: "The shell your terminal opens with"
             AxSelect { width: 180; anchors.verticalCenter: parent.verticalCenter; model: page.shells.map(s => page.shellName(s))
                        current: Math.max(0, page.shells.indexOf(page.shell)); enabled: page.busy === ""
                        onPicked: (i) => { if (page.shells[i] !== page.shell) page.setShell(page.shells[i]); } }

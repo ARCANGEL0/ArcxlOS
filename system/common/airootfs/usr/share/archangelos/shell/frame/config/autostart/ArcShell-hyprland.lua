@@ -1,9 +1,9 @@
--- ArcShell — Hyprland integration (Lua format)
+-- ArcShell - Hyprland integration (Lua format)
 -- Require this file from your hyprland.lua:
 --   require("path.to.ArcShell-hyprland")
 --
 -- On NixOS with the Home Manager module and systemd.enable = true, ArcShell
--- and its daemons are managed by systemd user services — omit the exec_cmd
+-- and its daemons are managed by systemd user services - omit the exec_cmd
 -- calls in the hyprland.start block and keep only the layer_rule entries.
 
 -- Daemon autostarts (omit this block on NixOS when using the HM module)
@@ -16,7 +16,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
 end)
 
--- Layer rules — always required regardless of install method
+-- Layer rules - always required regardless of install method
 hl.layer_rule({
     match   = { namespace = "^arcshell.*" },
     no_anim = true,

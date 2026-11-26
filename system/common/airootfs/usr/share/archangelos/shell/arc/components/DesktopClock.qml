@@ -12,7 +12,7 @@ Item {
     // Aligned to the wall clock rather than repeating every 60s, so the display flips at :00 and
     // not at whatever second the shell happened to start. The cost is not the timer but what it
     // drags behind it: this Column is layered with a MultiEffect shadow, so every tick re-renders
-    // 100px type into an FBO and runs a blur pass — once a second that was 60x more often than
+    // 100px type into an FBO and runs a blur pass - once a second that was 60x more often than
     // anything on screen could change, forever, on every output, even under a full-screen window.
     Timer {
         id: minuteTick

@@ -18,8 +18,8 @@ BarPopout {
 
     property string partition: ""
     property var heavy: []
-    property string fstype: "—"
-    property string mount: "—"
+    property string fstype: "-"
+    property string mount: "-"
 
     Process {
         id: dfProc
@@ -112,7 +112,7 @@ BarPopout {
             }
         }
 
-        SectionRow { label: "Partition"; value: partition !== "" ? partition : "—" }
+        SectionRow { label: "Partition"; value: partition !== "" ? partition : "-" }
         SectionRow { label: "Used"; value: diskUsedGb().toFixed(1) + " GB" }
         SectionRow { label: "Free"; value: Math.max(0, diskTotalGb() - diskUsedGb()).toFixed(1) + " GB" }
         SectionRow { label: "Filesystem"; value: fstype }

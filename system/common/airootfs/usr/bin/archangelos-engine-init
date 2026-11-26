@@ -1,5 +1,5 @@
 #!/bin/bash
-# archangelos-engine-init — materialize a fully-installed ArcShell desktop per user.
+# archangelos-engine-init - materialize a fully-installed ArcShell desktop per user.
 #
 # ArcShell's engine runtime ships vendored in the image under
 # /usr/share/archangelos/engine/runtime (no network clone at build or boot).
@@ -44,16 +44,16 @@ PATCH_ONLY=0
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 
 # 0) Keybinds: the engine's keybinds.lua is replaced outright by ArchangelOS's own
-# (/usr/share/archangelos/hypr/keybinds.lua) in step 4 below — Hyprland stacks duplicate
+# (/usr/share/archangelos/hypr/keybinds.lua) in step 4 below - Hyprland stacks duplicate
 # binds, so the desktop's key map has to come from one file, not a patch over another.
 
-# 0b) ArchangelOS AMOLED surfaces — force the dark palette's *background* layers to
+# 0b) ArchangelOS AMOLED surfaces - force the dark palette's *background* layers to
 # near-black so the desktop reads true-black, while leaving the wallpaper-derived
 # accent hues (primary/secondary/tertiary/onSurface/outline) exactly as matugen
 # picks them. Patched into $SRC before the artifact is built, at all three sources
 # that can supply a palette:
 #   - scripts/generate-palette.sh : the runtime matugen generator (what actually
-#     colours the live desktop from the user's wallpaper) — clamp dark surfaces
+#     colours the live desktop from the user's wallpaper) - clamp dark surfaces
 #     after matugen validates, before the atomic publish.
 #   - generated/palette.json      : the packaged fallback palette.
 #   - core/Theme.qml fallbackDark : the last-resort hard-coded dark palette.
@@ -108,7 +108,7 @@ AXEOF
       || log "Theme.qml AMOLED patch skipped"
   fi
 
-  # 0c) ArchangelOS video-wallpaper — teach the engine's wallpaper picker to smart-route
+  # 0c) ArchangelOS video-wallpaper - teach the engine's wallpaper picker to smart-route
   # by file type: a chosen image keeps the awww still pipeline (matugen palette and
   # all), a chosen video is displayed live via mpvpaper (archangelos-wallpaper) with no
   # palette. Patched into $SRC before the artifact is built so it ships in the release
@@ -118,11 +118,11 @@ AXEOF
   vp="/usr/share/archangelos/engine/ax-wallpaper-video-patch.py"
   [ -f "$vp" ] && python3 "$vp" "$SRC" || log "video-wallpaper patcher absent; skipping"
 
-  # 0d) ArchangelOS lock everywhere — route every engine lock path to
+  # 0d) ArchangelOS lock everywhere - route every engine lock path to
   # /usr/bin/archangelos-lock (hyprlock themed to match the SDDM login). The engine
   # otherwise locks with its OWN hyprlock: on idle via the hypridle.conf that
   # idlectl.sh generates, and via the Control-Center Lock button / `arcshell ipc
-  # session lock` through sessionctl.sh — the lockscreen that hangs on
+  # session lock` through sessionctl.sh - the lockscreen that hangs on
   # "authenticating". Patched into $SRC before the artifact build. Non-fatal.
   idl="$SRC/scripts/idlectl.sh"
   if [ -f "$idl" ]; then
@@ -138,7 +138,7 @@ AXEOF
       "$ssl" && log "sessionctl.sh: manual lock -> archangelos-lock" || log "sessionctl.sh lock patch skipped"
   fi
 
-  # 0e) ArchangelOS relabel — the engine's avatar picker reuses the Wallpaper grid and
+  # 0e) ArchangelOS relabel - the engine's avatar picker reuses the Wallpaper grid and
   # titles itself "Personal image", so it reads like a second, redundant wallpaper
   # tab. Rename its heading + subtitle to name the profile-image picker it actually
   # is. Patched into $SRC before the artifact build. Idempotent + non-fatal.
@@ -212,7 +212,7 @@ ln -sfn "releases/$RELEASE_ID" "$manager_current"
 mkdir -p "$bin_home"
 ln -sfn "$manager_current/arcshell" "$launcher"
 
-# 4) Startup layer — exactly what startupctl.sh apply (managed mode) would deploy.
+# 4) Startup layer - exactly what startupctl.sh apply (managed mode) would deploy.
 mkdir -p "$hypr_dir" "$split_dir" "$unit_dir"
 cp -f "$shell_rel/config/hypr/hyprland.lua" "$hypr_dir/hyprland.lua"
 grep -Fxq 'require("arcshell")' "$hypr_dir/hyprland.lua" \
@@ -222,7 +222,7 @@ grep -Fxq 'require("arcshell")' "$hypr_dir/hyprland.lua" \
 # On the live build, customize_airootfs runs archangelos-wallpaper-setup AFTER this
 # bake to layer the overlay on. But the on-disk installers re-run ONLY the bake for
 # the new user, and the bake rewrites hyprland.lua above (dropping any prior overlay
-# require), so wire it here too — layered after require("arcshell"), idempotent, so it
+# require), so wire it here too - layered after require("arcshell"), idempotent, so it
 # is correct on both the live ISO and every disk install without touching installers.
 overlay_src="/usr/share/archangelos/hypr/archangelos.lua"
 if [ -f "$overlay_src" ]; then
@@ -309,14 +309,14 @@ enable_user_unit() {
     ln -sfn "../$unit" "$unit_dir/$t.wants/$unit"
   done
 }
-# ArchangelOS: arcshell.service stays written but NOT enabled — its Quickshell would run
+# ArchangelOS: arcshell.service stays written but NOT enabled - its Quickshell would run
 # a second desktop on top of the ArchangelOS shell. Drop links left by an older bake.
 rm -f "$unit_dir/graphical-session.target.wants/arcshell.service"
 rm -f "$unit_dir/graphical-session.target.wants/arcshell.service" "$unit_dir/arcshell.service"
 
 # 5) Host config (kitty/starship/fastfetch/hypridle). The script writes its config
 # files before it touches systemd, so the tail `systemctl --user` failure in the
-# chroot is expected and harmless — the files are already in place.
+# chroot is expected and harmless - the files are already in place.
 if [ -x "$shell_rel/scripts/host-configctl.sh" ]; then
   "$shell_rel/scripts/host-configctl.sh" apply false \
     || log "host-configctl reported non-zero (expected: no user systemd in chroot)"
@@ -330,7 +330,7 @@ fi
 # (No managed-shortcut block: it binds SUPER+V / SUPER+SPACE / SUPER+A to the
 # engine's IPC, which would stack on top of the ArchangelOS key map.)
 
-# ArchangelOS default appearance — ship the desktop "glassy" out of the box:
+# ArchangelOS default appearance - ship the desktop "glassy" out of the box:
 # glass material + the lowest surfaceOpacity the shell allows (0.72 => maximum
 # translucency; see core/SurfaceMaterial.qml's glassOpacity mapping). Combined
 # with the AMOLED surfaces patched above this gives dark, glassy panels on first

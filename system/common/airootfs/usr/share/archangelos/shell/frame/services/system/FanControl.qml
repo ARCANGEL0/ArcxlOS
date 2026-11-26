@@ -30,10 +30,10 @@ import Quickshell.Io
 // Commands wrapped in `timeout 5` to prevent hanging on unavailable sensors.
 //
 // Exposes:
-//   string mode         — "quiet" | "auto" | "max"
-//   bool   available    — true if nbfc is installed and responding
-//   bool   busy         — true while a command is in flight
-//   bool   active       — drives refresh on UI reveal
+//   string mode         - "quiet" | "auto" | "max"
+//   bool   available    - true if nbfc is installed and responding
+//   bool   busy         - true while a command is in flight
+//   bool   active       - drives refresh on UI reveal
 //   function setMode(m)
 //   function refresh()
 

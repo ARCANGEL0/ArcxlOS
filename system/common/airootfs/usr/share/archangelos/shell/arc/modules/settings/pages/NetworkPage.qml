@@ -24,7 +24,7 @@ StackView {
 
             // Periodic rescan while the page is visible and Wi-Fi is on. `netMain.visible`, not a
             // bare `visible`: a Timer has no such property, so the unqualified form silently
-            // resolved up the scope chain to this page — right by accident, and wrong the day a
+            // resolved up the scope chain to this page - right by accident, and wrong the day a
             // Timer gains one or this moves into something that has its own.
             Timer {
                 running: netMain.visible && Net.wifiEnabled
@@ -32,7 +32,7 @@ StackView {
                 onTriggered: Net.rescanWifi()
             }
 
-            // Ethernet — every managed wired port, plugged or not, so an idle second port
+            // Ethernet - every managed wired port, plugged or not, so an idle second port
             // is visible instead of silently absent. Tap a port for addressing and profiles.
             SectionHeader { first: true; visible: Net.hasEthernetPort; text: "Ethernet" }
             ColumnLayout {
@@ -54,7 +54,7 @@ StackView {
                             ethRow.modelData.ip4 ? ethRow.modelData.ip4.split("/")[0] : "",
                             ethRow.modelData.isDefault ? "primary" : ""
                         ].filter(Boolean).join(" · ")
-                        // No button while the port is unavailable — with no carrier there is
+                        // No button while the port is unavailable - with no carrier there is
                         // nothing to connect to, and nmcli would just fail.
                         actionIcon: ethRow.modelData.stateCode < 30 ? "" : (ethRow.up ? "link_off" : "link")
                         actionTint: ethRow.up ? Config.danger : Config.accent
@@ -74,7 +74,7 @@ StackView {
                     text: "Wi-Fi"; checked: Net.wifiEnabled
                     onToggled: Net.enableWifi(!Net.wifiEnabled, null)
                 }
-                // Scan results only exist while the radio is on — with it off the row would
+                // Scan results only exist while the radio is on - with it off the row would
                 // just be an empty placeholder, so it goes away entirely.
                 NetworkList {
                     visible: Net.wifiEnabled
@@ -278,7 +278,7 @@ StackView {
                     icon: "badge"; label: linkRoot.wired ? "Profile" : "Network"
                     value: linkRoot.link?.connection ?? ""
                 }
-                // Which link the kernel actually sends traffic through — the question a
+                // Which link the kernel actually sends traffic through - the question a
                 // second active interface raises and nothing else on this page answers.
                 InfoRow {
                     visible: linkRoot.up

@@ -27,7 +27,7 @@ PopupWindow {
     readonly property bool shown: pop.bar.popout === pop.name && pop.available
     signal opened()
     // Raised before the shared bulge slot is released. NOT `closed`: PopupWindow already has a
-    // signal by that name, and the override is rejected — the handlers would then hang off the
+    // signal by that name, and the override is rejected - the handlers would then hang off the
     // base signal instead.
     signal dismissed()
 
@@ -36,7 +36,7 @@ PopupWindow {
     //
     // A FUNCTION, not a property: a popout whose body resizes asynchronously reports from the very
     // change handler that feeds this, and a property binding still holds the PREVIOUS value there.
-    // As a property it left the bulge a size behind every icon switch — the menu drew at full size
+    // As a property it left the bulge a size behind every icon switch - the menu drew at full size
     // over a stub of a background, and the stub stayed until the next switch.
     function bulge() { return -1; }
     // Re-report while merely hovered, for content that changes under the cursor.
@@ -64,7 +64,7 @@ PopupWindow {
     }
     // Content that resizes has to re-report, or the bulge keeps the old size. Only where the body
     // height IS the window height: a popout with its own bulge() derives this from the same layout
-    // it already reports off, so acting here too would report the identical box a second time —
+    // it already reports off, so acting here too would report the identical box a second time -
     // once more with `anim` unset, which restarts the Frame's easing over a bulge the first call
     // had already landed.
     onImplicitHeightChanged: if (pop.shown && pop.bulge() < 0) pop.report(undefined)

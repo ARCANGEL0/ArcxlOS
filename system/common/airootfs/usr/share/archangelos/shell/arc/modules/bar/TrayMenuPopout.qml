@@ -18,7 +18,7 @@ BarPopout {
     // Hovering another icon swaps the menu with no size change to react to.
     reportOnHover: true
 
-    // Read off the layout at call time, never through a binding — the reports come out of that
+    // Read off the layout at call time, never through a binding - the reports come out of that
     // layout's own change handler (see BarPopout.bulge). An empty layout is a menu mid-reload:
     // zero keeps the bulge that is up until the refill reports the real size, instead of
     // collapsing it to a stub and growing it back on every icon switch.

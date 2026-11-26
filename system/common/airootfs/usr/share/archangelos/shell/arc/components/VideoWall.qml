@@ -7,7 +7,7 @@ Item {
     property string file: ""        // absolute path to the video
     // Set false by whoever knows the layer cannot be seen. Nothing in Wayland tells a background
     // surface it is occluded, so without this the h264 decoder runs flat out behind a full-screen
-    // window — a whole thread pool decoding frames nobody will ever be shown.
+    // window - a whole thread pool decoding frames nobody will ever be shown.
     property bool active: true
     readonly property bool ready: player.playbackState === MediaPlayer.PlayingState
 

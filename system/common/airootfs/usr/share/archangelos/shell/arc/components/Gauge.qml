@@ -1,5 +1,5 @@
 // Flat metric gauge: a progress ring with the reading inside and a caption under it. No card
-// behind it on purpose — the Performance tab groups the gauges with spacing and a rule, so five
+// behind it on purpose - the Performance tab groups the gauges with spacing and a rule, so five
 // of them read as one row of instruments instead of five boxes.
 pragma ComponentBehavior: Bound
 
@@ -44,7 +44,7 @@ ColumnLayout {
                     centerX: gauge.ring / 2; centerY: gauge.ring / 2
                     radiusX: (gauge.ring - gauge.stroke) / 2; radiusY: (gauge.ring - gauge.stroke) / 2
                     startAngle: -90
-                    // Samples land once a second, so ease between them — the ring reads as a
+                    // Samples land once a second, so ease between them - the ring reads as a
                     // needle settling rather than a value teleporting.
                     sweepAngle: 360 * Math.max(0, Math.min(1, gauge.value))
                     Behavior on sweepAngle { Effect {} }

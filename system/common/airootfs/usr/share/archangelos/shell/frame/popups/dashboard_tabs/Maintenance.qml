@@ -60,7 +60,7 @@ Item {
     }
 
     function inTerminal(script, args) {
-        const tail = "; echo; read -r -n1 -p 'Done — press any key to close' _"
+        const tail = "; echo; read -r -n1 -p 'Done - press any key to close' _"
         Quickshell.execDetached(["rio", "-e", "bash", "-c", script + tail, "bash"].concat(args || []))
     }
 
@@ -152,8 +152,8 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 const parts = text.split("\n")
-                root.pkgCacheSize = (parts[0] || "").trim() || "—"
-                root.userCacheSize = (parts[2] || parts[1] || "").trim() || "—"
+                root.pkgCacheSize = (parts[0] || "").trim() || "-"
+                root.userCacheSize = (parts[2] || parts[1] || "").trim() || "-"
                 root.cleanupBusy = orphanProc.running
             }
         }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# axs-admin — the root half of ArchangelOS Settings. Each verb does one checked thing; Settings
+# axs-admin - the root half of ArchangelOS Settings. Each verb does one checked thing; Settings
 # runs it through pkexec, so the person is asked for their password (kept for a few minutes).
 #
 #   user-add NAME FULLNAME ADMIN      password on stdin
@@ -135,7 +135,7 @@ case "$verb" in
         command -v journalctl >/dev/null && journalctl --rotate >/dev/null 2>&1
         echo "ok $n" ;;
     clean-varlog)
-        # rotated / compressed logs only — never the live ones
+        # rotated / compressed logs only - never the live ones
         find /var/log -type f \( -name "*.gz" -o -name "*.xz" -o -name "*.old" -o -name "*.[0-9]" -o -name "*.[0-9].log" \) -delete 2>/dev/null || true
         journalctl --vacuum-size=64M >/dev/null 2>&1 || true
         echo ok ;;
@@ -216,7 +216,7 @@ for d in json.load(sys.stdin).get("devices", []):
         [[ "$mb" =~ ^[0-9]+$ && "$mb" -ge 16 && "$mb" -le 65536 ]] || die "Bad size."
         [[ "$loops" =~ ^[1-9]$ ]] || die "Bad loop count."
         avail=$(( $(awk '/MemAvailable/ {print $2}' /proc/meminfo) / 1024 ))
-        [ "$mb" -lt $(( avail - 512 )) ] || die "Only ${avail} MB free — close some apps or test less."
+        [ "$mb" -lt $(( avail - 512 )) ] || die "Only ${avail} MB free - close some apps or test less."
         memtester "${mb}M" "$loops" 2>&1 | tr '\r\b' '\n\n' | grep -E ":|Loop|Done|FAILURE|ok" | grep -v '^\s*$' | sed 's/  */ /g' | tail -n 40
         exit "${PIPESTATUS[0]}" ;;
     diag-dmi)
@@ -290,7 +290,7 @@ for d in json.load(sys.stdin).get("devices", []):
         if [ "$verb" = kernel-install ]; then
             pacman -S --noconfirm --needed "$k" "$hdr" 2>&1 | tail -n 5
         else
-            [ "$(pacman -Q linux linux-lts linux-zen linux-hardened 2>/dev/null | wc -l)" -ge 2 ] || die "This is the only kernel left — can't remove it."
+            [ "$(pacman -Q linux linux-lts linux-zen linux-hardened 2>/dev/null | wc -l)" -ge 2 ] || die "This is the only kernel left - can't remove it."
             [ "$k" = "linux-$(uname -r | grep -oE 'lts|zen|hardened' || echo none)" ] 2>/dev/null
             pacman -Rns --noconfirm "$k" "$hdr" 2>&1 | tail -n 5
         fi

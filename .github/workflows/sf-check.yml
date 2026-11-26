@@ -23,7 +23,7 @@ jobs:
             echo "key parses OK; public fingerprint (compare to SourceForge > Account > SSH Settings):"
             ssh-keygen -lf ~/.ssh/sf
           else
-            echo "::error::SF_SSH_KEY is NOT a valid private key — paste the whole key file, headers and newlines included."
+            echo "::error::SF_SSH_KEY is NOT a valid private key - paste the whole key file, headers and newlines included."
             cat /tmp/e; exit 1
           fi
           ssh-keyscan -H frs.sourceforge.net >> ~/.ssh/known_hosts 2>/dev/null
@@ -51,7 +51,7 @@ jobs:
           done
           if [ -z "$root" ] && rsync --list-only -e "$SSH" \
               "${SF_USER}@frs.sourceforge.net:/home/frs/project/" >/dev/null 2>&1; then
-            echo "project dir absent — creating /home/frs/project/${SF_PROJECT}"
+            echo "project dir absent - creating /home/frs/project/${SF_PROJECT}"
             printf -- '-mkdir /home/frs/project/%s\n' "$SF_PROJECT" \
               | $SFTP "${SF_USER}@frs.sourceforge.net" >/dev/null 2>&1 || true
             if rsync --list-only -e "$SSH" \

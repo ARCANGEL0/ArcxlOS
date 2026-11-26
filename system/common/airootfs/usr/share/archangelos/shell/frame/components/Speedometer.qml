@@ -24,7 +24,7 @@ import "../"
 // detail string (e.g. "11.2 / 16 GB") below the center text.
 // When active is false, arc is greyed and "Off" overlays center.
 //
-// property real size: 1.0  — scale factor. 1.0 = full (120×140). 0.7 = mini.
+// property real size: 1.0  - scale factor. 1.0 = full (120×140). 0.7 = mini.
 
 Item {
     id: root

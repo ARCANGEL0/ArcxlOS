@@ -1,5 +1,5 @@
 [Unit]
-Description=GhostWired — route all traffic through Tor
+Description=GhostWired - route all traffic through Tor
 Documentation=man:tor(1)
 After=network-online.target nss-lookup.target
 Wants=network-online.target

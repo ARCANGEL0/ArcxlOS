@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Focus the Hyprland window that owns the process tree containing $1 (a notification's sender-pid).
-# Walks up the parent-pid chain until a pid matches a Hyprland window's pid, then focuses it — this
+# Walks up the parent-pid chain until a pid matches a Hyprland window's pid, then focuses it - this
 # switches to the window's workspace too. Works for terminal apps (e.g. a CLI inside ghostty) whose
 # notification is sent by the child process, not the window.
 p="${1:-0}"

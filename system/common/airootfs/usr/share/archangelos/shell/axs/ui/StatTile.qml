@@ -4,7 +4,7 @@ import qs.axs
 
 Rectangle {
     id: t
-    property string value: "—"
+    property string value: "-"
     property string unit: ""
     property string caption: ""
     property real meter: -1          // <0 hides the meter

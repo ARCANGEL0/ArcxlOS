@@ -1,4 +1,4 @@
-// Audit — Lynis (a full security audit with a hardening score) and rkhunter (looks for rootkits
+// Audit - Lynis (a full security audit with a hardening score) and rkhunter (looks for rootkits
 // and tampered system files), run on demand, results as readable lists.
 import QtQuick
 import qs.axs
@@ -58,7 +58,7 @@ PageScaffold {
             Label { caption: true; text: "Lynis  ·  security audit" }
             Row {
                 spacing: 8
-                Label { id: sc; mono: true; font.pixelSize: 44; text: page.lynis ? page.lynis.score : "—" }
+                Label { id: sc; mono: true; font.pixelSize: 44; text: page.lynis ? page.lynis.score : "-" }
                 Label { anchors.baseline: sc.baseline; color: Ax.subtext; text: page.lynis ? "/ 100 hardening index" : "not run yet" }
             }
             Label { color: Ax.subtext; font.pixelSize: Ax.fsSmall

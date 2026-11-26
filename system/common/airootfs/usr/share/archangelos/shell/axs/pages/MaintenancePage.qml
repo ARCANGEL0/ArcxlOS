@@ -1,4 +1,4 @@
-// Packages & System — keeping the installation healthy: what's installed, what can go (orphans,
+// Packages & System - keeping the installation healthy: what's installed, what can go (orphans,
 // old packages, journal), config files waiting after updates (.pacnew), package and database
 // checks, mirrors and keyring, and the boot image. Root steps go through axs-admin.
 import QtQuick
@@ -81,7 +81,7 @@ PageScaffold {
 
     readonly property var issues: {
         const l = [];
-        if (page.k.reboot === "1") l.push("The kernel was updated — restart to use it");
+        if (page.k.reboot === "1") l.push("The kernel was updated - restart to use it");
         if (page.orphans.length) l.push(page.orphans.length + " packages nothing needs any more");
         if (page.pacnew.length) l.push(page.pacnew.length + " config files waiting after an update");
         if (+page.k.failed) l.push(page.k.failed + " services failed");
@@ -119,16 +119,16 @@ PageScaffold {
     Row {
         width: parent.width; spacing: 14
         readonly property real w: (width - 42) / 4
-        StatTile { width: parent.w; caption: "Installed packages"; value: page.k.total || "—" }
-        StatTile { width: parent.w; caption: "Installed by you"; value: page.k.explicit || "—" }
+        StatTile { width: parent.w; caption: "Installed packages"; value: page.k.total || "-" }
+        StatTile { width: parent.w; caption: "Installed by you"; value: page.k.explicit || "-" }
         StatTile { width: parent.w; caption: "From the AUR / elsewhere"; value: page.k.foreign || "0" }
-        StatTile { width: parent.w; caption: "Package cache"; value: page.k.cache ? page.bytes(page.k.cache).split(" ")[0] : "—"; unit: page.k.cache ? page.bytes(page.k.cache).split(" ")[1] : "" }
+        StatTile { width: parent.w; caption: "Package cache"; value: page.k.cache ? page.bytes(page.k.cache).split(" ")[0] : "-"; unit: page.k.cache ? page.bytes(page.k.cache).split(" ")[1] : "" }
     }
 
     Section {
         visible: page.k.reboot === "1"
         SRow {
-            icon: "restart_alt"; title: "Restart to finish updating"; desc: "Linux " + page.k.kernel + " is running, but its modules were replaced — new devices and USB drives may not work until you restart."
+            icon: "restart_alt"; title: "Restart to finish updating"; desc: "Linux " + page.k.kernel + " is running, but its modules were replaced - new devices and USB drives may not work until you restart."
             AxButton { text: "Restart"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: Quickshell.execDetached(["systemctl", "reboot"]) }
         }
     }
@@ -137,7 +137,7 @@ PageScaffold {
         title: "Clean up"
         SRow {
             icon: "link_off"; title: "Orphaned packages"
-            desc: page.orphans.length ? page.orphans.length + " installed as dependencies of something that's gone" : "None — every dependency is still needed"
+            desc: page.orphans.length ? page.orphans.length + " installed as dependencies of something that's gone" : "None - every dependency is still needed"
             AxButton { visible: page.orphans.length > 0; text: page.showOrphans ? "Hide" : "Show"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.showOrphans = !page.showOrphans }
             ConfirmButton { visible: page.orphans.length > 0; label: page.busy === "orph" ? "Removing…" : "Remove all"; confirmText: "Remove " + page.orphans.length + "?"; anchors.verticalCenter: parent.verticalCenter
                             onConfirmed: page.act("orph", [page.admin, "pkg-orphans"], "Orphans removed.") }
@@ -151,12 +151,12 @@ PageScaffold {
         }
         SRow {
             icon: "inventory_2"; title: "Old package versions"
-            desc: page.k.cachen ? page.k.cachen + " downloads kept, " + page.bytes(page.k.cache) + " — keeps the newest of each so you can roll back" : "…"
+            desc: page.k.cachen ? page.k.cachen + " downloads kept, " + page.bytes(page.k.cache) + " - keeps the newest of each so you can roll back" : "…"
             AxButton { text: page.busy === "cache" ? "Cleaning…" : "Clean"; enabled_: page.busy === "" && +page.k.cache > 0; anchors.verticalCenter: parent.verticalCenter
                        onClicked: page.act("cache", [page.admin, "pkg-clean-cache"], "Package cache cleaned.") }
         }
         SRow {
-            icon: "receipt_long"; title: "System journal"; desc: page.k.journal ? page.k.journal + "B of logs — trimming keeps the newest 64 MB" : page.loaded ? "Size unknown — trimming keeps the newest 64 MB" : "…"
+            icon: "receipt_long"; title: "System journal"; desc: page.k.journal ? page.k.journal + "B of logs - trimming keeps the newest 64 MB" : page.loaded ? "Size unknown - trimming keeps the newest 64 MB" : "…"
             AxButton { text: page.busy === "journal" ? "Trimming…" : "Trim"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onClicked: page.act("journal", [page.admin, "journal-vacuum"], "Journal trimmed.") }
         }
@@ -187,7 +187,7 @@ PageScaffold {
                     AxButton { text: "Keep mine"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                                onClicked: page.act("pacnew", [page.admin, "pacnew", page.base(pn.modelData), "keep"], "Kept your version.") }
                     ConfirmButton { label: "Use new"; confirmText: "Replace yours?"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter
-                                    onConfirmed: page.act("pacnew", [page.admin, "pacnew", page.base(pn.modelData), "use"], "Switched to the new version — yours is saved as .axs-old.") }
+                                    onConfirmed: page.act("pacnew", [page.admin, "pacnew", page.base(pn.modelData), "use"], "Switched to the new version - yours is saved as .axs-old.") }
                 }
                 Rectangle {
                     visible: page.diffOf === pn.modelData
@@ -214,9 +214,9 @@ PageScaffold {
         title: "Packages & database"
         SRow {
             icon: "rule"; title: "Check installed files"
-            desc: page.busy === "verify" ? "Checking every package — this takes a minute…"
+            desc: page.busy === "verify" ? "Checking every package - this takes a minute…"
                 : page.broken === null ? "Make sure no package is missing files (damaged or deleted by hand)"
-                : page.broken.length ? page.broken.length + " packages are missing files — reinstall them" : "Every package is complete"
+                : page.broken.length ? page.broken.length + " packages are missing files - reinstall them" : "Every package is complete"
             Badge { visible: page.broken !== null && page.busy !== "verify"; text: page.broken && page.broken.length ? "damaged" : "complete"; tone: page.broken && page.broken.length ? "danger" : "ok"; anchors.verticalCenter: parent.verticalCenter }
             AxButton { text: page.busy === "verify" ? "Checking…" : "Check"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onClicked: { page.busy = "verify";
@@ -230,7 +230,7 @@ PageScaffold {
                    Repeater { model: page.broken || []; Badge { required property string modelData; text: modelData; tone: "danger" } } }
         }
         SRow {
-            icon: "database"; title: "Package database"; desc: page.k.lock === "1" ? "A lock file is present — pacman is busy, or crashed and left it" : "Check that every dependency is installed and nothing conflicts"
+            icon: "database"; title: "Package database"; desc: page.k.lock === "1" ? "A lock file is present - pacman is busy, or crashed and left it" : "Check that every dependency is installed and nothing conflicts"
             AxButton { text: page.busy === "db" ? "Checking…" : "Check"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onClicked: page.act("db", [page.admin, "db-check"], (o) => o.trim() ? o.trim().split("\n").pop() : "The database is consistent.") }
         }
@@ -243,7 +243,7 @@ PageScaffold {
             icon: "public"; title: "Download mirrors"
             desc: (page.k.mirrors || "0") + (page.k.mirrors === "1" ? " server" : " servers") + "  ·  list is " + (page.k.mirrorsAge || 0) + " days old" + (page.k.reflector === "1" ? "" : "  ·  install reflector to rank them")
             AxButton { visible: page.k.reflector === "1"; text: page.busy === "mirrors" ? "Ranking…" : "Find the fastest"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
-                       onClicked: page.act("mirrors", [page.admin, "mirrors-refresh"], (o) => "Mirrors ranked — " + (o.trim().split(" ")[1] || "new") + " servers saved.") }
+                       onClicked: page.act("mirrors", [page.admin, "mirrors-refresh"], (o) => "Mirrors ranked - " + (o.trim().split(" ")[1] || "new") + " servers saved.") }
         }
         SRow {
             icon: "system_update"; title: "Updates"; desc: "System, AUR and Flatpak updates"; clickable: true; chevron: true
@@ -255,7 +255,7 @@ PageScaffold {
         title: "System"
         SRow {
             visible: page.k.mkinit === "1"
-            icon: "rocket_launch"; title: "Rebuild the boot image"; desc: "Regenerate the initramfs for every kernel — after changing modules, hooks or encryption"
+            icon: "rocket_launch"; title: "Rebuild the boot image"; desc: "Regenerate the initramfs for every kernel - after changing modules, hooks or encryption"
             ConfirmButton { label: page.busy === "init" ? "Rebuilding…" : "Rebuild"; kind: "ghost"; confirmText: "Rebuild now?"; anchors.verticalCenter: parent.verticalCenter
                             onConfirmed: page.act("init", [page.admin, "initramfs"], "Boot images rebuilt.") }
         }
@@ -265,12 +265,12 @@ PageScaffold {
                        onClicked: page.act("fonts", ["fc-cache", "-f"], "Font cache rebuilt.") }
         }
         SRow {
-            icon: "settings_backup_restore"; title: "Reload service definitions"; desc: "systemctl daemon-reload — after editing unit files"
+            icon: "settings_backup_restore"; title: "Reload service definitions"; desc: "systemctl daemon-reload - after editing unit files"
             AxButton { text: "Reload"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onClicked: page.act("units", ["systemctl", "daemon-reload"], "Service definitions reloaded.") }
         }
         SRow {
-            icon: "receipt_long"; title: "Failed services"; desc: +page.k.failed ? page.k.failed + " failed — see why in Logs" : "None"
+            icon: "receipt_long"; title: "Failed services"; desc: +page.k.failed ? page.k.failed + " failed - see why in Logs" : "None"
             clickable: true; chevron: true; onClicked: NSS.Shell.openSettings("logs")
         }
     }

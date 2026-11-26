@@ -97,7 +97,7 @@ Item {
     Item {
         anchors { fill: parent; margins: Math.round(10 * alarmView.localScale) }
 
-        // ── Header — Item, not Row, so right-anchor on + button works ──
+        // ── Header - Item, not Row, so right-anchor on + button works ──
         Item {
             id: alarmHeader
             anchors { left: parent.left; right: parent.right; top: parent.top }

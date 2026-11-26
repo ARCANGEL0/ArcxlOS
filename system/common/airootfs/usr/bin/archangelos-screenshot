@@ -1,5 +1,5 @@
 #!/bin/bash
-# ArchangelOS screenshot — pick a region with the animated selector, capture it
+# ArchangelOS screenshot - pick a region with the animated selector, capture it
 # with grim, save under ~/Pictures/Screenshots, and copy it to the clipboard.
 # Bound to SUPER+SHIFT+S.
 set -u

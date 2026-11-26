@@ -23,14 +23,14 @@ import Quickshell.Io
 // NVIDIA dGPU: nvidia-smi when envycontrol mode is not "integrated".
 //
 // Exposes:
-//   igpu.freqPercent  — 0–100 (act_freq / max_freq * 100)
-//   igpu.curMhz       — e.g. "650 MHz"
-//   igpu.maxMhz       — e.g. "1100 MHz"
+//   igpu.freqPercent  - 0–100 (act_freq / max_freq * 100)
+//   igpu.curMhz       - e.g. "650 MHz"
+//   igpu.maxMhz       - e.g. "1100 MHz"
 //
-//   dgpu.active       — false when envycontrol is "integrated"
-//   dgpu.usagePercent — 0–100
-//   dgpu.usedVram     — e.g. "2048 MB"
-//   dgpu.totalVram    — e.g. "4096 MB"
+//   dgpu.active       - false when envycontrol is "integrated"
+//   dgpu.usagePercent - 0–100
+//   dgpu.usedVram     - e.g. "2048 MB"
+//   dgpu.totalVram    - e.g. "4096 MB"
 
 QtObject {
     id: root
@@ -47,15 +47,15 @@ QtObject {
 
     property QtObject igpu: QtObject {
         property real   freqPercent: 0.0
-        property string curMhz:     "— MHz"
-        property string maxMhz:     "— MHz"
+        property string curMhz:     "- MHz"
+        property string maxMhz:     "- MHz"
     }
 
     property QtObject dgpu: QtObject {
         property bool   active:       false
         property real   usagePercent: 0.0
-        property string usedVram:     "— MB"
-        property string totalVram:    "— MB"
+        property string usedVram:     "- MB"
+        property string totalVram:    "- MB"
     }
 
     // ── Intel act freq ────────────────────────────────────────────────────────
@@ -143,8 +143,8 @@ QtObject {
         if (envyMode === "integrated") {
             dgpu.active       = false
             dgpu.usagePercent = 0
-            dgpu.usedVram     = "— MB"
-            dgpu.totalVram    = "— MB"
+            dgpu.usedVram     = "- MB"
+            dgpu.totalVram    = "- MB"
         }
     }
 

@@ -1,5 +1,5 @@
 // Soft Material drop shadow for a rounded rectangle. Place as a child of the target
-// with `anchors.fill: parent; radius: parent.radius; z: -1` — the blur peeks out behind it.
+// with `anchors.fill: parent; radius: parent.radius; z: -1` - the blur peeks out behind it.
 import QtQuick
 import QtQuick.Effects
 import qs.arc

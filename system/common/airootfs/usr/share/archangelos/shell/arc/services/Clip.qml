@@ -4,9 +4,9 @@ pragma Singleton
 // runs CMD on every change with the new content on stdin, so one long-lived process feeds it all.
 //
 // Text only (an image would have to be spooled to disk) and memory-only for the session, on
-// purpose — persisting it would put every password that crossed the clipboard into a plain file.
+// purpose - persisting it would put every password that crossed the clipboard into a plain file.
 //
-// Named Clip, not Clipboard, to stay clear of the QML/Quickshell namespaces — see SysLocale.qml.
+// Named Clip, not Clipboard, to stay clear of the QML/Quickshell namespaces - see SysLocale.qml.
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -15,7 +15,7 @@ import qs.arc
 Singleton {
     id: root
 
-    // [{ text, at }] — newest first.
+    // [{ text, at }] - newest first.
     property var entries: []
 
     // Past ~1 MB it is a file paste, not something worth re-selecting from a list.
@@ -30,8 +30,8 @@ Singleton {
     readonly property string sep: "\x1e"
 
     // `wl-paste --watch` fires once with whatever is already on the clipboard the moment it
-    // starts. After a pause that is precisely the content the pause existed to keep out — turning
-    // the history switch back on would have recorded the password copied while it was off — so the
+    // starts. After a pause that is precisely the content the pause existed to keep out - turning
+    // the history switch back on would have recorded the password copied while it was off - so the
     // first payload of every run is dropped. At shell start it means the clipboard you arrived
     // with is not in the list until you copy something.
     property bool skipFirst: true
@@ -44,7 +44,7 @@ Singleton {
         // with the x-kde-passwordManagerHint offer, which every one of them honours precisely so
         // that history tools skip it. Without this check the shell keeps a copied password in the
         // list for the rest of the session, one "#" away in the launcher. The offer list is re-read
-        // per change rather than trusted from the payload — only the types say what this is.
+        // per change rather than trusted from the payload - only the types say what this is.
         // The separator is still printed for a skipped entry, so the parser stays in sync.
         command: ["wl-paste", "--type", "text", "--watch", "sh", "-c",
                   "if wl-paste --list-types 2>/dev/null | grep -qF x-kde-passwordManagerHint; "
@@ -101,7 +101,7 @@ Singleton {
         const s = text.replace(/\s+/g, " ").trim();
         return s.length > 120 ? s.slice(0, 120) + "…" : s;
     }
-    // "3 lines · 452 characters" — what the preview had to throw away.
+    // "3 lines · 452 characters" - what the preview had to throw away.
     function summary(text) {
         const lines = text.split("\n").length;
         const chars = text.length;

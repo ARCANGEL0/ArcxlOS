@@ -384,7 +384,7 @@ playerctl
 ttf-nerd-fonts-symbols-mono
 xcb-util-cursor
 
-### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
+### cyberspace client runtime (WPEWebKit) - /usr/bin/cyberspace
 wpewebkit
 yt-dlp
 nftables

@@ -7,7 +7,7 @@ pragma Singleton
 //
 // The name dodges two collisions: `Locale` is a built-in QML value type (what Qt.locale()
 // returns) and `Region` is Quickshell's window-mask type. A singleton named after either shadows
-// it — `Locale` silently reads back undefined everywhere, `Region` breaks every `mask:` in the
+// it - `Locale` silently reads back undefined everywhere, `Region` breaks every `mask:` in the
 // shell.
 import QtQuick
 import Quickshell

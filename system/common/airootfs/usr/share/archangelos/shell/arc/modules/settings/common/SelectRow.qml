@@ -27,7 +27,7 @@ ConnectedRect {
     readonly property string currentLabel: {
         for (const o of row.options)
             if (row.optValue(o) === row.value) return row.optLabel(o);
-        return row.value === undefined || row.value === "" ? "—" : "" + row.value;
+        return row.value === undefined || row.value === "" ? "-" : "" + row.value;
     }
 
     Layout.fillWidth: true

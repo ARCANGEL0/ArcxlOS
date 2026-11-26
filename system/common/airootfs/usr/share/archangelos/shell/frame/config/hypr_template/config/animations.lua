@@ -1,5 +1,5 @@
 -- ################################################################################
--- # config/animations.lua — Bezier curves and animation config
+-- # config/animations.lua - Bezier curves and animation config
 -- # Converted from: animations/me.conf
 -- # See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Animations/
 -- ################################################################################

@@ -22,7 +22,7 @@ import "../../windows"
 import "../../"
 
 // Config:
-//showPercentage: bool — always show % beside icon (default: false = hover only)
+//showPercentage: bool - always show % beside icon (default: false = hover only)
 
 Item {
     id: root

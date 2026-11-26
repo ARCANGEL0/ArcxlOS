@@ -1,4 +1,4 @@
-//  ArchangelOS — animated region selector for screenshot / screen-record.
+//  ArchangelOS - animated region selector for screenshot / screen-record.
 //  Quickshell layer-shell overlay: darkened field, drag a rectangle, and the
 //  selected frame breathes dark "shadow flames". On confirm the chosen region
 //  is written (as slurp-style "X,Y WxH") to $ARCHANGELOS_CAP_OUT and the

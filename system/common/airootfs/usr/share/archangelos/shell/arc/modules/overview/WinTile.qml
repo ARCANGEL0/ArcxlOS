@@ -23,7 +23,7 @@ Rectangle {
     readonly property bool focused: tile.toplevel?.activated ?? false
     // A HoverHandler, NOT the MouseArea's containsMouse: the close button is a mouse area of its
     // own, so hovering it dropped containsMouse, which hid the button, which handed the hover
-    // back — the tile strobed. A parent HoverHandler is not stolen by child mouse areas.
+    // back - the tile strobed. A parent HoverHandler is not stolen by child mouse areas.
     readonly property bool hovered: tileHov.hovered
     HoverHandler { id: tileHov }
     // Ghosted while its own proxy is in flight, so it is obvious which window is being carried.
@@ -37,7 +37,7 @@ Rectangle {
         else Hypr.focusWindow(tile.addr);
     }
     function closeWin() {
-        // close() is a polite request — an editor with unsaved work still gets to ask.
+        // close() is a polite request - an editor with unsaved work still gets to ask.
         if (tile.toplevel?.wayland) tile.toplevel.wayland.close();
         else Hypr.closeWindow(tile.addr);
     }
@@ -91,7 +91,7 @@ Rectangle {
     // in flight, so this can't pile up.
     //
     // `hasContent` is the gate: assigning captureSource asks the compositor for a context, and
-    // until the first frame lands there is nothing to capture from — asking anyway is what filled
+    // until the first frame lands there is nothing to capture from - asking anyway is what filled
     // the log with "no recording context is ready", once per tile per pulse. A window whose first
     // frame never arrives simply keeps its icon card.
     readonly property int tick: tile.panel?.shotTick ?? 0

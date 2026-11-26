@@ -25,7 +25,7 @@ Item {
             color: root.barColor
             height: Math.max(root.height * root.minFrac, root.height * (Cava.values[bar.index] ?? 0))
             // No Behavior here on purpose: cava.conf runs at 60 fps, so a 110ms easing was being
-            // restarted on all 44 bars every frame — 44 animations perpetually in flight, smoothing
+            // restarted on all 44 bars every frame - 44 animations perpetually in flight, smoothing
             // a signal that already arrives faster than the display refreshes. cava smooths its own
             // output (noise_reduction = 45 in cava.conf); this just draws what it sends.
         }

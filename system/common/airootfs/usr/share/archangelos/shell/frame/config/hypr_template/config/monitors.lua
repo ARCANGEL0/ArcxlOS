@@ -1,5 +1,5 @@
 -- ################################################################################
--- # config/monitors.lua — Monitor setup
+-- # config/monitors.lua - Monitor setup
 -- # See https://wiki.hypr.land/Configuring/Basics/Monitors/
 -- ################################################################################
 

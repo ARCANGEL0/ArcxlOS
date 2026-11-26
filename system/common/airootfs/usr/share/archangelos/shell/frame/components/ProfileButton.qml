@@ -26,7 +26,7 @@ Item {
     property string icon:    ""
     property bool   active:  false
     property real   localScale: 1.0
-    // `enabled` is inherited from Item — no redeclaration needed
+    // `enabled` is inherited from Item - no redeclaration needed
 
     signal clicked()
 

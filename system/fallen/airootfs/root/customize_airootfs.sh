@@ -128,7 +128,7 @@ if { ! command -v yay >/dev/null 2>&1 || ! command -v paru >/dev/null 2>&1; } &&
     rm -rf "/tmp/$helper"
   done
   command -v yay >/dev/null 2>&1 || command -v paru >/dev/null 2>&1 \
-    || echo "  [warn] no AUR helper — AUR packages (yorha's astal deps included) will be missing" >&2
+    || echo "  [warn] no AUR helper - AUR packages (yorha's astal deps included) will be missing" >&2
 fi
 pacman-key --populate blackarch archlinux || true
 pacman -Fyy || true

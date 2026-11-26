@@ -115,7 +115,7 @@ Item {
         running: false
         onRunningChanged: if (!running) {
             root._applying = false
-            root._status = "Applied — reconnecting…"
+            root._status = "Applied - reconnecting…"
             Qt.callLater(function() { root._reload() })
         }
     }

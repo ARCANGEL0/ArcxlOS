@@ -1,4 +1,4 @@
-// ArchangelOS: weather pane — current conditions, a 3-day outlook and a city field.
+// ArchangelOS: weather pane - current conditions, a 3-day outlook and a city field.
 pragma ComponentBehavior: Bound
 
 import QtQuick

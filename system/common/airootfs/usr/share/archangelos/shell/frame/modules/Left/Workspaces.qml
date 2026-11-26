@@ -61,7 +61,7 @@ Rectangle {
 
     Timer {
         id: scrollCooldown
-        interval: 300   // ms — tune up if still too fast, down if sluggish
+        interval: 300   // ms - tune up if still too fast, down if sluggish
         repeat:   false
         onTriggered: root.scrollBusy = false
     }

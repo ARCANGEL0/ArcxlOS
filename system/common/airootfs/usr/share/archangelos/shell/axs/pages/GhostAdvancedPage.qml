@@ -1,4 +1,4 @@
-// GhostWired › Tor configuration — ports, exit countries, how circuits are split, local network
+// GhostWired › Tor configuration - ports, exit countries, how circuits are split, local network
 // access, and your own torrc lines (checked by Tor before they're used).
 import QtQuick
 import qs.axs

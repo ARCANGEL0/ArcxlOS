@@ -1,4 +1,4 @@
-// Encryption › Crypto toolkit — the small jobs that don't fit a file: encode and decode text,
+// Encryption › Crypto toolkit - the small jobs that don't fit a file: encode and decode text,
 // encrypt and decrypt a short message, hash or HMAC typed text, generate and check password
 // hashes, make random secrets and keys, guess what a hash is, and read a certificate. Everything
 // goes through /usr/lib/archangelos/axs-crypto, which runs as you and keeps secrets off the
@@ -146,7 +146,7 @@ PageScaffold {
             SRow {
                 required property var modelData
                 icon: "tag"; title: ({ md5: "MD5", sha1: "SHA-1", sha256: "SHA-256", sha512: "SHA-512", sha3_256: "SHA3-256", blake2b: "BLAKE2b" })[modelData] || modelData
-                desc: page.thRes[modelData] || "—"
+                desc: page.thRes[modelData] || "-"
                 AxButton { icon: "content_copy"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.copy(page.thRes[modelData]) }
             }
         }

@@ -1,4 +1,4 @@
-// GhostWired › Excluded apps — apps that connect directly instead of through the tunnel.
+// GhostWired › Excluded apps - apps that connect directly instead of through the tunnel.
 // Excluding an app puts /usr/lib/archangelos/ghostwired-exempt in front of its launcher entry
 // (a copy in ~/.local/share/applications), so it starts under the ghostwired-exempt group,
 // which the GhostWired firewall lets through.

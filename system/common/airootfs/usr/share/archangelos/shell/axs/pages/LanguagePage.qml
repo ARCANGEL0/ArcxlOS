@@ -1,4 +1,4 @@
-// Language & Region — the system language, your country (and with it how dates, numbers and money
+// Language & Region - the system language, your country (and with it how dates, numbers and money
 // are written), the keyboard, and the time zone. The globe shows the country you've picked and a
 // pin for your time zone's city. Language and formats are applied with localectl (the locale is
 // generated first if needed) and reach apps at the next sign-in; keyboard and time zone apply now.
@@ -71,7 +71,7 @@ PageScaffold {
         const n = l.nativeLanguageName || code, t = l.nativeTerritoryName || "";
         return (n.charAt(0).toUpperCase() + n.slice(1)) + (t ? " (" + t + ")" : "");
     }
-    function countryName(c) { return globe.world[c] ? globe.world[c].n : (c || "—"); }
+    function countryName(c) { return globe.world[c] ? globe.world[c].n : (c || "-"); }
 
     // countries that have at least one locale, by name
     readonly property var countries: {
@@ -145,12 +145,12 @@ PageScaffold {
                 Repeater {
                     model: [
                         ["Language", page.nameOf(page.pendingLang)],
-                        ["Keyboard", NSS.Input.layouts.length ? (page.layoutNames[NSS.Input.layouts[0]] || NSS.Input.layouts[0]) : "—"],
+                        ["Keyboard", NSS.Input.layouts.length ? (page.layoutNames[NSS.Input.layouts[0]] || NSS.Input.layouts[0]) : "-"],
                         ["Time zone", Geo.timezone.replace(/_/g, " ")],
                         ["Date", hero.loc.toString(page.sample, hero.loc.dateFormat(Locale.ShortFormat))],
                         ["Time", hero.loc.toString(page.sample, hero.loc.timeFormat(Locale.LongFormat).replace(/\s*t+\s*$/, ""))],
                         ["Number", Number(1234567.89).toLocaleString(hero.loc, "f", 2)],
-                        ["Currency", hero.loc.currencySymbol(Locale.CurrencyIsoCode) ? hero.loc.currencySymbol(Locale.CurrencyIsoCode) + " (" + hero.loc.currencySymbol(Locale.CurrencySymbol) + ")" : "—"]
+                        ["Currency", hero.loc.currencySymbol(Locale.CurrencyIsoCode) ? hero.loc.currencySymbol(Locale.CurrencyIsoCode) + " (" + hero.loc.currencySymbol(Locale.CurrencySymbol) + ")" : "-"]
                     ]
                     Row {
                         required property var modelData
@@ -200,7 +200,7 @@ PageScaffold {
         SRow {
             icon: "translate"; title: "System language"; desc: "Menus, apps and messages"
             AxSelect { width: 300; anchors.verticalCenter: parent.verticalCenter; searchable: true
-                       model: page.supported.map(c => page.nameOf(c) + "  —  " + page.base(c))
+                       model: page.supported.map(c => page.nameOf(c) + "  -  " + page.base(c))
                        current: page.supported.indexOf(page.pendingLang)
                        placeholder: page.nameOf(page.pendingLang)
                        onPicked: (i) => page.pendingLang = page.supported[i] }
@@ -225,7 +225,7 @@ PageScaffold {
             icon: "calendar_month"; title: "Formats"; desc: "The exact locale used for them"
             AxSelect { width: 300; anchors.verticalCenter: parent.verticalCenter; searchable: true
                        readonly property var opts: page.supported.filter(l => page.cc(l) === page.country)
-                       model: opts.map(c => page.nameOf(c) + "  —  " + page.base(c))
+                       model: opts.map(c => page.nameOf(c) + "  -  " + page.base(c))
                        current: opts.indexOf(page.pendingFmt)
                        onPicked: (i) => page.pendingFmt = opts[i] }
         }

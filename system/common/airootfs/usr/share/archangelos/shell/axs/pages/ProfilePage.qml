@@ -1,4 +1,4 @@
-// Profile — the machine as a specimen: an identity plate with the ArchangelOS mark, live vitals,
+// Profile - the machine as a specimen: an identity plate with the ArchangelOS mark, live vitals,
 // and what the hardware and this desktop are.
 import QtQuick
 import Quickshell
@@ -13,7 +13,7 @@ PageScaffold {
     property var meta
     group: ""
     title: "Profile"
-    desc: "Your machine at a glance — what it is, how it's running, and how it's dressed."
+    desc: "Your machine at a glance - what it is, how it's running, and how it's dressed."
 
     property var info: ({})
     property int uptimeS: 0
@@ -109,7 +109,7 @@ PageScaffold {
                 anchors.leftMargin: 22; anchors.rightMargin: 22
                 anchors.top: field.bottom; anchors.topMargin: 18
                 spacing: 4
-                Label { width: parent.width; text: page.info.host || "—"; font.pixelSize: 22; font.weight: Font.DemiBold; font.letterSpacing: -0.2 }
+                Label { width: parent.width; text: page.info.host || "-"; font.pixelSize: 22; font.weight: Font.DemiBold; font.letterSpacing: -0.2 }
                 Row {
                     spacing: 8
                     Label { text: (Quickshell.env("USER") || "user"); color: Ax.subtext; font.pixelSize: Ax.fsSmall }
@@ -121,12 +121,12 @@ PageScaffold {
                 Item { width: 1; height: 8 }
                 Repeater {
                     model: [
-                        ["KERNEL", page.info.kernel || "—"],
-                        ["ARCH", page.info.arch || "—"],
+                        ["KERNEL", page.info.kernel || "-"],
+                        ["ARCH", page.info.arch || "-"],
                         ["COMPOSITOR", page.info.hypr ? "Hyprland " + page.info.hypr : "Hyprland"],
-                        ["SHELL", page.info.shell || "—"],
+                        ["SHELL", page.info.shell || "-"],
                         ["UPTIME", page.fmtUptime(page.uptimeS)],
-                        ["PACKAGES", page.info.pkgs || "—"],
+                        ["PACKAGES", page.info.pkgs || "-"],
                     ]
                     delegate: Item {
                         required property var modelData
@@ -180,21 +180,21 @@ PageScaffold {
                 StatTile { width: parent.tw; caption: "Processor"; value: Math.round(NSS.Sys.cpu * 100); unit: "%"; meter: NSS.Sys.cpu }
                 StatTile { width: parent.tw; caption: "Memory"; value: Math.round(NSS.Sys.mem * 100); unit: "%"; meter: NSS.Sys.mem }
                 StatTile { width: parent.tw; caption: "Disk"; value: Math.round(NSS.Sys.disk * 100); unit: "%"; meter: NSS.Sys.disk }
-                StatTile { width: parent.tw; caption: "Temperature"; value: NSS.Sys.temp > 0 ? NSS.Sys.temp : "—"; unit: NSS.Sys.temp > 0 ? "°C" : ""; meter: NSS.Sys.temp > 0 ? NSS.Sys.temp / 100 : 0 }
+                StatTile { width: parent.tw; caption: "Temperature"; value: NSS.Sys.temp > 0 ? NSS.Sys.temp : "-"; unit: NSS.Sys.temp > 0 ? "°C" : ""; meter: NSS.Sys.temp > 0 ? NSS.Sys.temp / 100 : 0 }
             }
 
             Section {
                 title: "Machine"
                 SRow { icon: "memory"; title: "Processor"; desc: (page.info.threads ? page.info.threads + " threads" : "") + (NSS.Sys.load ? "  ·  load " + NSS.Sys.load.toFixed(2) : "")
-                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.info.cpu || "—"; width: 300; horizontalAlignment: Text.AlignRight } }
+                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.info.cpu || "-"; width: 300; horizontalAlignment: Text.AlignRight } }
                 SRow { icon: "developer_board"; title: "Graphics"
-                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.info.gpu || "—"; width: 300; horizontalAlignment: Text.AlignRight } }
+                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.info.gpu || "-"; width: 300; horizontalAlignment: Text.AlignRight } }
                 SRow { icon: "memory_alt"; title: "Memory"
-                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: NSS.Sys.memTotalGb ? NSS.Sys.memUsedGb.toFixed(1) + " / " + NSS.Sys.memTotalGb.toFixed(1) + " GiB" : "—" } }
+                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: NSS.Sys.memTotalGb ? NSS.Sys.memUsedGb.toFixed(1) + " / " + NSS.Sys.memTotalGb.toFixed(1) + " GiB" : "-" } }
                 SRow { icon: "monitor"; title: "Display"
-                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.scr ? page.scr.width + " × " + page.scr.height : "—" } }
+                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.scr ? page.scr.width + " × " + page.scr.height : "-" } }
                 SRow { icon: "inventory_2"; title: "Packages"; desc: "Installed from the repositories and the AUR"
-                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.info.pkgs ? page.info.pkgs + " total  ·  " + page.info.aur + " AUR" : "—" } }
+                       Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: page.info.pkgs ? page.info.pkgs + " total  ·  " + page.info.aur + " AUR" : "-" } }
             }
         }
     }

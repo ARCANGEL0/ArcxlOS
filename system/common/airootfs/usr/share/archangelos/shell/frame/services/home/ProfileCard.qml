@@ -23,7 +23,7 @@ import Quickshell.Io
 import "../../"
 import "../../components"
 
-// Profile card — circular avatar, username, window manager, uptime.
+// Profile card - circular avatar, username, window manager, uptime.
 
 StatCard {
     id: root

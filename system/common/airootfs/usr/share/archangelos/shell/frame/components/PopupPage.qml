@@ -27,7 +27,7 @@ import "../"
 // Usage:
 //   PopupPage {
 //       anchors.fill: parent
-//       // children go here — laid out top-to-bottom, scrollable if overflow
+//       // children go here - laid out top-to-bottom, scrollable if overflow
 //   }
 
 Item {

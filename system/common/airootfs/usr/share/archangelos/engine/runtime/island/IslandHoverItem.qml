@@ -163,7 +163,7 @@ Item {
             iconScale: Config.island.hoverIconScale
             icon: AudioService.muted ? "󰝟" : "󰕾"
             value: AudioService.available
-                ? (AudioService.muted ? "OFF" : AudioService.volumePercent + "%") : "—"
+                ? (AudioService.muted ? "OFF" : AudioService.volumePercent + "%") : "-"
             accent: AudioService.muted ? Theme.error : Theme.primary
         }
     }

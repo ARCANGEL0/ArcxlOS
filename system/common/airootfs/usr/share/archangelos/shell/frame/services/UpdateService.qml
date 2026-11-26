@@ -22,7 +22,7 @@ import Quickshell
 import Quickshell.Io
 import "../"
 
-// UpdateService — startup update checker (30s delay).
+// UpdateService - startup update checker (30s delay).
 // Persistent PrefsService.autoUpdate preference stored in src/user_data/update_prefs.json.
 QtObject {
     id: root
@@ -183,7 +183,7 @@ QtObject {
     }
 
     // ── Stash local changes, then pull ────────────────────────────────────
-    // stash pop is intentionally omitted — shell reloads after update anyway.
+    // stash pop is intentionally omitted - shell reloads after update anyway.
     // User can `git stash pop` manually if they want changes back.
     property var _stashPullProc: Process {
         command: ["bash", "-c",

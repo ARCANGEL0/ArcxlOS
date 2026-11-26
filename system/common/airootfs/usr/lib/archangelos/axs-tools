@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# axs-tools — lists the applications installed on this machine, grouped into categories, for
+# axs-tools - lists the applications installed on this machine, grouped into categories, for
 # Settings > Tool rack (Fallen). It only reads the .desktop files already on disk and prints
 # them as JSON; it installs nothing and runs nothing. The grouping mirrors the desktop wheel.
 import json
@@ -87,7 +87,7 @@ def categorize(entry):
     # anything that is plainly a security category but matched nothing specific
     if re.search(r"blackarch|security|pentest|exploit", hay, re.IGNORECASE):
         return "Utilities"
-    return None  # ordinary desktop app — not part of the tool rack
+    return None  # ordinary desktop app - not part of the tool rack
 
 
 def main():

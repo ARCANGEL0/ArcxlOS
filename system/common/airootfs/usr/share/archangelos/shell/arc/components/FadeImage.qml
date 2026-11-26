@@ -32,7 +32,7 @@ Item {
     property string _sb: ""
 
     // "This slot holds a usable frame." Cleared only when the slot is handed a different
-    // source, not on a failed reload of the same URL — retainWhileLoading keeps that frame up.
+    // source, not on a failed reload of the same URL - retainWhileLoading keeps that frame up.
     property bool _okA: false
     property bool _okB: false
 
@@ -44,13 +44,13 @@ Item {
         if (source === (_showB ? _sb : _sa))
             return;                              // already the visible one
         if (source === "") {
-            // Nothing to load — flip to the empty slot so the old art fades out.
+            // Nothing to load - flip to the empty slot so the old art fades out.
             if (_showB) { _sa = ""; _okA = false; } else { _sb = ""; _okB = false; }
             _showB = !_showB;
             return;
         }
         // Load behind the visible slot. Re-selecting a URL the slot already holds emits no
-        // status change, so don't drop its flag — and call _settled() by hand to hand over.
+        // status change, so don't drop its flag - and call _settled() by hand to hand over.
         if (_showB) { if (_sa !== source) _okA = false; _sa = source; }
         else        { if (_sb !== source) _okB = false; _sb = source; }
         _settled(!_showB);
@@ -58,7 +58,7 @@ Item {
 
     // Hand over only once the incoming image has decoded, or the swap reads as a blink.
     // Errors flip too, so a broken URL falls through to the caller's placeholder. Compares
-    // the slot string, not Image.source — Qt resolves that to an absolute URL and it never
+    // the slot string, not Image.source - Qt resolves that to an absolute URL and it never
     // matches.
     function _settled(slotIsB) {
         if (fade._showB === slotIsB || (slotIsB ? _sb : _sa) !== fade.source)

@@ -52,7 +52,7 @@ QtObject {
         || directRenderProcess.running
     readonly property string statusLabel: errorMessage
         || (backendState !== "ready" ? backendDetail
-        : candidateReady ? "Candidate palette prepared — Apply to change ArcShell"
+        : candidateReady ? "Candidate palette prepared - Apply to change ArcShell"
         : currentWallpaper ? currentName : "No wallpaper selected")
 
     signal wallpaperApplied(string path, bool paletteUpdated)
@@ -326,7 +326,7 @@ QtObject {
             else if (backendState === "conflict")
                 backendDetail = "Another wallpaper renderer is active; stop or reconfigure it first"
             else if (backendState === "exhausted")
-                backendDetail = "Automatic awww recovery paused after three attempts — Retry manually"
+                backendDetail = "Automatic awww recovery paused after three attempts - Retry manually"
             else
                 backendDetail = "awww is unavailable; Retry to check again"
         }

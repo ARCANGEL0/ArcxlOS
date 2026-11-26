@@ -29,13 +29,13 @@ Singleton {
     property real trackLength: 0
     property string _heldFor: ""    // track the held values belong to
 
-    // Same Metadata update as trackTitle, in no guaranteed signal order — reconcile once
+    // Same Metadata update as trackTitle, in no guaranteed signal order - reconcile once
     // after it settles.
     onRawArtChanged: Qt.callLater(_sync)
     onRawLengthChanged: Qt.callLater(_sync)
 
     function _sync() {
-        if (_heldFor !== trackTitle) {      // new track — drop the previous one's values
+        if (_heldFor !== trackTitle) {      // new track - drop the previous one's values
             artUrl = "";
             trackLength = 0;
             _heldFor = trackTitle;

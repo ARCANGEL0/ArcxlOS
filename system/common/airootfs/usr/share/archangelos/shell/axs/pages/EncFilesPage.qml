@@ -1,4 +1,4 @@
-// Encryption › Files, folders & vaults — GPG-encrypt a file or a whole folder with a passphrase,
+// Encryption › Files, folders & vaults - GPG-encrypt a file or a whole folder with a passphrase,
 // decrypt it again, and gocryptfs vaults: folders that are encrypted on disk and open as a normal
 // folder while unlocked.
 import QtQuick
@@ -29,10 +29,10 @@ PageScaffold {
     readonly property var sslCiphersEnc: ["aes-256-cbc", "aes-256-ctr", "chacha20", "camellia-256-cbc"]
     // [id, label, needs]
     readonly property var encFormats: [
-        ["gpg-pass", "GPG — passphrase", ""],
-        ["gpg-key", "GPG — to a public key", ""],
-        ["openssl", "OpenSSL — passphrase", ""],
-        ["age", "age — to a recipient", "age"],
+        ["gpg-pass", "GPG - passphrase", ""],
+        ["gpg-key", "GPG - to a public key", ""],
+        ["openssl", "OpenSSL - passphrase", ""],
+        ["age", "age - to a recipient", "age"],
         ["7z", "7-Zip (AES-256)", "7z"]
     ]
     function encFmtOk(f) { return f[2] === "" || (f[2] === "age" && page.hasAge) || (f[2] === "7z" && page.has7z); }
@@ -116,13 +116,13 @@ PageScaffold {
         SRow {
             visible: page.target !== ""
             icon: "category"; title: "Format"
-            desc: ({ "gpg-pass": "OpenPGP, unlocked by a passphrase — widely supported",
+            desc: ({ "gpg-pass": "OpenPGP, unlocked by a passphrase - widely supported",
                      "gpg-key": "OpenPGP, only the holders of these keys can open it",
                      "openssl": "OpenSSL, AES/ChaCha20 with a passphrase (PBKDF2-SHA512)",
                      "age": "age, modern and simple, to a recipient's public key",
                      "7z": "A 7-Zip archive with AES-256 and encrypted file names" })[page.encFormats[encFmt.current][0]]
             AxSelect { id: encFmt; width: 220; anchors.verticalCenter: parent.verticalCenter
-                       model: page.encFormats.map(f => f[1] + (page.encFmtOk(f) ? "" : "  — not installed")); current: 0 }
+                       model: page.encFormats.map(f => f[1] + (page.encFmtOk(f) ? "" : "  - not installed")); current: 0 }
         }
         SRow {
             visible: page.target !== "" && page.encFormats[encFmt.current][0] === "gpg-pass"
@@ -195,14 +195,14 @@ PageScaffold {
     readonly property var decLabels: ({ auto: "Auto", gpg: "GPG", openssl: "OpenSSL", age: "age", "7z": "7-Zip", zip: "Zip" })
     function doInspect() {
         page.inspect = "Reading…";
-        if (page.fmt !== "gpg") { page.inspect = page.fmt === "openssl" ? "OpenSSL file (salted). Its cipher and settings aren't stored inside — pick the ones it was made with below." : page.fmt === "age" ? "age file. Decrypts with the passphrase or an identity (key) file." : "Unknown format."; return; }
+        if (page.fmt !== "gpg") { page.inspect = page.fmt === "openssl" ? "OpenSSL file (salted). Its cipher and settings aren't stored inside - pick the ones it was made with below." : page.fmt === "age" ? "age file. Decrypts with the passphrase or an identity (key) file." : "Unknown format."; return; }
         cmd.sh('gpg --batch --pinentry-mode cancel --list-packets "$1" 2>&1 | grep -E "enc packet|literal data|compressed packet|keyid" | head -n 8', [page.source], (c, o) => {
             const cipher = { "7": "AES-128", "8": "AES-192", "9": "AES-256", "10": "Twofish", "11": "Camellia-128", "12": "Camellia-192", "13": "Camellia-256", "3": "CAST5", "2": "3DES" };
             const hash = { "2": "SHA-1", "8": "SHA-256", "9": "SHA-384", "10": "SHA-512", "11": "SHA-224" };
             const out = [];
             let m;
             if ((m = /symkey enc packet: version \d+, cipher (\d+)(?:, aead \d+)?, s2k (\d+), hash (\d+)/.exec(o))) out.push("Passphrase-encrypted with " + (cipher[m[1]] || "cipher " + m[1]) + ", key stretched with " + (hash[m[3]] || "hash " + m[3]) + (m[2] === "3" ? " (iterated)" : ""));
-            const keys = o.match(/keyid ([0-9A-F]{16})/g); if (keys) out.push("Encrypted to key" + (keys.length > 1 ? "s " : " ") + keys.map(k => k.slice(6)).join(", ") + " — decrypts with that key's passphrase");
+            const keys = o.match(/keyid ([0-9A-F]{16})/g); if (keys) out.push("Encrypted to key" + (keys.length > 1 ? "s " : " ") + keys.map(k => k.slice(6)).join(", ") + " - decrypts with that key's passphrase");
             if (/compressed packet/.test(o)) out.push("Compressed inside");
             if ((m = /literal data packet:.*?name="([^"]*)"/.exec(o)) && m[1]) out.push("Original name: " + m[1]);
             page.inspect = out.join("\n") || o.trim().split("\n").slice(0, 3).join("\n");
@@ -214,7 +214,7 @@ PageScaffold {
         let name = (outName.text.trim() || s.split("/").pop().replace(/\.(gpg|pgp|asc|enc|age)$/i, "")).replace(/\//g, "_");
         if (name === s.split("/").pop()) name += ".decrypted";
         const out = dir + "/" + name;
-        const guard = overwrite.checked ? "" : '[ -e "$2" ] && { echo "$2 already exists — turn on overwrite or pick another name." >&2; exit 1; }; ';
+        const guard = overwrite.checked ? "" : '[ -e "$2" ] && { echo "$2 already exists - turn on overwrite or pick another name." >&2; exit 1; }; ';
         const after = rmSrc.checked ? ' && rm -f "$1"' : "";
         let body;
         if (how === "7z" || how === "zip") {
@@ -250,7 +250,7 @@ PageScaffold {
         cmd.run(["bash", "-c", body, "bash", s, out, how === "age" ? ageKey.text : iter.text, dir], (c, o, e) => {
             page.busy = "";
             const sig = /(GOODSIG|BADSIG)\s+\S+\s+(.*)/.exec(o + "\n" + e);
-            if (sig) page.verify = sig[1] === "GOODSIG" ? "Signed by " + sig[2] + " — signature is good" : "Signature from " + sig[2] + " is BAD — the file was changed";
+            if (sig) page.verify = sig[1] === "GOODSIG" ? "Signed by " + sig[2] + " - signature is good" : "Signature from " + sig[2] + " is BAD - the file was changed";
             if (c !== 0) page.error = (e || o).trim().split("\n").filter(l => !/SIG/.test(l)).pop() || "Couldn't decrypt it.";
             else { page.notice = "Decrypted to " + (/\.tar\.gpg$/.test(s) && !outName.text.trim() ? dir : out); page.source = ""; }
         }, how === "age" ? undefined : dp.text + "\n");
@@ -401,7 +401,7 @@ PageScaffold {
                     }
                 }
                 Label { width: parent.width; wrapMode: Text.WordWrap; color: Ax.muted; font.pixelSize: Ax.fsSmall
-                        text: "Unlocked vaults open under ~/Vaults/. The encrypted data folder is safe to sync to any cloud — it's unreadable without the passphrase, and there's no way to recover it if the passphrase is lost." }
+                        text: "Unlocked vaults open under ~/Vaults/. The encrypted data folder is safe to sync to any cloud - it's unreadable without the passphrase, and there's no way to recover it if the passphrase is lost." }
             }
         }
     }

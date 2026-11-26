@@ -6,7 +6,7 @@ categories (Network, Wireless, Forensics, Blue Team, Web Attacks, etc.),
 similar to the Kali categories menu.
 
 Themed to match the ArchangelOS desktop shell: matte near-black, crimson
-accent, hairline edges — with a red-team / cyber-samurai read (reticle hub,
+accent, hairline edges - with a red-team / cyber-samurai read (reticle hub,
 monospace labels, arsenal glyphs). Only the wheel is drawn: no backdrop, the
 desktop stays visible around it. Click off the wheel (or Esc) to close.
 
@@ -64,7 +64,7 @@ NEON_PNG = _find_asset("sword_neon.png")
 
 def _emblem_svg():
     """Michael's sword: an upright steel blade with spread archangel wings.
-    Built symmetrically — the right wing is drawn, then mirrored to the left."""
+    Built symmetrically - the right wing is drawn, then mirrored to the left."""
     cx = 120.0
     # right-wing feathers: (tip_x, tip_y, belly_dx, belly_dy) long → short, high → low
     feathers = [
@@ -856,7 +856,7 @@ class WheelView(QWidget):
 
     def _draw_popped_segment(self, p, wc, scale, index, dx, dy, pop):
         """Draw the selected category as its own wheel wedge, slid out by `pop`
-        along the click direction and lit — same shape it had in the ring."""
+        along the click direction and lit - same shape it had in the ring."""
         cx, cy = wc.x(), wc.y()
         outer = self.outer * scale
         inner = self.inner * scale
@@ -1157,7 +1157,7 @@ def _toggle_wheel():
         try:
             with open(WHEEL_RUNTIME, "r") as f:
                 pid = int(f.read().strip())
-            os.kill(pid, 15)  # SIGTERM — the QWidget closes on this
+            os.kill(pid, 15)  # SIGTERM - the QWidget closes on this
         except OSError:
             pass
         try:

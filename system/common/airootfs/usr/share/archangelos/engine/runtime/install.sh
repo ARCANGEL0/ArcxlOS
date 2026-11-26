@@ -99,12 +99,12 @@ printf '%s\n' \
 
 section 1 'Welcome'
 if [[ $existing == true ]]; then
-    line "$good" '●' 'Existing ArcShell installation detected — this run will update or repair it.'
+    line "$good" '●' 'Existing ArcShell installation detected - this run will update or repair it.'
 else
     line "$accent" '●' 'Fresh ArcShell installation detected.'
 fi
 if [[ $existing_config == true ]]; then
-    line "$warn" '●' 'Existing desktop configuration detected — affected files will be backed up first.'
+    line "$warn" '●' 'Existing desktop configuration detected - affected files will be backed up first.'
 fi
 printf '\n  %sThis installer will:%s\n' "$dim" "$reset"
 printf '%s\n' \
@@ -267,7 +267,7 @@ fi
 
 section 3 'Configuration & backup plan'
 if [[ $configuration_mode == managed ]]; then
-    line "$accent" '●' 'Managed configuration — packaged desktop files will be installed.'
+    line "$accent" '●' 'Managed configuration - packaged desktop files will be installed.'
     printf '  %-11s %s\n' 'Hyprland' "$(display_path "$config_root/hypr/hyprland.lua") + arcshell.lua"
     printf '  %-11s %s\n' 'Kitty' "$(display_path "$config_root/kitty/kitty.conf")"
     printf '  %-11s %s\n' 'Starship' "$(display_path "$config_root/starship.toml") + login-shell initialization"
@@ -279,7 +279,7 @@ if [[ $configuration_mode == managed ]]; then
     fi
     printf '  %-11s %s\n' 'Hypridle' "$(display_path "$config_root/hypr/hypridle.conf") + hypridle.service"
 else
-    line "$good" '●' 'Preserve configuration — personal desktop files remain unchanged.'
+    line "$good" '●' 'Preserve configuration - personal desktop files remain unchanged.'
     printf '  %-11s %s\n' 'Hyprland' 'preserved; only the reversible ArcShell startup include is managed'
     printf '  %-11s %s\n' 'Kitty' 'preserved'
     printf '  %-11s %s\n' 'Starship' 'preserved; shell startup files are not modified'

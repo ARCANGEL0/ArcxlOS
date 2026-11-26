@@ -30,7 +30,7 @@ Item {
 
     implicitHeight: parent.height
 
-    // ── Normal content — fades out when any right popup opens ─────────────────
+    // ── Normal content - fades out when any right popup opens ─────────────────
     Row {
         id: contentRow
         anchors.right: parent.right

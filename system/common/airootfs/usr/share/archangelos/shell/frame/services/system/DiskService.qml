@@ -22,7 +22,7 @@ import Quickshell.Io
 // Runs df every 5s and exposes real block devices as a list model.
 //
 // Exposes:
-//   var disks — ListModel with objects:
+//   var disks - ListModel with objects:
 //     { source, mount, usedPct, usedStr, totalStr }
 
 QtObject {

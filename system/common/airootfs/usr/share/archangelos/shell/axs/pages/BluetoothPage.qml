@@ -1,4 +1,4 @@
-// Bluetooth — adapter power and visibility, your devices, and nearby ones to pair.
+// Bluetooth - adapter power and visibility, your devices, and nearby ones to pair.
 import QtQuick
 import Quickshell.Bluetooth
 import qs.axs
@@ -41,7 +41,7 @@ PageScaffold {
         SRow {
             icon: NSS.Bt.enabled ? "bluetooth" : "bluetooth_disabled"
             title: "Bluetooth"
-            desc: NSS.Bt.enabled ? (NSS.Bt.connected ? "On — device connected" : "On") : "Off"
+            desc: NSS.Bt.enabled ? (NSS.Bt.connected ? "On - device connected" : "On") : "Off"
             AxSwitch { checked: NSS.Bt.enabled; onToggled: NSS.Bt.toggle(); anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {

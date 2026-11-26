@@ -1,5 +1,5 @@
 /*
- * ArchangelOS shell — wallpaper coverflow, rising out of the bottom-centre notch.
+ * ArchangelOS shell - wallpaper coverflow, rising out of the bottom-centre notch.
  * Part of the ArcShell / arcshell mesh; AGPL-3.0 (see LICENSE).
  *
  * Replaces ArcShell's grid picker (WallpaperPopup.qml, kept for reference) and drives the
@@ -361,7 +361,7 @@ Item {
             }
         }
 
-        // --- the wallpaper's colours — pick one as the accent ---------------------------------------
+        // --- the wallpaper's colours - pick one as the accent ---------------------------------------
         Row {
             id: swatches
             anchors.horizontalCenter: parent.horizontalCenter

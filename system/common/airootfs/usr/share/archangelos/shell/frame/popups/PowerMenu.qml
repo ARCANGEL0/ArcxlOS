@@ -20,7 +20,7 @@ import QtQuick
 import Quickshell.Io
 import "../"
 
-// Power menu — vertical list of power action buttons.
+// Power menu - vertical list of power action buttons.
 
 Column {
     id: root

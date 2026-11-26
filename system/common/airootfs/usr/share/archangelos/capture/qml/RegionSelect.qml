@@ -25,7 +25,7 @@ Item {
     signal picked(real gx, real gy, real gw, real gh)
     signal cancelled()
 
-    // monochrome palette — soft neon white on charcoal
+    // monochrome palette - soft neon white on charcoal
     readonly property color neon:  "#f4f6f8"
     readonly property color petal: "#eae7e1"
 
@@ -60,7 +60,7 @@ Item {
         }
     }
 
-    // frosted-glass interior — a GPU-composited gradient rectangle, so it costs
+    // frosted-glass interior - a GPU-composited gradient rectangle, so it costs
     // nothing per frame (no canvas raster).
     Rectangle {
         visible: sel.hasSel
@@ -72,7 +72,7 @@ Item {
         }
     }
 
-    // subtle flame fringe — the ONLY animated layer. A tiny canvas (selection +
+    // subtle flame fringe - the ONLY animated layer. A tiny canvas (selection +
     // 8px) doing a single low-alpha path fill per frame: no blur, no gradients,
     // no full-screen raster, so it stays light.
     Canvas {
@@ -98,7 +98,7 @@ Item {
             pp -= rw
             return [sel.rx, sel.ry + rh - pp, -1, 0]
         }
-        // outward tongue height — layered sines, tapered so most of the edge sits
+        // outward tongue height - layered sines, tapered so most of the edge sits
         // near zero and only small tongues (≤ ~5px) lick out.
         function flameH(pp, t) {
             var v = 0.5 * Math.sin(pp * 0.055 + t * 1.9)
@@ -128,7 +128,7 @@ Item {
             ctx.restore()
         }
     }
-    // neon white frame + soft glow — concentric translucent bordered rectangles,
+    // neon white frame + soft glow - concentric translucent bordered rectangles,
     // fully GPU-composited. The "breath" is an opacity animation on the group, so
     // nothing re-rasterizes per frame (this is what killed the old blurred canvas
     // frame's lag).

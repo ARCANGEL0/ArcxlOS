@@ -1,5 +1,5 @@
 // Settings line: a label plus a segmented control. `values` carries the stored values, `labels`
-// the display text (defaults to `values`), and `picked` hands back the chosen value as a string —
+// the display text (defaults to `values`), and `picked` hands back the chosen value as a string -
 // numeric settings (fps) parse it back, which keeps the comparison here type-agnostic.
 pragma ComponentBehavior: Bound
 

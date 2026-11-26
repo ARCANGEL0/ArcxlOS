@@ -27,20 +27,20 @@ import "../../components"
 import "../../components"
 import "../../components"
 
-// CenterContent — scrollable dynamic island carousel.
+// CenterContent - scrollable dynamic island carousel.
 //
 // Active item order:
-//   "title"     — always present (default)
-//   "music"     — MPRIS player present
-//   "timer"     — ClockState.timerRunning
-//   "stopwatch" — ClockState.swRunning
+//   "title"     - always present (default)
+//   "music"     - MPRIS player present
+//   "timer"     - ClockState.timerRunning
+//   "stopwatch" - ClockState.swRunning
 //
 // CenterNotchMonitor (internal QtObject) watches ClockState and
 // handles urgent transitions:
 //   • timer <= 30s remaining → force-scroll to timer, text blinks red
 //   • stopwatch active → appears in carousel, scrolls if on title
 //
-// Cava bars: single Rectangle per bar, anchors.centerIn — grows
+// Cava bars: single Rectangle per bar, anchors.centerIn - grows
 // symmetrically. No center rounding artefact. 5px wide.
 
 Item {
@@ -179,7 +179,7 @@ Item {
 		if (autoScrollType) {
 			var nIdx = list.indexOf(autoScrollType)
 			if (nIdx >= 0) {
-				// Screen rec always takes priority — scroll regardless of where we are.
+				// Screen rec always takes priority - scroll regardless of where we are.
 				// Other items only auto-scroll when coming from "title".
 				var isScreenRec = (autoScrollType === "record_setup" ||
 				autoScrollType === "record_active")
@@ -217,7 +217,7 @@ Item {
 		}
 	}
 
-	// ── State monitor — timer urgency + carousel transitions ─────────────────
+	// ── State monitor - timer urgency + carousel transitions ─────────────────
 	readonly property bool timerUrgent:
 	ClockState.timerRunning && ClockState.timerLeft <= 30 && ClockState.timerLeft > 0
 
@@ -272,7 +272,7 @@ Item {
 		onTriggered: root._scrollBusy = false
 	}
 
-	// ── Cava — shared via CavaService singleton ─────────────────────────────
+	// ── Cava - shared via CavaService singleton ─────────────────────────────
 	readonly property int _cavaBars: CavaService.barCount
 	readonly property var _bars:     CavaService.bars
 

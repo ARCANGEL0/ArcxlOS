@@ -21,7 +21,7 @@ import Quickshell.Io
 import "../"
 import "../components"
 
-// VPNTab — WireGuard connections via nmcli.
+// VPNTab - WireGuard connections via nmcli.
 //
 // Rules:
 //  • Only one connection active at a time. Requesting a new one disconnects
@@ -150,7 +150,7 @@ Item {
                     "normal"
                 )
             } else {
-                // Failure — clear busy on all, reset ShellState
+                // Failure - clear busy on all, reset ShellState
                 var cons2 = root._connections.slice()
                 for (var j = 0; j < cons2.length; j++)
                     cons2[j] = { name: cons2[j].name, active: cons2[j].active, busy: false }
@@ -198,7 +198,7 @@ Item {
         }
     }
 
-    // ── Kill switch — nmcli only, no pkexec/nftables ──────────────────────────
+    // ── Kill switch - nmcli only, no pkexec/nftables ──────────────────────────
     // When enabled: downs all active WireGuard connections via nmcli.
     // No root required. Toggle reflects immediately in UI.
     Process {
@@ -218,7 +218,7 @@ Item {
         command: []
     }
 
-    // ── nmcli monitor — debounced refresh ─────────────────────────────────────
+    // ── nmcli monitor - debounced refresh ─────────────────────────────────────
     Process {
         id: monitorProc
         running: (SurfaceState.activeContent === "network")
@@ -265,7 +265,7 @@ Item {
     }
 
     function _applyKillSwitch() {
-        // Down all active WireGuard connections via nmcli — no root needed
+        // Down all active WireGuard connections via nmcli - no root needed
         killSwitchProc.command = ["bash", "-c",
             "nmcli -g NAME,TYPE connection show --active" +
             " | awk -F: '$2==\"wireguard\" {print $1}'" +
@@ -280,7 +280,7 @@ Item {
     }
 
     function _removeKillSwitch() {
-        // Nothing to undo — nmcli disconnect is the action itself.
+        // Nothing to undo - nmcli disconnect is the action itself.
         // Just update state; user reconnects manually if desired.
         root._killSwitch = false
     }
@@ -340,10 +340,10 @@ Item {
 
     function _toggleKillSwitch() {
         if (root._killSwitch) {
-            // Turning off — just clear the flag, no action needed
+            // Turning off - just clear the flag, no action needed
             root._killSwitch = false
         } else {
-            // Turning on — immediately down all active WireGuard connections
+            // Turning on - immediately down all active WireGuard connections
             root._killSwitch = true
             if (ShellState.vpnActive || ShellState.vpnConnecting)
                 root._applyKillSwitch()

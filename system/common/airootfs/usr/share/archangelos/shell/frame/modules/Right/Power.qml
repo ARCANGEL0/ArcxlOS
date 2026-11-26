@@ -1,4 +1,4 @@
-// ArchangelOS: power button in the top-right cluster — a bare red icon, no fill.
+// ArchangelOS: power button in the top-right cluster - a bare red icon, no fill.
 // Opens the session menu (shutdown / reboot / log out / lock / suspend).
 import QtQuick
 import "../../"

@@ -1,4 +1,4 @@
-// Appearance — accent, where colours come from, panel material and shape, type, and the system
+// Appearance - accent, where colours come from, panel material and shape, type, and the system
 // cursor and icon themes. The shell controls write its own preferences; the cursor/icon theme
 // writes ~/.config/archangelos/appearance.conf (read at login) and applies live.
 import QtQuick
@@ -136,7 +136,7 @@ PageScaffold {
               + 'rm -rf "$tmp"; [ "$n" -gt 0 ] && echo "OK $n" || echo "ERR no theme found in the archive"', [archive], (c, o) => {
             page.busy = "";
             const r = o.trim();
-            if (r.startsWith("OK")) { page.flash("Installed " + r.split(" ")[1] + " theme(s) — pick it below."); page.loadThemes(); }
+            if (r.startsWith("OK")) { page.flash("Installed " + r.split(" ")[1] + " theme(s) - pick it below."); page.loadThemes(); }
             else page.error = r.replace(/^ERR /, "") || "Couldn't install that theme.";
         });
     }
@@ -340,7 +340,7 @@ PageScaffold {
                        onPicked: (i) => page.applyGtk(page.gtkThemes[i]) }
         }
         SRow {
-            icon: "palette"; title: "Theme Mode"; desc: "ArcLight or ArcDark — system-wide dark/light mode"
+            icon: "palette"; title: "Theme Mode"; desc: "ArcLight or ArcDark - system-wide dark/light mode"
             AxSelect { width: 240; anchors.verticalCenter: parent.verticalCenter; model: ["ArcDark", "ArcLight"]
                        current: page.themeMode === "ArcLight" ? 1 : 0
                        onPicked: (i) => page.themeMode = i === 0 ? "ArcDark" : "ArcLight" }

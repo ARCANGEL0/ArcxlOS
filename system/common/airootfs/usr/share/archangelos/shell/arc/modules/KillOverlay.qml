@@ -80,7 +80,7 @@ PanelWindow {
         visible: Shell.killMode
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top; anchors.topMargin: 24
-        text: "KILL MODE — click a window to force-kill its app · ESC to cancel"
+        text: "KILL MODE - click a window to force-kill its app · ESC to cancel"
         color: "#e03030"; font.family: Config.textFont; font.pixelSize: 13; font.weight: Font.Bold
     }
 }

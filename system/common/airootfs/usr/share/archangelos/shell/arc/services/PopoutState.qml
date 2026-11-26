@@ -1,7 +1,7 @@
 pragma Singleton
 
 // Geometry of the currently-open bar popout, in screen pixels. The Frame's SDF shader reads it
-// and bulges the bar surface out to form the popout body — one continuous surface, not a detached
+// and bulges the bar surface out to form the popout body - one continuous surface, not a detached
 // panel. Stored as one atomic vector4d (x, y, w, h) because assigning the components one by one
 // let the shader sample a torn state and flash a zero width. z (=w) <= 0 means nothing is open.
 import QtQuick
@@ -13,7 +13,7 @@ Singleton {
     // Second, independent bulge slot (a toast melting out of the top border).
     property vector4d box2: Qt.vector4d(0, 0, 0, 0)
     // Third slot: the right-edge side panel, the one popout that stays open while another is
-    // used — a translation is what you keep on screen while the launcher comes and goes.
+    // used - a translation is what you keep on screen while the launcher comes and goes.
     property vector4d box3: Qt.vector4d(0, 0, 0, 0)
 
     // Who owns the `box` slot, so a closing popout can't wipe a bulge another just claimed.

@@ -1,5 +1,5 @@
 -- ################################################################################
--- # config/input.lua — Input, gestures, and per-device config
+-- # config/input.lua - Input, gestures, and per-device config
 -- # See https://wiki.hypr.land/Configuring/Basics/Variables/#input
 -- ################################################################################
 

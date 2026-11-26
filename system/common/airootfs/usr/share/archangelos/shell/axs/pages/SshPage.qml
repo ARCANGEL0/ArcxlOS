@@ -1,4 +1,4 @@
-// Remote access — the SSH server: on/off, port, passwords vs keys, root login, your authorized
+// Remote access - the SSH server: on/off, port, passwords vs keys, root login, your authorized
 // keys, and recent logins. Config changes go to /etc/ssh/sshd_config.d/50-archangelos.conf and
 // are checked with sshd -t before the server restarts.
 import QtQuick
@@ -11,7 +11,7 @@ PageScaffold {
     property var meta
     group: "Privacy & Security"
     title: "Remote access"
-    desc: "Let yourself log in to this computer over the network with SSH — or make sure nobody can."
+    desc: "Let yourself log in to this computer over the network with SSH - or make sure nobody can."
 
     readonly property string sec: "/usr/lib/archangelos/axs-sec"
     readonly property string keysFile: Quickshell.env("HOME") + "/.ssh/authorized_keys"
@@ -70,7 +70,7 @@ PageScaffold {
         }
         SRow {
             icon: "password"; title: "Allow password logins"
-            desc: page.pw ? "Anyone who guesses a password gets in. Keys only is much safer" : "Keys only — passwords are refused"
+            desc: page.pw ? "Anyone who guesses a password gets in. Keys only is much safer" : "Keys only - passwords are refused"
             Badge { visible: page.pw && page.on; text: "risky"; tone: "danger"; anchors.verticalCenter: parent.verticalCenter }
             AxSwitch { checked: page.pw; enabled_: page.busy === "" && (page.pw || true); anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => { if (!on && page.keys.length === 0) { page.error = "Add a key below first, or you'll lock yourself out."; return; }
@@ -120,7 +120,7 @@ PageScaffold {
             visible: page.log.length === 0
             icon: "history"; title: "Show logins and failed attempts"; desc: "From the system journal"
             AxButton { text: "Show"; anchors.verticalCenter: parent.verticalCenter
-                       onClicked: cmd.run([page.sec, "ssh-log"], (c, o) => { page.log = o.split("\n").filter(l => l).reverse(); if (!page.log.length) page.log = ["—  nothing recorded"]; }) }
+                       onClicked: cmd.run([page.sec, "ssh-log"], (c, o) => { page.log = o.split("\n").filter(l => l).reverse(); if (!page.log.length) page.log = ["-  nothing recorded"]; }) }
         }
         Repeater {
             model: page.log

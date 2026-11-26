@@ -170,7 +170,7 @@ SLIDESHOW_TEXTS = [
     ("Hack The Planet", "A complete red-team toolkit tuned for OSINT, recon, and exploitation workflows straight out of the box."),
     ("BlackArch Compatible Repos", "Drop straight into the BlackArch package universe for the deepest security tooling catalog available on Linux."),
     ("Built-in Threat Research Suite", "Reverse engineering, malware analysis, and network forensics tools pre-wired and ready to launch."),
-    ("Arc-Reactor Themed Experience", "Every corner of ArchangelOS — from boot to desktop — carries a consistent Iron Man-inspired cyberpunk aesthetic."),
+    ("Arc-Reactor Themed Experience", "Every corner of ArchangelOS - from boot to desktop - carries a consistent Iron Man-inspired cyberpunk aesthetic."),
     ("Luna AI Integrated Ecosystem", "ArchangelOS ships alongside Luna AI, an autonomous multi-agent assistant built directly into the OS workflow."),
     ("Crafted by Arunachalam", "Designed for maximum stability, cutting-edge security research, and seamless dual-boot functionality."),
 ]
@@ -1331,7 +1331,7 @@ class ArchangelOSInstallerWindow(QMainWindow):
         for label, code in LANGUAGES:
             self.lang_combo.addItem(label, code)
         self.lang_combo.setCurrentIndex(0)
-        lang_label = QLabel("Language — English is always included; any other language is downloaded during install")
+        lang_label = QLabel("Language - English is always included; any other language is downloaded during install")
         lang_label.setWordWrap(True)
         layout.addWidget(lang_label)
         layout.addWidget(self.lang_combo)
@@ -1470,9 +1470,9 @@ class ArchangelOSInstallerWindow(QMainWindow):
 
         self.part_button_group = QButtonGroup(self)
 
-        self.radio_erase = QRadioButton("Erase Entire Disk — Wipe disk & create fresh partition layout")
-        self.radio_dual = QRadioButton("Install on free space remaining — Use largest free unallocated space")
-        self.radio_manual = QRadioButton("Manual Partitioning — Custom select existing partitions or format manually")
+        self.radio_erase = QRadioButton("Erase Entire Disk - Wipe disk & create fresh partition layout")
+        self.radio_dual = QRadioButton("Install on free space remaining - Use largest free unallocated space")
+        self.radio_manual = QRadioButton("Manual Partitioning - Custom select existing partitions or format manually")
 
         self.radio_erase.setChecked(True)
 

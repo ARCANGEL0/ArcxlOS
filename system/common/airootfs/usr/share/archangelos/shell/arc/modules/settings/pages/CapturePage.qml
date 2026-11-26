@@ -1,4 +1,4 @@
-// Capture defaults — the same knobs the capture panel exposes mid-flight, in a place where they
+// Capture defaults - the same knobs the capture panel exposes mid-flight, in a place where they
 // can be set once and forgotten. The panel writes the very same Config keys, so changing a value
 // in either place is immediately reflected in the other.
 pragma ComponentBehavior: Bound
@@ -43,7 +43,7 @@ StackView {
                 ToggleRow {
                     first: false; last: false
                     text: "Save a file"
-                    subtext: Config.shotSave ? "" : "Off — screenshots go to the clipboard only"
+                    subtext: Config.shotSave ? "" : "Off - screenshots go to the clipboard only"
                     checked: Config.shotSave
                     onToggled: Config.shotSave = !Config.shotSave
                 }
@@ -145,8 +145,8 @@ StackView {
                 InfoRow {
                     first: true; last: false
                     icon: "videocam"; label: "Recorder"
-                    value: Capture.active ? (Capture.paused ? "Paused — " + Capture.elapsedText
-                                                            : "Recording — " + Capture.elapsedText)
+                    value: Capture.active ? (Capture.paused ? "Paused - " + Capture.elapsedText
+                                                            : "Recording - " + Capture.elapsedText)
                                           : "Idle"
                 }
                 InfoRow {

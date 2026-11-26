@@ -1,4 +1,4 @@
-// Date & Time — clock format, the time zone (automatic or chosen) and the clock (synced or set
+// Date & Time - clock format, the time zone (automatic or chosen) and the clock (synced or set
 // by hand, DD-MM-YYYY HH:MM:SS), through systemd-timedated.
 import QtQuick
 import Quickshell

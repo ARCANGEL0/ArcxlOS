@@ -1,5 +1,5 @@
 // Right-edge workspace overview: every workspace top to bottom with the windows on it. Hover the
-// right border to reveal it. Like the other popouts it paints nothing — the background is the
+// right border to reveal it. Like the other popouts it paints nothing - the background is the
 // Frame's THIRD SDF bulge slot (reportBox → PopoutState.setBox3 → modules/Frame.qml), the slot the
 // old side panel used and left free.
 pragma ComponentBehavior: Bound
@@ -71,7 +71,7 @@ PanelWindow {
             closeTimer.restart();
         }
     }
-    // The trigger sits where scrollbars and window edges live, so brushing past it must not count —
+    // The trigger sits where scrollbars and window edges live, so brushing past it must not count -
     // the cursor has to rest there first.
     Timer { id: openTimer; interval: 180; onTriggered: ovWin.ovOpen = true }
     // Short, not zero: crossing the seam between the trigger strip and the panel drops both hover
@@ -80,7 +80,7 @@ PanelWindow {
 
     // Opening scrolls the active workspace into view. The panel is a fixed half-screen while the
     // list behind it is as long as the workspaces are, so the one you are actually on is usually
-    // outside the viewport — landing on it is what makes the panel useful on open.
+    // outside the viewport - landing on it is what makes the panel useful on open.
     // Deferred: it runs before the rows have laid out on the very first open otherwise.
     onOvOpenChanged: {
         reportBox();
@@ -103,7 +103,7 @@ PanelWindow {
     // to this, and a false tears every context down.
     readonly property bool capturing: ovWin.ovOpen && !ovWin.blocked
     // A counter rather than a signal: the tiles hold this window as an untyped `var`, and
-    // Connections can't resolve a signal through that — it warns and never fires.
+    // Connections can't resolve a signal through that - it warns and never fires.
     property int shotTick: 0
     Timer {
         interval: Math.max(400, Config.overviewRefreshMs)
@@ -113,9 +113,9 @@ PanelWindow {
     }
 
     // Report the panel body rect (screen px) so the Frame bulges the right border out into it.
-    // Driven off the panel's LIVE x, so the bulge rides the slide 1:1 — slot 3 is passed to the
+    // Driven off the panel's LIVE x, so the bulge rides the slide 1:1 - slot 3 is passed to the
     // shader unsmoothed for exactly this reason (Frame.qml:93-95).
-    // One slot, one panel per screen — so a closing panel only drops the box if it still owns it.
+    // One slot, one panel per screen - so a closing panel only drops the box if it still owns it.
     readonly property string slotId: "overview:" + (modelData?.name ?? "")
     function reportBox() {
         if (!ovWin.ovOpen && PopoutState.owner3 !== ovWin.slotId) return;
@@ -177,7 +177,7 @@ PanelWindow {
                                                             wsList.contentY + ovWin.scrollDir * 14))
     }
 
-    // Hot-zone: when closed, a thin strip covering only the MIDDLE of the right border — the top and
+    // Hot-zone: when closed, a thin strip covering only the MIDDLE of the right border - the top and
     // bottom of that border belong to window edges and scrollbars, and opening from there was all
     // false positives. When open it grows to the panel plus a buffer; the buffer is hysteresis, so
     // movement near the panel doesn't flicker it. While dragging the whole screen is claimed, so the
@@ -197,8 +197,8 @@ PanelWindow {
         // Plain numbers, never a sum of implicit heights: sizing the panel from the rows while the
         // rows size themselves from the panel is a cycle, and QML resolves it by drawing nothing.
         width: Math.max(280, Config.overviewWidth)
-        // Half the screen, NOT the sum of the rows: sizing to the content made the panel — and the
-        // frame bulge behind it — grow every time a workspace appeared or a window opened. Nine
+        // Half the screen, NOT the sum of the rows: sizing to the content made the panel - and the
+        // frame bulge behind it - grow every time a workspace appeared or a window opened. Nine
         // workspaces get the same panel as two; the list inside scrolls.
         height: ovWin.panelH
         anchors.verticalCenter: parent.verticalCenter
@@ -268,7 +268,7 @@ PanelWindow {
         }
 
         // Drag layer: the ghost lives here, above the clipped list, so it stays visible when the
-        // cursor carries it past the viewport edge. A real thumbnail is deliberately NOT used —
+        // cursor carries it past the viewport edge. A real thumbnail is deliberately NOT used -
         // moving a capture context around every frame is the one thing that would stutter.
         Item {
             id: dragLayer

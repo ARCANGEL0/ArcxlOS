@@ -1,5 +1,5 @@
 // Arch logo as vector geometry, not a Nerd Font codepoint. It was the shell's only glyph outside
-// the bundled faces, so drawing it here is what lets the whole Nerd Font dependency go away —
+// the bundled faces, so drawing it here is what lets the whole Nerd Font dependency go away -
 // everything else already comes out of assets/fonts.
 //
 // Path is the official mark as shipped in archlinux-logo (the trademark text beside it is not

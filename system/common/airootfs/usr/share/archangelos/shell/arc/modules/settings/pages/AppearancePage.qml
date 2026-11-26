@@ -1,5 +1,5 @@
 // Appearance: where the palette comes from (wallpaper-derived Material You vs a curated preset),
-// the theme itself, the static wallpaper, the text face and the global animation speed — all of
+// the theme itself, the static wallpaper, the text face and the global animation speed - all of
 // it spelled out, where the old Quick page hid it behind two unlabelled icon buttons.
 pragma ComponentBehavior: Bound
 
@@ -16,7 +16,7 @@ StackView {
     clip: true
     initialItem: mainPage
 
-    // matugen's scheme algorithms — how far the palette is allowed to drift from the wallpaper's
+    // matugen's scheme algorithms - how far the palette is allowed to drift from the wallpaper's
     // own colours. Only meaningful while autoColors is on.
     readonly property var schemes: [
         { value: "scheme-tonal-spot", label: "Tonal spot", subtext: "Balanced (default)" },
@@ -79,7 +79,7 @@ StackView {
                 Layout.fillWidth: true
                 implicitHeight: themeFlow.implicitHeight + 24
                 // Dimmed, not hidden, while auto colours own the palette: the preset still picks
-                // the video wallpaper, so it is not inert — just not driving the colours.
+                // the video wallpaper, so it is not inert - just not driving the colours.
                 opacity: Config.autoColors ? 0.5 : 1
                 Behavior on opacity { Effect {} }
 
@@ -138,7 +138,7 @@ StackView {
                                     }
                                     StateLayer {
                                         ovRadius: 12
-                                        // Picking a preset means opting out of wallpaper colours —
+                                        // Picking a preset means opting out of wallpaper colours -
                                         // otherwise the click would visibly do nothing.
                                         onTapped: { Config.autoColors = false; Config.activeTheme = card.modelData; }
                                     }
@@ -180,7 +180,7 @@ StackView {
                     subtext: "Any .ttf/.otf dropped into assets/fonts shows up here"
                     options: Config.fontFiles.map(f => ({ value: f.key, label: f.label }))
                     value: Config.fontKey
-                    // Each choice previews in its own face — the point of picking one.
+                    // Each choice previews in its own face - the point of picking one.
                     optionFont: o => Config.fontNames[o.value] ?? Config.textFont
                     onSelected: v => Config.fontPreset = v
                 }

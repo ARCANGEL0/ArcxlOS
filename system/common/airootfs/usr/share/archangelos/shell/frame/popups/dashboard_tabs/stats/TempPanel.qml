@@ -38,7 +38,7 @@ Item {
 
     readonly property real s: 0.60 * localScale
 
-    // ── Speedometers — anchored left ──────────────────────────────────────────
+    // ── Speedometers - anchored left ──────────────────────────────────────────
     Row {
         id: speedoRow
         anchors.horizontalCenter: parent.horizontalCenter
@@ -59,7 +59,7 @@ Item {
             size:        root.s
             label:       ""
             percent:     root.dgpuActive ? Math.min(100, service.gpuTemp) : 0
-            centerText:  root.dgpuActive ? service.gpuTempStr : "—"
+            centerText:  root.dgpuActive ? service.gpuTempStr : "-"
             bottomText:  "GPU"
             active:      root.dgpuActive
             accentColor: root.tempColor(service.gpuTemp)

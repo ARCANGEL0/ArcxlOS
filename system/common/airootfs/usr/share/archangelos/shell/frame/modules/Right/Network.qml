@@ -80,7 +80,7 @@ Item {
         anchors.centerIn: parent
         spacing: Math.round(8 * localScale)
 
-        // WiFi/ethernet icon — opens to wifi tab
+        // WiFi/ethernet icon - opens to wifi tab
         Text {
             id: netIcon
             text:           root._netIcon
@@ -102,7 +102,7 @@ Item {
             }
         }
 
-        // VPN shield — opens to vpn tab
+        // VPN shield - opens to vpn tab
         Text {
             visible:        ShellState.vpnActive || ShellState.vpnConnecting
             font.family: "Symbols Nerd Font"
@@ -126,7 +126,7 @@ Item {
             }
         }
 
-        // Bluetooth — opens to bluetooth tab
+        // Bluetooth - opens to bluetooth tab
         Text {
             visible:        ShellState.btPowered
             font.family: "Symbols Nerd Font"
@@ -148,7 +148,7 @@ Item {
             }
         }
 
-        // Hotspot — opens to hotspot tab
+        // Hotspot - opens to hotspot tab
         Text {
             visible:        ShellState.hotspot
             font.family: "Symbols Nerd Font"

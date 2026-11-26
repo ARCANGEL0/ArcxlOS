@@ -22,7 +22,7 @@ import Quickshell.Io
 import "../"
 import "../components"
 
-// HotspotTab — config editor for hotspot SSID/password.
+// HotspotTab - config editor for hotspot SSID/password.
 // The actual start/stop toggle lives in QuickSettings tile.
 // Config stored in src/user_data/hotspot.json.
 
@@ -160,7 +160,7 @@ Item {
                             }
                         }
 
-                        // Save button — only visible when dirty
+                        // Save button - only visible when dirty
                         Rectangle {
                             visible: root._dirty
                             anchors.horizontalCenter: parent.horizontalCenter

@@ -33,10 +33,10 @@ import "../../"
 //   scroller → 󰔧     (nf-md-scroll_horizontal)
 //
 // Update triggers (event-driven, no forever-loop):
-//   • Component.onCompleted     — initial read
-//   • focusedWorkspaceChanged   — workspace switch
-//   • focusedToplevelChanged    — window focus change (covers most layout shifts)
-//   • 4 s safety timer          — catches layout change with no following event
+//   • Component.onCompleted     - initial read
+//   • focusedWorkspaceChanged   - workspace switch
+//   • focusedToplevelChanged    - window focus change (covers most layout shifts)
+//   • 4 s safety timer          - catches layout change with no following event
 // ────────────────────────────────────────────────────────────────────────────
 
 Item {
@@ -85,7 +85,7 @@ Item {
                         root.numWindows = obj.windows > 0 ? obj.windows.toString() : "  "
                     } 
                 } catch (e) {
-                    // malformed JSON — keep current value
+                    // malformed JSON - keep current value
                 }
             }
         }

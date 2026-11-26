@@ -1,7 +1,7 @@
 pragma Singleton
 
 // Network state scraped from nmcli (Wi-Fi + Ethernet + VPN); refreshed live via `nmcli monitor`.
-// Sole owner of nmcli in the shell — the bar widgets and the settings network pages both read here,
+// Sole owner of nmcli in the shell - the bar widgets and the settings network pages both read here,
 // so there is exactly one `nmcli monitor` process.
 import QtQuick
 import Quickshell
@@ -44,7 +44,7 @@ Singleton {
     readonly property var wifiLinks: root.links.filter(l => l.type === "wifi")
 
     // Wired and wireless can both be up at once, so each side gets its own active link
-    // rather than one shared "the connection" — the default route decides who carries traffic.
+    // rather than one shared "the connection" - the default route decides who carries traffic.
     readonly property var activeEthernet: root.ethernetLinks.find(l => l.stateCode >= 100) ?? null
     readonly property var activeWifi: root.wifiLinks.find(l => l.stateCode >= 100) ?? null
     readonly property var connectingEthernet: root.ethernetLinks.find(l => l.stateCode >= 40 && l.stateCode < 100) ?? null
@@ -62,7 +62,7 @@ Singleton {
     readonly property bool wifiUp: root.wifiSsid !== ""
     readonly property bool netUp:  root.ethernetUp || root.wifiUp
 
-    // True when both carriers are up — the case where a single shared icon would lie.
+    // True when both carriers are up - the case where a single shared icon would lie.
     readonly property bool dualUp: root.ethernetUp && root.wifiUp
     readonly property bool ethernetIsDefault: root.ethernetUp && root.activeEthernet?.isDefault === true
     readonly property bool wifiIsDefault: root.wifiUp && root.activeWifi?.isDefault === true
@@ -84,7 +84,7 @@ Singleton {
         return l.stateCode >= 100 ? "settings_ethernet" : (l.stateCode === 20 ? "power_off" : "lan");
     }
 
-    // Compact view for the bar popout — strongest 8, with the `signal` spelling it expects.
+    // Compact view for the bar popout - strongest 8, with the `signal` spelling it expects.
     readonly property var wifiScan: root.networks.slice(0, 8).map(n => ({
         ssid: n.ssid, signal: n.strength, active: n.active, secure: n.isSecure
     }))
@@ -98,7 +98,7 @@ Singleton {
     onWifiSsidChanged: if (root.wifiSsid !== "" && root.wifiSsid === root.pendingSsid) root.pendingSsid = "";
 
     // One sweep: radio state, every device with its addressing, then the default routes.
-    // `device show` is keyed one "FIELD:value" per line — values are NOT colon-escaped here
+    // `device show` is keyed one "FIELD:value" per line - values are NOT colon-escaped here
     // (MACs come through raw), so split on the first colon only.
     Process {
         id: netProc
@@ -239,7 +239,7 @@ Singleton {
     // `nmcli … password <psk>` publishes the key to every process on the machine for as long as
     // nmcli runs. `--ask` makes nmcli prompt for what it is missing and read the answer from
     // stdin, which is a pipe only this process and root can see. Verified that nmcli's prompt
-    // reader accepts a pipe — it does not require a tty.
+    // reader accepts a pipe - it does not require a tty.
     Process {
         id: secretProc
         stdinEnabled: true
@@ -269,7 +269,7 @@ Singleton {
             root.connectWithSecret(["nmcli", "--ask", "device", "wifi", "connect", target], password);
         } else {
             // A saved network activates straight from its profile. `device wifi connect` would
-            // re-derive the profile and can block on a fresh scan first — noticeably slower.
+            // re-derive the profile and can block on a fresh scan first - noticeably slower.
             Quickshell.execDetached(ssid && root.hasSavedProfile(ssid)
                 ? ["nmcli", "con", "up", "id", ssid]
                 : ["nmcli", "device", "wifi", "connect", target]);
@@ -314,7 +314,7 @@ Singleton {
 
     // --- Saved profiles + VPN (one `con show` feeds both) ---
     property var    savedConnectionSsids: []
-    property var    wiredProfiles: []     // [{ name, device, active }] — saved 802-3-ethernet profiles
+    property var    wiredProfiles: []     // [{ name, device, active }] - saved 802-3-ethernet profiles
     property bool   vpnActive: false
     property string vpnActiveName: ""
     property string vpnFirst: ""
@@ -395,7 +395,7 @@ Singleton {
         conRefresh.restart();
     }
     // Not fire-and-forget: a VPN that refuses to come up says why, and nmcli is the only one who
-    // hears it — a missing password, a gateway that never answers, or strongSwan turning down a
+    // hears it - a missing password, a gateway that never answers, or strongSwan turning down a
     // second tunnel because it only ever runs one.
     Process {
         id: vpnUpProc

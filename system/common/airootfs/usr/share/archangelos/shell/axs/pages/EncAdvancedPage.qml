@@ -1,4 +1,4 @@
-// Encryption › Advanced — the cipher, key size, hash and key derivation for drives encrypted from
+// Encryption › Advanced - the cipher, key size, hash and key derivation for drives encrypted from
 // here, how account passwords are hashed, and your GPG keys.
 import QtQuick
 import Quickshell
@@ -113,7 +113,7 @@ PageScaffold {
                       + (modelData.expires ? "  ·  expires " + Qt.formatDate(new Date(+modelData.expires * 1000), "d MMM yyyy") : "")
                 AxButton { icon: "ios_share"; text: "Export public"; anchors.verticalCenter: parent.verticalCenter
                            onClicked: page.run("exp", ["sh", "-c", 'gpg --armor --export "$1" > "$2"', "sh", modelData.fpr || modelData.id, Quickshell.env("HOME") + "/" + (modelData.id || "key") + ".asc"],
-                                               undefined, "Saved to ~/" + (modelData.id || "key") + ".asc — share that file freely.") }
+                                               undefined, "Saved to ~/" + (modelData.id || "key") + ".asc - share that file freely.") }
             }
         }
         Item {

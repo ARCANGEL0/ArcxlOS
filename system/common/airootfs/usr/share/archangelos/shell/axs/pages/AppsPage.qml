@@ -1,4 +1,4 @@
-// Apps — which app opens what, what starts with the desktop, and everything installed
+// Apps - which app opens what, what starts with the desktop, and everything installed
 // (open, see where it came from, uninstall).
 import QtQuick
 import Quickshell

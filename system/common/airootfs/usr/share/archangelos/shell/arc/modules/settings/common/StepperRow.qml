@@ -1,5 +1,5 @@
 // Row with a label and a numeric value adjusted by −/+ buttons. Used where a slider would be
-// imprecise (idle timeouts, frame rates) — the values matter to the unit, not to the pixel.
+// imprecise (idle timeouts, frame rates) - the values matter to the unit, not to the pixel.
 pragma ComponentBehavior: Bound
 
 import QtQuick

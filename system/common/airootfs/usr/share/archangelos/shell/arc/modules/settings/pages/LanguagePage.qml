@@ -1,4 +1,4 @@
-// Language & input: the system locale and time zone (read-only — both are privileged), and the
+// Language & input: the system locale and time zone (read-only - both are privileged), and the
 // Hyprland keyboard layout list, which is ours to edit.
 pragma ComponentBehavior: Bound
 
@@ -40,7 +40,7 @@ StackView {
                 InfoRow {
                     first: true; last: false
                     icon: "globe"; label: "System language"
-                    value: SysLocale.langName ? SysLocale.langName + " · " + SysLocale.lang : (SysLocale.lang || "—")
+                    value: SysLocale.langName ? SysLocale.langName + " · " + SysLocale.lang : (SysLocale.lang || "-")
                 }
                 InfoRow {
                     first: false; last: false
@@ -50,13 +50,13 @@ StackView {
                 NavRow {
                     first: false; last: false
                     icon: "translate"; label: "Change the system language"
-                    status: "Needs root — copies the command"
+                    status: "Needs root - copies the command"
                     onClicked: stack.push(localePage)
                 }
                 NavRow {
                     first: false; last: true
                     icon: "public"; label: "Change the time zone"
-                    status: "Needs root — copies the command"
+                    status: "Needs root - copies the command"
                     onClicked: stack.push(tzPage)
                 }
             }
@@ -258,7 +258,7 @@ StackView {
                 Layout.fillWidth: true
                 Layout.leftMargin: 6
                 text: "Changing the system locale is a privileged operation. Pick one below and the "
-                      + "matching command is copied to the clipboard — run it in a terminal, then log "
+                      + "matching command is copied to the clipboard - run it in a terminal, then log "
                       + "out and back in."
                 color: Config.dim; font.family: Config.textFont; font.pixelSize: 11
                 wrapMode: Text.WordWrap
@@ -336,8 +336,8 @@ StackView {
             }
             InfoRow { first: true; last: true; icon: "check"; label: "Current"; value: SysLocale.timezone }
 
-            // Search, and a cap on what is drawn. The list inside ItemList does not virtualise —
-            // its height IS its content height, so every row exists at once — and there are ~600
+            // Search, and a cap on what is drawn. The list inside ItemList does not virtualise -
+            // its height IS its content height, so every row exists at once - and there are ~600
             // zones on a normal install, each with its own state layer and mask. Opening the page
             // built all of them.
             TextRow {

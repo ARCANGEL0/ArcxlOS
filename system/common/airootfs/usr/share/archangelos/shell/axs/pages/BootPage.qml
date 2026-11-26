@@ -1,4 +1,4 @@
-// Boot & startup — the bootloader (how long it waits, which entry it defaults to), the kernels
+// Boot & startup - the bootloader (how long it waits, which entry it defaults to), the kernels
 // installed, the splash screen, and what the login screen does. Everything here changes system
 // files, so /usr/lib/archangelos/axs-admin asks for your password.
 import QtQuick
@@ -29,7 +29,7 @@ PageScaffold {
     Cmd { id: cmd }
     Cmd { id: act }
 
-    // Everything here is read without root — these files and tools are world-readable. Only the
+    // Everything here is read without root - these files and tools are world-readable. Only the
     // changes below go through axs-admin (pkexec), so just viewing the page never asks for a password.
     function load() {
         cmd.sh('if [ -d /sys/firmware/efi ] && [ -f /boot/loader/loader.conf ]; then echo "kind=systemd-boot"; '
@@ -90,7 +90,7 @@ PageScaffold {
         note: page.kind === "grub" ? "GRUB" : page.kind === "systemd-boot" ? "systemd-boot" : ""
         SRow {
             visible: page.loaded && page.kind === "unknown"
-            icon: "help"; title: "Bootloader not recognised"; desc: "This looks like a live session — boot settings appear once ArchangelOS is installed."
+            icon: "help"; title: "Bootloader not recognised"; desc: "This looks like a live session - boot settings appear once ArchangelOS is installed."
         }
         SRow {
             visible: page.kind !== "unknown" && page.kind !== ""
@@ -115,7 +115,7 @@ PageScaffold {
             icon: "visibility"; title: "Quiet boot"
             desc: /(^|\s)quiet(\s|$)/.test(page.b.cmdline || "") ? "Hides kernel messages behind the splash" : "Shows kernel messages while booting"
             AxSwitch { checked: /(^|\s)quiet(\s|$)/.test(page.b.cmdline || ""); enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
-                       onToggled: (on) => page.run("quiet", ["boot-quiet", on ? "1" : "0"], "Boot output updated — takes effect next boot.") }
+                       onToggled: (on) => page.run("quiet", ["boot-quiet", on ? "1" : "0"], "Boot output updated - takes effect next boot.") }
         }
     }
 
@@ -134,7 +134,7 @@ PageScaffold {
                 desc: modelData.installed ? "Installed" + (modelData.version ? "  ·  " + modelData.version : "") : "Not installed"
                 Badge { visible: parent.running && modelData.installed; text: "running now"; tone: "accent"; anchors.verticalCenter: parent.verticalCenter }
                 AxButton { visible: !modelData.installed; text: page.busy === "k-" + modelData.pkg ? "Installing…" : "Install"; kind: "primary"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
-                           onClicked: page.run("k-" + modelData.pkg, ["kernel-install", modelData.pkg], "Kernel installed — pick it in the boot menu.") }
+                           onClicked: page.run("k-" + modelData.pkg, ["kernel-install", modelData.pkg], "Kernel installed - pick it in the boot menu.") }
                 ConfirmButton { visible: modelData.installed && !parent.running; label: "Remove"; confirmText: "Remove?"; anchors.verticalCenter: parent.verticalCenter
                                 onConfirmed: page.run("k-" + modelData.pkg, ["kernel-remove", modelData.pkg], "Kernel removed.") }
             }
@@ -150,7 +150,7 @@ PageScaffold {
             AxSelect { width: 220; anchors.verticalCenter: parent.verticalCenter
                        model: page.splash.themes || []
                        current: Math.max(0, (page.splash.themes || []).indexOf(page.splash.current))
-                       onPicked: (i) => page.run("splash", ["splash-set", page.splash.themes[i]], "Splash theme set — takes effect next boot.") }
+                       onPicked: (i) => page.run("splash", ["splash-set", page.splash.themes[i]], "Splash theme set - takes effect next boot.") }
         }
     }
 
@@ -159,7 +159,7 @@ PageScaffold {
         title: "Login screen"
         SRow {
             icon: "login"; title: "Sign in automatically"
-            desc: page.login.autologin ? "Boots straight to " + page.login.autologin + "'s desktop — no password at startup" : "Ask for a password at startup (recommended)"
+            desc: page.login.autologin ? "Boots straight to " + page.login.autologin + "'s desktop - no password at startup" : "Ask for a password at startup (recommended)"
             AxSwitch { checked: !!page.login.autologin; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => page.run("auto", ["login-autologin", on ? (page.login.autologin || page.users[0] || "") : ""], on ? "Automatic sign-in on." : "Automatic sign-in off.") }
         }

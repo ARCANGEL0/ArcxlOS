@@ -30,7 +30,7 @@ Singleton {
 
     // PID of the recorder. Read back after launching so pause/stop can signal that exact process
     // instead of pkill-ing every gpu-screen-recorder on the system. When debugging by hand, note
-    // that `pkill -x gpu-screen-recorder` never matches either — the kernel truncates the process
+    // that `pkill -x gpu-screen-recorder` never matches either - the kernel truncates the process
     // name at 15 characters. Use `kill -INT $(pidof -x gpu-screen-recorder)`.
     property int recPid: 0
 
@@ -70,7 +70,7 @@ Singleton {
 
     // --- Region picking (slurp) ---
     // slurp knows the geometry, so both capture paths funnel through here. Cancelling leaves no
-    // output — hand back null and give up silently, where the old `grim -g "$(slurp)"` ran
+    // output - hand back null and give up silently, where the old `grim -g "$(slurp)"` ran
     // `grim -g ""`. Validating the four numbers avoids racing the exit code against stdout.
     property var regionCb: null
     readonly property bool picking: slurpProc.running
@@ -81,7 +81,7 @@ Singleton {
         //
         // stdin MUST be /dev/null. slurp reads predefined rectangles from stdin whenever it is not
         // a TTY, so the pipe a Process hands it blocked the read forever and the layer surface
-        // never mapped. stdinEnabled: false doesn't help — the pipe is still there. exec keeps the
+        // never mapped. stdinEnabled: false doesn't help - the pipe is still there. exec keeps the
         // shell from lingering, so `picking` still tracks slurp itself.
         slurpProc.command = ["sh", "-c", 'exec "$@" </dev/null', "sh", "slurp", "-d", "-w", "3",
             "-b", root.hexa(Config.shadow, Config.lightMode ? 0.5 : 0.6),
@@ -149,7 +149,7 @@ Singleton {
         // Hand `busy` back if the settle slot is taken, or the shot key would be dead until restart.
         if (!root.hideThenRun(() => {
             if (src !== "region") { root.grab(null); return; }
-            // No cropper, no still to crop from — then pick over the live desktop.
+            // No cropper, no still to crop from - then pick over the live desktop.
             if (root.hasMagick) root.freezeThenPick();
             else root.pickRegion(r => { if (r) root.grab(r); else root.busy = false; });
         }, src === "region" ? 60 : 150))
@@ -185,7 +185,7 @@ Singleton {
         id: freezeProc
         onExited: code => {
             root.hidingForCapture = false;
-            // No still — pick over the live desktop rather than drop the capture.
+            // No still - pick over the live desktop rather than drop the capture.
             if (code !== 0) {
                 root.freezePath = "";
                 root.pickRegion(r => { if (r) root.grab(r); else root.busy = false; });
@@ -357,7 +357,7 @@ Singleton {
             root.elapsed = 0;
             if (failedToStart) { root.wantErr = true; errLog.reload(); return; }
             Quickshell.execDetached(["notify-send", "-a", "Capture", "-t", "4000",
-                "Recording saved", path.split("/").pop() + " — " + took]);
+                "Recording saved", path.split("/").pop() + " - " + took]);
             if (Config.recCopyPath) Quickshell.clipboardText = path;
         }
     }
@@ -398,7 +398,7 @@ Singleton {
         // SIGINT only asks; gsr then muxes the file, which on a long recording takes seconds, and
         // `state` cannot go idle until it actually exits (that is what stamps the saved file in the
         // notification). The UI must not sit there in the meantime, so the intent is published
-        // separately — the bar drops its popout on this, not on the process finally dying.
+        // separately - the bar drops its popout on this, not on the process finally dying.
         root.stopping = true;
         Quickshell.execDetached(["kill", "-SIGINT", String(root.recPid)]);   // stop and mux
     }
@@ -406,7 +406,7 @@ Singleton {
 
     // Output directories are typed by hand in Settings, so "~/Videos/Recordings", "Videos/Recordings"
     // and "/mnt/media/clips" all have to land somewhere sensible. Anything that isn't already
-    // absolute is resolved against $HOME rather than left to the process's inherited cwd — that cwd
+    // absolute is resolved against $HOME rather than left to the process's inherited cwd - that cwd
     // is why a bare "Pictures/Screenshots" appeared to work while nothing else did.
     function absDir(p) {
         const home = Paths.home;
@@ -419,7 +419,7 @@ Singleton {
 
     // The form a path is STORED and SHOWN in: absolute, with $HOME folded back to "~". Settings
     // writes every directory field through this, so "Pictures", "~/Pictures" and "/home/me/Pictures"
-    // all end up on disk as the same string — the two capture fields can't drift into different
+    // all end up on disk as the same string - the two capture fields can't drift into different
     // styles the way they had.
     function niceDir(p) {
         const home = Paths.home;

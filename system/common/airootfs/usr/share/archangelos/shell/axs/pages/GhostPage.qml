@@ -1,4 +1,4 @@
-// GhostWired — the ghost wire tunnel: every packet this computer sends goes through Tor or is
+// GhostWired - the ghost wire tunnel: every packet this computer sends goes through Tor or is
 // rejected, except for the apps you exclude. State and commands live in the Ghost singleton;
 // Excluded apps and Tor configuration are sub-pages.
 import QtQuick
@@ -141,7 +141,7 @@ PageScaffold {
         EmptyState {
             icon: "shield"
             title: Ghost.st.installed !== "1" ? "Tor isn't installed" : "nftables isn't installed"
-            desc: "GhostWired needs both. Install them with  sudo pacman -S tor nftables  — until then the settings below can't take effect."
+            desc: "GhostWired needs both. Install them with  sudo pacman -S tor nftables  - until then the settings below can't take effect."
         }
     }
 
@@ -163,7 +163,7 @@ PageScaffold {
         title: "Tunnel"
         SRow {
             icon: "apps_outage"; title: "Excluded apps"
-            desc: page.excluded === 0 ? "None — nothing gets past the tunnel" : page.excluded + (page.excluded === 1 ? " app connects" : " apps connect") + " directly, outside Tor"
+            desc: page.excluded === 0 ? "None - nothing gets past the tunnel" : page.excluded + (page.excluded === 1 ? " app connects" : " apps connect") + " directly, outside Tor"
             clickable: true; chevron: true
             onClicked: NSS.Shell.openSettings("ghostwired-exclude")
         }
@@ -171,7 +171,7 @@ PageScaffold {
             icon: "alt_route"; title: "Bridge"; desc: page.mode.d
             AxSelect {
                 width: 230; anchors.verticalCenter: parent.verticalCenter
-                model: page.modes.map(m => m.t + (page.hasTransport(m.tr) ? "" : "  — not installed"))
+                model: page.modes.map(m => m.t + (page.hasTransport(m.tr) ? "" : "  - not installed"))
                 current: page.modes.indexOf(page.mode)
                 onPicked: (i) => Ghost.setOpt(["bridges=" + page.modes[i].k])
             }

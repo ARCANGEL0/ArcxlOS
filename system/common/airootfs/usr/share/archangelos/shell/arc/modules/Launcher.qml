@@ -1,6 +1,6 @@
 // App launcher (Super+Space): fuzzy app search + calc/emoji/actions/run/web prefixes. Per-screen
 // panel sliding up from the bottom edge, its background drawn by the Frame's SDF bulge
-// (PopoutState) so it flows out of the border — the bottom analogue of the Dashboard. No dim.
+// (PopoutState) so it flows out of the border - the bottom analogue of the Dashboard. No dim.
 pragma ComponentBehavior: Bound
 
 import QtQuick
@@ -42,7 +42,7 @@ PanelWindow {
     }
     Connections {
         target: Shell
-        // On an already-open launcher onShownChanged never fires again, so switch modes here —
+        // On an already-open launcher onShownChanged never fires again, so switch modes here -
         // otherwise a second `launcher open …` silently does nothing.
         function onLauncherQueryChanged() {
             if (launcher.shown && Shell.launcherQuery) launcher.takeQuery();
@@ -53,7 +53,7 @@ PanelWindow {
     //
     // Driven off panel.y live and reported with anim=false, so the bulge rides the slide 1:1.
     // Reporting the resting rect made the background appear where the panel was going to land and
-    // collapse upward — the Frame eases size only, so the box grew down from a fixed top edge.
+    // collapse upward - the Frame eases size only, so the box grew down from a fixed top edge.
     function reportBox() {
         // The panel keeps sliding after closing, by which point the Dashboard may already own the
         // shared bulge slot.
@@ -71,7 +71,7 @@ PanelWindow {
     }
 
     // Command palette, shown when the query starts with ">". The entries themselves live in
-    // services/Actions.qml — the list is long and purely declarative.
+    // services/Actions.qml - the list is long and purely declarative.
     readonly property bool isActions: search.text.startsWith(">")
 
     // ">theme", ">wallpaper" and ">font" swap the result list for a live-preview carousel. One
@@ -118,7 +118,7 @@ PanelWindow {
         const p = launcher.carouselModel[i];
         if (p) Wallpaper.set(p);
     }
-    // Rewrite the query in place instead of closing — how a ">" command hands off to another mode.
+    // Rewrite the query in place instead of closing - how a ">" command hands off to another mode.
     function enterPrefix(text) {
         search.text = text;
         search.cursorPosition = search.text.length;
@@ -174,7 +174,7 @@ PanelWindow {
                       const script = '"$0" -c "$1"; printf "\\n[exit %s] press Enter to close" "$?"; read -r _';
                       Quickshell.execDetached([launcher.terminal, "-e", "sh", "-c", script, launcher.userShell, cmd]);
                   } },
-                { name: "Run: " + cmd, desc: "Detached via " + launcher.shellName + " — no window, no output",
+                { name: "Run: " + cmd, desc: "Detached via " + launcher.shellName + " - no window, no output",
                   matIcon: "terminal", isAction: true,
                   execute: function() { Quickshell.execDetached([launcher.userShell, "-c", cmd]); } }
             ];
@@ -241,7 +241,7 @@ PanelWindow {
         return "";
     }
 
-    // Move the selection by one, in whichever is on screen — result list or carousel. Arrows and
+    // Move the selection by one, in whichever is on screen - result list or carousel. Arrows and
     // Ctrl+J/K both land here. Untyped on purpose: an annotated return with an unannotated
     // parameter is rejected outright and the function never registers.
     function step(delta) {
@@ -282,7 +282,7 @@ PanelWindow {
         if (!item.keepOpen) Shell.launcherVisible = false;
     }
 
-    // Transparent outside-click catcher — masked (and thus interactive) only while open.
+    // Transparent outside-click catcher - masked (and thus interactive) only while open.
     mask: Region { item: launcher.shown ? catcher : null }
     MouseArea {
         id: catcher
@@ -290,7 +290,7 @@ PanelWindow {
         onClicked: Shell.launcherVisible = false
     }
 
-    // Sliding panel — background from the Frame bulge, content on top. Search sits at the bottom
+    // Sliding panel - background from the Frame bulge, content on top. Search sits at the bottom
     // and the height tracks the content, so results grow upward from it.
     Item {
         id: panel
@@ -300,7 +300,7 @@ PanelWindow {
         anchors.horizontalCenterOffset: (56 - 8) / 2
         // A compact box, not screen-relative, so the side padding stays constant; a carousel widens
         // for the previews, and the screen clamp is only a safety net. The base width is measured
-        // off the prefix hint rather than hardcoded — the hint grows with every mode added, and a
+        // off the prefix hint rather than hardcoded - the hint grows with every mode added, and a
         // fixed 600 silently clipped it.
         readonly property int chrome: 16 + 20 + 12 + 50   // search icon block + clear-button gutter
         readonly property int hintFit: hint.implicitWidth + panel.chrome + panel.pad * 2
@@ -361,7 +361,7 @@ PanelWindow {
                 }
             }
 
-            // Results — sized to content (capped), so the panel hugs the search when short.
+            // Results - sized to content (capped), so the panel hugs the search when short.
             ListView {
                 id: appList
                 Layout.fillWidth: true
@@ -463,7 +463,7 @@ PanelWindow {
                 preferredHighlightEnd: 0.5
                 highlightRangeMode: PathView.StrictlyEnforceRange
                 highlightMoveDuration: Motion.spatialDur
-                // Start on whatever is in effect, on creation and on every re-entry — the model
+                // Start on whatever is in effect, on creation and on every re-entry - the model
                 // changes underneath, so the index must follow.
                 Component.onCompleted: currentIndex = launcher.carouselIndex()
                 onVisibleChanged: if (visible) currentIndex = launcher.carouselIndex()
@@ -601,7 +601,7 @@ PanelWindow {
                             }
                         }
 
-                        // Wallpapers only apply on Enter — say so, since every other mode is live.
+                        // Wallpapers only apply on Enter - say so, since every other mode is live.
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             visible: launcher.carouselMode === "wallpaper" && card.cur
@@ -622,7 +622,7 @@ PanelWindow {
                 }
             }
 
-            // Search field — bottom of the panel; magnifier left, clear right, inner padding.
+            // Search field - bottom of the panel; magnifier left, clear right, inner padding.
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 50
@@ -651,7 +651,7 @@ PanelWindow {
                     Keys.onUpPressed: launcher.step(-1)
                     // Ctrl+J/K for down/up and Ctrl+H/L for left/right, so the hands stay on the
                     // home row; Ctrl is required because bare hjkl must stay typeable. H/L are
-                    // gated on isCarousel like the arrows below — sideways means nothing in a
+                    // gated on isCarousel like the arrows below - sideways means nothing in a
                     // vertical list, and leaving them unaccepted keeps Qt's Ctrl+H (delete
                     // previous character) working.
                     Keys.onPressed: e => {

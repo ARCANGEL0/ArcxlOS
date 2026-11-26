@@ -21,7 +21,7 @@ import Quickshell.Io
 import "../../"
 
 // Queries envycontrol on load and after each switch.
-// Switching requires reboot — uses Popups.showConfirm().
+// Switching requires reboot - uses Popups.showConfirm().
 //
 // currentMode is ONLY ever set from an envycontrol --query result,
 // never optimistically. If pkexec is cancelled, the re-query after
@@ -32,8 +32,8 @@ import "../../"
 // the next scheduled query.
 //
 // Exposes:
-//   string currentMode  — "integrated" | "hybrid" | "nvidia"
-//   bool   busy         — true while a switch command is running
+//   string currentMode  - "integrated" | "hybrid" | "nvidia"
+//   bool   busy         - true while a switch command is running
 //   function switchMode(mode)
 
 QtObject {
@@ -53,7 +53,7 @@ QtObject {
         }
     }
 
-    // Pending mode — held until we confirm the switch succeeded
+    // Pending mode - held until we confirm the switch succeeded
 
     // ── Query current mode ────────────────────────────────────────────────────
     property var _queryProc: Process {

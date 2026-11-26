@@ -1,4 +1,4 @@
-// USB devices — USBGuard: when on, devices plugged in now stay allowed and anything new waits
+// USB devices - USBGuard: when on, devices plugged in now stay allowed and anything new waits
 // for your OK here (keyboards that type by themselves, rogue chargers, BadUSB sticks).
 import QtQuick
 import qs.axs
@@ -50,7 +50,7 @@ PageScaffold {
             visible: page.installed
             icon: page.on ? "usb" : "usb_off"; title: "Ask before new USB devices work"
             desc: page.on ? "Devices plugged in later are blocked until you allow them below"
-                          : "Off — any device works the moment it's plugged in. Turning this on keeps everything connected now"
+                          : "Off - any device works the moment it's plugged in. Turning this on keeps everything connected now"
             AxSwitch { checked: page.on; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => page.act("svc", ["/usr/lib/archangelos/axs-sec", on ? "usbguard-on" : "usbguard-off"]) }
         }

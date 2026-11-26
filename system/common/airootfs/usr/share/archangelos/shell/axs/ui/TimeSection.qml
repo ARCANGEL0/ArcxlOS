@@ -22,7 +22,7 @@ Section {
         icon: "public"; title: "Set the time zone automatically"
         desc: Geo.auto ? (Geo.detected ? "Found " + Geo.detected + " from your connection" : "Looks up where your internet connection is")
                          + ". Paused while GhostWired is on"
-                       : "Off — you choose the zone below"
+                       : "Off - you choose the zone below"
         AxSwitch { checked: Geo.auto; anchors.verticalCenter: parent.verticalCenter; onToggled: (on) => Geo.setAuto(on) }
     }
     SRow {
@@ -46,7 +46,7 @@ Section {
     SRow {
         visible: Geo.timedated
         icon: "sync"; title: "Set the time automatically"
-        desc: Geo.ntp ? "Synced with internet time servers" : "Off — set the date and time below"
+        desc: Geo.ntp ? "Synced with internet time servers" : "Off - set the date and time below"
         AxSwitch { checked: Geo.ntp; enabled_: Geo.busy === ""; anchors.verticalCenter: parent.verticalCenter; onToggled: (on) => Geo.setNtp(on) }
     }
     // by hand: DD-MM-YYYY and HH:MM:SS

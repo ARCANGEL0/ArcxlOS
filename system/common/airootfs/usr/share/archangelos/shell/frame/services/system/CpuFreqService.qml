@@ -30,21 +30,21 @@ import Quickshell.Io
 //      → averages kHz across all cores → curFreqStr
 //
 // Exposes:
-//   string governor      — dominant sysfs value e.g. "powersave"
-//   string activeProfile — "performance" | "powersave"
-//   bool   daemonActive  — true if auto-cpufreq.service is running
+//   string governor      - dominant sysfs value e.g. "powersave"
+//   string activeProfile - "performance" | "powersave"
+//   bool   daemonActive  - true if auto-cpufreq.service is running
 //   bool   busy
-//   string curFreqStr    — average frequency e.g. "2.40 GHz"
-//   function setActiveProfile(profile)  — "performance" | "powersave"
+//   string curFreqStr    - average frequency e.g. "2.40 GHz"
+//   function setActiveProfile(profile)  - "performance" | "powersave"
 
 QtObject {
     id: root
 
-    property string governor:      "—"
+    property string governor:      "-"
     property string activeProfile: "powersave"
     property bool   daemonActive:  false
     property bool   busy:          false
-    property string curFreqStr:    "— GHz"
+    property string curFreqStr:    "- GHz"
 
     // ── Daemon status check ───────────────────────────────────────────────────
     property var _daemonProc: Process {

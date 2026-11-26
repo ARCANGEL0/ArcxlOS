@@ -1,7 +1,7 @@
 // Month grid with prev/next navigation, today highlighted.
 //
 // The grid is a fixed six rows: months span five or six weeks depending on where they start, and
-// letting the row count follow would resize the dashboard panel — and with it the Frame's bulge —
+// letting the row count follow would resize the dashboard panel - and with it the Frame's bulge -
 // every time you page through the year.
 pragma ComponentBehavior: Bound
 

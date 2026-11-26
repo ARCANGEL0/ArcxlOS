@@ -23,7 +23,7 @@ import "../services"
 import "../"
 
 // ─────────────────────────────────────────────────────────────
-// NotificationList — content panel for NotificationsPopup
+// NotificationList - content panel for NotificationsPopup
 // ─────────────────────────────────────────────────────────────
 Item {
     id: root
@@ -50,7 +50,7 @@ Item {
             font.bold:      true
         }
 
-        // Clear-all — only visible when there are notifications
+        // Clear-all - only visible when there are notifications
         Item {
             anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
             width:   clearLabel.width + 16
@@ -75,7 +75,7 @@ Item {
         }
     }
 
-    // Divider — only when list is non-empty
+    // Divider - only when list is non-empty
     Rectangle {
         id: divider
         anchors { top: header.bottom; left: parent.left; right: parent.right }
@@ -88,7 +88,7 @@ Item {
     Item {
         id:      listArea
         anchors { top: divider.bottom; left: parent.left; right: parent.right }
-        // Clamp to maxListHeight — ListView scrolls inside
+        // Clamp to maxListHeight - ListView scrolls inside
         height:  Math.min(contentList.contentHeight, maxListHeight)
         visible: NotificationService.count > 0
 
@@ -153,10 +153,10 @@ Item {
     component NotificationCard: Item {
         id: card
 
-        // notification is required — guard every access with ?. and ?? fallback
+        // notification is required - guard every access with ?. and ?? fallback
         required property var notification
 
-        // Urgency accent color — guard against undefined notification/urgency
+        // Urgency accent color - guard against undefined notification/urgency
         readonly property color urgencyColor: {
             if (!notification) return Theme.active
             switch (notification.urgency) {

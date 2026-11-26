@@ -1,4 +1,4 @@
-// Wi-Fi & Network — wireless on/off, nearby networks (connect, password, forget) and wired links.
+// Wi-Fi & Network - wireless on/off, nearby networks (connect, password, forget) and wired links.
 // Everything goes through the shell's NetworkManager service, so the bar updates in step.
 import QtQuick
 import qs.axs
@@ -45,7 +45,7 @@ PageScaffold {
                 : !NSS.Net.wifiOn ? "Off"
                 : NSS.Net.wifiSsid !== "" ? "Connected to " + NSS.Net.wifiSsid
                 : NSS.Net.connectingSsid() !== "" ? "Connecting to " + NSS.Net.connectingSsid() + "…"
-                : "On — not connected"
+                : "On - not connected"
             AxSwitch { checked: page.hasWifi && NSS.Net.wifiOn; enabled_: page.hasWifi; onToggled: (on) => NSS.Net.enableWifi(on, null); anchors.verticalCenter: parent.verticalCenter }
         }
     }
@@ -118,7 +118,7 @@ PageScaffold {
                             enabled_: pw.text.length >= 8
                             onClicked: {
                                 NSS.Net.connectToNetwork(net.modelData.ssid, pw.text, net.modelData.bssid, (ok, msg) => {
-                                    if (!ok) page.error = msg || "Couldn't connect — check the password.";
+                                    if (!ok) page.error = msg || "Couldn't connect - check the password.";
                                 });
                                 page.expanded = "";
                             }
@@ -161,14 +161,14 @@ PageScaffold {
         title: "Details"
         SRow {
             icon: "router"; title: "Gateway"
-            Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: NSS.Net.defaultGateway || "—"; anchors.verticalCenter: parent.verticalCenter }
+            Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: NSS.Net.defaultGateway || "-"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
             icon: "lan"; title: "Default interface"
-            Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: NSS.Net.defaultDevice || "—"; anchors.verticalCenter: parent.verticalCenter }
+            Label { mono: true; font.pixelSize: Ax.fsSmall; color: Ax.subtext; text: NSS.Net.defaultDevice || "-"; anchors.verticalCenter: parent.verticalCenter }
         }
         SRow {
-            icon: "vpn_lock"; title: "VPN"; desc: NSS.Net.vpnActive ? "Active on " + (NSS.Net.vpnDevice || "—") : "Not connected"
+            icon: "vpn_lock"; title: "VPN"; desc: NSS.Net.vpnActive ? "Active on " + (NSS.Net.vpnDevice || "-") : "Not connected"
             clickable: true; chevron: true; onClicked: NSS.Shell.openSettings("vpn")
             Badge { visible: NSS.Net.vpnActive; text: NSS.Net.vpnActiveName; tone: "accent"; anchors.verticalCenter: parent.verticalCenter }
         }

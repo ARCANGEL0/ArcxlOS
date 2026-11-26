@@ -424,7 +424,7 @@ wget
 ### arcfetch banner deps
 chafa
 
-### cyberspace client runtime (WPEWebKit) — /usr/bin/cyberspace
+### cyberspace client runtime (WPEWebKit) - /usr/bin/cyberspace
 wpewebkit
 yt-dlp
 nftables

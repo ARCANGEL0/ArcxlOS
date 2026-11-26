@@ -39,7 +39,7 @@ QYLOCK_DIR=/opt/qylock
 if [ ! -d "$QYLOCK_DIR" ]; then
   git clone --depth 1 https://github.com/Darkkal44/qylock.git "$QYLOCK_DIR" 2>/dev/null || true
 fi
-# Drop the cloned VCS history — it's ~570 MB of pack objects with zero runtime
+# Drop the cloned VCS history - it's ~570 MB of pack objects with zero runtime
 # value and would otherwise ship inside the ISO.
 rm -rf "$QYLOCK_DIR/.git" "$QYLOCK_DIR/.github" 2>/dev/null || true
 
@@ -56,7 +56,7 @@ if [ -d "$QYLOCK_DIR/themes" ] && [ -d "$SDDM_THEME" ]; then
   cp -a "$SDDM_THEME" "$QYLOCK_DIR/themes/archangelos"
 fi
 
-# ArchangelOS: qylock ships ~600 MB of upstream themes we never use — the config
+# ArchangelOS: qylock ships ~600 MB of upstream themes we never use - the config
 # below pins the injected "archangelos" theme, so drop every other theme to keep
 # them out of the ISO. Guarded on archangelos existing so we never wipe all themes.
 if [ -d "$QYLOCK_DIR/themes/archangelos" ]; then

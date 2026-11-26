@@ -1,4 +1,4 @@
-# gits-glass-red — red-glass overhaul of gits-glass for Rio
+# gits-glass-red - red-glass overhaul of gits-glass for Rio
 # Deep red-black surface, neon red foreground, readable contrast scale.
 [colors]
 background = '#0B0103'

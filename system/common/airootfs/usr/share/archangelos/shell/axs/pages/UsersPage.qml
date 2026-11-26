@@ -1,4 +1,4 @@
-// Users & Accounts — your picture, name and password; other people on this computer; adding one.
+// Users & Accounts - your picture, name and password; other people on this computer; adding one.
 // Account changes go through /usr/lib/archangelos/axs-admin, which asks for your password.
 import QtQuick
 import Quickshell
@@ -253,7 +253,7 @@ PageScaffold {
                 Row {
                     spacing: 10
                     AxSwitch { id: newAdmin; checked: false; onToggled: (on) => checked = on; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: "Administrator — can install apps and change system settings"; font.pixelSize: Ax.fsSmall; color: Ax.subtext; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: "Administrator - can install apps and change system settings"; font.pixelSize: Ax.fsSmall; color: Ax.subtext; anchors.verticalCenter: parent.verticalCenter }
                 }
                 Row {
                     spacing: 12

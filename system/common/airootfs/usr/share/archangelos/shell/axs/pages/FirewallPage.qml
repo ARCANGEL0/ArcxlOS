@@ -1,4 +1,4 @@
-// Firewall — firewalld: on/off, how strict (its zone), which services and ports may come in, and
+// Firewall - firewalld: on/off, how strict (its zone), which services and ports may come in, and
 // which networks you trust. firewall-cmd and systemctl ask polkit, so you're prompted for your
 // password when something changes.
 import QtQuick
@@ -80,7 +80,7 @@ PageScaffold {
         SRow {
             icon: page.on ? "local_fire_department" : "fire_extinguisher"
             title: page.on ? "On" : "Off"
-            desc: page.on ? "Incoming connections are checked against the rules below" : "Nothing is filtered — anything on the network can try to connect in"
+            desc: page.on ? "Incoming connections are checked against the rules below" : "Nothing is filtered - anything on the network can try to connect in"
             AxSwitch { checked: page.on; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => page.run("svc", on ? "systemctl enable --now firewalld" : "systemctl disable --now firewalld") }
         }
@@ -115,7 +115,7 @@ PageScaffold {
                         }
                     }
                 }
-                Label { visible: page.profiles.every(p => p.z !== page.f.zone); text: "Currently: " + (page.f.zone || "—"); color: Ax.faint; font.pixelSize: Ax.fsSmall }
+                Label { visible: page.profiles.every(p => p.z !== page.f.zone); text: "Currently: " + (page.f.zone || "-"); color: Ax.faint; font.pixelSize: Ax.fsSmall }
             }
         }
     }

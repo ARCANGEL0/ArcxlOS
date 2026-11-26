@@ -26,7 +26,7 @@ import "../services/"
 // Driven entirely by Popups.confirm* props.
 // Call Popups.showConfirm() to open, Popups.cancelConfirm() to close.
 //
-// Supported confirmAction values — all routed through scripts/PowerControl.sh:
+// Supported confirmAction values - all routed through scripts/PowerControl.sh:
 //   "shutdown"        → systemctl poweroff
 //   "reboot"          → systemctl reboot
 //   "logout"          → loginctl terminate-user $USER
@@ -63,7 +63,7 @@ PanelWindow {
         property var pendingCmd: []
         command: pendingCmd
 
-        // Watch stdout for "authenticated" — printed by GfxSwitch.sh immediately
+        // Watch stdout for "authenticated" - printed by GfxSwitch.sh immediately
         // after pkexec grants root, before envycontrol starts doing its work.
         stdout: SplitParser {
             onRead: data => {
@@ -76,7 +76,7 @@ PanelWindow {
                 if (exitCode === 0) {
                     reboot.running = true
                 } else {
-                    // Auth cancelled or envycontrol failed — hide card, abort.
+                    // Auth cancelled or envycontrol failed - hide card, abort.
                     Popups.confirmRunning = false
                     reboot.command = []
                 }

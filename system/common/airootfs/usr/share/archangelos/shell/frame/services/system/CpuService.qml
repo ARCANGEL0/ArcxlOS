@@ -21,7 +21,7 @@ import Quickshell.Io
 
 // Reads /proc/stat every second via cat and computes CPU usage %.
 // Exposes:
-//   real usagePercent   — 0.0 to 100.0
+//   real usagePercent   - 0.0 to 100.0
 
 QtObject {
     id: root

@@ -19,7 +19,7 @@ Singleton {
 
     readonly property NotificationServer server: notifServer
 
-    // Every app that has sent a notification this session — the roster the settings page offers
+    // Every app that has sent a notification this session - the roster the settings page offers
     // for per-app muting. Nothing is remembered about an app that has never sent one.
     readonly property var apps: {
         const seen = {};
@@ -40,7 +40,7 @@ Singleton {
     // --- Icons ---
     // The picture the app sent (Telegram ships the sender's photo as image-data, the capture
     // service its screenshot), else the app's own icon, else the one its desktop entry declares.
-    // Empty when it offers none of the three — the caller draws glyph() instead.
+    // Empty when it offers none of the three - the caller draws glyph() instead.
     function art(n) {
         if (!n) return "";
         if (n.image) return n.image;
@@ -64,7 +64,7 @@ Singleton {
     // A body about to be rendered as Markdown, with every image reference taken out:
     // `![alt](url)` and the reference form both make Qt fetch the url the moment the text is
     // laid out, which turns any notification into a read receipt for whoever sent it. Inline
-    // styling and links survive — a link is at least a deliberate click (see Toasts.qml).
+    // styling and links survive - a link is at least a deliberate click (see Toasts.qml).
     function safeBody(text) {
         return (text ?? "")
             .replace(/!\[[^\]]*\]\([^)]*\)/g, "")     // ![alt](url)
@@ -72,8 +72,8 @@ Singleton {
             .replace(/^\s*\[[^\]]*\]:\s*\S+.*$/gm, ""); // the [ref]: url definition line
     }
 
-    // How many notifications stay in the dashboard's list. Nothing expires them on its own —
-    // `tracked` keeps a notification alive until it is dismissed — so an app in a crash loop
+    // How many notifications stay in the dashboard's list. Nothing expires them on its own -
+    // `tracked` keeps a notification alive until it is dismissed - so an app in a crash loop
     // would grow the list, and the delegates behind it, for as long as the session lasts.
     readonly property int maxTracked: 100
     function trimTracked() {
@@ -82,7 +82,7 @@ Singleton {
         const all = (notifServer.trackedNotifications?.values ?? []).slice();
         if (all.length <= root.maxTracked) return;
         // `values` is oldest-first; drop from that end until the cap holds. expire(), not
-        // dismiss(): the sender is told the notification timed out, which is what happened —
+        // dismiss(): the sender is told the notification timed out, which is what happened -
         // dismiss() would claim the user closed one they were never shown.
         for (let i = 0; i < all.length - root.maxTracked; i++) all[i].expire();
     }

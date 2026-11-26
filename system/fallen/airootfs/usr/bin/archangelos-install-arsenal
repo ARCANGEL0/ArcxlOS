@@ -3,7 +3,7 @@ set -u
 
 cat <<'BANNER'
 ========================================================================
-  ArchangelOS — Fallen Edition : Full Red-Team Arsenal Installer
+  ArchangelOS - Fallen Edition : Full Red-Team Arsenal Installer
 ------------------------------------------------------------------------
   The live image ships a curated core of the most-used tools. This
   pulls the complete arsenal (~1000 tools) from the repositories and

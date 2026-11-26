@@ -21,7 +21,7 @@ import Quickshell.Io
 import "../../"
 import "../../components"
 
-// ClockCard — Clock / Timer / Alarm / Stopwatch
+// ClockCard - Clock / Timer / Alarm / Stopwatch
 
 StatCard {
     id: root
@@ -150,7 +150,7 @@ StatCard {
                 list[i] = Object.assign({}, a, { firedToday: true })
                 changed = true
                 _notify("Alarm", (a.label !== "" ? a.label : "Alarm") +
-                        " — " + _zp(a.hour) + ":" + _zp(a.minute))
+                        " - " + _zp(a.hour) + ":" + _zp(a.minute))
             }
             if (a.firedToday && !(a.hour === _currentH && a.minute === _currentM)) {
                 list[i] = Object.assign({}, a, { firedToday: false })

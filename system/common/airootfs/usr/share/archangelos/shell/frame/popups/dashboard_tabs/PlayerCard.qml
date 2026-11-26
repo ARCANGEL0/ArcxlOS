@@ -281,7 +281,7 @@ Item {
         }
     }
 
-    // ── Source picker — upward-expanding pill ─────────────────────────────────
+    // ── Source picker - upward-expanding pill ─────────────────────────────────
     Item {
         id: sourcePicker
         anchors {
@@ -408,7 +408,7 @@ Item {
         }
     } 
 
-    // ── Cava bars — flush with the card bottom ────────────────────────────────
+    // ── Cava bars - flush with the card bottom ────────────────────────────────
     Item {
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: Math.round(7 * localScale); rightMargin: Math.round(7 * localScale); bottomMargin: Math.round(4 * localScale) }
         height: Math.round(32 * localScale)

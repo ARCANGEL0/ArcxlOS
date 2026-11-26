@@ -53,7 +53,7 @@ StackView {
                 StepperRow {
                     first: false; last: false
                     label: "Turn displays off after"
-                    subtext: "Independent of the lock — screens may sleep before or after it"
+                    subtext: "Independent of the lock - screens may sleep before or after it"
                     value: Config.dpmsTimeout
                     ladder: stack.dpmsLadder
                     valueText: stack.durationText(Config.dpmsTimeout)
@@ -95,7 +95,7 @@ StackView {
                     text: "Battery saver"
                     // Names what it gives up, so nobody has to read services/Power.qml to find out.
                     subtext: Power.saving
-                        ? "Active — live wallpaper, window previews, frame shader and background polling are off"
+                        ? "Active - live wallpaper, window previews, frame shader and background polling are off"
                         : "While on battery: pause the live wallpaper and window previews, flatten the frame, shorten animations and stop background polling"
                     checked: Config.batterySaver
                     onToggled: Config.batterySaver = !Config.batterySaver

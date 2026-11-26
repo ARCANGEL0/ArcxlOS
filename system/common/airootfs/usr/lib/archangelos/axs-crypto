@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# axs-crypto — helper for Settings > Encryption's checksum and toolkit pages.
+# axs-crypto - helper for Settings > Encryption's checksum and toolkit pages.
 #
 # Reads one JSON request on stdin, writes one JSON reply on stdout, so passphrases and keys never
 # sit on a command line or in the process list. Runs as the user; nothing here needs root. It is a

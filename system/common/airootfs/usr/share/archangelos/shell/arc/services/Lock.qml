@@ -35,7 +35,7 @@ Singleton {
         if (pam.active || root.password.length === 0) return;
         root.error = "";
         // A failed start emits no `completed`, so taking `busy` on faith would disable the password
-        // field for the rest of the lock — with no way to type and no way out.
+        // field for the rest of the lock - with no way to type and no way out.
         if (!pam.start()) {
             root.error = "Authentication unavailable";
             root.password = "";

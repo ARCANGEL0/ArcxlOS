@@ -1,6 +1,6 @@
 pragma Singleton
 
-// Session verbs — the one place that knows how to end, suspend or restart the session.
+// Session verbs - the one place that knows how to end, suspend or restart the session.
 // greeter.qml keeps its own pair: it runs before a session exists, under another user.
 import Quickshell
 

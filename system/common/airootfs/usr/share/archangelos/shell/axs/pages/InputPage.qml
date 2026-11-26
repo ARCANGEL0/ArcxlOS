@@ -1,4 +1,4 @@
-// Keyboard & Mouse — layouts and how to switch them, typing repeat, pointer and touchpad.
+// Keyboard & Mouse - layouts and how to switch them, typing repeat, pointer and touchpad.
 // Layouts go through ArcShell's input service; pointer options are applied live and saved to
 // ~/.config/archangelos/hypr/pointer.lua, which the compositor config loads last.
 import QtQuick

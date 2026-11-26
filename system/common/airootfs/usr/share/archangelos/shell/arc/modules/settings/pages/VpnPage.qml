@@ -64,7 +64,7 @@ StackView {
                                 Layout.fillWidth: true; elide: Text.ElideRight
                             }
                             Text {
-                                // Name the carrier it rides on — with wired and Wi-Fi both able
+                                // Name the carrier it rides on - with wired and Wi-Fi both able
                                 // to be up, "Connected" alone does not say over what.
                                 text: !nm.modelData.active ? "Tap to connect"
                                     : nm.modelData.device ? "Connected via " + nm.modelData.device
@@ -212,7 +212,7 @@ StackView {
                             }
                             Text {
                                 text: ty.modelData.available ? ty.modelData.subtext
-                                    : "Plugin not installed — needs " + ty.modelData.package
+                                    : "Plugin not installed - needs " + ty.modelData.package
                                 color: ty.modelData.available ? Config.dim : Config.warning
                                 font.family: Config.textFont; font.pixelSize: 11
                                 Layout.fillWidth: true; elide: Text.ElideRight
@@ -244,7 +244,7 @@ StackView {
             Text {
                 Layout.fillWidth: true
                 Layout.leftMargin: 6
-                text: "Hands the file to `nmcli connection import`, which reads the whole thing — "
+                text: "Hands the file to `nmcli connection import`, which reads the whole thing - "
                       + "keys, peers and routes included. The profile then appears in the list and "
                       + "in the bar."
                 color: Config.dim; font.family: Config.textFont; font.pixelSize: 11
@@ -327,7 +327,7 @@ StackView {
                 Layout.fillWidth: true
                 Layout.leftMargin: 6
                 text: form.kind === "wireguard"
-                    ? "WireGuard profiles carry their keys and peers in the profile itself — edit "
+                    ? "WireGuard profiles carry their keys and peers in the profile itself - edit "
                       + "the .conf and import it again to change them."
                     : "This profile was made by something else and uses settings this page does not "
                       + "know. Its name can be changed here; the rest, only in nm-connection-editor."
@@ -425,7 +425,7 @@ StackView {
             Text {
                 Layout.fillWidth: true
                 Layout.leftMargin: 6
-                text: "For anything NetworkManager does not manage — tailscale, warp-cli, a bare "
+                text: "For anything NetworkManager does not manage - tailscale, warp-cli, a bare "
                       + "wg-quick. The commands run through `sh -c`; the interface is how the shell "
                       + "tells whether it is up."
                 color: Config.dim; font.family: Config.textFont; font.pixelSize: 11

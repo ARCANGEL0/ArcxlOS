@@ -70,13 +70,13 @@ BarPopout {
             ColumnLayout {
                 Layout.preferredWidth: 64
                 spacing: 1
-                Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: Sys.hasGpu ? Math.round(Sys.gpu * 100) + "%" : "—"; color: Sys.hasGpu ? pop.gpuTint : Config.fg; font.family: Config.textFont; font.pixelSize: 16; font.weight: Font.Bold }
+                Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: Sys.hasGpu ? Math.round(Sys.gpu * 100) + "%" : "-"; color: Sys.hasGpu ? pop.gpuTint : Config.fg; font.family: Config.textFont; font.pixelSize: 16; font.weight: Font.Bold }
                 Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: Sys.hasGpu ? "GPU" : "no GPU"; color: Config.dim; font.family: Config.textFont; font.pixelSize: 9 }
             }
         }
 
         SectionRow { label: "System load"; value: Sys.load.toFixed(2) + "  ·  " + Sys.cores + " cores" }
-        SectionRow { label: "Temperature"; value: (Sys.temp > 0 ? Sys.temp + "°C" : "—") + (Sys.hasGpu && Sys.gpuTemp > 0 ? "  ·  GPU " + Sys.gpuTemp + "°C" : "") }
+        SectionRow { label: "Temperature"; value: (Sys.temp > 0 ? Sys.temp + "°C" : "-") + (Sys.hasGpu && Sys.gpuTemp > 0 ? "  ·  GPU " + Sys.gpuTemp + "°C" : "") }
 
         Text { text: "CPU"; color: pop.cpuTint; font.family: Config.textFont; font.pixelSize: 8; font.bold: true; Layout.topMargin: 2 }
         HistChart { Layout.fillWidth: true; implicitHeight: 56; hist: Sys.cpuHist; line: pop.cpuTint }

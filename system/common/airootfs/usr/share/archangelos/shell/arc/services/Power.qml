@@ -1,7 +1,7 @@
 pragma Singleton
 
 // Power policy: what the shell stops paying for while it runs off the battery.
-// GameMode turned around — that one trades power for frames, this one for runtime.
+// GameMode turned around - that one trades power for frames, this one for runtime.
 import QtQuick
 import Quickshell
 import qs.arc

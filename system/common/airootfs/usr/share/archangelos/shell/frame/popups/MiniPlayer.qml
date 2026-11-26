@@ -24,7 +24,7 @@ import "../services"
 import "../components"
 import "../"
 
-// MiniPlayer — compact music controls popup extruding from the center notch.
+// MiniPlayer - compact music controls popup extruding from the center notch.
 // Replicates the ScreenRecOptionsPopup pattern: clip-masked downward reveal.
 
 Item {

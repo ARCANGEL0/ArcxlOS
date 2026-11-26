@@ -1,4 +1,4 @@
-// Displays — arrangement, resolution, refresh rate, scale, rotation, brightness and night light.
+// Displays - arrangement, resolution, refresh rate, scale, rotation, brightness and night light.
 // Changes go to Hyprland at once and are saved by ArcShell's display service, so they survive a
 // restart.
 import QtQuick
@@ -257,7 +257,7 @@ PageScaffold {
                         onPicked: (i) => page.change(page.sel.name, null, { bitdepth: i ? 10 : 8 }) }
         }
         SRow {
-            icon: "hdr_on"; title: "HDR"; desc: "High dynamic range on supported screens — experimental; if it looks washed out, turn it back off"
+            icon: "hdr_on"; title: "HDR"; desc: "High dynamic range on supported screens - experimental; if it looks washed out, turn it back off"
             AxSwitch { anchors.verticalCenter: parent.verticalCenter; checked: page.selColor.hdr
                        onToggled: (on) => page.change(page.sel.name, null, on ? { hdr: true, bitdepth: 10 } : { hdr: false }) }
         }
@@ -292,7 +292,7 @@ PageScaffold {
             visible: page.hasSunset
             icon: "nightlight"; title: "Night light"
             desc: page.nightMode === "auto"
-                    ? (NightLight.sunsetText ? "Warm from sunset (" + NightLight.sunsetText + ") to sunrise (" + NightLight.sunriseText + ")" : "Automatic — set your region in Date & Time so it knows sunset")
+                    ? (NightLight.sunsetText ? "Warm from sunset (" + NightLight.sunsetText + ") to sunrise (" + NightLight.sunriseText + ")" : "Automatic - set your region in Date & Time so it knows sunset")
                     : page.nightMode === "on" ? "Warmer colours, all the time" : "Warmer colours that are easier on the eyes after dark"
             AxSegment { options: ["Off", "On", "Automatic"]; anchors.verticalCenter: parent.verticalCenter
                         current: page.nightMode === "on" ? 1 : page.nightMode === "auto" ? 2 : 0
@@ -300,7 +300,7 @@ PageScaffold {
         }
         SRow {
             visible: page.hasSunset && page.nightMode !== "off"
-            icon: "thermostat"; title: "Warmth"; desc: "How warm the screen gets — lower is warmer"
+            icon: "thermostat"; title: "Warmth"; desc: "How warm the screen gets - lower is warmer"
             AxSlider { width: 280; anchors.verticalCenter: parent.verticalCenter
                        value: Store.data.nightTemp; from: 2500; to: 6500; stepSize: 100; suffix: " K"
                        onMoved: (v) => Store.data.nightTemp = Math.round(v) }

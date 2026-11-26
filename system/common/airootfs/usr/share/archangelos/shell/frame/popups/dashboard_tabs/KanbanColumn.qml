@@ -165,7 +165,7 @@ Item {
             width: parent.width
             height: parent.height - Math.round(26 * localScale) - 1 - parent.spacing * 2
 
-            // Draft card — slides in from top
+            // Draft card - slides in from top
             Item {
                 id: draftWrap
                 z: 2

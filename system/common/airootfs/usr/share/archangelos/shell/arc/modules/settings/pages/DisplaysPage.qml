@@ -167,9 +167,9 @@ StackView {
                 spacing: 3
                 InfoRow { first: true;  last: false; icon: "label"; label: "Model"
                           value: (detail.m?.make ?? "") + " " + (detail.m?.model ?? "") }
-                InfoRow { first: false; last: false; icon: "tag"; label: "Serial"; value: detail.m?.serial || "—" }
+                InfoRow { first: false; last: false; icon: "tag"; label: "Serial"; value: detail.m?.serial || "-" }
                 InfoRow { first: false; last: true;  icon: "palette"; label: "Colour"
-                          value: (detail.m?.currentFormat ?? "—") + " · " + (detail.m?.colorManagementPreset ?? "—") }
+                          value: (detail.m?.currentFormat ?? "-") + " · " + (detail.m?.colorManagementPreset ?? "-") }
             }
 
             SectionHeader { text: "Mode" }
@@ -301,7 +301,7 @@ StackView {
                     first: false; last: true
                     text: "Display on"
                     subtext: (detail.m?.dpmsStatus ?? true) ? "Turn off to blank this output"
-                                                            : "Blanked — turn on to restore it"
+                                                            : "Blanked - turn on to restore it"
                     checked: detail.m?.dpmsStatus ?? true
                     onToggled: Display.setDpms(detail.name, !(detail.m?.dpmsStatus ?? true))
                 }

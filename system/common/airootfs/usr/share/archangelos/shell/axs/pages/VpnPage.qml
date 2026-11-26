@@ -1,4 +1,4 @@
-// VPN — NetworkManager's VPN and WireGuard connections: import a config, connect, remove.
+// VPN - NetworkManager's VPN and WireGuard connections: import a config, connect, remove.
 import QtQuick
 import qs.axs
 import qs.axs.ui

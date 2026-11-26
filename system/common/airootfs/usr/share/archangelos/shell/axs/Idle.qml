@@ -1,4 +1,4 @@
-// Idle behaviour — dim, lock, screen off, sleep — written out as hypridle's config.
+// Idle behaviour - dim, lock, screen off, sleep - written out as hypridle's config.
 // Locking always goes through archangelos-lock, the same command as Super+L.
 pragma Singleton
 

@@ -1,4 +1,4 @@
-// Sound — output and input devices, their volumes, and per-app volume (PipeWire, live).
+// Sound - output and input devices, their volumes, and per-app volume (PipeWire, live).
 import QtQuick
 import Quickshell.Services.Pipewire
 import qs.axs
@@ -13,7 +13,7 @@ PageScaffold {
     desc: "Choose where sound plays and records, and how loud each app is."
 
     readonly property bool pwUp: NSS.Audio.sink !== null || NSS.Audio.sinks.length > 0
-    function nodeName(n) { return n ? (n.description || n.nickname || n.name || "Unknown device") : "—"; }
+    function nodeName(n) { return n ? (n.description || n.nickname || n.name || "Unknown device") : "-"; }
     function streamName(s) {
         const p = s.properties || {};
         return p["application.name"] || s.description || s.name || "App";

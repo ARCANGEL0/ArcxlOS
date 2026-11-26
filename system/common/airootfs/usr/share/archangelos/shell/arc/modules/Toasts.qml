@@ -18,7 +18,7 @@ PanelWindow {
     anchors { top: true; right: true }
     margins { top: 16; right: 16 }
     implicitWidth: 340
-    implicitHeight: Math.max(1, toastList.contentHeight)   // never animated — instant map/unmap only
+    implicitHeight: Math.max(1, toastList.contentHeight)   // never animated - instant map/unmap only
     color: "transparent"
     exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
@@ -28,7 +28,7 @@ PanelWindow {
 
     // Report the toast body to the Frame's second bulge slot in screen px: from the top border
     // (y = 0) down past the card, spanning its band at the top-right. The single source of truth
-    // for that bulge — driven by the model count and list height, NOT per-delegate, which raced on
+    // for that bulge - driven by the model count and list height, NOT per-delegate, which raced on
     // rapid toasts and left the frame deformed with no toast on screen.
     function syncBulge() {
         // Anchored to its own top-right corner, so the bulge grows out of and retracts into it.
@@ -68,7 +68,7 @@ PanelWindow {
             required property int urgency
             required property var notif
             readonly property bool critical: urgency === 2
-            // Named actions only — the "default" action is "activate the app", handled by clicking
+            // Named actions only - the "default" action is "activate the app", handled by clicking
             // the toast body, not shown as a (label-less) button.
             readonly property var buttonActions: (notif?.actions ?? []).filter(a => a.identifier !== "default")
 
@@ -153,7 +153,7 @@ PanelWindow {
                         Text {
                             visible: wrapper.body.length > 0
                             // Markdown is what the freedesktop spec's markup amounts to in practice,
-                            // so it stays — but images are stripped first (![alt](url) fetches the
+                            // so it stays - but images are stripped first (![alt](url) fetches the
                             // url exactly like the HTML case above) and only the inline styling is
                             // left. Bodies with no markup at all skip the parser entirely.
                             text: Notifs.safeBody(wrapper.body)
@@ -214,7 +214,7 @@ PanelWindow {
                         if (Math.abs(card.dragX) >= 5) return;   // was a swipe
                         // Switch to the sending window: the sender-pid hint walked up to the owning
                         // Hyprland window, which works for a CLI app inside a terminal too
-                        // (focus_on_activate can't — the app never requests it).
+                        // (focus_on_activate can't - the app never requests it).
                         const pid = wrapper.notif?.hints?.["sender-pid"];
                         if (pid) Quickshell.execDetached([Paths.focusSenderScript, String(pid)]);
                         const def = (wrapper.notif?.actions ?? []).find(a => a.identifier === "default");
@@ -223,7 +223,7 @@ PanelWindow {
                     }
                 }
 
-                // Close button (top-right) — added last so it sits above the card's click area.
+                // Close button (top-right) - added last so it sits above the card's click area.
                 MatIcon {
                     anchors { top: parent.top; right: parent.right; topMargin: 8; rightMargin: 10 }
                     text: "close"

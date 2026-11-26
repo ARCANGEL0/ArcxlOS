@@ -24,7 +24,7 @@ import "../../components"
 import "../../popups/dashboard_tabs"
 import "../../"
 
-// Dashboard Home tab — layout only.
+// Dashboard Home tab - layout only.
 //
 //  ┌──────────────┬───────────────────────────┬──────────────┐
 //  │ ProfileCard  │  ClockCard                │              │
@@ -125,7 +125,7 @@ Item {
         }
     }
 
-    // ── Right column — QuickSettings fills full height ────────────────────────
+    // ── Right column - QuickSettings fills full height ────────────────────────
     QuickSettings {
         id: rightCard
         localScale: root.localScale

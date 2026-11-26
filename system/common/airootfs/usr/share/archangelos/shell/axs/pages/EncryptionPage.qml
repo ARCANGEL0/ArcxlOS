@@ -1,4 +1,4 @@
-// Encryption — encrypted disks (details, passphrases, header backup), USB drives (unlock, lock,
+// Encryption - encrypted disks (details, passphrases, header backup), USB drives (unlock, lock,
 // encrypt), and the way to files, vaults, checksums and the advanced defaults.
 import QtQuick
 import Quickshell
@@ -62,7 +62,7 @@ PageScaffold {
         page.drawer(d.path, "info"); page.info = "Reading…";
         cmd.run([page.sec, "luks-info", d.path], (c, o) => {
             if (c !== 0) { page.info = ""; return; }
-            const g = (re) => { const m = re.exec(o); return m ? m[1] : "—"; };
+            const g = (re) => { const m = re.exec(o); return m ? m[1] : "-"; };
             const slots = (o.match(/^\s+\d+: luks2/mg) || []).length;
             page.info = "LUKS" + g(/^Version:\s+(\d+)/m) + "  ·  " + g(/cipher:\s+(\S+)/) + "  ·  " + g(/Cipher key:\s+(\d+ bits)/)
                       + "\nKey derivation " + g(/PBKDF:\s+(\S+)/) + "  ·  hash " + g(/Hash:\s+(\S+)/) + "  ·  " + slots + (slots === 1 ? " passphrase" : " passphrases");
@@ -73,7 +73,7 @@ PageScaffold {
         property string dev: ""
         title: "Save the header backup"; save: true; filters: ["LUKS header (*.img)"]
         folder: Quickshell.env("HOME"); suggested: "luks-header.img"
-        onPicked: (p) => page.run("hdr", [page.sec, "luks-header", dev, p], undefined, "Header saved to " + p + ". Keep it somewhere safe — with it and a passphrase the volume can be rescued.")
+        onPicked: (p) => page.run("hdr", [page.sec, "luks-header", dev, p], undefined, "Header saved to " + p + ". Keep it somewhere safe - with it and a passphrase the volume can be rescued.")
     }
 
     // ── status ─────────────────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ PageScaffold {
                     desc: drv.modelData.path + "  ·  " + (drv.isLuks ? (drv.clear ? "encrypted, unlocked" + (drv.clear.mountpoint ? " at " + drv.clear.mountpoint : "") : "encrypted, locked") : (drv.modelData.fstype || "no filesystem") + ", not encrypted")
                     AxButton { visible: drv.isLuks && !drv.clear; text: "Unlock"; kind: "primary"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.drawer(drv.modelData.path, "unlock") }
                     AxButton { visible: drv.isLuks && !!drv.clear; text: "Lock"; anchors.verticalCenter: parent.verticalCenter
-                               onClicked: page.run("lock", ["sh", "-c", 'udisksctl unmount -b "$1" >/dev/null 2>&1; udisksctl lock -b "$2"', "sh", drv.clear.path, drv.modelData.path], undefined, "Locked — safe to unplug.") }
+                               onClicked: page.run("lock", ["sh", "-c", 'udisksctl unmount -b "$1" >/dev/null 2>&1; udisksctl lock -b "$2"', "sh", drv.clear.path, drv.modelData.path], undefined, "Locked - safe to unplug.") }
                     AxButton { visible: !drv.isLuks; icon: "enhanced_encryption"; text: "Encrypt…"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.drawer(drv.modelData.path, "encrypt") }
                 }
                 Row {
@@ -191,7 +191,7 @@ PageScaffold {
                     Row {
                         spacing: 8
                         AxField { id: lab; width: 140; placeholder: "Label"; text: "secure" }
-                        AxSelect { id: fsSel; width: 230; model: ["exFAT — works everywhere", "ext4 — Linux only", "btrfs — Linux only"]; current: 0 }
+                        AxSelect { id: fsSel; width: 230; model: ["exFAT - works everywhere", "ext4 - Linux only", "btrfs - Linux only"]; current: 0 }
                     }
                     Row {
                         spacing: 8

@@ -1,6 +1,6 @@
 pragma Singleton
 
-// Every write into Hyprland — options, monitor rules, dispatches — goes through here, spelt for
+// Every write into Hyprland - options, monitor rules, dispatches - goes through here, spelt for
 // whichever config parser the compositor runs. Under a hyprland.lua (0.55+) `hyprctl keyword` is
 // refused and `dispatch` takes a Lua expression, so the hyprlang spelling silently does nothing.
 import QtQuick

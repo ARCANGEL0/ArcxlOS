@@ -1,7 +1,7 @@
 pragma Singleton
 
 // Screen brightness: /sys/class/backlight for a laptop panel, ddcutil for a monitor.
-// The panel wins where both exist — it is what costs battery and what the Fn keys move.
+// The panel wins where both exist - it is what costs battery and what the Fn keys move.
 import QtQuick
 import Quickshell
 import Quickshell.Io

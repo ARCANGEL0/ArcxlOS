@@ -34,7 +34,7 @@ BarPopout {
                 objectProp: "uuid"
                 values: [...Net.vpnList].sort((a, b) => (b.active - a.active) || a.name.localeCompare(b.name))
             }
-            // No per-row entrance animation — see the Wi-Fi list.
+            // No per-row entrance animation - see the Wi-Fi list.
             RowLayout {
                 id: vpnItem
                 required property var modelData

@@ -1,4 +1,4 @@
-// Security overview — one look at how protected this computer is. Each check links to the page
+// Security overview - one look at how protected this computer is. Each check links to the page
 // that fixes it.
 import QtQuick
 import qs.axs
@@ -36,17 +36,17 @@ PageScaffold {
 
     readonly property var checks: !loaded ? [] : [
         { ok: r.fw === "active", icon: "local_fire_department", t: "Firewall", page: "firewall",
-          d: r.fw === "active" ? "On — unwanted incoming connections are blocked" : "Off — anything can try to connect in" },
+          d: r.fw === "active" ? "On - unwanted incoming connections are blocked" : "Off - anything can try to connect in" },
         { ok: r.upd === "0", icon: "system_update", t: "Updates", page: "updates",
           d: r.upd === "-1" ? "Can't check (pacman-contrib missing)" : r.upd === "0" ? "Everything is current" : r.upd + " updates waiting, some may be security fixes" },
         { ok: r.ssh !== "active" || r.sshpw === "no", icon: "terminal", t: "Remote access", page: "ssh",
-          d: r.ssh !== "active" ? "SSH is off" : r.sshpw === "no" ? "SSH is on, keys only" : "SSH accepts passwords — guessable from the network" },
+          d: r.ssh !== "active" ? "SSH is off" : r.sshpw === "no" ? "SSH is on, keys only" : "SSH accepts passwords - guessable from the network" },
         { ok: r.crypt !== "0" && r.crypt !== "", icon: "enhanced_encryption", t: "Disk encryption", page: "encryption",
-          d: r.crypt !== "0" && r.crypt !== "" ? "The system drive is encrypted" : "The system drive isn't encrypted — a stolen disk can be read" },
+          d: r.crypt !== "0" && r.crypt !== "" ? "The system drive is encrypted" : "The system drive isn't encrypted - a stolen disk can be read" },
         { ok: r.sb === "1" || r.efi === "0", icon: "verified_user", t: "Secure Boot", page: "hardening", info: true,
-          d: r.efi === "0" ? "Not a UEFI machine" : r.sb === "1" ? "On" : "Off — the firmware doesn't check what it boots" },
+          d: r.efi === "0" ? "Not a UEFI machine" : r.sb === "1" ? "On" : "Off - the firmware doesn't check what it boots" },
         { ok: r.aa === "Y", icon: "policy", t: "AppArmor", page: "hardening",
-          d: r.aa === "Y" ? "Confining apps with profiles" : "Off — apps aren't confined" },
+          d: r.aa === "Y" ? "Confining apps with profiles" : "Off - apps aren't confined" },
         { ok: +r.kptr >= 1 && +r.ptrace >= 1 && +r.bpf >= 1, icon: "memory", t: "Kernel hardening", page: "hardening",
           d: +r.kptr >= 1 && +r.ptrace >= 1 && +r.bpf >= 1 ? "Recommended restrictions are on" : "Some recommended restrictions are off" },
         { ok: r.usb === "active", icon: "usb", t: "USB protection", page: "usb",

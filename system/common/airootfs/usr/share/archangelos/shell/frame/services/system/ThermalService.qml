@@ -23,15 +23,15 @@ import Quickshell.Io
 // Separately queries nvidia-smi for GPU temp every 3s.
 //
 // Exposes:
-//   real   cpuTemp      — CPU package temp °C, 0 if unread
-//   real   gpuTemp      — NVIDIA GPU temp °C, 0 if unread/off
-//   int    fan1Rpm      — fan1 speed RPM, 0 if not present
-//   int    fan2Rpm      — fan2 speed RPM, 0 if not present
-//   int    fanCount     — number of fans detected (0, 1, or 2)
-//   string cpuTempStr   — e.g. "52°C"
-//   string gpuTempStr   — e.g. "65°C" or "—"
-//   string fan1Str      — e.g. "2400 RPM" or "—"
-//   string fan2Str      — e.g. "0 RPM"    or "—"
+//   real   cpuTemp      - CPU package temp °C, 0 if unread
+//   real   gpuTemp      - NVIDIA GPU temp °C, 0 if unread/off
+//   int    fan1Rpm      - fan1 speed RPM, 0 if not present
+//   int    fan2Rpm      - fan2 speed RPM, 0 if not present
+//   int    fanCount     - number of fans detected (0, 1, or 2)
+//   string cpuTempStr   - e.g. "52°C"
+//   string gpuTempStr   - e.g. "65°C" or "-"
+//   string fan1Str      - e.g. "2400 RPM" or "-"
+//   string fan2Str      - e.g. "0 RPM"    or "-"
 
 QtObject {
     id: root
@@ -43,10 +43,10 @@ QtObject {
     property int    fan1Rpm:    0
     property int    fan2Rpm:    0
     property int    fanCount:   0
-    property string cpuTempStr: "—"
-    property string gpuTempStr: "—"
-    property string fan1Str:    "—"
-    property string fan2Str:    "—"
+    property string cpuTempStr: "-"
+    property string gpuTempStr: "-"
+    property string fan1Str:    "-"
+    property string fan2Str:    "-"
 
     // ── sensors process ───────────────────────────────────────────────────────
     property var _proc: Process {
@@ -108,14 +108,14 @@ QtObject {
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i]
 
-            // CPU package temp — "Package id 0:  +52.0°C"
+            // CPU package temp - "Package id 0:  +52.0°C"
             if (/Package id 0:/i.test(line)) {
                 var m = line.match(/\+([0-9.]+)°C/)
                 if (m) pkg = parseFloat(m[1])
                 continue
             }
 
-            // Fan lines — "fan1:   2400 RPM" or "Fan Speed:  2400 RPM"
+            // Fan lines - "fan1:   2400 RPM" or "Fan Speed:  2400 RPM"
             var fm = line.match(/fan\d\s*:\s+([0-9]+)\s+RPM/i)
             if (fm) {
                 fans.push(parseInt(fm[1]))
@@ -131,8 +131,8 @@ QtObject {
         root.fanCount = fans.length
         root.fan1Rpm  = fans.length > 0 ? fans[0] : 0
         root.fan2Rpm  = fans.length > 1 ? fans[1] : 0
-        root.fan1Str  = fans.length > 0 ? fans[0] + " RPM" : "—"
-        root.fan2Str  = fans.length > 1 ? fans[1] + " RPM" : "—"
+        root.fan1Str  = fans.length > 0 ? fans[0] + " RPM" : "-"
+        root.fan2Str  = fans.length > 1 ? fans[1] + " RPM" : "-"
     }
 
     Component.onCompleted: _run()

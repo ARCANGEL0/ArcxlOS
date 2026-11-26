@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# arcfetch — ArchangelOS branded system info banner with the real image logo.
+# arcfetch - ArchangelOS branded system info banner with the real image logo.
 #   arcfetch              full banner with the pixel logo (chafa)
 #   arcfetch --logo none  info only
 #   arcfetch --help       fastfetch help

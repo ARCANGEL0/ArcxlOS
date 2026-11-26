@@ -1,4 +1,4 @@
-// Logs — the system journal made readable: problems this boot, failed services, crashes, and a
+// Logs - the system journal made readable: problems this boot, failed services, crashes, and a
 // filterable, searchable, live list of messages (by importance, source, boot and time).
 import QtQuick
 import Quickshell
@@ -10,7 +10,7 @@ PageScaffold {
     property var meta
     group: "Maintenance"
     title: "Logs"
-    desc: "What the system has been saying — and what went wrong."
+    desc: "What the system has been saying - and what went wrong."
 
     property var entries: []                     // { t, pri, ident, unit, pid, msg }
     property var boots: []                       // { idx, id, when }
@@ -71,7 +71,7 @@ PageScaffold {
               + 'command -v coredumpctl >/dev/null && coredumpctl list --no-pager -q -r -n 8 --json=short 2>/dev/null', [], (c, o) => {
             const part = (a, b) => { const i = o.indexOf(a), j = b ? o.indexOf(b) : o.length; return i < 0 ? "" : o.slice(i + a.length, j < 0 ? o.length : j); };
             const bootsTxt = o.slice(0, o.indexOf("--units"));
-            page.boots = bootsTxt.split("\n").map(l => /^\s*(-?\d+)\s+([0-9a-f]{32})\s+\S+\s+(.+?)(?:\s+—|\s+\S+ \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \S+)?$/.exec(l))
+            page.boots = bootsTxt.split("\n").map(l => /^\s*(-?\d+)\s+([0-9a-f]{32})\s+\S+\s+(.+?)(?:\s+-|\s+\S+ \d{4}-\d\d-\d\d \d\d:\d\d:\d\d \S+)?$/.exec(l))
                                  .filter(m => m).map(m => ({ idx: +m[1], id: m[2], when: m[3] })).reverse();
             page.units = part("--units", "--failed").split("\n").filter(u => u).map(u => u.replace(/\.service$/, ""));
             page.failed = part("--failed", "--count").split("\n").filter(l => l.includes("|")).map(l => ({ unit: l.split("|")[0], desc: l.split("|")[1] }));

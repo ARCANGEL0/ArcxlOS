@@ -1,5 +1,5 @@
 // Material state layer: hover/press tint + ripple from the click point.
-// The tint and the ripple are masked to the host's own rounded shape — Qt Quick's `clip` is
+// The tint and the ripple are masked to the host's own rounded shape - Qt Quick's `clip` is
 // always rectangular, so a growing ripple used to paint square corners over a rounded row.
 // The mask is engaged only while the ripple is alive, so idle rows pay for no extra layer.
 pragma ComponentBehavior: Bound
@@ -11,7 +11,7 @@ MouseArea {
     id: sl
     property color tint: Config.fg
     // Corners default to the host's own, so a layer dropped on a rounded card matches it without
-    // repeating the numbers — and follows it when the host animates its radius. A connected-group
+    // repeating the numbers - and follows it when the host animates its radius. A connected-group
     // row carries different top and bottom corners, hence the two. Non-Rectangle hosts report no
     // radius and fall back to 8. Set ovRadius to force both, or either one for finer control.
     property real ovRadius: -1

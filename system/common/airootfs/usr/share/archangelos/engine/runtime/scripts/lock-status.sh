@@ -97,7 +97,7 @@ media() {
     title=$(escape_markup "$title")
     artist=$(escape_markup "$artist")
     if [[ -n $artist ]]; then
-        printf '󰎈  %s  —  %s\n' "$title" "$artist"
+        printf '󰎈  %s  -  %s\n' "$title" "$artist"
     else
         printf '󰎈  %s\n' "$title"
     fi

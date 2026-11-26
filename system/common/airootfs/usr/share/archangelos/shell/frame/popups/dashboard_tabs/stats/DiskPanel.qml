@@ -64,7 +64,7 @@ Item {
         }
     }
 
-    // ── Standalone scrollbar — lives outside the Flickable ──────────────────
+    // ── Standalone scrollbar - lives outside the Flickable ──────────────────
     ScrollBar {
         id: vScroll
         visible:     root._scrollable
@@ -98,7 +98,7 @@ Item {
         }
     }
 
-    // ── Flickable — stops before the scrollbar lane ──────────────────────────
+    // ── Flickable - stops before the scrollbar lane ──────────────────────────
     Flickable {
         id: flickable
         anchors {

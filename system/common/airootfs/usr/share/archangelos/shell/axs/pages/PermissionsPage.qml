@@ -1,4 +1,4 @@
-// App permissions — who is using the microphone, camera or screen right now and switches that cut
+// App permissions - who is using the microphone, camera or screen right now and switches that cut
 // them off for everyone; the wireless radios and location; and real per-app permissions for
 // Flatpak apps (network, files, devices, sound…), which are the ones Linux can sandbox.
 import QtQuick
@@ -13,7 +13,7 @@ PageScaffold {
     property var meta
     group: "Privacy & Security"
     title: "App permissions"
-    desc: "What apps can see, hear and reach — and switches to take it away."
+    desc: "What apps can see, hear and reach - and switches to take it away."
 
     readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
     PwObjectTracker { objects: page.nodes }
@@ -168,7 +168,7 @@ PageScaffold {
                 readonly property var names: ({ wlan: ["Wi-Fi", "wifi"], bluetooth: ["Bluetooth", "bluetooth"], wwan: ["Mobile broadband", "signal_cellular_alt"], gps: ["GPS", "location_on"], nfc: ["NFC", "nfc"], uwb: ["Ultra-wideband", "sensors"] })
                 icon: (names[modelData.type] || [modelData.type, "settings_input_antenna"])[1]
                 title: (names[modelData.type] || [modelData.type])[0]
-                desc: modelData.hard ? "Switched off by a hardware switch or key" : modelData.soft ? "Off — the radio isn't transmitting" : "On"
+                desc: modelData.hard ? "Switched off by a hardware switch or key" : modelData.soft ? "Off - the radio isn't transmitting" : "On"
                 AxSwitch { checked: !modelData.soft && !modelData.hard; enabled_: !modelData.hard; anchors.verticalCenter: parent.verticalCenter
                            onToggled: (on) => cmd2.run(["rfkill", on ? "unblock" : "block", modelData.type], () => page.loadRadios()) }
             }
@@ -180,7 +180,7 @@ PageScaffold {
         SRow {
             icon: page.geo ? "location_on" : "location_off"
             title: page.geo ? "Location service" : "No location service"
-            desc: page.geo ? (page.geoState === "active" ? "Running — apps can ask where you are" : "Not running — apps can't find your location")
+            desc: page.geo ? (page.geoState === "active" ? "Running - apps can ask where you are" : "Not running - apps can't find your location")
                            : "Nothing on this computer gives apps your location (the automatic time zone is separate, in Date & Time)"
             AxSwitch { visible: page.geo; checked: page.geoState === "active"; anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => cmd2.run(["systemctl", on ? "unmask" : "mask", "--now", "geoclue"], () => page.loadOnce()) }

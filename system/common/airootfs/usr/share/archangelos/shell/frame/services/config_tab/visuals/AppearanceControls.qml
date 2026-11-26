@@ -54,7 +54,7 @@ Item {
             width: parent.width
             localScale: root.localScale
             text: "Background Blur"
-            description: PrefsService.bgOpacity >= 0.95 ? "Disabled — opacity must be below 95%." : "Enable blur effect behind transparent backgrounds."
+            description: PrefsService.bgOpacity >= 0.95 ? "Disabled - opacity must be below 95%." : "Enable blur effect behind transparent backgrounds."
             checked: PrefsService.bgBlur
             Binding on checked { value: PrefsService.bgBlur; restoreMode: Binding.RestoreBinding }
             enabled: PrefsService.bgOpacity < 0.95

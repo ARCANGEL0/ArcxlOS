@@ -1,5 +1,5 @@
 #!/bin/bash
-# axs-sec — the root half of Settings > Privacy & Security. Settings runs it through pkexec
+# axs-sec - the root half of Settings > Privacy & Security. Settings runs it through pkexec
 # (your password, remembered for a few minutes). Every verb checks its input; nothing here takes
 # a free-form command.
 #
@@ -61,7 +61,7 @@ case "$verb" in
         f=/etc/modprobe.d/90-archangelos-camera.conf
         if [ "${1:-}" = 0 ]; then
             echo "blacklist uvcvideo" > "$f"
-            modprobe -r uvcvideo 2>/dev/null || die "The camera is in use — close the app using it first."
+            modprobe -r uvcvideo 2>/dev/null || die "The camera is in use - close the app using it first."
         else
             rm -f "$f"; modprobe uvcvideo 2>/dev/null || true
         fi

@@ -499,7 +499,7 @@ PanelWindow {
                 label: "Volume"
                 anchors.horizontalCenter: parent.horizontalCenter
                 icon: Audio.muted ? "volume_off" : (Audio.volume > 0.5 ? "volume_up" : "volume_down")
-                value: Audio.muted ? "—" : Math.round(Audio.volume * 100) + ""
+                value: Audio.muted ? "-" : Math.round(Audio.volume * 100) + ""
                 tint: Audio.muted ? Config.dim : (volMa.containsMouse ? Config.accent : Config.fg)
             }
             MouseArea {

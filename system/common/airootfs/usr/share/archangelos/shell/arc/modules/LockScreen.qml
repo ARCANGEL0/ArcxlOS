@@ -27,7 +27,7 @@ WlSessionLock {
             sourceSize: Qt.size(width, height)
         }
 
-        // Live video background, paused while the outputs are blanked — most of a lock's life.
+        // Live video background, paused while the outputs are blanked - most of a lock's life.
         VideoWall {
             anchors.fill: parent
             visible: Config.videoWallpaper.length > 0
@@ -42,7 +42,7 @@ WlSessionLock {
         }
 
         property var now: new Date()
-        // hh:mm and a date — a minute-aligned tick, like the bar and the desktop clock.
+        // hh:mm and a date - a minute-aligned tick, like the bar and the desktop clock.
         Timer {
             id: lockMinuteTick
             interval: 60000 - (Date.now() % 60000)

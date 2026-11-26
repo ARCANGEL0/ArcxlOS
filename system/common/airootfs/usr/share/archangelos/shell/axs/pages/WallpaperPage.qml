@@ -1,4 +1,4 @@
-// Wallpaper — pick from your wallpapers and the ArchangelOS set, stills or live video.
+// Wallpaper - pick from your wallpapers and the ArchangelOS set, stills or live video.
 import QtQuick
 import Quickshell
 import qs.axs

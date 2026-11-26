@@ -1,4 +1,4 @@
-// Diagnostics — everything about how the hardware is doing, live: processor, graphics, memory,
+// Diagnostics - everything about how the hardware is doing, live: processor, graphics, memory,
 // disks (throughput, health, speed), temperatures and fans, the network (latency, DNS, speed),
 // and what the machine is made of. Readings and tests come from /usr/lib/archangelos/axs-diag
 // (runs as you); disk health, memory modules and the memory test need root (axs-admin).
@@ -13,7 +13,7 @@ PageScaffold {
     property var meta
     group: "Maintenance"
     title: "Diagnostics"
-    desc: "How every part of this computer is doing — and tests to prove it."
+    desc: "How every part of this computer is doing - and tests to prove it."
 
     readonly property string diag: "/usr/lib/archangelos/axs-diag"
     readonly property string admin: "/usr/lib/archangelos/axs-admin"
@@ -84,7 +84,7 @@ PageScaffold {
         sec = Math.floor(sec); const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60);
         return (d ? d + "d " : "") + (d || h ? h + "h " : "") + m + "m";
     }
-    function ms(v) { return v === null || v === undefined ? "—" : (v < 10 ? v.toFixed(2) : v.toFixed(1)) + " ms"; }
+    function ms(v) { return v === null || v === undefined ? "-" : (v < 10 ? v.toFixed(2) : v.toFixed(1)) + " ms"; }
     readonly property real hottest: s && s.temps.length ? Math.max(...s.temps.map(t => t.c)) : 0
     readonly property var gpuLive: s ? s.gpus : []
 
@@ -118,7 +118,7 @@ PageScaffold {
             const list = [];
             for (const l of o.split("\n")) { try { if (l.trim()) list.push(JSON.parse(l)); } catch (x) {} }
             page.smart = list.length === 1 && list[0].missing ? [] : list;
-            if (list.length === 1 && list[0].missing) page.error = "smartmontools isn't installed — sudo pacman -S smartmontools";
+            if (list.length === 1 && list[0].missing) page.error = "smartmontools isn't installed - sudo pacman -S smartmontools";
         });
     }
     function readDimms() {
@@ -235,7 +235,7 @@ PageScaffold {
             Row {
                 anchors.right: parent.right; anchors.rightMargin: 22; anchors.verticalCenter: parent.verticalCenter; spacing: 22
                 Repeater {
-                    model: page.s ? [["Load", page.s.load[0]], ["Processes", page.s.procs], ["Kernel", page.hw ? page.hw.system.kernel.split("-")[0] : "—"]] : []
+                    model: page.s ? [["Load", page.s.load[0]], ["Processes", page.s.procs], ["Kernel", page.hw ? page.hw.system.kernel.split("-")[0] : "-"]] : []
                     Column { required property var modelData; spacing: 2
                              Label { caption: true; text: modelData[0] }
                              Label { mono: true; text: modelData[1] } }
@@ -245,12 +245,12 @@ PageScaffold {
         Row {
             width: parent.width; spacing: 14
             readonly property real w: (width - 42) / 4
-            StatTile { width: parent.w; caption: "Processor"; value: page.s ? Math.round(page.s.cpu) : "—"; unit: "%"; meter: page.s ? page.s.cpu / 100 : 0 }
-            StatTile { width: parent.w; caption: "Memory · " + (page.s ? page.gib(page.s.mem.total) + " GB" : ""); value: page.s ? page.gib(page.s.mem.used) : "—"; unit: "GB"
+            StatTile { width: parent.w; caption: "Processor"; value: page.s ? Math.round(page.s.cpu) : "-"; unit: "%"; meter: page.s ? page.s.cpu / 100 : 0 }
+            StatTile { width: parent.w; caption: "Memory · " + (page.s ? page.gib(page.s.mem.total) + " GB" : ""); value: page.s ? page.gib(page.s.mem.used) : "-"; unit: "GB"
                        meter: page.s ? page.s.mem.used / page.s.mem.total : 0 }
-            StatTile { width: parent.w; caption: "Graphics"; value: page.gpuLive.length && page.gpuLive[0].busy !== null ? Math.round(page.gpuLive[0].busy) : "—"; unit: page.gpuLive.length ? "%" : ""
+            StatTile { width: parent.w; caption: "Graphics"; value: page.gpuLive.length && page.gpuLive[0].busy !== null ? Math.round(page.gpuLive[0].busy) : "-"; unit: page.gpuLive.length ? "%" : ""
                        meter: page.gpuLive.length && page.gpuLive[0].busy !== null ? page.gpuLive[0].busy / 100 : 0 }
-            StatTile { width: parent.w; caption: "Hottest sensor"; value: page.hottest ? Math.round(page.hottest) : "—"; unit: page.hottest ? "°C" : ""; meter: page.hottest / 100 }
+            StatTile { width: parent.w; caption: "Hottest sensor"; value: page.hottest ? Math.round(page.hottest) : "-"; unit: page.hottest ? "°C" : ""; meter: page.hottest / 100 }
         }
         Flow {
             width: parent.width; spacing: 14
@@ -301,7 +301,7 @@ PageScaffold {
             title: "Processor"
             KV { icon: "memory"; title: page.hw ? page.hw.cpu.model : "…"; desc: page.hw ? page.hw.cpu.vendor + "  ·  " + page.hw.cpu.arch : ""
                  value: page.hw ? (page.hw.cpu.cores ? page.hw.cpu.cores * (page.hw.cpu.sockets || 1) + " cores · " : "") + page.hw.cpu.threads + " threads" : "" }
-            KV { icon: "speed"; title: "Clock"; value: page.hw && page.hw.cpu.maxMhz ? Math.round(page.hw.cpu.minMhz) + " – " + Math.round(page.hw.cpu.maxMhz) + " MHz" : "—"
+            KV { icon: "speed"; title: "Clock"; value: page.hw && page.hw.cpu.maxMhz ? Math.round(page.hw.cpu.minMhz) + " – " + Math.round(page.hw.cpu.maxMhz) + " MHz" : "-"
                  desc: page.s && page.s.freq.some(f => f) ? "Now " + Math.round(page.s.freq.filter(f => f).reduce((a, b) => a + b, 0) / page.s.freq.filter(f => f).length) + " MHz average" : "" }
             KV { icon: "tune"; title: "Frequency scaling"; value: page.hw && page.hw.cpu.driver ? page.hw.cpu.driver + " · " + page.hw.cpu.governor : "Not exposed" }
             KV { icon: "layers"; title: "Cache"; value: page.hw ? [["L1d", page.hw.cpu.l1d], ["L2", page.hw.cpu.l2], ["L3", page.hw.cpu.l3]].filter(x => x[1]).map(x => x[0] + " " + x[1].replace(/ \(.*\)$/, "")).join("  ·  ") : "" }
@@ -337,7 +337,7 @@ PageScaffold {
             SRow {
                 icon: "bolt"; title: "Hashing throughput"
                 desc: page.cpuB ? "One thread " + page.cpuB.single + " MB/s  ·  all " + page.cpuB.threads + " threads " + page.cpuB.multi + " MB/s  ·  scales ×" + page.cpuB.scaling
-                                : "SHA-256 on one thread, then on every thread — about 7 seconds"
+                                : "SHA-256 on one thread, then on every thread - about 7 seconds"
                 Run { job: "cpu"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.test("cpu", [page.diag, "cpu"], r => page.cpuB = r) }
             }
         }
@@ -442,7 +442,7 @@ PageScaffold {
             note: page.dimms ? page.dimms.list.filter(d => !/No Module/i.test(d.Size)).length + " of " + (page.dimms.slots || page.dimms.list.length) + " slots" + (page.dimms.max ? "  ·  up to " + page.dimms.max : "") : ""
             SRow {
                 visible: page.dimms === null
-                icon: "memory_alt"; title: "Memory modules"; desc: "Size, speed, type and maker of each stick — needs your password"
+                icon: "memory_alt"; title: "Memory modules"; desc: "Size, speed, type and maker of each stick - needs your password"
                 AxButton { text: page.busy === "dmi" ? "Reading…" : "Read"; kind: "primary"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: page.readDimms() }
             }
             Repeater {
@@ -461,8 +461,8 @@ PageScaffold {
             title: "Memory test"
             SRow {
                 icon: "fact_check"; title: "Test for faulty memory"
-                desc: page.busy === "memtest" ? "Testing — this takes a few minutes, keep the computer otherwise idle"
-                    : page.memtest ? (page.memtest.ok ? "Passed — " + page.bytes(page.memtest.mb * 1048576) + " tested, no errors" : "Errors found — a memory module may be failing")
+                desc: page.busy === "memtest" ? "Testing - this takes a few minutes, keep the computer otherwise idle"
+                    : page.memtest ? (page.memtest.ok ? "Passed - " + page.bytes(page.memtest.mb * 1048576) + " tested, no errors" : "Errors found - a memory module may be failing")
                     : "Writes patterns to free memory with memtester and reads them back"
                 Badge { visible: !!page.memtest; text: page.memtest && page.memtest.ok ? "passed" : "failed"; tone: page.memtest && page.memtest.ok ? "ok" : "danger"; anchors.verticalCenter: parent.verticalCenter }
                 AxSegment { options: ["256 MB", "1 GB", "4 GB", "Half of free"]; current: page.mtSize; onPicked: (i) => page.mtSize = i; anchors.verticalCenter: parent.verticalCenter }
@@ -474,7 +474,7 @@ PageScaffold {
             }
             SRow {
                 icon: "bolt"; title: "Bandwidth"
-                desc: page.memB ? page.memB.copy + " GB/s copied  ·  " + page.memB.moved + " GB/s through the memory bus" : "How fast memory can be copied — 3 seconds"
+                desc: page.memB ? page.memB.copy + " GB/s copied  ·  " + page.memB.moved + " GB/s through the memory bus" : "How fast memory can be copied - 3 seconds"
                 Run { job: "mem"; anchors.verticalCenter: parent.verticalCenter; onClicked: page.test("mem", [page.diag, "mem"], r => page.memB = r) }
             }
         }
@@ -537,7 +537,7 @@ PageScaffold {
         Section {
             visible: page.smart === null || page.smart.length === 0
             SRow {
-                icon: "health_metrics"; title: "Disk health (SMART)"; desc: "Wear, bad sectors, temperature and lifetime writes — needs your password"
+                icon: "health_metrics"; title: "Disk health (SMART)"; desc: "Wear, bad sectors, temperature and lifetime writes - needs your password"
                 AxButton { text: page.busy === "smart" ? "Reading…" : "Read"; kind: "primary"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter; onClicked: page.readSmart() }
             }
         }
@@ -563,7 +563,7 @@ PageScaffold {
     Column {
         visible: page.tab === 5
         width: parent.width; spacing: 14
-        Graph { width: parent.width; label: "Hottest sensor"; value: page.hottest ? page.hottest + " °C" : "—"; a: page.hist.temp; max: 100 }
+        Graph { width: parent.width; label: "Hottest sensor"; value: page.hottest ? page.hottest + " °C" : "-"; a: page.hist.temp; max: 100 }
         Section {
             title: "Temperatures"
             note: page.s ? page.s.temps.length + " sensors" : ""
@@ -677,9 +677,9 @@ PageScaffold {
                 Row {
                     x: Ax.pad; y: 14; spacing: 14; width: parent.width - 2 * Ax.pad
                     StatTile { width: (parent.width - 42) / 4; caption: "Download"; value: page.speedR ? page.speedR.down : ""; unit: "Mbit/s" }
-                    StatTile { width: (parent.width - 42) / 4; caption: "Upload"; value: page.speedR && page.speedR.up ? page.speedR.up : "—"; unit: "Mbit/s" }
+                    StatTile { width: (parent.width - 42) / 4; caption: "Upload"; value: page.speedR && page.speedR.up ? page.speedR.up : "-"; unit: "Mbit/s" }
                     StatTile { width: (parent.width - 42) / 4; caption: "Latency"; value: page.speedR ? Math.round(page.speedR.latency) : ""; unit: "ms" }
-                    StatTile { width: (parent.width - 42) / 4; caption: "Public address"; value: page.speedR && page.speedR.ip ? (page.speedR.ip.length > 15 ? "IPv6" : page.speedR.ip) : "—"; unit: "" }
+                    StatTile { width: (parent.width - 42) / 4; caption: "Public address"; value: page.speedR && page.speedR.ip ? (page.speedR.ip.length > 15 ? "IPv6" : page.speedR.ip) : "-"; unit: "" }
                 }
             }
         }
@@ -696,8 +696,8 @@ PageScaffold {
         Section {
             visible: page.hw !== null
             title: "System"
-            KV { icon: "computer"; title: "Model"; value: page.hw ? [page.hw.system.vendor, page.hw.system.product, page.hw.system.version].filter(x => x && !/To Be Filled|Default string|System (Product|Version)/i.test(x)).join(" ") || "—" : "" }
-            KV { icon: "developer_board"; title: "Motherboard"; value: page.hw ? page.hw.system.board || "—" : "" }
+            KV { icon: "computer"; title: "Model"; value: page.hw ? [page.hw.system.vendor, page.hw.system.product, page.hw.system.version].filter(x => x && !/To Be Filled|Default string|System (Product|Version)/i.test(x)).join(" ") || "-" : "" }
+            KV { icon: "developer_board"; title: "Motherboard"; value: page.hw ? page.hw.system.board || "-" : "" }
             KV { icon: "settings_applications"; title: "Firmware"; value: page.hw ? [page.hw.system.firmware, page.hw.system.bios + (page.hw.system.biosDate ? " (" + page.hw.system.biosDate + ")" : "")].filter(x => x).join("  ·  ") : "" }
             KV { icon: "deployed_code"; title: "Operating system"; value: page.hw ? page.hw.system.os + "  ·  Linux " + page.hw.system.kernel : "" }
             KV { visible: !!page.hw && page.hw.system.virt !== "" && page.hw.system.virt !== "none"; icon: "cloud"; title: "Running inside"; value: page.hw ? page.hw.system.virt : "" }

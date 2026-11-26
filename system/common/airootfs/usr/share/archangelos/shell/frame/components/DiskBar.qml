@@ -25,8 +25,8 @@ Item {
     property string source:   ""
     property string mount:    ""
     property int    usedPct:  0
-    property string usedStr:  "—"
-    property string totalStr: "—"
+    property string usedStr:  "-"
+    property string totalStr: "-"
     property real   localScale: 1.0
 
     property real _animPct: 0
@@ -43,7 +43,7 @@ Item {
         return Theme.active
     }
 
-    // Mount label — left, fixed width
+    // Mount label - left, fixed width
     Text {
         id: mountLabel
         anchors.left:           parent.left
@@ -86,7 +86,7 @@ Item {
         }
     }
 
-    // Percentage — right of bar
+    // Percentage - right of bar
     Text {
         id: pctLabel
         anchors.right:          parent.right
@@ -100,7 +100,7 @@ Item {
         Behavior on color { ColorAnimation { duration: Anim.mediumSlow} }
     }
 
-    // Size info — below the bar, aligned with bar
+    // Size info - below the bar, aligned with bar
     Text {
         anchors.horizontalCenter: barTrack.horizontalCenter
         anchors.top:     barTrack.bottom

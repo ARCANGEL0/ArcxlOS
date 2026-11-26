@@ -37,7 +37,7 @@ Singleton {
     property list<PwNode> sinks: []
     property list<PwNode> sources: []
     property list<PwNode> streams: []
-    // Playback streams only — what the dashboard mixer offers a slider for. Capture streams
+    // Playback streams only - what the dashboard mixer offers a slider for. Capture streams
     // (a call app listening on the mic) are excluded by class; anything unlabelled is kept,
     // since a missing media.class is likelier to be a player than a recorder.
     readonly property var playbackStreams:

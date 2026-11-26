@@ -21,7 +21,7 @@ Singleton {
         id: scanProc
         // The directory goes in as an argument, never spliced into the script, so a space or an
         // apostrophe in the path cannot break it. The copy the shell makes of the current pick is
-        // filtered out — it is the same image under another name.
+        // filtered out - it is the same image under another name.
         command: ["sh", "-c",
             'ls -1 "$1"/*.jpg "$1"/*.jpeg "$1"/*.png "$1"/*.webp 2>/dev/null | grep -v static-wallpaper',
             "sh", root.userDir]

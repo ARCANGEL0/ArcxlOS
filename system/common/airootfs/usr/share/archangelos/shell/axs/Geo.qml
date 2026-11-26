@@ -40,7 +40,7 @@ Singleton {
                 const c = root.coord(f[1]);
                 if (!c || !f[2]) continue;
                 const city = f[2].split("/").pop().replace(/_/g, " ");
-                out.push({ tz: f[2], cc: f[0].split(","), lon: c.lon, lat: c.lat, label: city + (f[3] ? " — " + f[3] : "") });
+                out.push({ tz: f[2], cc: f[0].split(","), lon: c.lon, lat: c.lat, label: city + (f[3] ? " - " + f[3] : "") });
             }
             out.push({ tz: "UTC", cc: [], lon: 0, lat: 51.5, label: "Coordinated Universal Time" });
             root.zones = out.sort((a, b) => a.tz.localeCompare(b.tz));
@@ -70,7 +70,7 @@ Singleton {
     function setAuto(on) { Store.data.autoTimezone = on; if (on) root.detect(); }
 
     // Automatic time zone: ask a geolocation service which zone this connection is in. Skipped
-    // while GhostWired is up — the answer would be the Tor exit's zone, and the lookup itself
+    // while GhostWired is up - the answer would be the Tor exit's zone, and the lookup itself
     // would be a needless request.
     function detect() {
         if (!root.auto) return;

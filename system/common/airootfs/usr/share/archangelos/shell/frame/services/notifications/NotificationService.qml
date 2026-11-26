@@ -22,7 +22,7 @@ import Quickshell.Services.Notifications
 import "../../"
 
 // ─────────────────────────────────────────────────────────────
-// NotificationService — global singleton
+// NotificationService - global singleton
 // ─────────────────────────────────────────────────────────────
 
 NotificationServer {

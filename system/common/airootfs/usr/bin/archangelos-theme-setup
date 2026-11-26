@@ -1,5 +1,5 @@
 #!/bin/bash
-# ArchangelOS — force the default GTK/Qt dark theme (Adwaita-dark / Breeze-Dark),
+# ArchangelOS - force the default GTK/Qt dark theme (Adwaita-dark / Breeze-Dark),
 # icon theme (Arcanum) and cursor theme (Crystal) into every home,
 # run at image-build time AFTER the engine has laid down its own ~/.config (which may
 # otherwise ship its own GTK settings). System-wide defaults also live in
@@ -49,7 +49,7 @@ Theme=$ICON_THEME
 [KDE]
 widgetStyle=$QT_WIDGET_STYLE
 EOF
-  # A bare `ColorScheme=BreezeDark` only names a scheme — KColorScheme (used by
+  # A bare `ColorScheme=BreezeDark` only names a scheme - KColorScheme (used by
   # Dolphin and other KDE apps) reads the actual [Colors:*]/[WM] blocks straight
   # from kdeglobals, and without them falls back to its built-in *light* palette
   # (the "white Dolphin" bug). Inline the real BreezeDark palette so the dark

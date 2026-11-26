@@ -1,5 +1,5 @@
 #!/bin/bash
-# ArchangelOS region picker — shows the animated Quickshell selector overlay and
+# ArchangelOS region picker - shows the animated Quickshell selector overlay and
 # prints the chosen region as grim/slurp-style "X,Y WxH" on stdout. Exits non-zero
 # if the user cancels (Esc / right-click) or picks nothing.
 #

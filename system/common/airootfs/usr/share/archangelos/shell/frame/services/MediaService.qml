@@ -37,7 +37,7 @@ QtObject {
         "plasma-browser-integration"
     ]
 
-    // Explicit count tracker — forces filteredPlayers to re-evaluate
+    // Explicit count tracker - forces filteredPlayers to re-evaluate
     // whenever a player joins or leaves the MPRIS list.
     property int _mprisCount: Mpris.players.values.length
 
@@ -210,7 +210,7 @@ QtObject {
     }
 
     function playerLabel(player) {
-        if (!player) return "—"
+        if (!player) return "-"
         var id = (player.identity || "").toLowerCase()
         if (id.indexOf("spotify")  !== -1) return "Spotify"
         if (id.indexOf("firefox")  !== -1) return "Firefox"

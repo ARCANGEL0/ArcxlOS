@@ -1,4 +1,4 @@
-// Windows & workspaces — how Hyprland frames and moves windows: gaps, borders, rounding, see-
+// Windows & workspaces - how Hyprland frames and moves windows: gaps, borders, rounding, see-
 // through inactive windows, blur, shadows, animations, screen tearing and adaptive sync, the
 // tiling layout, and your own per-app rules. Changes apply live and are saved to
 // ~/.config/archangelos/hypr/window.lua, which the compositor config loads last.
@@ -113,7 +113,7 @@ PageScaffold {
         title: "Look"
         SRow {
             icon: "opacity"; title: "See-through inactive windows"
-            desc: "Windows you're not using fade a little — " + Math.round(page.num("decoration:inactive_opacity", 1) * 100) + "% opaque"
+            desc: "Windows you're not using fade a little - " + Math.round(page.num("decoration:inactive_opacity", 1) * 100) + "% opaque"
             AxSlider { width: 220; from: 0.5; to: 1; valueScale: 100; suffix: "%"; value: page.num("decoration:inactive_opacity", 1); anchors.verticalCenter: parent.verticalCenter
                        onMoved: (v) => page.set("decoration:inactive_opacity", Math.round(v * 100) / 100) }
         }
@@ -150,7 +150,7 @@ PageScaffold {
             AxSwitch { checked: page.bool("animations:enabled"); anchors.verticalCenter: parent.verticalCenter; onToggled: (on) => page.set("animations:enabled", on) }
         }
         SRow {
-            icon: "sync"; title: "Adaptive sync (VRR)"; desc: "Match the screen to the game's frame rate — fewer tears, smoother motion"
+            icon: "sync"; title: "Adaptive sync (VRR)"; desc: "Match the screen to the game's frame rate - fewer tears, smoother motion"
             AxSegment { options: ["Off", "On", "Fullscreen"]; current: page.num("misc:vrr", 0)
                         onPicked: (i) => page.set("misc:vrr", i); anchors.verticalCenter: parent.verticalCenter }
         }

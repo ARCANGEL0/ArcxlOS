@@ -15,7 +15,7 @@ Singleton {
 
     // --- Easing curves (cubic-bézier control points) ---
     // Springy overshoot for movement/size/position (panel slides, indicators).
-    // ArchangelOS: no rebound — panels pour out and settle like water ([0.38, 1.21, 0.22, 1] upstream).
+    // ArchangelOS: no rebound - panels pour out and settle like water ([0.38, 1.21, 0.22, 1] upstream).
     readonly property var spatialCurve: [0.16, 1, 0.3, 1, 1, 1]
     // Stronger, snappier overshoot for small fast moves (bar indicator, dots).
     readonly property var spatialFastCurve: [0.42, 1.67, 0.21, 0.9, 1, 1]
@@ -31,7 +31,7 @@ Singleton {
     readonly property int effectMs: 200
     readonly property int colorMs: 280
 
-    // --- Scaled durations — what the primitives actually consume ---
+    // --- Scaled durations - what the primitives actually consume ---
     readonly property int spatialDur: Math.round(spatialMs * scale)
     readonly property int spatialFastDur: Math.round(spatialFastMs * scale)
     readonly property int effectDur: Math.round(effectMs * scale)

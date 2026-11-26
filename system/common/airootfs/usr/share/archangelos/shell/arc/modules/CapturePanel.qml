@@ -107,7 +107,7 @@ PanelWindow {
     }
 
     // Report the panel body rect (screen px) so the Frame bulges the bottom border up into it.
-    // Driven off the live geometry with anim=false so the bulge rides the slide 1:1 — see Launcher.
+    // Driven off the live geometry with anim=false so the bulge rides the slide 1:1 - see Launcher.
     function reportBox() {
         if (!capture.shown && PopoutState.owner !== "capture") return;
         const inset = 16, topInset = 16;
@@ -117,7 +117,7 @@ PanelWindow {
                            panel.height - topInset + 18, "capture", false, 0.5, 1.0);
     }
 
-    // Transparent outside-click catcher — interactive only while open, so the click that closes
+    // Transparent outside-click catcher - interactive only while open, so the click that closes
     // the panel is never the one slurp is waiting for.
     mask: Region { item: capture.shown ? catcher : null }
     MouseArea {
@@ -178,7 +178,7 @@ PanelWindow {
         }
     }
 
-    // Sliding panel — the background is the Frame bulge, so nothing here paints a surface.
+    // Sliding panel - the background is the Frame bulge, so nothing here paints a surface.
     Item {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
@@ -202,7 +202,7 @@ PanelWindow {
         onYChanged: capture.reportBox()
         onWidthChanged: capture.reportBox()
         onHeightChanged: capture.reportBox()
-        // The capture path unpaints the panel outright instead of animating it away — a mid-slide
+        // The capture path unpaints the panel outright instead of animating it away - a mid-slide
         // frame would otherwise end up in the screenshot.
         visible: !Capture.hidingForCapture
         MouseArea { anchors.fill: parent }   // swallow clicks on the panel
@@ -372,7 +372,7 @@ PanelWindow {
                                 : (capture.mode === "rec" ? "fiber_manual_record" : "photo_camera")
                             font.pixelSize: 18; color: Config.accentText
                         }
-                        // "Region" says what happens next — the panel goes and slurp asks for a
+                        // "Region" says what happens next - the panel goes and slurp asks for a
                         // rectangle. "Start recording" made that click look like a no-op.
                         Text {
                             text: capture.src === "region" ? "Select region"

@@ -13,7 +13,7 @@ ConnectedRect {
     property string value: ""
     property string placeholder: ""
     property bool echoPassword: false
-    // Emit on every keystroke instead of on commit — for a search box, where a half-typed value
+    // Emit on every keystroke instead of on commit - for a search box, where a half-typed value
     // is exactly what should be acted on.
     property bool live: false
     property alias input: field

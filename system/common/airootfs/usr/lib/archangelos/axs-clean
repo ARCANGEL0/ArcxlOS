@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# axs-clean — the measuring and sweeping half of Settings > Cleaning. Runs as the person (no
-# root). It only ever looks at, and removes, well-known throwaway locations — caches, trashes,
-# thumbnails, crash dumps, build caches — never documents. System-owned junk (the package cache,
+# axs-clean - the measuring and sweeping half of Settings > Cleaning. Runs as the person (no
+# root). It only ever looks at, and removes, well-known throwaway locations - caches, trashes,
+# thumbnails, crash dumps, build caches - never documents. System-owned junk (the package cache,
 # orphan packages, the journal, core dumps, rotated logs) is handled by axs-admin instead.
 #
 #   scan                 one JSON object: every category with its size, on disk right now
@@ -150,7 +150,7 @@ def biggest(kind):
     # files
     found = []
     for root, dirs, files in os.walk(HOME, onerror=lambda e: None):
-        # don't descend into throwaway trees — they're handled by the cleaner
+        # don't descend into throwaway trees - they're handled by the cleaner
         dirs[:] = [d for d in dirs if os.path.join(root, d) not in skip]
         for f in files:
             fp = os.path.join(root, f)

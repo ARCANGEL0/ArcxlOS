@@ -19,7 +19,7 @@
 pragma Singleton
 import QtQuick
 
-// ClockState — exposes active clock module state for the dynamic island.
+// ClockState - exposes active clock module state for the dynamic island.
 // Written by ClockCard, read by CenterNotch / dynamic island.
 
 QtObject {
@@ -38,7 +38,7 @@ QtObject {
     signal requestStopwatchReset()
     signal requestTimerReset()
 
-    // Alarms — list of { id, hour, minute, label, enabled }
+    // Alarms - list of { id, hour, minute, label, enabled }
 
     // Nearest upcoming enabled alarm: { hour, minute, label, minsUntil } or null
     property var nextAlarm: null

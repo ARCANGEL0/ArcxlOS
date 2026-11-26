@@ -20,7 +20,7 @@ import QtQuick
 import Quickshell
 import "../"
 
-// Low battery warning — FloatingWindow, centered by the WM (Hyprland floats center).
+// Low battery warning - FloatingWindow, centered by the WM (Hyprland floats center).
 // Auto-dismisses after `timeout` ms. Click anywhere to dismiss early.
 
 FloatingWindow {
@@ -50,8 +50,8 @@ FloatingWindow {
     readonly property string title:      warnLevel <= 5  ? "Critical Battery" :
                                          warnLevel <= 10 ? "Very Low Battery"  : "Low Battery"
     readonly property string message:    warnLevel <= 5
-                                             ? "Battery at " + warnLevel + "% — plug in now!"
-                                             : "Battery at " + warnLevel + "% — consider charging." // for testing visuals without changing actual battery level
+                                             ? "Battery at " + warnLevel + "% - plug in now!"
+                                             : "Battery at " + warnLevel + "% - consider charging." // for testing visuals without changing actual battery level
 
     // ── Visuals ───────────────────────────────────────────────────────────────
     Rectangle {

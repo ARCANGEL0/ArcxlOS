@@ -1,5 +1,5 @@
 // One workspace in the overview: a header (Roman numeral, matching the bar, plus the window
-// count) over the windows living on it. Empty workspaces get a row too — they are drop targets.
+// count) over the windows living on it. Empty workspaces get a row too - they are drop targets.
 pragma ComponentBehavior: Bound
 
 import QtQuick
@@ -15,7 +15,7 @@ Rectangle {
 
     // The workspace object where Hyprland knows about it; null for a slot that doesn't exist yet.
     readonly property var hws: Hypr.wsList.find(w => w.id === row.ws) ?? null
-    // Its own toplevel model, which notifies per workspace — cheaper and more reactive than
+    // Its own toplevel model, which notifies per workspace - cheaper and more reactive than
     // re-filtering the global list on every refresh the way the bar does.
     readonly property var wins: row.hws ? (row.hws.toplevels?.values ?? []) : []
     readonly property bool active: row.ws === Hypr.activeWs
@@ -75,7 +75,7 @@ Rectangle {
 
         // The header doubles as the workspace's own drag handle: press it and move to swap this
         // workspace with another. A plain click still activates it. The wrapper exists because a
-        // MouseArea placed directly in a layout cannot use anchors — the layout owns its geometry.
+        // MouseArea placed directly in a layout cannot use anchors - the layout owns its geometry.
         Item {
             Layout.fillWidth: true
             implicitHeight: hdr.implicitHeight
@@ -153,7 +153,7 @@ Rectangle {
             }
         }
 
-        // An empty workspace keeps a slot of its own — it is what a dragged window aims at.
+        // An empty workspace keeps a slot of its own - it is what a dragged window aims at.
         Rectangle {
             Layout.fillWidth: true
             visible: row.wins.length === 0

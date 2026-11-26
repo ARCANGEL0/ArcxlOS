@@ -19,20 +19,20 @@
 import QtQuick
 import "../"
 
-// Unified tab switcher — horizontal or vertical.
+// Unified tab switcher - horizontal or vertical.
 //
-// orientation: "horizontal" (default) — Row, fills parent width, tabs spaced equally
-//              "vertical"             — Column, fills parent height, tabs spaced equally
+// orientation: "horizontal" (default) - Row, fills parent width, tabs spaced equally
+//              "vertical"             - Column, fills parent height, tabs spaced equally
 //
 // Horizontal: icon + label pill, bottom divider. Used by Dashboard.
 // Vertical:   icon-only solid pill. Used by ArchMenu.
 //
 // Model: [{ key: string, icon: string, label?: string }]
-// label is optional — only rendered in horizontal orientation.
+// label is optional - only rendered in horizontal orientation.
 //
 // Sizing contract:
-//   Horizontal — parent MUST set width.  implicitHeight is 40.
-//   Vertical   — parent MUST set height. implicitWidth  is 40.
+//   Horizontal - parent MUST set width.  implicitHeight is 40.
+//   Vertical   - parent MUST set height. implicitWidth  is 40.
 
 Item {
 	id: root
@@ -86,7 +86,7 @@ Item {
 		}
 	}
 
-	// ── HORIZONTAL layout — Row ───────────────────────────────────────────────
+	// ── HORIZONTAL layout - Row ───────────────────────────────────────────────
 	Item {
 		id: hContainer
 		anchors.fill: parent
@@ -208,7 +208,7 @@ Item {
 		color:          Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.07)
 	}
 
-	// ── VERTICAL layout — Column ──────────────────────────────────────────────
+	// ── VERTICAL layout - Column ──────────────────────────────────────────────
 	    Item {
 	        id: vContainer
 	        anchors.centerIn: parent

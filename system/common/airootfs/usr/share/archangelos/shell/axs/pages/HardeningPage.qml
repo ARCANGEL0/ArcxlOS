@@ -1,4 +1,4 @@
-// Hardening — AppArmor (on at boot, profiles in enforce or complain), kernel restrictions as
+// Hardening - AppArmor (on at boot, profiles in enforce or complain), kernel restrictions as
 // plain switches (written to /etc/sysctl.d/90-archangelos-hardening.conf), Secure Boot status and
 // the root account.
 import QtQuick
@@ -38,7 +38,7 @@ PageScaffold {
         ["net.ipv6.conf.all.accept_redirects", "Ignore IPv6 redirects", "The same, for IPv6", "0", "alt_route"],
         ["net.ipv4.conf.all.send_redirects", "Don't send redirects", "This computer isn't a router", "0", "router"],
         ["net.ipv4.conf.all.log_martians", "Log impossible packets", "Spoofed traffic shows up in the system log", "1", "description"],
-        ["net.ipv4.icmp_echo_ignore_all", "Stealth mode", "Don't answer pings — harder to find on a network (can confuse diagnostics)", "1", "visibility_off"]
+        ["net.ipv4.icmp_echo_ignore_all", "Stealth mode", "Don't answer pings - harder to find on a network (can confuse diagnostics)", "1", "visibility_off"]
     ]
     Cmd { id: cmd }
     function load() {
@@ -69,8 +69,8 @@ PageScaffold {
         title: "AppArmor"
         SRow {
             icon: "policy"; title: "Confine apps with AppArmor"
-            desc: page.cur.aa === "Y" ? "Running — profiled apps can only touch what their profile allows"
-                : page.cur.aaboot === "1" || page.cur.aasvc === "enabled" ? "Set to start — restart to turn it on" : "Off. Turning it on adds it to the boot options; it starts after a restart"
+            desc: page.cur.aa === "Y" ? "Running - profiled apps can only touch what their profile allows"
+                : page.cur.aaboot === "1" || page.cur.aasvc === "enabled" ? "Set to start - restart to turn it on" : "Off. Turning it on adds it to the boot options; it starts after a restart"
             Badge { visible: page.cur.aa === "Y"; text: "running"; tone: "accent"; anchors.verticalCenter: parent.verticalCenter }
             AxSwitch { checked: page.cur.aa === "Y" || page.cur.aasvc === "enabled"; enabled_: page.busy === ""; anchors.verticalCenter: parent.verticalCenter
                        onToggled: (on) => page.run("aaboot", [page.sec, "apparmor-boot", on ? "1" : "0"], "Saved. Restart to " + (on ? "start" : "stop") + " AppArmor.") }
@@ -116,7 +116,7 @@ PageScaffold {
         title: "Boot & accounts"
         SRow {
             icon: "verified_user"; title: "Secure Boot"
-            desc: page.cur.efi === "0" ? "This computer doesn't boot with UEFI" : page.cur.sb === "1" ? "On — the firmware only starts signed boot loaders"
+            desc: page.cur.efi === "0" ? "This computer doesn't boot with UEFI" : page.cur.sb === "1" ? "On - the firmware only starts signed boot loaders"
                 : "Off. Turning it on is done in the firmware setup and needs signed boot files (sbctl)"
             Badge { text: page.cur.sb === "1" ? "on" : "off"; tone: page.cur.sb === "1" ? "accent" : "neutral"; anchors.verticalCenter: parent.verticalCenter }
         }

@@ -8,7 +8,7 @@
 //   secret   goes to vpn.secrets, plus a "<key>-flags" companion in vpn.data
 //   def      what the plugin already assumes; a field still at its default is not written
 //   always   write even when equal to def
-//   falseAs  "no" writes the key, "omit" drops it — plugins differ on which they read
+//   falseAs  "no" writes the key, "omit" drops it - plugins differ on which they read
 //   when     { key, in: [...] } or { key, nonEmpty: true }
 //   accept   extensions the file picker offers first
 
@@ -17,7 +17,7 @@
 const STRONGSWAN = {
     id: "strongswan",
     label: "IPsec / IKEv2",
-    subtext: "strongSwan — what most corporate and hosting VPNs speak",
+    subtext: "strongSwan - what most corporate and hosting VPNs speak",
     icon: "shield_lock",
     service: "org.freedesktop.NetworkManager.strongswan",
     package: "networkmanager-strongswan",
@@ -289,7 +289,7 @@ const L2TP = {
 const WIREGUARD = {
     id: "wireguard",
     label: "WireGuard",
-    subtext: "Import a .conf — NetworkManager builds the profile",
+    subtext: "Import a .conf - NetworkManager builds the profile",
     icon: "bolt",
     importOnly: true,
     importType: "wireguard",
@@ -315,7 +315,7 @@ const CLEAR_PREFIX = "__clear:";
 function clearKey(key) { return CLEAR_PREFIX + key; }
 
 // Defaults folded in, so a `when` clause can test a field nobody has touched yet.
-// An unreachable field contributes nothing — neither its default nor a stale earlier value —
+// An unreachable field contributes nothing - neither its default nor a stale earlier value -
 // which is what keeps the private key row out of an EAP form. A `when` may only name a field
 // declared before it.
 function resolve(type, rawValues) {
@@ -390,7 +390,7 @@ function build(type, rawValues, existing) {
 }
 
 // Required fields still empty: the submit button's gate, and its subtext when disabled.
-// A secret already held by the profile counts as filled — an edit leaves every password box blank
+// A secret already held by the profile counts as filled - an edit leaves every password box blank
 // on purpose, and demanding it be retyped to change an unrelated field would be absurd.
 function missingRequired(type, rawValues, existing) {
     const values = resolve(type, rawValues);

@@ -1,4 +1,4 @@
-// Storage — how full the system drive is and what's taking the space, every disk and partition
+// Storage - how full the system drive is and what's taking the space, every disk and partition
 // (mount, unmount, eject), and one-click cleanups.
 import QtQuick
 import Quickshell
@@ -188,7 +188,7 @@ PageScaffold {
         }
         SRow {
             icon: "link_off"; title: "Unused dependencies"
-            desc: page.measuring ? "Measuring…" : page.clean.orph > 0 ? page.clean.orph + " packages nothing needs any more" : "None — everything installed is in use"
+            desc: page.measuring ? "Measuring…" : page.clean.orph > 0 ? page.clean.orph + " packages nothing needs any more" : "None - everything installed is in use"
             AxButton { text: "Remove"; enabled_: page.busy === "" && page.clean.orph > 0; anchors.verticalCenter: parent.verticalCenter
                        onClicked: page.doClean("orph", ["/usr/lib/archangelos/axs-admin", "pkg-orphans"], "Unused packages removed.") }
         }

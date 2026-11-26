@@ -21,7 +21,7 @@ import Quickshell.Io
 import "../"
 
 // ============================================================
-// ColorsLoader — watches ~/.config/ArcShell/matugen/colors.json
+// ColorsLoader - watches ~/.config/ArcShell/matugen/colors.json
 // and exposes parsed color properties.
 // ============================================================
 
@@ -84,7 +84,7 @@ QtObject {
             if (obj.border)     root.border     = obj.border
             if (obj.iconFont)   root.iconFont   = obj.iconFont
         } catch (e) {
-            // Malformed JSON — keep fallback values
+            // Malformed JSON - keep fallback values
         }
         _adjustLightMode()
     }

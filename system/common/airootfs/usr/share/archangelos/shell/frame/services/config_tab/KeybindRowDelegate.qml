@@ -294,7 +294,7 @@ Item {
                 }
             }
 
-            // Binding pill — amber tint when a pending change is staged
+            // Binding pill - amber tint when a pending change is staged
             Rectangle {
                 height: Math.round(24 * localScale); radius: Math.round(6 * localScale)
                 width:  _pillT.implicitWidth + Math.round(18 * localScale)
@@ -395,7 +395,7 @@ Item {
                     }
                 }
 
-                // Cancel — Escape also cancels
+                // Cancel - Escape also cancels
                 Rectangle {
                     width: 28; height: Math.round(24 * localScale); radius: Math.round(6 * localScale)
                     color: _cnH.hovered ? Qt.rgba(Theme.text.r,Theme.text.g,Theme.text.b,0.09) : "transparent"

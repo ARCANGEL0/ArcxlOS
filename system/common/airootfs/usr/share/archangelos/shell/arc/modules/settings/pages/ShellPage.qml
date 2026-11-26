@@ -1,4 +1,4 @@
-// Shell: the surfaces the shell itself draws — the vertical bar, the top dashboard and the
+// Shell: the surfaces the shell itself draws - the vertical bar, the top dashboard and the
 // launcher. Everything here was previously a code edit away.
 pragma ComponentBehavior: Bound
 
@@ -95,7 +95,7 @@ StackView {
                     text: "Brightness"
                     subtext: Brightness.hasInternal ? "Laptop panel"
                            : (Brightness.hasDdc ? "External monitor over DDC/CI"
-                                                : "No backlight and no DDC/CI monitor found — hidden anyway")
+                                                : "No backlight and no DDC/CI monitor found - hidden anyway")
                     checked: Config.barBrightness
                     onToggled: Config.barBrightness = !Config.barBrightness
                 }
@@ -107,7 +107,7 @@ StackView {
                 ToggleRow {
                     first: false; last: false
                     text: "Battery"
-                    subtext: Bat.has ? "" : "No laptop battery — hidden anyway"
+                    subtext: Bat.has ? "" : "No laptop battery - hidden anyway"
                     checked: Config.barBattery
                     onToggled: Config.barBattery = !Config.barBattery
                 }
@@ -211,7 +211,7 @@ StackView {
                 ToggleRow {
                     first: true; last: false
                     text: "Remember what is copied"
-                    subtext: "Kept in memory for the session only — never written to disk"
+                    subtext: "Kept in memory for the session only - never written to disk"
                     checked: Config.clipboardEnabled
                     onToggled: Config.clipboardEnabled = !Config.clipboardEnabled
                 }

@@ -1,4 +1,4 @@
-// Graphics — the GPUs in this machine, the drivers and APIs they present (Vulkan, OpenGL), and,
+// Graphics - the GPUs in this machine, the drivers and APIs they present (Vulkan, OpenGL), and,
 // on laptops with switchable graphics, which GPU the system uses. Switching goes through
 // /usr/lib/archangelos/axs-admin (envycontrol) and takes effect after a restart.
 import QtQuick
@@ -76,7 +76,7 @@ PageScaffold {
             page.busy = "";
             if (c === 126) page.error = "Cancelled.";
             else if (c !== 0) page.error = (e || o).trim().split("\n").pop() || "Couldn't switch graphics.";
-            else { page.notice = "Switched to " + mode + " — restart to apply."; noticeT.restart(); page.load(); }
+            else { page.notice = "Switched to " + mode + " - restart to apply."; noticeT.restart(); page.load(); }
         });
     }
     Timer { id: noticeT; interval: 6000; onTriggered: page.notice = "" }
@@ -113,9 +113,9 @@ PageScaffold {
                 id: modes
                 x: Ax.pad; y: 14; width: parent.width - 2 * Ax.pad; spacing: 10
                 Repeater {
-                    model: [{ m: "integrated", t: "Integrated", d: "iGPU only — longest battery" },
-                            { m: "hybrid", t: "Hybrid", d: "Both — apps opt in to the dGPU" },
-                            { m: "nvidia", t: "NVIDIA", d: "dGPU for everything — most power" }]
+                    model: [{ m: "integrated", t: "Integrated", d: "iGPU only - longest battery" },
+                            { m: "hybrid", t: "Hybrid", d: "Both - apps opt in to the dGPU" },
+                            { m: "nvidia", t: "NVIDIA", d: "dGPU for everything - most power" }]
                     Rectangle {
                         required property var modelData
                         readonly property bool sel: page.envy === modelData.m
