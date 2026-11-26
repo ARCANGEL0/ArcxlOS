@@ -26,8 +26,8 @@ ensure_repo() {
     if [ ! -d "$REPO_DIR/.git" ]; then
         git clone --depth 1 --filter=blob:none --sparse "$REPO_URL" "$REPO_DIR" 2>/dev/null \
             || git clone --depth 1 "$REPO_URL" "$REPO_DIR"
-        git -C "$REPO_DIR" sparse-checkout set system VERSION 2>/dev/null || true
     fi
+    git -C "$REPO_DIR" sparse-checkout set system 2>/dev/null || true
     git -C "$REPO_DIR" fetch --depth 1 origin "$BRANCH" --quiet 2>/dev/null || true
 }
 
@@ -51,10 +51,13 @@ cmd_check() {
 
 sync_tree() {
     ed="$1"; tag="$2"
-    git -C "$REPO_DIR" checkout -q "$tag" -- system
-    rsync -a --backup --suffix=.axbak "$REPO_DIR/system/common/airootfs/" / || return 1
+    git -C "$REPO_DIR" cat-file -e "$tag^{commit}" 2>/dev/null || { echo "missing update ref: $tag" >&2; return 1; }
+    git -C "$REPO_DIR" checkout -q "$tag" -- system || return 1
+    [ -d "$REPO_DIR/system/common/airootfs" ] || { echo "missing system/common/airootfs in $REPO_DIR" >&2; return 1; }
+    opts="-a --backup --suffix=.axbak --exclude=/etc/hostname --exclude=/etc/hosts --exclude=/etc/resolv.conf --exclude=/etc/archangelos/version"
+    rsync $opts "$REPO_DIR/system/common/airootfs/" / || return 1
     if [ -d "$REPO_DIR/system/$ed/airootfs" ]; then
-        rsync -a --backup --suffix=.axbak "$REPO_DIR/system/$ed/airootfs/" / || return 1
+        rsync $opts "$REPO_DIR/system/$ed/airootfs/" / || return 1
     fi
     return 0
 }
@@ -69,6 +72,10 @@ cmd_update() {
     fetch_tag "$rv"; fetch_tag "$lv"
     oldtag=""; has_tag "$lv" && oldtag="v$lv"
     tag="v$rv"
+    if ! has_tag "$rv"; then
+        tag="origin/$BRANCH"
+        echo "tag v$rv is not published; using $tag"
+    fi
 
     if [ -n "$oldtag" ]; then
         newpkgs=$(git -C "$REPO_DIR" diff "$oldtag" "$tag" -- "system/$ed/packages.x86_64" "system/common/packages.x86_64" 2>/dev/null \

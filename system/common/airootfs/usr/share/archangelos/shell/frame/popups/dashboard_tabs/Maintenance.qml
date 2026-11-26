@@ -266,6 +266,7 @@ Item {
         Text {
             anchors.centerIn: parent
             text: ib.icon
+            font.family: "Symbols Nerd Font"
             font.pixelSize: Math.round(12 * root.localScale)
             color: ibHov.hovered && ib.enabledState ? (ib.danger ? Theme.error : Theme.active) : Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.6)
         }
@@ -298,6 +299,7 @@ Item {
             Text {
                 visible: tb.icon !== ""
                 text: tb.icon
+                font.family: "Symbols Nerd Font"
                 font.pixelSize: Math.round(12 * root.localScale)
                 color: tb.primary ? Theme.active : Theme.text
                 anchors.verticalCenter: parent.verticalCenter
@@ -377,7 +379,7 @@ Item {
         property color tint: Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.35)
         anchors.centerIn: parent
         spacing: Math.round(4 * root.localScale)
-        Text { anchors.horizontalCenter: parent.horizontalCenter; text: parent.icon; font.pixelSize: Math.round(24 * root.localScale); color: parent.tint }
+        Text { anchors.horizontalCenter: parent.horizontalCenter; text: parent.icon; font.family: "Symbols Nerd Font"; font.pixelSize: Math.round(24 * root.localScale); color: parent.tint }
         Text { anchors.horizontalCenter: parent.horizontalCenter; text: parent.label; font.pixelSize: Math.round(11 * root.localScale); color: parent.tint }
     }
 
