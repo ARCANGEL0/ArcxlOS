@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=HTB TUI
+GenericName=Hack the Box Client
+Comment=Hack the Box terminal client
+Exec=/usr/bin/htbtui
+TryExec=/usr/bin/htbtui
+Icon=utilities-terminal
+Terminal=true
+Categories=Network;Security;
+Keywords=htb;hackthebox;security;

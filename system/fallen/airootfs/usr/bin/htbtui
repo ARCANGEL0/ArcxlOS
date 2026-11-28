@@ -1,0 +1,4 @@
+#!/bin/sh
+PYTHONPATH="/opt/htbtui/python${PYTHONPATH:+:${PYTHONPATH}}"
+export PYTHONPATH
+exec python3 /opt/htbtui/src/htbtui.py "$@"

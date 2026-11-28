@@ -387,6 +387,22 @@ fi
 chmod -R u+w "$ghostWork" 2>/dev/null || true
 rm -rf "$ghostWork"
 
+htbWork=$(mktemp -d)
+if git clone --depth 1 https://github.com/its-sarin/HTBtui "$htbWork/src" >/dev/null 2>&1; then
+  mkdir -p /opt/htbtui/src /opt/htbtui/python
+  git -C "$htbWork/src" archive HEAD | tar -x -C /opt/htbtui/src
+  timeout 900 python3 -m pip install --no-cache-dir --break-system-packages \
+    --root-user-action=ignore --timeout 60 --retries 3 \
+    --target /opt/htbtui/python -r /opt/htbtui/src/requirements.txt \
+    && echo "  [ok] htbtui installed" \
+    || echo "  [warn] htbtui dependencies failed" >&2
+else
+  echo "  [warn] htbtui source unavailable" >&2
+fi
+chmod -R u+w "$htbWork" 2>/dev/null || true
+rm -rf "$htbWork"
+find /opt/htbtui -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+
 cp -rf /etc/skel/. /home/liveuser/
 lhl=/home/liveuser/.config/hypr/hyprland.lua
 if [ -f "$lhl" ]; then
